@@ -1,6 +1,3 @@
 (ns yggdrasil.core)
 
-(defn foo
-  "I don't do a whole lot."
-  [x]
-  (println x "Hello, World!"))
+; this file will parse command line arguments and call the appropriate functions
