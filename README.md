@@ -1,10 +1,10 @@
 # yggdrasil
 
-A Clojure library designed to ... well, that part is up to you.
+A music programming language for musicians, implemented in Clojure.
 
 ## Usage
 
-FIXME
+TBA.
 
 ## License
 
