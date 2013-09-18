@@ -7,9 +7,14 @@
 	[& args]
 	(let [[opts args banner]
 		(cli args
-			["-h" "--help" "Display help text." :flag true, :default false]
-			["-s" "--start" "Start playing the score at a specific minute/second mark." :default "0:00"]
-			["-e" "--end" "Stop playing at a specific minute/second mark in the score."] ;; optional
+			["-h" "--help" 
+				"Display help text." 
+				:flag true, :default false]
+			["-s" "--start" 
+				"Start playing the score at a specific minute/second mark." 
+				:default "0:00"]
+			["-e" "--end" 
+				"Stop playing at a specific minute/second mark in the score."] ;; optional
 			)]
 	   (when (:help opts)
 	   	   (println banner)
