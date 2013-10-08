@@ -1,4 +1,5 @@
 (ns yggdrasil.sound-generator
+	(:require [yggdrasil.parser :as parser])
 	(:import (java.io File))
 
 (defn play

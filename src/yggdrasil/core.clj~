@@ -1,6 +1,6 @@
 (ns yggdrasil.core
-	(:use [clojure.tools.cli :only (cli)])
-	(:require [yggdrasil.sound-generator :as soundgen])
+	(:use [clojure.tools.cli :only (cli)]
+	      [yggdrasil.sound-generator :as soundgen])
 	(:gen-class :main true))
 
 (defn -main
@@ -44,4 +44,3 @@
 		(soundgen/play input-file opts))
 	([input-file output-file opts]
 		(soundgen/make-wav input-file output-file opts)))
-
