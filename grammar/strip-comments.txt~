@@ -1,8 +1,0 @@
-score			= not-a-comment+
-<not-a-comment>		= !comment #".|\n"
-
-comment			= long-comment | short-comment | barline
-long-comment 		= "###" inside-long-comment* "###"
-inside-long-comment 	= !"###" #".|\n" | long-comment
-short-comment 		= "#" #".*" "\n"
-barline 		= "|"
