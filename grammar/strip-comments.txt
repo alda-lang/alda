@@ -1,0 +1,10 @@
+score				= <comment*> 
+					    not-a-comment+ (<comment+> not-a-comment+)* 
+					    <comment*>
+<not-a-comment>	= !comment #".|\n"
+
+comment			= long-comment | short-comment | barline
+long-comment 		= "###" inside-long-comment* "###"
+inside-long-comment 	= !"###" #".|\n" | long-comment
+short-comment 		= "#" #".*" #"(\n|\r|$)+"
+barline 				= "|"

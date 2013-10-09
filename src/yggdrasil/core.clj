@@ -3,6 +3,14 @@
 	(:require [yggdrasil.sound-generator :as soundgen])
 	(:gen-class :main true))
 
+(defn dispatcher
+	"If no output file is specified, plays the file using the specified options. 
+	 If an output file is specified, creates a .wav file using the specified options."
+	([input-file opts]
+		(soundgen/play input-file opts))
+	([input-file output-file opts]
+		(soundgen/make-wav input-file output-file opts)))
+
 (defn -main
 	"Parses command line arguments and dispatches the appropriate functions."
 	[& args]
@@ -22,7 +30,7 @@
 	   	   (System/exit 0))
 	   (try
 		   (apply dispatcher (conj args opts))
-		   (catch ArityException e
+		   (catch clojure.lang.ArityException e
 			   (cond 
 				   (zero? (count args)) 
 				   (println "Please specify an input file containing some yggdrasil code."
@@ -33,15 +41,7 @@
 					    " file and (optionally) one output file."
 					    "\n\n"
 					    "example:    ygg chorale.yg chorale.wav")))
-		   (catch FileNotFoundException e
+		   (catch java.io.FileNotFoundException e
 			   (let [bad-filename (first args)]
 			      (println "Input file \"" bad-filename "\" not found."))))))
-
-(defn dispatcher
-	"If no output file is specified, plays the file using the specified options. 
-	 If an output file is specified, creates a .wav file using the specified options."
-	([input-file opts]
-		(soundgen/play input-file opts))
-	([input-file output-file opts]
-		(soundgen/make-wav input-file output-file opts)))
 

@@ -33,7 +33,7 @@
 
 (def strip-comments
 	"Strips comments from a yggdrasil score."
-	(insta/parser "strip-comments.txt"))
+	(insta/parser "grammar/strip-comments.txt"))
 
 (def separate-instruments
 	"Takes a complete yggdrasil score and returns a simple parse tree consisting
@@ -53,9 +53,9 @@
 	      [:name 'tuba']
 	      [:nickname 'brass']]
 	    [:music-data 'string of ygg code for the brass group']]]"
-	(insta/parser "separate-instruments.txt"))
+	(insta/parser "grammar/separate-instruments.txt"))
 
 (def parse-ygg-code
 	"Takes a string of music-data (for one instrument) and returns a parse tree of
 	 music events, including attribute changes and notes."
-	(insta/parser "parse-ygg-code.txt"))
+	(insta/parser "grammar/parse-ygg-code.txt"))

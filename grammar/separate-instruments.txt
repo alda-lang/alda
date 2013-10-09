@@ -1,0 +1,12 @@
+score 			= <ows> instrument+
+instrument		= instrument-call <ows> music-data
+instrument-call 	= name 
+			  (<ows> <"/"> <ows> name)* 
+			  (<ows> nickname)?
+			  <ows> <":">
+music-data		= !instrument-call #".|\n|\r"
+
+name 			= #"[a-zA-Z]{2}" #"[\w\-'()]*"
+nickname		= <"\""> name <"\"">
+
+ows 			= #"\s*"

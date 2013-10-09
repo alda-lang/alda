@@ -1,18 +1,6 @@
 (ns yggdrasil.sound-generator
 	(:require [yggdrasil.parser :as parser])
-	(:import (java.io File))
-
-(defn play
-	"Parses an input file and plays the result, using the specified options."
-	[input-file {:keys [start end]}]
-	(comment "To do."))
-
-(defn make-wav
-	"Parses an input file and saves the resulting sound data as a wav file, using the
-	 specified options."
-	[input-file output-file {:keys [start end]}]
-	(let [target-file (check-for output-file)]
-		(comment "To do.")))
+	(:import (java.io File)))
 
 (defn check-for
 	"Checks to see if a given file already exists. If it does, prompts the user whether 
@@ -48,3 +36,15 @@
 				(recur (prompt)))
 
 			:else filename)))
+
+(defn play
+	"Parses an input file and plays the result, using the specified options."
+	[input-file {:keys [start end]}]
+	(comment "To do."))
+
+(defn make-wav
+	"Parses an input file and saves the resulting sound data as a wav file, using the
+	 specified options."
+	[input-file output-file {:keys [start end]}]
+	(let [target-file (check-for output-file)]
+		(comment "To do.")))
