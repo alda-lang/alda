@@ -49,7 +49,7 @@
          [:name 'tuba']
          [:nickname 'brass']]
        [:music-data 'string of ygg code for the brass group']]]"
-
+       
   (insta/parser "grammar/separate-instruments.txt"))
 
 (defn nicknames
@@ -131,7 +131,10 @@
       [:music-data 'brass music']]]"
 
   [parse-tree]
-  (comment "To do."))
+  (let [instrument-calls (rest parse-tree)]
+  	(loop [instrument-list [], instrument-calls instrument-calls]
+  		(if (first instrument-calls)
+  			"to do" "to do"))))
 
 (def parse-ygg-code
   "Takes a string of music-data (for one instrument) and returns a parse tree of music 
