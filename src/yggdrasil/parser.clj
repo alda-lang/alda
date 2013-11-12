@@ -28,9 +28,13 @@
    then use the time markings to layer all the different audio segments together to
    create the final audio file.")
 
-(def strip-comments
-  "Strips comments from a yggdrasil score."
-  (insta/parser "grammar/strip-comments.txt"))
+(defn strip-comments
+  "Strips comments from a yggdrasil score. Returns a new score (in string form),
+   devoid of comments."
+   [score]
+  (->> score
+    (insta/parse (insta/parser "grammar/strip-comments.txt"))
+    (insta/transform {:score str})))
 
 (def separate-instruments
   "Takes a complete yggdrasil score and returns a simple parse tree consisting of 
@@ -101,7 +105,7 @@
                    (->> (map expand x)
                         (remove nil?))))       
 
-        expand-and-tag (fn [name-nodes]
+        expand-and-tag (fn [& name-nodes]
                          (->> (expand name-nodes)
                               (mapcat #(if (coll? (first %)) % [%]))
                               (cons :instrument-call)
