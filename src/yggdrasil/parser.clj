@@ -1,5 +1,6 @@
 (ns yggdrasil.parser
-  (:require [instaparse.core :as insta]))
+  (:require [instaparse.core :as insta]
+  	        [clojure.string :as str]))
 
 (comment
   "Rough structural sketch.
@@ -36,7 +37,7 @@
     (insta/parse (insta/parser "grammar/strip-comments.txt"))
     (insta/transform {:score str})))
 
-(def separate-instruments
+(defn separate-instruments
   "Takes a complete yggdrasil score and returns a simple parse tree consisting of 
    instrument-calls that include their respective music data as an un-parsed string.
 
@@ -53,8 +54,11 @@
          [:name 'tuba']
          [:nickname 'brass']]
        [:music-data 'string of ygg code for the brass group']]]"
-       
-  (insta/parser "grammar/separate-instruments.txt"))
+  [score]
+  (->> score
+    (insta/parse (insta/parser "grammar/separate-instruments.txt"))
+    (insta/transform {:music-data (fn [& chars] 
+    		                            [:music-data (str/join chars)])})))
 
 (defn nicknames
   "Takes the output of the separate-instruments parser and returns a map of
@@ -89,8 +93,7 @@
         expand (fn expand [x]
                  (cond 
                    (not (coll? (first x)))  ; x is a single node
-                   (let [type (first x)
-                         name (last x)]
+                   (let [[type name] x]
                      (cond
                        (= type :nickname)
                        nil
@@ -115,30 +118,18 @@
 
 (defn consolidate-instruments
   "Takes the output of separate-instruments parser -> expand-nicknames and 
-   consolidates repeated calls to the same instrument, returning an even more
-   organized parse tree consisting of each individual instrument and its respective
-   music data.
+   consolidates repeated calls to the same instrument, returning a map of 
+   individual instruments to their respective music data."
 
-   e.g.
-  [:score
-    [:instrument
-      [:name 'cello']
-      [:music-data 'cello music']]
-    [:instrument
-      [:name 'trumpet']
-      [:music-data 'brass music']]
-    [:instrument
-      [:name 'trombone']
-      [:music-data 'brass music']]
-    [:instrument
-      [:name 'tuba']
-      [:music-data 'brass music']]]"
-
-  [parse-tree]
-  (let [instrument-calls (rest parse-tree)]
-  	(loop [instrument-list [], instrument-calls instrument-calls]
-  		(if (first instrument-calls)
-  			"to do" "to do"))))
+  [[_ & instrument-nodes :as parse-tree]]
+  	(letfn [(add-music-data 
+  			      [score ; map
+  			      [_ [_ & name-nodes] [_ music-data]]] ; instrument-node
+  			      (reduce (fn [m [_ name :as name-node]] 
+  			      		      (merge-with str m {name (str " " music-data)}))
+  			               score
+  			               name-nodes))]
+  		(reduce add-music-data {} instrument-nodes)))
 
 (def parse-ygg-code
   "Takes a string of music-data (for one instrument) and returns a parse tree of music 
