@@ -13,7 +13,7 @@ by Dave Yarwood
 piano:  # verse 1
 # LH
 V1: o2 b1/>b | o2 g+/>g+ | o2 g/>g  
-    o2 f+2/>f+ o2 e+>/e+ | o2 e/>e o2 d+/d+ | o2 d1/>d
+    o2 f+2/>f+ o2 e+/>e+ | o2 e/>e o2 d+/d+ | o2 d1/>d
 # RH
 V2: r4 o4 d+/f+ e/g f+/a | d1/f+/b | d/f+/b |
     r4 c+4/f+/a+ c+2/e+/g+ | r4 c+/e/g < a+2/>d+/f+ |
@@ -46,4 +46,4 @@ r2 r8 o3 f+ f+ f+ g2 | b8 d f g+ b | >d c+4.~8 r8 f+ a |
 a b b8~2~ | > d2 r8 < g+ | a4 g+16 f+8.~4 e+8 d++ e+ g+4. | f+4
 
 
-piano:  # verse 2...
+piano: # verse 2...
