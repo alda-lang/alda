@@ -1,6 +1,6 @@
 (ns yggdrasil.parser
   (:require [instaparse.core :as insta]
-  	        [clojure.string :as str]))
+            [clojure.string :as str]))
 
 (comment
   "STEP ONE:
@@ -21,13 +21,13 @@
          [:nickname 'brass']]
        [:music-data 'string of ygg code for the brass group']]]    ")
 
-(defn strip-comments [score]
+(defn- strip-comments [score]
   "Takes a string of ygg code, returns a string with comments/barlines removed."
   (->> score
     (insta/parse (insta/parser "grammar/strip-comments.txt"))
     (insta/transform {:score str})))
 
-(defn separate-instruments [score]
+(defn- separate-instruments [score]
   "Takes a string of de-commented ygg code, returns a parse tree."
   (->> score
     (insta/parse (insta/parser "grammar/separate-instruments.txt"))
@@ -61,7 +61,7 @@
    The second function consolidates repeated calls to the same instrument instance
    and returns a simple map of each instance to its consolidated music data.")
 
-(defn assign-instances [[_ & instrument-nodes :as parse-tree]]
+(defn- assign-instances [[_ & instrument-nodes :as parse-tree]]
   (loop [table {}, ; a map of the "names" to the instrument instance(s)
                    ; e.g. {"bill" [{"cello" 1}], "bob" [{"cello" 2}], "trumpet" [{"trumpet" 1}],
                    ;       "brass" [{"trumpet" 1} {"trombone" 1} {"tuba" 1}]}
@@ -119,7 +119,7 @@
 
         (recur updated-table updated-nicknames updated-score (rest nodes))))))
 
-(defn consolidate-instruments [[_ & instrument-nodes :as parse-tree]]
+(defn- consolidate-instruments [[_ & instrument-nodes :as parse-tree]]
   "Returns a map of instrument instances to their consolidated music-data."
   	(letfn [(add-music-data
   			      [score ; map
@@ -155,4 +155,3 @@
      (separate-instruments)
      (assign-instances)
      (consolidate-instruments))
-
