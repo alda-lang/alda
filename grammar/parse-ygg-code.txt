@@ -1,24 +1,15 @@
-part                    = <ows> event+
+part                    = <ows> (voices | event)+
 <event>                 = chord | note | rest | octave-change |
-                          attribute-change | voices |
-                          marker | at-marker
+                          attribute-change | marker | at-marker
 
-(* This isn't working right... 
-   I don't think I quite understand how to use the negative lookahead
-   correctly. For some reason, each voice in succession is being considered
-   the start of a new [:voices] group, and also, there are [:voices] within
-   [:voice-events] tags, rather than closing the [:voice] and [:voices] tags
-   as expected...
-   Maybe try tweaking the [:voice] definition? *)
-voices                  = voice+ <voice-zero>? 
-voice                   = voice-number voice-events 
-voice-number            = <"V"> #"[1-9]+" <":"> <ows>
+voices                  = voice+ (<voice-zero> | <#"\z">)
+voice                   = voice-number event*
+voice-number            = <"V"> #"[1-9]\d*" <":"> <ows>
 <voice-zero>            = <"V0:"> <ows>
-voice-events            = !voices event*
 
-chord                   = (note|rest) subchord+
-<subchord>              = <"/"> <ows> (octave-change|attribute-change)*
-                                <ows> (note|rest) <ows>
+chord                   = (note | rest) subchord+
+<subchord>              = <"/"> <ows> (octave-change | attribute-change)*
+                                <ows> (note | rest) <ows>
 note                    = pitch duration? <ows>
 rest                    = "r" duration? <ows>
 
@@ -30,8 +21,8 @@ duration                = note-length <ows> (tie <ows> note-length <ows>)*
 <tie>                   = "~"
 
 octave-change           = (<"o"> number | ">" | "<") <ows>
-attribute-change        = "(" <ows> 
-                          (attribute <ows> number <ows> #"[,;]" <ows>)+ 
+attribute-change        = "(" <ows>
+                          (attribute <ows> number <ows> #"[,;]" <ows>)+
                           ")" <ows>
 attribute               = "volume" | "pan" | "tempo"
 
@@ -40,3 +31,8 @@ at-marker               = <"@"> name <ows>
 name                    = #"[a-zA-Z]{2}[\w\-'()]*"
 
 ows                     = #"\s*"
+
+
+
+
+
