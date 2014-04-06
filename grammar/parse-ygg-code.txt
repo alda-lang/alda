@@ -28,11 +28,12 @@ attribute               = "volume" | "pan" | "tempo"
 
 marker                  = <"%"> name <ows>
 at-marker               = <"@"> name <ows>
-name                    = #"[a-zA-Z]{2}[\w\-'()]*"
+<name>                    = #"[a-zA-Z]{2}[\w\-'()]*"
 
 ows                     = #"\s*"
 
 
 
 
-
+
+
