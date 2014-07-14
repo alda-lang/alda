@@ -30,9 +30,7 @@
 (defn- separate-instruments [score]
   "Takes a string of de-commented ygg code, returns a parse tree."
   (->> score
-    (insta/parse (insta/parser "grammar/separate-instruments.txt"))
-    (insta/transform {:music-data (fn [& chars]
-    		                            [:music-data (str/join chars)])})))
+    (insta/parse (insta/parser "grammar/separate-instruments.txt"))))
 
 (comment
   "STEP TWO:
@@ -149,9 +147,13 @@
 (def parse-ygg-code
   (insta/parser "grammar/parse-ygg-code.txt"))
 
+
 ; example -- it's working so far!
 (->> (slurp "test/yggdrasil/awobmolg.yg")
      (strip-comments)
      (separate-instruments)
      (assign-instances)
      (consolidate-instruments))
+
+
+
