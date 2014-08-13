@@ -1,6 +1,7 @@
 (ns yggdrasil.parser
   (:require [instaparse.core :as insta]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [clojure.java.io :as io]))
 
 (comment
   "STEP ONE:
@@ -24,13 +25,14 @@
 (defn- strip-comments [score]
   "Takes a string of ygg code, returns a string with comments/barlines removed."
   (->> score
-    (insta/parse (insta/parser "grammar/strip-comments.txt"))
+    (insta/parse (insta/parser (io/resource "grammar/strip-comments.bnf")))
     (insta/transform {:score str})))
 
 (defn- separate-instruments [score]
   "Takes a string of de-commented ygg code, returns a parse tree."
   (->> score
-    (insta/parse (insta/parser "grammar/separate-instruments.txt"))
+    (insta/parse (insta/parser 
+                   (io/resource "grammar/separate-instruments.bnf")))
     (insta/transform {:music-data (fn [& chars]
     		                            [:music-data (str/join chars)])})))
 
@@ -147,7 +149,7 @@
    create the final audio file.")
 
 (def parse-ygg-code
-  (insta/parser "grammar/parse-ygg-code.txt"))
+  (insta/parser (io/resource "grammar/parse-ygg-code.bnf")))
 
 
 ; example -- it's working so far!
