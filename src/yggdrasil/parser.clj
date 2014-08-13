@@ -30,7 +30,9 @@
 (defn- separate-instruments [score]
   "Takes a string of de-commented ygg code, returns a parse tree."
   (->> score
-    (insta/parse (insta/parser "grammar/separate-instruments.txt"))))
+    (insta/parse (insta/parser "grammar/separate-instruments.txt"))
+    (insta/transform {:music-data (fn [& chars]
+    		                            [:music-data (str/join chars)])})))
 
 (comment
   "STEP TWO:
@@ -156,4 +158,3 @@
      (consolidate-instruments))
 
 
-
