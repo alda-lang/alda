@@ -41,7 +41,7 @@ cello "voice":
 @voiceIn   # verse 1
 r2 r8 o3 f+ f+ f+ g2 | b8 d f g+ b | >d c+4.~8 r8 f+ a |
 > d c+ b < a f+ f4 f8 | > e d c < b b g+ | a2 r8 f |
-      # tie(b a g a)
+      # slur(b a g a)
 
 #{
    The following two lines currently raise parse errors --
