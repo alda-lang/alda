@@ -3,21 +3,23 @@
   (:import (java.io File)))
 
 (defn check-for
-  "Checks to see if a given file already exists. If it does, prompts the user whether he/she wants to
-   overwrite the file. If he/she doesn't, then prompts the user to choose a new filename and calls
-   itself to check the new file, etc. Returns a filename that does not exist, or does exist and the
-   user is OK with overwriting it."
+  "Checks to see if a given file already exists. If it does, prompts the user 
+   whether he/she wants to overwrite the file. If he/she doesn't, then prompts 
+   the user to choose a new filename and calls itself to check the new file, etc. 
+   Returns a filename that does not exist, or does exist and the user is OK with 
+   overwriting it."
   [filename]
   (letfn [(prompt [] 
-            (print "> ") (read-line))
+            (print "> ") (flush) (read-line))
           (overwrite-dialog []
-            (println "File \"" filename "\" already exists. Overwrite? (y/n)")
+            (println 
+              (format "File \"%s\" already exists. Overwrite? (y/n)" filename))
             (let [response (prompt)]
               (cond
-                (some #{response} ["y" "yes" "Y" "YES" "Yes"])
+                (re-find #"(?i)y(es)?" response)
                 filename
 
-                (some #{response} ["n" "no" "N" "NO" "No"])
+                (re-find #"(?i)no?" response)
                 (do
                   (println "Please specify a different filename.")
                   (check-for (prompt)))
@@ -31,9 +33,10 @@
       (overwrite-dialog)
 
       (.isDirectory (File. filename))
-        (do
-          (println "\"" filename "\" is a directory. Please specify a filename.")
-          (recur (prompt)))
+      (do
+        (println 
+          (format "\"%s\" is a directory. Please specify a filename." filename))
+        (recur (prompt)))
 
       :else filename)))
 
