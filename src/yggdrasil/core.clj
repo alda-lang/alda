@@ -43,4 +43,4 @@
                    "example:    ygg chorale.yg chorale.wav")))
       (catch java.io.FileNotFoundException e
         (let [bad-filename (first args)]
-          (println "Input file \"" bad-filename "\" not found."))))))
+          (println (format "Input file \"%s\" not found." bad-filename)))))))
