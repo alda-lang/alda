@@ -5,7 +5,7 @@
 
 (declare assign-instances consolidate-instruments)
 
-(def ygg-parser
+(def ^:private ygg-parser
   (insta/parser (io/resource "grammar/yggdrasil.bnf")))
 
 (defn parse-input
@@ -17,6 +17,8 @@
        ygg-parser
        (insta/transform {:score assign-instances})
        (insta/transform {:score consolidate-instruments})))
+
+(declare update-data)
 
 (defn- assign-instances
   "Reconstructs the parse tree by going through the score linearly and deducing what
@@ -37,71 +39,72 @@
    On the other hand, -- thor/clarinet: -- in the same scenario would refer to cello 1
    and clarinet 1, the same instances that were already in use."
   [& instrument-nodes]
-  (loop [table {}, ; a map of the "names" to the instrument instance(s)
-                   ; e.g. {"bill" [{"cello" 1}], "bob" [{"cello" 2}], "trumpet" [{"trumpet" 1}],
-                   ;       "brass" [{"trumpet" 1} {"trombone" 1} {"tuba" 1}]}
+  (-> (reduce update-data {:table {}, :nicknames {}, :score [:score]} 
+                          instrument-nodes)
+      :score))
 
-         nicknames {}, ; exactly the same as table, but only the nicknames are added
+(defn- assign
+  "Assigns instance(s) to a name-node. Returns nil for nickname nodes.
 
-         score [:score] ; re-constructing the parse-tree node by node
+   nickname is nickname of the current instrument call, if it has one, otherwise nil.
+  
+   data represents a map of 'working data' including:
+             
+   table:     a map of 'names' to instrument instance(s)
+   nicknames: just like table, but only the nicknames"
+  [[tag name :as name-node] nickname {:keys [table nicknames] :as data}]
+  (when (= tag :name)
+    (if-not nickname
+ ; If the current instrument call does NOT have a nickname, assign this name
+ ; node to its current entry in the table if it exists, 
+ ; otherwise assign it {'itself' 1}.
+      (table name [{name 1}])
+ ; If the current instrument call DOES have a nickname, and this name node's 
+ ; name is a previously defined nickname, then use those instances defined for 
+ ; that nickname in the nicknames table; otherwise if the node's name is not a 
+ ; previously defined nickname, then assign it {'itself' n}, where n is 1 greater
+ ; than the highest numbered instance with that name in the table, or 1 if 
+ ; there are no such instances already in the table.
+      (nicknames name [{name (let [instances (flatten (vals table))]
+                               (if-let [existing-numbers (->> instances
+                                                              (map #(% name))
+                                                              (remove nil?)
+                                                              seq)]
+                                 (inc (apply max existing-numbers))
+                                 1))}]))))
 
-         nodes instrument-nodes]
-    (if-not (seq nodes)
-      score
-      (let [[_ [_ & name-nodes] music-data-node] (first nodes)
+(defn- update-data 
+  "Assigns instances for one instrument node.
+   score is a parse-tree being rebuilt from scratch."         
+  [{:keys [table nicknames score] :as data} 
+   [_ [_ & name-nodes] music-data-node]]
+  ; nickname evaluates to the nickname of the node or nil
+  (let [nickname    (last (last (filter #(= (first %) :nickname) name-nodes)))
+        instances   (vec (remove nil? (map #(assign % nickname data) name-nodes)))
+        whole-group (vec (flatten instances))
+        names       (map second name-nodes)]
+    {:table (merge table 
+                   (zipmap names (conj instances whole-group)))
+     :nicknames (if nickname
+                  (assoc nicknames nickname whole-group)
+                  nicknames)
+     :score (conj score [:instrument 
+                          (apply vector :tracks whole-group)
+                          music-data-node])}))
 
-            nickname ; returns the nickname of the node or nil
-            (last (last (filter #(= (first %) :nickname) name-nodes)))
-
-            assign
-            (fn [[tag name :as name-node]]
-              "Assigns an instance to each name-node. Returns nil for nickname nodes."
-              (when (= tag :name)
-                (if-not nickname
-                  (table name [{name 1}])
-                  (nicknames name [{name
-                                    (let [instances (flatten (vals table))]
-                                      (if (some #(% name) instances)
-                                        (->> (filter #(% name) instances)
-                                             (map #(% name))
-                                             (apply max)
-                                             (inc))
-                                        1))}]))))
-
-            instances
-            (vec (remove nil? (map assign name-nodes)))
-
-            names
-            (map second name-nodes)
-
-            updated-table
-            (merge table
-                   (zipmap names
-                           (conj instances
-                                 (vec (flatten instances)))))
-
-            updated-nicknames
-            (if nickname
-              (assoc nicknames nickname (vec (flatten instances)))
-              nicknames)
-
-            updated-score
-            (conj score
-                  [:instrument
-                    (apply vector :tracks (flatten instances))
-                    music-data-node])]
-
-        (recur updated-table updated-nicknames updated-score (rest nodes))))))
+(defn- add-music-data
+  "Adds the music events from an instrument node's music data node to the 
+   appropriate instances in a score, which is represented as a map of 
+   instrument instances to their respective music data."
+  [score [_ [_ & instances] [_ & events]]]
+  (reduce (fn [m instance] (merge-with concat m {instance events}))
+  			  score
+  			  instances))
 
 (defn- consolidate-instruments
   "Returns a map of instrument instances to their consolidated music data."
   [& instrument-nodes]
-  	(letfn [(add-music-data [score ; map
-  			                    [_ [_ & instances] [_ & events]]] ; instrument node
-  			      (reduce (fn [m instance] (merge-with concat m {instance events}))
-  			               score
-  			               instances))]
-  		(reduce add-music-data {} instrument-nodes)))
+  (reduce add-music-data {} instrument-nodes))
 
 (comment
   "Each instrument now has its own vector of music events, representing everything that instrument
@@ -135,4 +138,5 @@
         of each instrument at each time marking, and then use the time markings to layer all
         the different audio segments together to create the final audio file.")
 
-(parse-input (slurp "test/yggdrasil/awobmolg.yg"))
+; testing
+(parse-input (slurp "test/yggdrasil/awobmolg.yg"))
