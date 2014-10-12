@@ -3,7 +3,7 @@
             [clojure.string :as str]
             [clojure.java.io :as io]))
 
-(declare assign-instances consolidate-instruments)
+(declare apply-global-attributes assign-instances consolidate-instruments)
 
 (def ^:private ygg-parser
   (insta/parser (io/resource "grammar/yggdrasil.bnf")))
@@ -15,8 +15,22 @@
   [ygg-code]
   (->> ygg-code
        ygg-parser
+       (insta/transform {:score apply-global-attributes})
        (insta/transform {:score assign-instances})
        (insta/transform {:score consolidate-instruments})))
+
+(defn- apply-global-attributes
+  "If the first node is a :global-attributes node, prepends it to the music
+   data of the first instrument as an :attribute-changes node."
+  [& score-contents]
+  (let [[[first-tag & contents] & nodes] score-contents]
+    (if (= first-tag :global-attributes)
+      (let [[[_ instrument-call-node [_ & music-data]] & other-nodes] nodes
+            attribute-changes-node (apply vector :attribute-changes contents)
+            music-data-node (apply vector :music-data attribute-changes-node music-data)]
+        (apply vector :score [:instrument instrument-call-node music-data-node] 
+                      other-nodes))
+      (apply vector :score score-contents))))
 
 (declare update-data)
 
