@@ -1,0 +1,23 @@
+# String Quartet in G Minor, Claude Debussy (1862-1918)
+# (excerpt)
+
+(tempo! 126)
+
+violin "violin-1":
+  o4 
+  g4 f4~8 d f a-24 b- a- | g8 f4 g8 d4 d 
+  b-8 r g4~8 b- g12 b- > d < | b-8 r g4~8 b- g12 b- > d
+  
+violin "violin-2":
+  o3
+  b-4 > c4~8 < b-8 > c c < | b- > c4 < b-8 b-4 > c < 
+  b-8 r b-2~12 > d g | d8 r < b-4~8 > d < b-12 > d g
+  
+viola:
+  o3
+  d4 d4~8 f d d | d d4 g8 f4 f+ 
+  g8 r f+4 f e12 g b- | g8 r f+4 f e12 g b-
+  
+cello:
+  o2
+  g4 a-4~8 b- a- f | g a-4 g8 b-4 a- | g1 | g
