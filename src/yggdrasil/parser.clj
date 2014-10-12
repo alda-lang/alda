@@ -136,6 +136,4 @@
         of each instrument at each time marking, and then use the time markings to layer all
         the different audio segments together to create the final audio file.")
 
-; testing
-(parse-input (slurp "test/yggdrasil/awobmolg.yg"))
-
+
