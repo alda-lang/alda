@@ -6,6 +6,6 @@
 (deftest parser-test
   (testing "parsing of valid input"
     (testing "all watched over by machines of loving grace"
-      (let [result (parse-input (slurp "test/yggdrasil/awobmolg.yg"))]
+      (let [result (parse-input (slurp "test/yggdrasil/awobmolg.yd"))]
         (is (not (instance? instaparse.gll.Failure result)))
         (pprint result)))))

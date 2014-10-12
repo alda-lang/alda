@@ -35,12 +35,12 @@
           (zero? (count args)) 
           (println "Please specify an input file containing some yggdrasil code."
                    "\n\n" 
-                   "example:    ygg chorale.yg")
+                   "example:    ygg chorale.yd")
           (> (count args) 2) 
           (println "Invalid number of arguments. You must specify only one input file and"
-                   " (optionally) one output file."
+                   "(optionally) one output file."
                    "\n\n"
-                   "example:    ygg chorale.yg chorale.wav")))
+                   "example:    ygg chorale.yd chorale.wav")))
       (catch java.io.FileNotFoundException e
         (let [bad-filename (first args)]
           (println (format "Input file \"%s\" not found." bad-filename)))))))
