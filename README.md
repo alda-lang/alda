@@ -14,10 +14,6 @@ of all manner of music: classical, popular, chiptune, electroacoustic, and more!
 [lilypond]: http://www.lilypond.org
 [chuck]: http://chuck.cs.princeton.edu
 
-## Usage
-
-TBA.
-
 ## Syntax example
 
     piano: o3 
