@@ -3,7 +3,7 @@
 A music programming language for musicians, implemented in Clojure.
 
 Inspired by other music/audio programming languages such as [PPMCK][ppmck], 
-[LilyPond][lilypond] and [ChucK][chuck], the goal of Yggdrasil is to provide a 
+[LilyPond][lilypond] and [ChucK][chuck], Yggdrasil aims to provide a 
 powerful and extremely flexible programming language for the musician who wants 
 to easily compose and generate music on the fly using only a text editor and a 
 compiler. Yggdrasil is designed in a way that equally favors aesthetics, 
