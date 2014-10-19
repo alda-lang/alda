@@ -14,6 +14,26 @@ of music: classical, popular, chiptune, electroacoustic, and more!
 [lilypond]: http://www.lilypond.org
 [chuck]: http://chuck.cs.princeton.edu
 
+## Etymology
+
+In Norse mythology, [Yggdrasil](http://en.wikipedia.org/wiki/Yggdrasil) is the 
+central, venerated, immense tree around which the universe revolves and on which 
+the mythical "nine worlds" exist. Using this as a metaphor, you could say that 
+*sound* or *music* is an immense, holy tree that supports numerous different 
+"worlds" (different genres, tonalities, paradigms, etc.) that are all part of 
+the same tree. 
+
+There is a plethora of different music software out there, but most of these 
+programs tend to specialize or "reside" in at most one or two different "worlds" 
+-- [FamiTracker][famitracker] and MCK are specifically for the creation of NES 
+music; [puredata][pd], [Csound][csound] and ChucK are mostly useful for 
+experimental electronic music; Lilypond, [Rosegarden][rosegarden], and 
+[MuseScore][musescore] can be used for more than just classical music, but 
+their standard notation interface suggests a preference for classical music; 
+Guitar Pro is specific to the creation of guitar-based music. Why not have one 
+piece of software that can act as the Great Tree that supports all of these 
+existing worlds? 
+
 ## Syntax example
 
     piano: o3 
