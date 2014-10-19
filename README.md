@@ -26,9 +26,9 @@ music; [puredata][pd], [Csound][csound] and ChucK are mostly useful for
 experimental electronic music; Lilypond, [Rosegarden][rosegarden], and 
 [MuseScore][musescore] can be used for more than just classical music, but 
 their standard notation interface suggests a preference for classical music; 
-Guitar Pro is specific to the creation of guitar-based music. Why not have one 
-piece of software that can serve as the Great Tree that supports all of these 
-existing worlds? 
+[Guitar Pro][guitarpro] is specific to the creation of guitar-based music. Why 
+not have one piece of software that can serve as the Great Tree that supports 
+all of these existing worlds? 
 
 [ppmck]: http://ppmck.wikidot.com/what-is-ppmck
 [lilypond]: http://www.lilypond.org
@@ -38,6 +38,7 @@ existing worlds?
 [csound]: http://www.csounds.com
 [rosegarden]: http://www.rosegardenmusic.com
 [musescore]: http://musescore.org
+[guitarpro]: http://www.guitar-pro.com
 
 ## Syntax example
 
