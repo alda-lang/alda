@@ -7,3 +7,4 @@ pom.xml.asc
 *.class
 /.lein-*
 /.nrepl-port
+.DS_Store
