@@ -7,10 +7,10 @@
 (deftest parser-test
   (testing "parsing valid input"
     (testing "all watched over by machines of loving grace"
-      (let [result (parse-input (slurp "test/yggdrasil/awobmolg.yd"))]
+      (let [result (parse-input (slurp "test/examples/awobmolg.yd"))]
         (is (not (insta/failure? result)))
         (pprint result)))
     (testing "debussy string quartet"
-      (let [result (parse-input (slurp "test/yggdrasil/debussy_quartet.yd"))]
+      (let [result (parse-input (slurp "test/examples/debussy_quartet.yd"))]
         (is (not (insta/failure? result)))
         (pprint result)))))
