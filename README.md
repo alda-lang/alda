@@ -1,4 +1,6 @@
-# Alda: a music programming language for musicians
+# Alda
+
+## A music programming language for musicians
 
 Inspired by other music/audio programming languages such as [PPMCK][ppmck],
 [LilyPond][lilypond] and [ChucK][chuck], Alda aims to be a
