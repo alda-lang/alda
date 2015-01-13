@@ -31,7 +31,7 @@ all of these existing worlds?
 [lilypond]: http://www.lilypond.org
 [chuck]: http://chuck.cs.princeton.edu
 [yggdrasil]: http://en.wikipedia.org/wiki/Yggdrasil
-[adzerk]: http://github.com/adzerk
+[adzerk]: http://www.adzerk.com
 [quenya]: http://en.wikipedia.org/wiki/Quenya
 [famitracker]: http://famitracker.com
 [pd]: http://puredata.info
