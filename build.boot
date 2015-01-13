@@ -14,14 +14,14 @@
 (bootlaces! +version+)
 
 (task-options!
-  pom {:project 'yggdrasil
+  pom {:project 'alda
        :version +version+
        :description "A music programming language for musicians"
-       :url "https://github.com/daveyarwood/yggdrasil"
-       :scm {:url "https://github.com/daveyarwood/yggdrasil"}
+       :url "https://github.com/daveyarwood/alda"
+       :scm {:url "https://github.com/daveyarwood/alda"}
        :license {:name "Eclipse Public License"
                  :url "http://www.eclipse.org/legal/epl-v10.html"}}
-  test {:namespaces '#{yggdrasil.parser-test}})
+  test {:namespaces '#{alda.parser-test}})
 
 (defn -main [& args]
   "To do: refer to boot-uberjar example")

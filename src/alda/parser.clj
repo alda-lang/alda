@@ -1,20 +1,20 @@
-(ns yggdrasil.parser
+(ns alda.parser
   (:require [instaparse.core :as insta]
             [clojure.string :as str]
             [clojure.java.io :as io]))
 
 (declare apply-global-attributes assign-instances consolidate-instruments)
 
-(def ^:private ygg-parser
-  (insta/parser (io/resource "grammar/yggdrasil.bnf")))
+(def ^:private alda-parser
+  (insta/parser (io/resource "grammar/alda.bnf")))
 
 (defn parse-input
-  "Parses a string of ygg code, determines which instrument instances are assigned to
+  "Parses a string of alda code, determines which instrument instances are assigned to
    each instrument call, and returns a map of each instrument instance to its own parse
    tree of music data."
-  [ygg-code]
-  (->> ygg-code
-       ygg-parser
+  [alda-code]
+  (->> alda-code
+       alda-parser
        (insta/transform {:score apply-global-attributes})
        (insta/transform {:score assign-instances})
        (insta/transform {:score consolidate-instruments})))
@@ -27,7 +27,7 @@
     (let [[[_ instrument-call-node [_ & music-data]] & other-nodes] nodes
           attribute-changes-node (apply vector :attribute-changes contents)
           music-data-node (apply vector :music-data attribute-changes-node music-data)]
-      (apply vector :score [:instrument instrument-call-node music-data-node] 
+      (apply vector :score [:instrument instrument-call-node music-data-node]
                     other-nodes))
     (apply vector :score score-contents)))
 
@@ -145,7 +145,7 @@
                      foresee this as being an inconvience. Markers will be easy to use.
 
      -  At this point, will probably hand off the final parse trees (one per instrument)
-        to yggdrasil.sound_generator, which will hopefully be able to create audio segments
+        to alda.sound_generator, which will hopefully be able to create audio segments
         of each instrument at each time marking, and then use the time markings to layer all
         the different audio segments together to create the final audio file.")
 
