@@ -3,7 +3,8 @@
             [clojure.string :as str]
             [clojure.java.io :as io]))
 
-(declare apply-global-attributes assign-instances consolidate-instruments)
+(declare apply-global-attributes assign-instances consolidate-instruments
+         lispify-part)
 
 (def ^:private alda-parser
   (insta/parser (io/resource "grammar/alda.bnf")))
@@ -17,7 +18,23 @@
        alda-parser
        (insta/transform {:score apply-global-attributes})
        (insta/transform {:score assign-instances})
-       (insta/transform {:score consolidate-instruments})))
+       (insta/transform {:score consolidate-instruments})
+       (map lispify-part)))
+
+(defn- lispify-part
+  "Generates Clojure code from an instrument part's Hiccup data structure."
+  [[instance part]]
+  (let [[instrument-name instance-number] (first instance)
+        tree (vec (cons :part part))]
+    (insta/transform
+      {:number      #(Integer/parseInt %)
+       :tie         (constantly :tie)
+       :slur        (constantly :slur)
+       :dots        #(hash-map :dots (count %))
+       :note-length #(list* 'note-length %&)
+       :duration    #(list* 'duration %&)
+       :part        #(list* 'part instrument-name instance-number %&)}
+      tree)))
 
 (defn- apply-global-attributes
   "If the first node is a :global-attributes node, prepends it to the music
@@ -79,8 +96,10 @@
  ; previously defined nickname, then assign it {'itself' n}, where n is 1 greater
  ; than the highest numbered instance with that name in the table, or 1 if
  ; there are no such instances already in the table.
-      (nicknames name [{name (let [instances (flatten (vals table))
-                                   existing-numbers (remove nil? (map #(% name) instances))]
+      (nicknames name [{name (let [instances
+                                     (flatten (vals table))
+                                   existing-numbers
+                                     (remove nil? (map #(% name) instances))]
                                (if (seq existing-numbers)
                                  (inc (apply max existing-numbers))
                                  1))}]))))
@@ -117,6 +136,34 @@
   "Returns a map of instrument instances to their consolidated music data."
   [& instrument-nodes]
   (reduce add-music-data {} instrument-nodes))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn note-length
+  "Converts a number, representing a note type, e.g. 4 = quarter, 8 = eighth,
+   into a number of beats. Handles dots if present."
+  ([number]
+    (/ 4 number))
+  ([number {:keys [dots]}]
+    (let [value (/ 4 number)]
+      (loop [total value, factor 1/2, dots dots]
+        (if (pos? dots)
+          (recur (+ total (* value factor)) (* factor 1/2) (dec dots))
+          total)))))
+
+(defn duration
+  "Converts a variable number of duration components* into a number of beats.
+
+  *a note length
+  *a dot (.), which multiplies the preceding number length by 1.5x
+  *a tilde (~), which conditionally represents either a tie or a slur:
+    - a tie adds two durations together as one note
+    - a slur connects two _separate_ (different) notes together
+
+  Slurs only appear in the final argument slot of a duration; they make the
+  current note legato, effectively slurring it into the next."
+  [& components]
+  "to do")
 
 (comment
   "Each instrument now has its own vector of music events, representing
