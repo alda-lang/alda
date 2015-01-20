@@ -3,7 +3,7 @@
  :resource-paths #{"resources"}
  :dependencies '[[org.clojure/clojure "1.6.0"]
                  [org.clojure/tools.cli "0.2.4"]
-                 [instaparse "1.3.3"]
+                 [instaparse "1.3.5"]
                  [adzerk/bootlaces "0.1.8" :scope "test"]
                  [adzerk/boot-test "1.0.3" :scope "test"]])
 

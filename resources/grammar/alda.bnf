@@ -19,23 +19,24 @@ voice-number            = <"V"> #"[1-9]\d*" <":"> <ows>
 chord                   = (note | rest) subchord+
 <subchord>              = <"/"> <ows> (octave-change | attribute-changes)*
                                 <ows> (note | rest) <ows>
-note                    = pitch duration? <ows>
+note                    = pitch duration? <ows> slur?
 rest                    = "r" duration? <ows>
 
 pitch                   = !name #"[a-g][+-]*"
-duration                = note-length <ows> (tie <ows> note-length <ows>)*
-<note-length>           = number dots?
-<number>                = #"-?[0-9]+"
-<dots>                  = #"\.+"
-<tie>                   = "~"
+duration                = note-length <ows> (tie <ows> note-length <ows>)* slur?
+note-length             = number dots?
+number                  = #"-?[0-9]+"
+dots                    = #"\.+"
+tie                     = "~"
+slur                    = tie
 
 octave-change           = (<"o"> number | ">" | "<") <ows>
 
-global-attributes       = <"("> <ows> global-attribute-change+ <")"> <ows> 
+global-attributes       = <"("> <ows> global-attribute-change+ <")"> <ows>
 global-attribute-change = global-attribute <ows> number <ows> <#"[,;]">? <ows>
 <global-attribute>      = attribute <"!">
 attribute-changes       = <"("> <ows>
-                          (global-attribute-change | attribute-change)+ 
+                          (global-attribute-change | attribute-change)+
                           <")"> <ows>
 attribute-change        = attribute <ows>
                           number <ows> <#"[,;]">? <ows>
