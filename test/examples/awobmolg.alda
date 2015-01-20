@@ -42,14 +42,8 @@ cello "voice":
 r2 r8 o3 f+ f+ f+ g2 | b8 d f g+ b | >d c+4.~8 r8 f+ a |
 > d c+ b < a f+ f4 f8 | > e d c < b b g+ | a2 r8 f |
 
-      # slur(b a g a)
-#{
-   The following two lines currently raise parse errors --
-   This (tentative) "slur" syntax is not yet implemented
-   in the grammar.
-
-  > c8 < b4.~b16~a~g~a b2 r8 g | > e d c < b b a16 g |
-  a b b8~2~ | > d2 r8 < g+ | a4 g+16 f+8.~4 e+8 d++ e+ g+4. | f+4
-}
+    # slur(b a g a)
+> c8 < b4.~b16~a~g~a b2 r8 g | > e d c < b b a16 g |
+a b b8~2~ | > d2 r8 < g+ | a4 g+16 f+8.~4 e+8 d++ e+ g+4. | f+4
 
 piano: # verse 2...
