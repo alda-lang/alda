@@ -3,7 +3,8 @@
             [clojure.string :as str]
             [clojure.java.io :as io]))
 
-(declare apply-global-attributes assign-instances consolidate-instruments)
+(declare apply-global-attributes assign-instances consolidate-instruments
+         lispify-part)
 
 (def ^:private alda-parser
   (insta/parser (io/resource "grammar/alda.bnf")))
@@ -17,7 +18,44 @@
        alda-parser
        (insta/transform {:score apply-global-attributes})
        (insta/transform {:score assign-instances})
-       (insta/transform {:score consolidate-instruments})))
+       (insta/transform {:score consolidate-instruments})
+       (map lispify-part)))
+
+(defn- lispify-part
+  "Generates Clojure code from an instrument part's Hiccup data structure."
+  [[instance part]]
+  (let [[instrument-name instance-number] (first instance)
+        tree (vec (cons :part part))]
+    (insta/transform
+      {:name              identity
+       :number            #(Integer/parseInt %)
+       :voice-number      #(Integer/parseInt %)
+       :tie               (constantly :tie)
+       :slur              (constantly :slur)
+       :flat              (constantly :flat)
+       :sharp             (constantly :sharp)
+       :dots              #(hash-map :dots (count %))
+       :note-length       #(list* 'note-length %&)
+       :duration          #(list* 'duration %&)
+       :pitch             (fn [s]
+                            (list* 'pitch (str (first s))
+                                   (map #(case %
+                                           \- :flat
+                                           \+ :sharp)
+                                        (rest s))))
+       :note              #(list* 'note %&)
+       :rest              #(list* 'pause %&)
+       :chord             #(list* 'chord %&)
+       :octave-change     #(list  'octave %)
+       :attribute-changes #(list* 'attributes %&)
+       :attribute-change  #(list* 'attr %&)
+       :global-attribute-change #(list* 'global-attr %&)
+       :voice             #(list* 'voice %&)
+       :voices            #(list* 'voices %&)
+       :marker            #(list  'marker %)
+       :at-marker         #(list  'at-marker %)
+       :part              #(list* 'part instrument-name instance-number %&)}
+      tree)))
 
 (defn- apply-global-attributes
   "If the first node is a :global-attributes node, prepends it to the music
@@ -79,8 +117,10 @@
  ; previously defined nickname, then assign it {'itself' n}, where n is 1 greater
  ; than the highest numbered instance with that name in the table, or 1 if
  ; there are no such instances already in the table.
-      (nicknames name [{name (let [instances (flatten (vals table))
-                                   existing-numbers (remove nil? (map #(% name) instances))]
+      (nicknames name [{name (let [instances
+                                     (flatten (vals table))
+                                   existing-numbers
+                                     (remove nil? (map #(% name) instances))]
                                (if (seq existing-numbers)
                                  (inc (apply max existing-numbers))
                                  1))}]))))
