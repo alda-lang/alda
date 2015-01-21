@@ -27,13 +27,34 @@
   (let [[instrument-name instance-number] (first instance)
         tree (vec (cons :part part))]
     (insta/transform
-      {:number      #(Integer/parseInt %)
-       :tie         (constantly :tie)
-       :slur        (constantly :slur)
-       :dots        #(hash-map :dots (count %))
-       :note-length #(list* 'note-length %&)
-       :duration    #(list* 'duration %&)
-       :part        #(list* 'part instrument-name instance-number %&)}
+      {:name              identity
+       :number            #(Integer/parseInt %)
+       :voice-number      #(Integer/parseInt %)
+       :tie               (constantly :tie)
+       :slur              (constantly :slur)
+       :flat              (constantly :flat)
+       :sharp             (constantly :sharp)
+       :dots              #(hash-map :dots (count %))
+       :note-length       #(list* 'note-length %&)
+       :duration          #(list* 'duration %&)
+       :pitch             (fn [s]
+                            (list* 'pitch (str (first s))
+                                   (map #(case %
+                                           \- :flat
+                                           \+ :sharp)
+                                        (rest s))))
+       :note              #(list* 'note %&)
+       :rest              #(list* 'pause %&)
+       :chord             #(list* 'chord %&)
+       :octave-change     #(list  'octave %)
+       :attribute-changes #(list* 'attributes %&)
+       :attribute-change  #(list* 'attr %&)
+       :global-attribute-change #(list* 'global-attr %&)
+       :voice             #(list* 'voice %&)
+       :voices            #(list* 'voices %&)
+       :marker            #(list  'marker %)
+       :at-marker         #(list  'at-marker %)
+       :part              #(list* 'part instrument-name instance-number %&)}
       tree)))
 
 (defn- apply-global-attributes
@@ -136,34 +157,6 @@
   "Returns a map of instrument instances to their consolidated music data."
   [& instrument-nodes]
   (reduce add-music-data {} instrument-nodes))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defn note-length
-  "Converts a number, representing a note type, e.g. 4 = quarter, 8 = eighth,
-   into a number of beats. Handles dots if present."
-  ([number]
-    (/ 4 number))
-  ([number {:keys [dots]}]
-    (let [value (/ 4 number)]
-      (loop [total value, factor 1/2, dots dots]
-        (if (pos? dots)
-          (recur (+ total (* value factor)) (* factor 1/2) (dec dots))
-          total)))))
-
-(defn duration
-  "Converts a variable number of duration components* into a number of beats.
-
-  *a note length
-  *a dot (.), which multiplies the preceding number length by 1.5x
-  *a tilde (~), which conditionally represents either a tie or a slur:
-    - a tie adds two durations together as one note
-    - a slur connects two _separate_ (different) notes together
-
-  Slurs only appear in the final argument slot of a duration; they make the
-  current note legato, effectively slurring it into the next."
-  [& components]
-  "to do")
 
 (comment
   "Each instrument now has its own vector of music events, representing

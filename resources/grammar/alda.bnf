@@ -20,15 +20,15 @@ chord                   = (note | rest) subchord+
 <subchord>              = <"/"> <ows> (octave-change | attribute-changes)*
                                 <ows> (note | rest) <ows>
 note                    = pitch duration? <ows> slur?
-rest                    = "r" duration? <ows>
+rest                    = <"r"> duration? <ows>
 
 pitch                   = !name #"[a-g][+-]*"
 duration                = note-length <ows> (tie <ows> note-length <ows>)* slur?
 note-length             = number dots?
 number                  = #"-?[0-9]+"
 dots                    = #"\.+"
-tie                     = "~"
-slur                    = tie
+<tie>                   = <"~">
+slur                    = <"~">
 
 octave-change           = (<"o"> number | ">" | "<") <ows>
 
