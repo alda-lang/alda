@@ -1,6 +1,6 @@
 (set-env!
  :source-paths #{"src" "test"}
- :resource-paths #{"resources"}
+ :resource-paths #{"grammar"}
  :dependencies '[[org.clojure/clojure "1.6.0"]
                  [org.clojure/tools.cli "0.2.4"]
                  [instaparse "1.3.5"]

@@ -7,7 +7,7 @@
          lispify-part)
 
 (def ^:private alda-parser
-  (insta/parser (io/resource "grammar/alda.bnf")))
+  (insta/parser (io/resource "alda.bnf")))
 
 (defn parse-input
   "Parses a string of alda code, determines which instrument instances are
