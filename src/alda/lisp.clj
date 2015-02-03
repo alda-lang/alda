@@ -2,11 +2,11 @@
   "alda.parser transforms Alda code into Clojure code, which can then be
    evaluated with the help of this namespace.")
 
-(defn alda-eval [code]
+(defmacro alda-eval [code]
   "Uses eval within the alda.lisp namespace to evaluate code written
    (or generated) in Alda's Lisp DSL."
-  (binding [*ns* (find-ns 'alda.lisp)]
-    (eval code)))
+  (prn :code code)
+  (eval code))
 
 ;;; score-builder utils ;;;
 
@@ -15,12 +15,15 @@
    music-data."
   [global-attrs instruments]
   (letfn [(with-global-attrs [[tag call data :as instrument]]
-            (list tag
-                  call
-                  (list* 'music-data global-attrs (rest data))))]
+            `(~tag
+               ~call
+               (music-data ~global-attrs ~@(rest data))))]
     (if global-attrs
       (cons (with-global-attrs (first instruments)) (rest instruments))
       instruments)))
+
+(defn part [& args]
+  (identity args))
 
 ; FIXME
 (defn build-parts
@@ -32,11 +35,11 @@
                                             components
                                             (cons nil components))
         instrument-calls (add-globals global-attrs instrument-calls)
-        parts (-> {:parts {} :name-table {} :nickname-table {}}
-                  (#(apply comp instrument-calls))
-                  :parts)]
-    (for [[[name number] music-data] parts]
-      (list* 'part name number music-data))))
+        ]
+    `(for [[[name# number#] music-data#] (-> {:parts {} :name-table {} :nickname-table {}}
+                                             ((apply comp ~instrument-calls))
+                                             :parts)]
+       (part name# number# music-data#))))
 
 (defn- assign-new
   "Assigns a new instance of x, given the table of existing instances."
@@ -55,8 +58,8 @@
   "Returns a new version of the code involving consolidated instrument parts
    instead of overlapping instrument calls."
   [& components]
-  (let [parts (build-parts components)]
-  `(score ~@parts)))
+  (let [parts (apply build-parts components)]
+  `(score ~parts)))
 
 (defn instrument-call
   "Returns a function which, given the context of the score-builder in
@@ -68,7 +71,8 @@
         nickname (some :nickname names-and-nicks)]
     (fn [working-data]
       (reduce (fn [{:keys [parts name-table nickname-table]} name]
-                (let [instance
+                (let [name-table (or (and (map? name-table) name-table) {})
+                      instance
                       (if nickname
                         (nickname-table name (assign-new name name-table))
                         (name-table name [[name 1]]))]
@@ -84,7 +88,7 @@
 (defn music-data
   "to do"
   [& events]
-  (list* 'music-data events))
+  `(music-data ~@events))
 
 ;;; score evaluator utils ;;;
 
@@ -112,27 +116,27 @@
 (defn voices
   "to do"
   [& args]
-  (list* 'voices args))
+  `(voices ~@args))
 
 (defn voice
   "to do"
   [& args]
-  (list* 'voice args))
+  `(voice ~@args))
 
 (defn chord
   "to do"
   [& args]
-  (list* 'chord args))
+  `(chord ~@args))
 
 (defn marker
   "to do"
   [& args]
-  (list* 'marker args))
+  `(marker ~@args))
 
 (defn at-marker
   "to do"
   [& args]
-  (list* 'at-marker args))
+  `(at-marker ~@args))
 
 (defn note-length
   "Converts a number, representing a note type, e.g. 4 = quarter, 8 = eighth,
@@ -179,16 +183,16 @@
 (defn note
   "to do"
   ([pitch-fn]
-    (list 'note pitch-fn))
+   `(note ~pitch-fn))
   ([pitch-fn & more]
-    (list* 'note pitch-fn more))) ; more = duration, slur, or both
+   `(note ~pitch-fn ~@more))) ; more = duration, slur, or both
 
 (defn pause
   "to do (pause = rest)"
   ([]
-    (list 'pause))
+   `(pause))
   ([duration-fn]
-    (list 'pause duration-fn)))
+   `(pause ~duration-fn)))
 
 (defn octave
   "Sets the current octave. Like pitch, this is also dependent on the current
