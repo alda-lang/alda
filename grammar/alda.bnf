@@ -1,6 +1,6 @@
-score                   = <ows> global-attributes? instrument+
-instrument              = instrument-call <ows> music-data
-instrument-call         = name
+alda-score              = <ows> global-attributes? instrument-call+
+instrument-call         = calls <ows> music-data
+<calls>                 = name
                           (<ows> <"/"> <ows> name)*
                           (<ows> nickname)?
                           <ows> <":">
@@ -35,7 +35,7 @@ octave-change           = (<"o"> number | ">" | "<") <ows>
 global-attributes       = <"("> <ows> global-attribute-change+ <")"> <ows>
 global-attribute-change = global-attribute <ows> number <ows> <#"[,;]">? <ows>
 <global-attribute>      = attribute <"!">
-attribute-changes       = <"("> <ows>
+<attribute-changes>     = <"("> <ows>
                           (global-attribute-change | attribute-change)+
                           <")"> <ows>
 attribute-change        = attribute <ows>

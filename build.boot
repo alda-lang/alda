@@ -25,7 +25,7 @@
        :license {"name" "Eclipse Public License"
                  "url" "http://www.eclipse.org/legal/epl-v10.html"}}
   jar {:main 'alda.core}
-  test {:namespaces '#{alda.parser-test}})
+  test {:namespaces '#{alda.parser-test alda.lisp-test}})
 
 (deftask build
   "Builds uberjar.
