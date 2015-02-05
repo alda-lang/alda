@@ -2,22 +2,17 @@
   "alda.parser transforms Alda code into Clojure code, which can then be
    evaluated with the help of this namespace.")
 
-(defmacro alda-eval [code]
-  "Uses eval within the alda.lisp namespace to evaluate code written
-   (or generated) in Alda's Lisp DSL."
-  (prn :code code)
-  (eval code))
-
 ;;; score-builder utils ;;;
 
 (defn- add-globals
   "If initial global attributes are set, add them to the first instrument's
    music-data."
   [global-attrs instruments]
-  (letfn [(with-global-attrs [[tag call data :as instrument]]
-            `(~tag
-               ~call
-               (music-data ~global-attrs ~@(rest data))))]
+  (letfn [(with-global-attrs [[tag & names-and-data :as instrument]]
+            (let [[data & names] (reverse names-and-data)]
+              `(~tag
+                ~@names
+                (music-data ~global-attrs ~@(rest data)))))]
     (if global-attrs
       (cons (with-global-attrs (first instruments)) (rest instruments))
       instruments)))
@@ -25,17 +20,16 @@
 (defn part [& args]
   (identity args))
 
-; FIXME
+; FIXME: comp isn't what we want, it will do the instrument calls in reverse order
 (defn build-parts
   "Walks through a variable number of instrument calls, building a score
    from scratch. Handles initial global attributes, if present."
-  [& components]
+  [components]
   (let [[global-attrs & instrument-calls] (if (= (ffirst components)
-                                                 'global-attributes)
+                                                 'alda.lisp/global-attributes)
                                             components
                                             (cons nil components))
-        instrument-calls (add-globals global-attrs instrument-calls)
-        ]
+        instrument-calls (add-globals global-attrs instrument-calls)]
     `(for [[[name# number#] music-data#] (-> {:parts {} :name-table {} :nickname-table {}}
                                              ((apply comp ~instrument-calls))
                                              :parts)]
@@ -53,23 +47,21 @@
 
 ;;; score-builder ;;;
 
-; FIXME?
 (defmacro alda-score
   "Returns a new version of the code involving consolidated instrument parts
    instead of overlapping instrument calls."
   [& components]
-  (let [parts (apply build-parts components)]
+  (let [parts (build-parts components)]
   `(score ~parts)))
 
 (defn instrument-call
   "Returns a function which, given the context of the score-builder in
    progress, adds the music data to the appropriate instrument part(s)."
   [& components]
-  (let [[_ & music-data] (last components)
-        names-and-nicks (drop-last components)
+  (let [[[_ & music-data] & names-and-nicks] (reverse components)
         names (for [{:keys [name]} names-and-nicks :when name] name)
         nickname (some :nickname names-and-nicks)]
-    (fn [working-data]
+    (fn update-data [working-data]
       (reduce (fn [{:keys [parts name-table nickname-table]} name]
                 (let [name-table (or (and (map? name-table) name-table) {})
                       instance

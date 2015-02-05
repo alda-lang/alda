@@ -28,7 +28,7 @@
   (testing "instrument part consolidation"
     (testing "all watched over by machines of loving grace"
       (let [result (parse-input (slurp "test/examples/awobmolg.alda"))]
-        (pprint (alda-eval result))))
+        (pprint (eval result))))
     (testing "debussy string quartet"
       (let [result (parse-input (slurp "test/examples/debussy_quartet.alda"))]
-        (pprint (alda-eval result))))))
+        (pprint (eval result))))))
