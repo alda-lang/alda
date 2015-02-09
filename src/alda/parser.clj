@@ -38,17 +38,18 @@
           :global-attribute-change #(list* 'alda-lisp/global-attribute %&)
           :voice             #(list* 'alda.lisp/voice %&)
           :voices            #(list* 'alda.lisp/voices %&)
-          :marker            #(list  'alda.lisp/marker %)
-          :at-marker         #(list  'alda.lisp/at-marker %)
+          :marker            #(list  'alda.lisp/marker (:name %))
+          :at-marker         #(list  'alda.lisp/at-marker (:name %))
+          :calls             (fn [& calls]
+                               (let [names    (keep :name calls)
+                                     nickname (some :nickname calls)]
+                                 {:names names, :nickname nickname}))
           :music-data        #(list* 'alda.lisp/music-data %&)
-          :instrument-call   #(list* 'alda.lisp/instrument-call %&)
-          :alda-score        #(list* 'alda.lisp/alda-score %&)})))
+          :part              #(list* 'alda.lisp/part %&)
+          :score             #(list* 'alda.lisp/score %&)})))
 
 (comment
-  "Each instrument now has its own vector of music events, representing
-   everything that instrument will do for the duration of the score.
-
-   To do:
+  "To do:
 
      - Implement a way to embed time markers of some sort among the musical
        events, so that they end up synchronized between the musical instruments.
@@ -59,7 +60,7 @@
          Special cases:
            * Chords: each note in the chord starts at the same time mark. The
                      next event after the chord will be assigned that time mark
-                     + the duration of the longest note/rest in the chord.
+                     + the duration of the shortest note/rest in the chord.
            * Voices: voices work just like chords. Each voice in the voices
                      grouping starts at the same time mark. The next event after
                      the voices grouping (whether via explicit V0: or switching
@@ -67,17 +68,8 @@
                      voice has finished its music data... i.e. the 'largest' time
                      marking out of all the voices.
 
-                     Implications: the composer will need to either make use of
-                     named markers or make sure, when switching from instrument
-                     to instrument, that he be aware that the end of the longest
-                     held voice is where the next event will come in after
-                     switching back to that instrument. I don't really foresee
-                     this as being an inconvience. Markers will be easy to use.
-
      -  At this point, will probably hand off the final parse trees (one per
         instrument) to alda.sound_generator, which will hopefully be able to
         create audio segments of each instrument at each time marking, and then
         use the time markings to layer all the different audio segments together
         to create the final audio file.")
-
-

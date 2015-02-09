@@ -12,7 +12,9 @@
     (is (== 4 (note-length 1)))
     (is (== 6 (note-length 1 {:dots 1})))
     (is (== 7 (note-length 1 {:dots 2}))))
-  (testing "duration converts beats to ms, given tempo"
+;; alda.lisp has moved to using dynamic vars.
+;; TODO: rewrite using *tempo* instead of providing it as an arg
+    (testing "duration converts beats to ms, given tempo"
     (is (= {:duration 1000 :slurred true}
             ((duration (note-length 4) :slur) 60)))
     (is (= {:duration 500 :slurred false}
