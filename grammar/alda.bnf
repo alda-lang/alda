@@ -1,6 +1,6 @@
-score                   = <ows> global-attributes? instrument+
-instrument              = instrument-call <ows> music-data
-instrument-call         = name
+score                   = <ows> global-attributes? part+
+part                    = calls <ows> music-data
+calls                   = name
                           (<ows> <"/"> <ows> name)*
                           (<ows> nickname)?
                           <ows> <":">
@@ -8,7 +8,7 @@ instrument-call         = name
 name                    = acceptable-name
 nickname                = <"\""> acceptable-name <"\"">
 
-music-data              = (voices | event)*
+<music-data>            = (voices | event)*
 <event>                 = chord | note | rest | octave-change |
                           attribute-changes | marker | at-marker
 voices                  = voice+ (<voice-zero> | <#"\z">)
@@ -32,14 +32,13 @@ slur                    = <"~">
 
 octave-change           = (<"o"> number | ">" | "<") <ows>
 
-global-attributes       = <"("> <ows> global-attribute-change+ <")"> <ows>
+<global-attributes>     = <"("> <ows> global-attribute-change+ <")"> <ows>
 global-attribute-change = global-attribute <ows> number <ows> <#"[,;]">? <ows>
 <global-attribute>      = attribute <"!">
-attribute-changes       = <"("> <ows>
+<attribute-changes>     = <"("> <ows>
                           (global-attribute-change | attribute-change)+
                           <")"> <ows>
-attribute-change        = attribute <ows>
-                          number <ows> <#"[,;]">? <ows>
+attribute-change        = attribute <ows> number <ows> <#"[,;]">? <ows>
 <attribute>             = "volume" | "pan" | "tempo"
 
 marker                  = <"%"> name <ows>
