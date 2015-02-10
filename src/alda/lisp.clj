@@ -20,7 +20,7 @@
 
 ;;; TODO: make this all happen encapsulated in a pod ;;;
 
-(def ^:dynamic *instrument* nil)
+(def ^:dynamic *instruments* []) ; the instrument(s) for the current part
 (def ^:dynamic *tempo* 120)
 (def ^:dynamic *duration* 1) ; default note length in beats
 (def ^:dynamic *octave* 4)
@@ -74,6 +74,13 @@
                "octave"       octave}
         f (attrs attr)]
     (f num)))
+
+(defn set-attributes
+  "Convenience fn for setting multiple attributes at once.
+   e.g. (set-attributes 'tempo' 100 'volume' 50)"
+  [& attrs]
+  (doseq [[attr num] (partition 2 attrs)]
+    (set-attribute attr num)))
 
 (defn note-length
   "Converts a number, representing a note type, e.g. 4 = quarter, 8 = eighth,
@@ -129,7 +136,7 @@
                         1.0
                         *quant*)]
       (let [event {:offset *current-offset*
-                   :instrument *instrument*
+                   :instruments *instruments*
                    :volume *volume*
                    :pitch pitch
                    :duration (* duration *quant*)}]

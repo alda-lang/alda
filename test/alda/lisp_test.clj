@@ -2,8 +2,7 @@
   (:require [clojure.test :refer :all]
             [clojure.pprint :refer :all]
             [alda.lisp :refer :all]
-            [alda.parser :refer :all]
-            [instaparse.core :as insta]))
+            [alda.parser :refer :all]))
 
 (deftest attribute-tests
   (testing "octaves"
@@ -56,11 +55,44 @@
     (is (= {:duration 500 :slurred false} (duration (note-length 4))))
     (is (= {:duration 750 :slurred false} (duration (note-length 4 {:dots 1})))))
   (testing "quantization quantizes note durations"
-    (tempo 120)
-    (quant 100)
+    (set-attributes "tempo" 120 "quant" 100)
     (is (== (:duration (note (pitch "c") (duration (note-length 4)))) 500))
+    (quant 0)
+    (is (== (:duration (note (pitch "c") (duration (note-length 4)))) 0))
     (quant 90)
     (is (== (:duration (note (pitch "c") (duration (note-length 4)))) 450))))
+
+(deftest pitch-tests
+  (testing "pitch converts a note in a given octave to frequency in Hz"
+    (octave 4)
+    (is (== 440 (pitch "a")))
+    (octave 5)
+    (is (== 880 (pitch "a")))
+    (octave 4)
+    (is (< 261 (pitch "c") 262)))
+  (testing "flats and sharps"
+    (is (>  (pitch "c" :sharp) (pitch "c")))
+    (is (<  (pitch "b" :flat)  (pitch "b")))
+    (is (== (pitch "c" :sharp) (pitch "d" :flat)))
+    (is (== (pitch "c" :sharp :sharp) (pitch "d")))
+    (is (== (pitch "f" :flat)  (pitch "e")))
+    (is (== (pitch "a" :flat :flat) (pitch "g")))
+    (is (== (pitch "c" :sharp :flat :flat :sharp) (pitch "c")))))
+
+(deftest note-tests
+  (testing "*duration* is used if a duration is not provided"
+    (alter-var-root #'*duration* (constantly 1))
+    (is (== (:duration (note (pitch "c") :slur)) (:duration (duration *duration*)))))
+  (testing "a note is placed at the current offset"
+    (let [offset *current-offset*]
+      (is (== offset (:offset (note (pitch "c")))))))
+  (testing "a note event bumps *current-offset* forward by its duration"
+    (let [offset *current-offset*
+          note-duration (:duration (note (pitch "c") (duration (note-length 4) :slur)))]
+        (is (== (+ offset note-duration) *current-offset*))))
+  (testing "a note event has the pitch it is provided"
+    (let [g-sharp (pitch "g" :sharp)]
+      (is (== g-sharp (:pitch (note (pitch "g" :sharp))))))))
 
 (deftest lisp-test
   (testing "instrument part consolidation"
