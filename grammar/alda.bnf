@@ -39,7 +39,8 @@ global-attribute-change = global-attribute <ows> number <ows> <#"[,;]">? <ows>
                           (global-attribute-change | attribute-change)+
                           <")"> <ows>
 attribute-change        = attribute <ows> number <ows> <#"[,;]">? <ows>
-<attribute>             = "volume" | "pan" | "tempo"
+<attribute>             = "volume" | #"pan(ning)?" | "tempo" |
+                          #"quant(iz(e|ation))?"
 
 marker                  = <"%"> name <ows>
 at-marker               = <"@"> name <ows>

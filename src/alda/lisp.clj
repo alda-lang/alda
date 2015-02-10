@@ -26,6 +26,7 @@
 (def ^:dynamic *octave* 4)
 (def ^:dynamic *quant* 0.9)
 (def ^:dynamic *volume* 1.0)
+(def ^:dynamic *panning* 0.5)
 (def ^:dynamic *global-attributes* {})
 (def ^:dynamic *events* {:start {:offset 0, :events []}})
 (def ^:dynamic *current-marker* :start)
@@ -39,6 +40,40 @@
                                "<" dec
                                ">" inc
                                (constantly arg))))
+
+(defn tempo
+  "Sets the current tempo."
+  [bpm]
+  (alter-var-root #'*tempo* (constantly bpm)))
+
+(defn volume
+  "Sets the current volume (0-100)."
+  [vol]
+  (alter-var-root #'*volume* (constantly (/ vol 100.0))))
+
+(defn panning
+  "Sets the current panning (L 0 <- C 50 -> R 100)."
+  [pan]
+  (alter-var-root #'*panning* (constantly (/ pan 100.0))))
+
+(defn quant
+  "Sets the current quantization (0-100)."
+  [q]
+  (alter-var-root #'*quant* (constantly (/ q 100.0))))
+
+(defn set-attribute
+  "Top-level fn for setting attributes."
+  [attr num]
+  (let [attrs {"volume"       volume
+               "panning"      panning
+               "pan"          panning
+               "quantization" quant
+               "quantize"     quant
+               "quant"        quant
+               "tempo"        tempo
+               "octave"       octave}
+        f (attrs attr)]
+    (f num)))
 
 (defn note-length
   "Converts a number, representing a note type, e.g. 4 = quarter, 8 = eighth,
@@ -83,6 +118,7 @@
 
 (defn note
   ([pitch]
+   {:pre [(number? pitch)]}
     (note pitch (duration *duration*) false))
   ([pitch arg2] ; arg2 could be a duration or :slur
     (cond
@@ -92,24 +128,44 @@
     (binding [*quant* (if (or slur? slurred)
                         1.0
                         *quant*)]
-      (alter-var-root #'*events* update-in [*current-marker* :events] conj
-                      {:offset *current-offset*
-                       :instrument *instrument*
-                       :volume *volume*
-                       :pitch pitch
-                       :duration (* duration *quant*)})
-      (alter-var-root #'*last-offset* (constantly *current-offset*))
-      (alter-var-root #'*current-offset* (partial + duration)))))
+      (let [event {:offset *current-offset*
+                   :instrument *instrument*
+                   :volume *volume*
+                   :pitch pitch
+                   :duration (* duration *quant*)}]
+        (alter-var-root #'*events* update-in [*current-marker* :events] conj event)
+        (alter-var-root #'*last-offset* (constantly *current-offset*))
+        (alter-var-root #'*current-offset* (partial + duration))
+        event))))
 
+(defn pause
+  ([]
+    (pause (duration *duration*)))
+  ([{:keys [duration]}]
+    (alter-var-root #'*last-offset* (constantly *current-offset*))
+    (alter-var-root #'*current-offset* (partial + duration))))
 
-;; TODO: after each event, record the new value of *current-offset* in an atom;
-;;       at the end of all events, set *current-offset* to the smallest value
-(defmacro chord [& events]
-  (let [start *current-offset*]
+(defmacro chord
+  "Chords contain notes/rests that all start at the same time/offset.
+   The resulting *current-offset* is that of the shortest note/rest in
+   the chord."
+  [& events]
+  (let [start *current-offset*
+        num-of-events (count (filter #(= (first %) 'note) events))
+        note-durations (gensym)]
     (list* 'do
-           (interleave
-             (repeat (list 'alter-var-root '(var *current-offset*) (list 'constantly start)))
-             events))))
+           `(def ~note-durations (atom []))
+           (concat
+             (interleave
+               (repeat `(alter-var-root (var *current-offset*) (constantly ~start)))
+               events
+               (repeat `(swap! ~note-durations conj *current-offset*)))
+             [`(alter-var-root (var *current-offset*)
+                 (constantly (apply min
+                               (remove #(= % ~start)
+                                 (deref ~note-durations)))))]
+             [`(take-last ~num-of-events
+                          (get-in *events* [*current-marker* :events]))]))))
 
 ;; everything below this line is old and overly complicated --
 ;; TODO: rewrite using the dynamic var system instead of callbacks
@@ -126,11 +182,6 @@
 
 (comment
 
-(defn add-event
-  [context & event-map])
-
-(defn attribute-change
-  [context instrument attribute value])
 
 (defn global-attribute
   "Stores a global attribute change event in *global-attribute-events*.
