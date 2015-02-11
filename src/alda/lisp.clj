@@ -33,54 +33,74 @@
 (def ^:dynamic *last-offset* 0)
 (def ^:dynamic *current-offset* 0)
 
-(defn octave
-  "Sets the current octave."
-  [arg]
-  (alter-var-root #'*octave* (case arg
-                               "<" dec
-                               ">" inc
-                               (constantly arg))))
+;; TODO: refactor by writing a defattribute macro, which will:
+;; - def the dynamic var
+;; - add entries to a map like the one in set-attribute
+;; - defn that will call set-attribute
+;; (note: while doing this, add validation to things like octave)
 
-(defn tempo
-  "Sets the current tempo."
-  [bpm]
-  (alter-var-root #'*tempo* (constantly bpm)))
-
-(defn volume
-  "Sets the current volume (0-100)."
-  [vol]
-  (alter-var-root #'*volume* (constantly (/ vol 100.0))))
-
-(defn panning
-  "Sets the current panning (L 0 <- C 50 -> R 100)."
-  [pan]
-  (alter-var-root #'*panning* (constantly (/ pan 100.0))))
-
-(defn quant
-  "Sets the current quantization (0-100)."
-  [q]
-  (alter-var-root #'*quant* (constantly (/ q 100.0))))
+(defrecord AttributeChange [attr val])
 
 (defn set-attribute
   "Top-level fn for setting attributes."
-  [attr num]
-  (let [attrs {"volume"       volume
-               "panning"      panning
-               "pan"          panning
-               "quantization" quant
-               "quantize"     quant
-               "quant"        quant
-               "tempo"        tempo
-               "octave"       octave}
-        f (attrs attr)]
-    (f num)))
+  [attr val]
+  (let [out-of-100 (fn [x]
+                     {:pre [(<= 0 x 100)]}
+                     (constantly (/ x 100.0)))
+        [attr attr-var change-fn]
+        (case attr
+          "volume"       [:volume       #'*volume*   (out-of-100 val)]
+          "panning"      [:panning      #'*panning*  (out-of-100 val)]
+          "pan"          [:panning      #'*panning*  (out-of-100 val)]
+          "quantization" [:quantization #'*quant*    (out-of-100 val)]
+          "quantize"     [:quantization #'*quant*    (out-of-100 val)]
+          "quant"        [:quantization #'*quant*    (out-of-100 val)]
+          "tempo"        [:tempo        #'*tempo*    (constantly val)]
+          "octave"       [:octave       #'*octave*   (case val
+                                                       "<" dec
+                                                       ">" inc
+                                                       (constantly val))]
+          "duration"     [:duration     #'*duration* (constantly val)])]
+    (let [new-value (alter-var-root attr-var change-fn)]
+      (AttributeChange. attr new-value))))
 
 (defn set-attributes
   "Convenience fn for setting multiple attributes at once.
    e.g. (set-attributes 'tempo' 100 'volume' 50)"
   [& attrs]
-  (doseq [[attr num] (partition 2 attrs)]
-    (set-attribute attr num)))
+  (doall
+    (for [[attr num] (partition 2 attrs)]
+      (set-attribute attr num))))
+
+(defn octave
+  "Sets the current octave."
+  [arg]
+  (set-attribute "octave" arg))
+
+(defn tempo
+  "Sets the current tempo."
+  [bpm]
+  (set-attribute "tempo" bpm))
+
+(defn volume
+  "Sets the current volume (0-100)."
+  [vol]
+  (set-attribute "volume" vol))
+
+(defn panning
+  "Sets the current panning (L 0 <- C 50 -> R 100)."
+  [pan]
+  (set-attribute "panning" pan))
+
+(defn quant
+  "Sets the current quantization (0-100)."
+  [q]
+  (set-attribute "quantization" q))
+
+(defn set-duration
+  "Sets the current default note duration (in beats)."
+  [dur]
+  (set-attribute "duration" dur))
 
 (defn note-length
   "Converts a number, representing a note type, e.g. 4 = quarter, 8 = eighth,
@@ -123,6 +143,8 @@
                           accidentals)]
     (midi->hz midi-note)))
 
+(defrecord Note [offset instruments volume pitch duration])
+
 (defn note
   ([pitch]
    {:pre [(number? pitch)]}
@@ -135,22 +157,27 @@
     (binding [*quant* (if (or slur? slurred)
                         1.0
                         *quant*)]
-      (let [event {:offset *current-offset*
-                   :instruments *instruments*
-                   :volume *volume*
-                   :pitch pitch
-                   :duration (* duration *quant*)}]
+      (let [event (map->Note {:offset *current-offset*
+                              :instruments *instruments*
+                              :volume *volume*
+                              :pitch pitch
+                              :duration (* duration *quant*)})]
         (alter-var-root #'*events* update-in [*current-marker* :events] conj event)
         (alter-var-root #'*last-offset* (constantly *current-offset*))
         (alter-var-root #'*current-offset* (partial + duration))
         event))))
+
+(defrecord Rest [offset duration])
 
 (defn pause
   ([]
     (pause (duration *duration*)))
   ([{:keys [duration]}]
     (alter-var-root #'*last-offset* (constantly *current-offset*))
-    (alter-var-root #'*current-offset* (partial + duration))))
+    (alter-var-root #'*current-offset* (partial + duration))
+    (Rest. *last-offset* duration)))
+
+(defrecord Chord [events])
 
 (defmacro chord
   "Chords contain notes/rests that all start at the same time/offset.
@@ -171,8 +198,18 @@
                  (constantly (apply min
                                (remove #(= % ~start)
                                  (deref ~note-durations)))))]
-             [`(take-last ~num-of-events
-                          (get-in *events* [*current-marker* :events]))]))))
+             [`(Chord. (take-last ~num-of-events
+                                  (get-in *events* [*current-marker* :events])))]))))
+
+(defn voice
+  "One voice within a voices macro call. Returns a list of the events, executing them
+   in the process."
+  [& events]
+  (remove #(not (contains? #{alda.lisp.Note alda.lisp.Chord} (type %))) events))
+
+(defmacro voices
+  "TODO"
+  [& voices])
 
 ;; everything below this line is old and overly complicated --
 ;; TODO: rewrite using the dynamic var system instead of callbacks

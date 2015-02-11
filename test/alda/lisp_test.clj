@@ -81,7 +81,6 @@
 
 (deftest note-tests
   (testing "*duration* is used if a duration is not provided"
-    (alter-var-root #'*duration* (constantly 1))
     (is (== (:duration (note (pitch "c") :slur)) (:duration (duration *duration*)))))
   (testing "a note is placed at the current offset"
     (let [offset *current-offset*]
@@ -93,6 +92,34 @@
   (testing "a note event has the pitch it is provided"
     (let [g-sharp (pitch "g" :sharp)]
       (is (== g-sharp (:pitch (note (pitch "g" :sharp))))))))
+
+(deftest chord-tests
+  (testing "the notes/rests in a chord all start at the same time"
+    (let [start *current-offset*
+          new-notes (:events (chord (note (pitch "c"))
+                                    (note (pitch "c"))
+                                    (pause)
+                                    (note (pitch "c"))))]
+      (is (every? #(= start (:offset %)) new-notes))))
+  (testing "*current-offset* ends up being increased by the shortest note/rest duration
+             in the chord"
+    (tempo 120)
+    (alter-var-root #'*current-offset* (constantly 0))
+    (let [start *current-offset*
+          new-notes (chord (note (pitch "c") (duration (note-length 1)))
+                           (note (pitch "e") (duration (note-length 4)))
+                           (pause (duration (note-length 8)))
+                           (note (pitch "g") (duration (note-length 2))))]
+      (is (= *current-offset* (+ start (:duration (duration (note-length 8)))))))))
+
+(deftest voice-tests
+  (testing "the first note of each voice should all start at the same time"
+    (let [start *current-offset*
+          {:keys [v1 v2 v3]} (voices
+                               (voice 1 (note (pitch "g")) (note (pitch "b")))
+                               (voice 2 (note (pitch "b")) (note (pitch "d")))
+                               (voice 3 (note (pitch "d")) (note (pitch "f"))))]
+      (is (every? #(= start (:offset %)) (map first [v1 v2 v3]))))))
 
 (deftest lisp-test
   (testing "instrument part consolidation"
