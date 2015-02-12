@@ -181,35 +181,52 @@
 
 (defmacro chord
   "Chords contain notes/rests that all start at the same time/offset.
-   The resulting *current-offset* is that of the shortest note/rest in
+   The resulting *current-offset* is at the end of the shortest note/rest in
    the chord."
   [& events]
   (let [start *current-offset*
         num-of-events (count (filter #(= (first %) 'note) events))
-        note-durations (gensym)]
+        offsets (gensym)]
     (list* 'do
-           `(def ~note-durations (atom []))
+           `(def ~offsets (atom []))
            (concat
              (interleave
                (repeat `(alter-var-root (var *current-offset*) (constantly ~start)))
                events
-               (repeat `(swap! ~note-durations conj *current-offset*)))
+               (repeat `(swap! ~offsets conj *current-offset*)))
              [`(alter-var-root (var *current-offset*)
                  (constantly (apply min
                                (remove #(= % ~start)
-                                 (deref ~note-durations)))))]
+                                 (deref ~offsets)))))]
              [`(Chord. (take-last ~num-of-events
                                   (get-in *events* [*current-marker* :events])))]))))
 
 (defn voice
-  "One voice within a voices macro call. Returns a list of the events, executing them
-   in the process."
+  "Returns a list of the events, executing them in the process."
   [& events]
   (remove #(not (contains? #{alda.lisp.Note alda.lisp.Chord} (type %))) events))
 
 (defmacro voices
-  "TODO"
-  [& voices])
+  "Voices are chronological sequences of events that each start at the same time.
+   The resulting *current-offset* is at the end of the voice that finishes last."
+  [& voices]
+  (let [start *current-offset*
+        voice-events (gensym)
+        offsets (gensym)
+        num (gensym)]
+    (list* 'do
+           `(def ~offsets (atom []))
+           `(def ~voice-events (atom {}))
+           (concat
+             (for [[_ num# & events# :as voice#] voices]
+               (list 'do
+                     `(alter-var-root (var *current-offset*) (constantly ~start))
+                      (list 'swap! voice-events 'assoc (keyword (str \v num#))
+                                                       (vec events#))
+                     `(swap! ~offsets conj *current-offset*)))
+             [`(alter-var-root (var *current-offset*)
+                               (constantly (apply max (deref ~offsets))))
+              `(deref ~voice-events)]))))
 
 ;; everything below this line is old and overly complicated --
 ;; TODO: rewrite using the dynamic var system instead of callbacks

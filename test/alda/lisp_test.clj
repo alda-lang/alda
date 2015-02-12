@@ -95,6 +95,7 @@
 
 (deftest chord-tests
   (testing "the notes/rests in a chord all start at the same time"
+    (alter-var-root #'*current-offset* (constantly 0))
     (let [start *current-offset*
           new-notes (:events (chord (note (pitch "c"))
                                     (note (pitch "c"))
@@ -103,7 +104,6 @@
       (is (every? #(= start (:offset %)) new-notes))))
   (testing "*current-offset* ends up being increased by the shortest note/rest duration
              in the chord"
-    (tempo 120)
     (alter-var-root #'*current-offset* (constantly 0))
     (let [start *current-offset*
           new-notes (chord (note (pitch "c") (duration (note-length 1)))
