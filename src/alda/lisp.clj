@@ -2,8 +2,6 @@
   "alda.parser transforms Alda code into Clojure code, which can then be
    evaluated with the help of this namespace.")
 
-;;; utils ;;;
-
 (def ^:private intervals
   {"c" 0, "d" 2, "e" 4, "f" 5, "g" 7, "a" 9, "b" 11})
 
@@ -21,48 +19,76 @@
 ;;; TODO: make this all happen encapsulated in a pod ;;;
 
 (def ^:dynamic *instruments* []) ; the instrument(s) for the current part
-(def ^:dynamic *tempo* 120)
-(def ^:dynamic *duration* 1) ; default note length in beats
-(def ^:dynamic *octave* 4)
-(def ^:dynamic *quant* 0.9)
-(def ^:dynamic *volume* 1.0)
-(def ^:dynamic *panning* 0.5)
 (def ^:dynamic *global-attributes* {})
 (def ^:dynamic *events* {:start {:offset 0, :events []}})
 (def ^:dynamic *current-marker* :start)
 (def ^:dynamic *last-offset* 0)
 (def ^:dynamic *current-offset* 0)
 
-;; TODO: refactor by writing a defattribute macro, which will:
-;; - def the dynamic var
-;; - add entries to a map like the one in set-attribute
-;; - defn that will call set-attribute
-;; (note: while doing this, add validation to things like octave)
+(def attribute-info (atom {}))
 
 (defrecord AttributeChange [attr val])
+
+(defmacro defattribute
+  "Convenience macro for setting up attributes."
+  [attr-name & {:keys [aliases var initial-val fn-name transform] :as opts}]
+  (let [var-name     (or var (symbol (str \* attr-name \*)))
+        attr-aliases (vec (cons (str attr-name) (or aliases [])))
+        transform-fn (or transform #(constantly %))]
+    `(do
+       (def ~(vary-meta var-name assoc :dynamic true) ~initial-val)
+       (doseq [alias# ~attr-aliases]
+         (swap! attribute-info assoc alias# [~(keyword attr-name)
+                                             (var ~var-name)
+                                             ~transform-fn]))
+       (defn ~(or fn-name attr-name) [x#]
+         (let [new-value# (alter-var-root (var ~var-name) (~transform-fn x#))]
+           (AttributeChange. ~(keyword attr-name) new-value#))))))
+
+(defn- percentage [x]
+  {:pre [(<= 0 x 100)]}
+  (constantly (/ x 100.0)))
+
+(defattribute tempo
+  :initial-val 120)
+
+(defattribute duration ; default note length in beats
+  :initial-val 1
+  :fn-name set-duration)
+
+(defattribute octave
+  :initial-val 4
+  :transform (fn [val]
+               {:pre [(or (number? val)
+                          (contains? #{"<" ">"} val))]}
+               (case val
+                "<" dec
+                ">" inc
+                (constantly val))))
+
+(defattribute quantization
+  :var *quant*
+  :aliases ["quant" "quantize"]
+  :initial-val 0.9
+  :fn-name quant
+  :transform percentage)
+
+(defattribute volume
+  :aliases ["vol"]
+  :initial-val 1.0
+  :transform percentage)
+
+(defattribute panning
+  :aliases ["pan"]
+  :initial-val 0.5
+  :transform percentage)
 
 (defn set-attribute
   "Top-level fn for setting attributes."
   [attr val]
-  (let [out-of-100 (fn [x]
-                     {:pre [(<= 0 x 100)]}
-                     (constantly (/ x 100.0)))
-        [attr attr-var change-fn]
-        (case attr
-          "volume"       [:volume       #'*volume*   (out-of-100 val)]
-          "panning"      [:panning      #'*panning*  (out-of-100 val)]
-          "pan"          [:panning      #'*panning*  (out-of-100 val)]
-          "quantization" [:quantization #'*quant*    (out-of-100 val)]
-          "quantize"     [:quantization #'*quant*    (out-of-100 val)]
-          "quant"        [:quantization #'*quant*    (out-of-100 val)]
-          "tempo"        [:tempo        #'*tempo*    (constantly val)]
-          "octave"       [:octave       #'*octave*   (case val
-                                                       "<" dec
-                                                       ">" inc
-                                                       (constantly val))]
-          "duration"     [:duration     #'*duration* (constantly val)])]
-    (let [new-value (alter-var-root attr-var change-fn)]
-      (AttributeChange. attr new-value))))
+  (let [[attr attr-var change-fn] (@attribute-info attr)
+         new-value (alter-var-root attr-var (change-fn val))]
+      (AttributeChange. attr new-value)))
 
 (defn set-attributes
   "Convenience fn for setting multiple attributes at once.
@@ -71,36 +97,6 @@
   (doall
     (for [[attr num] (partition 2 attrs)]
       (set-attribute attr num))))
-
-(defn octave
-  "Sets the current octave."
-  [arg]
-  (set-attribute "octave" arg))
-
-(defn tempo
-  "Sets the current tempo."
-  [bpm]
-  (set-attribute "tempo" bpm))
-
-(defn volume
-  "Sets the current volume (0-100)."
-  [vol]
-  (set-attribute "volume" vol))
-
-(defn panning
-  "Sets the current panning (L 0 <- C 50 -> R 100)."
-  [pan]
-  (set-attribute "panning" pan))
-
-(defn quant
-  "Sets the current quantization (0-100)."
-  [q]
-  (set-attribute "quantization" q))
-
-(defn set-duration
-  "Sets the current default note duration (in beats)."
-  [dur]
-  (set-attribute "duration" dur))
 
 (defn note-length
   "Converts a number, representing a note type, e.g. 4 = quarter, 8 = eighth,
@@ -242,7 +238,6 @@
 ;; the behavior of add-event unpredictable).
 
 (comment
-
 
 (defn global-attribute
   "Stores a global attribute change event in *global-attribute-events*.
