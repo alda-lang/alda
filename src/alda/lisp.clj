@@ -25,7 +25,17 @@
 (def ^:dynamic *last-offset* 0)
 (def ^:dynamic *current-offset* 0)
 
-(def attribute-info (atom {}))
+(defmulti set-attribute
+  "Top level fn for setting attributes."
+  (fn [attr val] attr))
+
+(defn set-attributes
+  "Convenience fn for setting multiple attributes at once.
+   e.g. (set-attributes 'tempo' 100 'volume' 50)"
+  [& attrs]
+  (doall
+    (for [[attr num] (partition 2 attrs)]
+      (set-attribute attr num))))
 
 (defrecord AttributeChange [attr val])
 
@@ -38,12 +48,11 @@
     `(do
        (def ~(vary-meta var-name assoc :dynamic true) ~initial-val)
        (doseq [alias# ~attr-aliases]
-         (swap! attribute-info assoc alias# [~(keyword attr-name)
-                                             (var ~var-name)
-                                             ~transform-fn]))
+         (defmethod set-attribute alias# [attr# val#]
+           (let [new-value# (alter-var-root (var ~var-name) (~transform-fn val#))]
+             (AttributeChange. ~(keyword attr-name) new-value#))))
        (defn ~(or fn-name attr-name) [x#]
-         (let [new-value# (alter-var-root (var ~var-name) (~transform-fn x#))]
-           (AttributeChange. ~(keyword attr-name) new-value#))))))
+         (set-attribute ~(str attr-name) x#)))))
 
 (defn- percentage [x]
   {:pre [(<= 0 x 100)]}
@@ -82,21 +91,6 @@
   :aliases ["pan"]
   :initial-val 0.5
   :transform percentage)
-
-(defn set-attribute
-  "Top-level fn for setting attributes."
-  [attr val]
-  (let [[attr attr-var change-fn] (@attribute-info attr)
-         new-value (alter-var-root attr-var (change-fn val))]
-      (AttributeChange. attr new-value)))
-
-(defn set-attributes
-  "Convenience fn for setting multiple attributes at once.
-   e.g. (set-attributes 'tempo' 100 'volume' 50)"
-  [& attrs]
-  (doall
-    (for [[attr num] (partition 2 attrs)]
-      (set-attribute attr num))))
 
 (defn note-length
   "Converts a number, representing a note type, e.g. 4 = quarter, 8 = eighth,
