@@ -80,37 +80,38 @@
     (is (== (pitch "c" :sharp :flat :flat :sharp) (pitch "c")))))
 
 (deftest note-tests
-  (testing "*duration* is used if a duration is not provided"
-    (is (== (:duration (note (pitch "c") :slur)) (:duration (duration *duration*)))))
-  (testing "a note is placed at the current offset"
-    (let [offset *current-offset*]
-      (is (== offset (:offset (note (pitch "c")))))))
-  (testing "a note event bumps *current-offset* forward by its duration"
-    (let [offset *current-offset*
-          note-duration (:duration (note (pitch "c") (duration (note-length 4) :slur)))]
-        (is (== (+ offset note-duration) *current-offset*))))
-  (testing "a note event has the pitch it is provided"
-    (let [g-sharp (pitch "g" :sharp)]
-      (is (== g-sharp (:pitch (note (pitch "g" :sharp))))))))
+  (testing "a note event:"
+    (let [start *current-offset*
+          c (pitch "c")
+          {:keys [duration offset pitch]} (note (pitch "c")
+                                                (duration (note-length 4) :slur))]
+     (testing "the note should be placed at the current offset"
+       (is (== start offset)))
+     (testing "*current-offset* should be bumped forward by the note's duration"
+       (is (== (+ start duration) *current-offset*)))
+     (testing "*last-offset* should get updated"
+       (is (== start *last-offset*)))
+     (testing "the note should have the pitch it was given"
+       (is (== pitch c)))))
+  (testing "a note event with no duration provided:"
+    (let [default-duration (:duration (duration *duration*))
+          {:keys [duration]} (note (pitch "c") :slur)]
+      (testing "the default duration (*duration*) should be used"
+        (is (== duration default-duration))))))
 
 (deftest chord-tests
-  (testing "the notes/rests in a chord should all start at the same time"
-    (alter-var-root #'*current-offset* (constantly 0))
+  (testing "a chord event:"
     (let [start *current-offset*
-          new-notes (:events (chord (note (pitch "c"))
-                                    (note (pitch "c"))
-                                    (pause)
-                                    (note (pitch "c"))))]
-      (is (every? #(= start (:offset %)) new-notes))))
-  (testing "the shortest note/rest duration in the chord should bump
-            *current-offset* forward by that duration"
-    (alter-var-root #'*current-offset* (constantly 0))
-    (let [start *current-offset*]
-      (chord (note (pitch "c") (duration (note-length 1)))
-             (note (pitch "e") (duration (note-length 4)))
-             (pause (duration (note-length 8)))
-             (note (pitch "g") (duration (note-length 2))))
-      (is (= *current-offset* (+ start (:duration (duration (note-length 8)))))))))
+          {:keys [events]} (chord (note (pitch "c") (duration (note-length 1)))
+                                  (note (pitch "e") (duration (note-length 4)))
+                                  (pause (duration (note-length 8)))
+                                  (note (pitch "g") (duration (note-length 2))))]
+      (testing "the notes should all start at the same time"
+        (is (every? #(= start (:offset %)) events)))
+      (testing "*current-offset should be bumped forward by the shortest note/rest duration"
+        (is (= *current-offset* (+ start (:duration (duration (note-length 8)))))))
+      (testing "*last-offset* should be updated correctly"
+        (is (= *last-offset* start))))))
 
 (deftest voice-tests
   (testing "a voice returns as many notes as it has"
@@ -125,32 +126,37 @@
           the-voice (voice 1 a-note b-note c-note)]
       (is (contains? (set the-voice) a-note))
       (is (contains? (set the-voice) b-note))
-      (is (contains? (set the-voice) c-note))))
-  (testing "the first note of each voice should all start at the same time"
-    (alter-var-root #'*current-offset* (constantly 0))
+      (is (contains? (set the-voice) c-note))
+      (is (= 3 (count the-voice)))))
+  (testing "a voice group:"
     (let [start *current-offset*
           {:keys [v1 v2 v3]} (voices
-                               (voice 1 (note (pitch "g")) (note (pitch "b")))
-                               (voice 2 (note (pitch "b")) (note (pitch "d")))
-                               (voice 3 (note (pitch "d")) (note (pitch "f"))))]
-      (is (every? #(= start (:offset %)) (map first [v1 v2 v3])))))
-  (testing "the voice lasting the longest should bump *current-offset* forward
-            by however long it takes to finish"
-    (alter-var-root #'*current-offset* (constantly 0))
-    (let [start *current-offset*
-          voice-group (voices
-                        (voice 1
-                          (note (pitch "g") (duration (note-length 1)))
-                          (note (pitch "b") (duration (note-length 2))))
-                        (voice 2
-                          (note (pitch "b") (duration (note-length 1)))
-                          (note (pitch "d") (duration (note-length 1))))
-                        (voice 3
-                          (note (pitch "d") (duration (note-length 1)))
-                          (note (pitch "f") (duration (note-length 4)))))]
+                               (voice 1
+                                 (note (pitch "g") (duration (note-length 1)))
+                                 (note (pitch "b") (duration (note-length 2))))
+                               (voice 2
+                                 (note (pitch "b") (duration (note-length 1)))
+                                 (note (pitch "d") (duration (note-length 1))))
+                               (voice 3
+                                 (note (pitch "d") (duration (note-length 1)))
+                                 (note (pitch "f") (duration (note-length 4))))
+                               (voice 2
+                                 (octave ">")
+                                 (octave ">")
+                                 (note (pitch "g"))
+                                 (note (pitch "g"))))]
+    (testing "the first note of each voice should all start at the same time"
+      (is (every? #(= start (:offset %)) (map first [v1 v2 v3]))))
+    (testing "repeated calls to the same voice should append events"
+      (is (= 6 (count v2))))
+    (testing "the voice lasting the longest should bump *current-offset* forward
+              by however long it takes to finish"
       (is (= *current-offset* (+ start
                                  (:duration (duration (note-length 1)
-                                                      (note-length 1)))))))))
+                                                      (note-length 1)))))))
+    (testing "*last-offset* should be updated to the *last-offset* as of the
+              point where the longest voice finishes"
+      (is (= *last-offset* (+ start (:duration (duration (note-length 1))))))))))
 
 
 (deftest lisp-test
