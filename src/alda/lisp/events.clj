@@ -26,7 +26,7 @@
                                  (conj [(drop-last components)] true)
                                  (conj [components] false))
         beats (apply + note-lengths)]
-    (alter-var-root #'*duration* (constantly beats))
+    (set-duration beats)
     {:duration (* beats (/ 60000 *tempo*))
      :slurred slurred}))
 
@@ -75,9 +75,9 @@
                               :volume *volume*
                               :pitch pitch
                               :duration (* duration *quant*)})]
-        (alter-var-root #'*events* update-in [*current-marker* :events] conj event)
-        (alter-var-root #'*last-offset* (constantly *current-offset*))
-        (alter-var-root #'*current-offset* (partial + duration))
+        (add-event event)
+        (set-last-offset *current-offset*)
+        (set-current-offset (+ *current-offset* duration))
         event))))
 
 (defrecord Rest [offset duration])
@@ -85,9 +85,10 @@
 (defn pause
   ([]
     (pause (duration *duration*)))
-  ([{:keys [duration]}]
-    (alter-var-root #'*last-offset* (constantly *current-offset*))
-    (alter-var-root #'*current-offset* (partial + duration))
+  ([{:keys [duration] :as dur}]
+    {:pre [(map? dur)]}
+    (set-last-offset *current-offset*)
+    (set-current-offset (+ *current-offset* duration))
     (Rest. *last-offset* duration)))
 
 (defrecord Chord [events])
@@ -103,15 +104,14 @@
                  offsets (list 'atom [])]
            (concat
              (interleave
-               (repeat `(alter-var-root (var *current-offset*) (constantly ~'start)))
+               (repeat `(set-current-offset ~'start))
                events
                (repeat `(swap! ~offsets conj *current-offset*)))
-             [`(alter-var-root (var *last-offset*) (constantly ~'start))
-              `(alter-var-root (var *current-offset*)
-                 (constantly (+ ~'start
-                                (apply min
-                                  (remove #(= % ~'start)
-                                    (deref ~offsets))))))
+             [`(set-last-offset ~'start)
+              `(set-current-offset (+ ~'start
+                                      (apply min
+                                             (remove #(= % ~'start)
+                                                     (deref ~offsets)))))
               `(Chord. (take-last ~num-of-events
                                   (get-in *events* [*current-marker* :events])))]))))
 

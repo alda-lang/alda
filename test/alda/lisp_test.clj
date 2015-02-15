@@ -158,8 +158,25 @@
               point where the longest voice finishes"
       (is (= *last-offset* (+ start (:duration (duration (note-length 1))))))))))
 
+(deftest global-attribute-test
+  (testing "a global tempo change:"
+    (set-attributes "current-offset" 0 "tempo" 120)
+    (pause (duration (note-length 1)))
+    (global-attribute "tempo" 60)
+    (testing "it should change the tempo"
+      (is (= *tempo* 60)))
+    (testing "when another part starts,"
+      (set-attributes "current-offset" 0 "tempo" 120)
+      (testing "the tempo should change once it encounters the global attribute"
+        (is (= *tempo* 120)) ; not yet...
+        (pause (duration (note-length 2 {:dots 1})))
+        (is (= *tempo* 120)) ; not yet...
+        (pause)
+        (Thread/sleep 200)
+        (is (= *tempo* 60))))) ; now!
+  (remove-watch offset-agent "global-attr-1"))
 
-(deftest lisp-test
+#_(deftest lisp-test
   (testing "instrument part consolidation"
     (testing "all watched over by machines of loving grace"
       (let [result (parse-input (slurp "test/examples/awobmolg.alda"))]

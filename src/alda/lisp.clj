@@ -6,34 +6,13 @@
 
 ;;; TODO: make this all happen encapsulated in a pod ;;;
 
-(defn global-attribute
-  "TODO: (tentative idea) create an agent and add a watch for any changes to
-   *current-offset* -- on every change, check *last-offset* and *current-offset*
-   and if the global attribute change happens in that range, make it happen.
 
-   Note: this only works moving forward. That is to say, a global attribute
-         change event will only affect the current part and any others that
-         follow it in the score."
-  [attr val])
 
 ;; everything below this line is old and overly complicated -- TODO: rewrite
 
 (comment
 
-  (defn global-attribute
-    "Stores a global attribute change event in *global-attribute-events*.
-    Upon evaluation of the score (after all instrument instances are recorded),
-    the attribute is changed for every instrument at that time marking."
-    [attribute value]
-    (alter-var-root #'*add-event*
-                    (fn [f]
-                      (fn [{:keys [last-offset current-offset instrument] :as context}
-                           & event-map]
-                        (let [context
-                              (if (<= last-offset *current-offset* current-offset)
-                                (attribute-change context instrument attribute value)
-                                context)]
-                          (apply f context event-map))))))
+
 
 ;;; score-builder utils ;;;
 
