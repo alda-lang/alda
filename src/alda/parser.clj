@@ -24,7 +24,8 @@
           :note-length       #(list* 'alda.lisp/note-length %&)
           :duration          #(list* 'alda.lisp/duration %&)
           :pitch             (fn [s]
-                               (list* 'alda.lisp/pitch (str (first s))
+                               (list* 'alda.lisp/pitch
+                                      (keyword (str (first s)))
                                       (map #(case %
                                               \- :flat
                                               \+ :sharp)
@@ -32,13 +33,17 @@
           :note              #(list* 'alda.lisp/note %&)
           :rest              #(list* 'alda.lisp/pause %&)
           :chord             #(list* 'alda.lisp/chord %&)
-          :octave-change     #(list  'alda.lisp/octave %)
-          :attribute-change  #(list* 'alda.lisp/set-attribute %&)
-          :global-attribute-change #(list* 'alda-lisp/global-attribute %&)
+          :octave-change     #(list 'alda.lisp/octave (case %
+                                                         "<" :down
+                                                         ">" :up
+                                                         %))
+          :attribute-change  #(list 'alda.lisp/set-attribute (keyword %1) %2)
+          :global-attribute-change
+                             #(list 'alda-lisp/global-attribute (keyword %1) %2)
           :voice             #(list* 'alda.lisp/voice %&)
           :voices            #(list* 'alda.lisp/voices %&)
-          :marker            #(list  'alda.lisp/marker (:name %))
-          :at-marker         #(list  'alda.lisp/at-marker (:name %))
+          :marker            #(list 'alda.lisp/marker (:name %))
+          :at-marker         #(list 'alda.lisp/at-marker (:name %))
           :calls             (fn [& calls]
                                (let [names    (keep :name calls)
                                      nickname (some :nickname calls)]

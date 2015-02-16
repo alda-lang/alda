@@ -31,11 +31,11 @@
      :slurred slurred}))
 
 (def ^:private intervals
-  {"c" 0, "d" 2, "e" 4, "f" 5, "g" 7, "a" 9, "b" 11})
+  {:c 0, :d 2, :e 4, :f 5, :g 7, :a 9, :b 11})
 
 (defn- midi-note
   "Given a letter and an octave, returns the MIDI note number.
-   e.g. 'c', 4  =>  60"
+   e.g. :c, 4  =>  60"
   [letter octave]
   (+ (intervals letter) (* octave 12) 12))
 

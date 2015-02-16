@@ -12,7 +12,7 @@
 
 (defn set-attributes
   "Convenience fn for setting multiple attributes at once.
-   e.g. (set-attributes 'tempo' 100 'volume' 50)"
+   e.g. (set-attributes :tempo 100 :volume 50)"
   [& attrs]
   (doall
     (for [[attr num] (partition 2 attrs)]
@@ -28,7 +28,7 @@
                                                (rest things)
                                                things)
         var-name     (or var (symbol (str \* attr-name \*)))
-        attr-aliases (vec (cons (str attr-name) (or aliases [])))
+        attr-aliases (vec (cons (keyword attr-name) (or aliases [])))
         transform-fn (or transform #(constantly %))]
     `(do
        (def ~(vary-meta var-name assoc :dynamic true) ~initial-val)
@@ -39,7 +39,7 @@
                                             (~transform-fn val#))]
              (AttributeChange. ~(keyword attr-name) new-value#))))
        (defn ~(or fn-name attr-name) [x#]
-         (set-attribute ~(str attr-name) x#)))))
+         (set-attribute ~(keyword attr-name) x#)))))
 
 ;;;
 
@@ -98,10 +98,10 @@
   :initial-val 4
   :transform (fn [val]
                {:pre [(or (number? val)
-                          (contains? #{"<" ">"} val))]}
+                          (contains? #{:down :up} val))]}
                (case val
-                "<" dec
-                ">" inc
+                :down dec
+                :up inc
                 (constantly val))))
 
 (defattribute quantization
@@ -112,20 +112,20 @@
    500 ms will be quantized to last 450 ms. The resulting note event will
    have a duration of 450 ms, and the next event will be set to occur in 500 ms."
   :var *quant*
-  :aliases ["quant" "quantize"]
+  :aliases [:quant :quantize]
   :initial-val 0.9
   :fn-name quant
   :transform percentage)
 
 (defattribute volume
   "Current volume."
-  :aliases ["vol"]
+  :aliases [:vol]
   :initial-val 1.0
   :transform percentage)
 
 (defattribute panning
   "Current panning."
-  :aliases ["pan"]
+  :aliases [:pan]
   :initial-val 0.5
   :transform percentage)
 
