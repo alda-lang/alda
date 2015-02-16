@@ -108,7 +108,7 @@
                                   (note (pitch "g") (duration (note-length 2))))]
       (testing "the notes should all start at the same time"
         (is (every? #(= start (:offset %)) events)))
-      (testing "*current-offset should be bumped forward by the shortest note/rest duration"
+      (testing "*current-offset* should be bumped forward by the shortest note/rest duration"
         (is (= *current-offset* (+ start (:duration (duration (note-length 8)))))))
       (testing "*last-offset* should be updated correctly"
         (is (= *last-offset* start))))))
@@ -172,9 +172,8 @@
         (pause (duration (note-length 2 {:dots 1})))
         (is (= *tempo* 120)) ; not yet...
         (pause)
-        (Thread/sleep 200)
         (is (= *tempo* 60))))) ; now!
-  (remove-watch offset-agent "global-attr-1"))
+  (alter-var-root #'*global-attributes* (constantly (sorted-map))))
 
 #_(deftest lisp-test
   (testing "instrument part consolidation"

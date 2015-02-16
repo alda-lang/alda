@@ -108,10 +108,8 @@
                events
                (repeat `(swap! ~offsets conj *current-offset*)))
              [`(set-last-offset ~'start)
-              `(set-current-offset (+ ~'start
-                                      (apply min
-                                             (remove #(= % ~'start)
-                                                     (deref ~offsets)))))
+              `(set-current-offset (apply min (remove #(= % ~'start)
+                                                      (deref ~offsets))))
               `(Chord. (take-last ~num-of-events
                                   (get-in *events* [*current-marker* :events])))]))))
 

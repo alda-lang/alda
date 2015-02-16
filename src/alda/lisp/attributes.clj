@@ -35,7 +35,8 @@
        (alter-var-root (var *attribute-vars*) conj (var ~var-name))
        (doseq [alias# ~attr-aliases]
          (defmethod set-attribute alias# [attr# val#]
-           (let [new-value# (alter-var-root (var ~var-name) (~transform-fn val#))]
+           (let [new-value# (alter-var-root (var ~var-name)
+                                            (~transform-fn val#))]
              (AttributeChange. ~(keyword attr-name) new-value#))))
        (defn ~(or fn-name attr-name) [x#]
          (set-attribute ~(str attr-name) x#)))))
@@ -65,18 +66,15 @@
   :transform (fn [event]
                #(update-in % [*current-marker* :events] conj event)))
 
-(def offset-agent
-  "Current offset is primarily stored in the dynamic var *current-offset*.
-   However, the set-current-offset function also sends the value to this agent
-   so that events can be captured by adding watches."
-  (agent 0))
+(declare new-global-attrs)
 
 (defattribute current-offset
   "The offset, in ms, where the next event will occur."
   :initial-val 0
   :fn-name set-current-offset
   :transform (fn [offset]
-               (send offset-agent (fn [_ o] o) offset)
+               (doseq [[attr val] (new-global-attrs offset)]
+                 (set-attribute attr val))
                (constantly offset)))
 
 (defattribute last-offset
@@ -133,43 +131,50 @@
 
 ;;;
 
+(defattribute global-attributes
+  "A map of offsets to the global attribute changes that occur at that offset.
+   Each time current-offset is updated, it checks here to see if the new offset
+   has crossed any points where global attributes occur, and if so, applies
+   them.
+
+   Note: this only works moving forward. That is to say, a global attribute
+         change event will only affect the current part and any others that
+         follow it in the score."
+  :initial-val (sorted-map)
+  :fn-name global-attribute*
+  :transform (fn [[attr val]]
+               (set-attribute attr val)
+               #(update-in % [*current-offset*] (fnil conj []) [attr val])))
+
+(defn global-attribute
+  [attr val]
+  (global-attribute* [attr val]))
+
+(defn global-attributes
+  "Convenience fn for setting multiple global attributes at once."
+  [& attrs]
+  (doall
+    (for [[attr val] (partition 2 attrs)]
+      (global-attribute attr val))))
+
+(defn new-global-attrs
+  "Determines any global attributes to be applied at a given moment."
+  [now]
+  (->> (filter (fn [[offset attrs]]
+                 (<= *last-offset* offset now))
+               *global-attributes*)
+       (mapcat second)))
+
+;;;
+
 (defn snapshot
   "Returns a map of current offset and attribute information."
   []
   (into {} (map (fn [var] [var (deref var)])
-                (disj *attribute-vars* #'*events*))))
+                (disj *attribute-vars* #'*events* #'*global-attributes*))))
 
 (defn load-snapshot
   "Alters the current values of vars based on the input snapshot."
   [snapshot]
   (doseq [[var val] snapshot]
     (alter-var-root var (constantly val))))
-
-(def global-attribute-id (atom 0))
-
-(defrecord GlobalAttribute [offset attr val])
-
-(defn global-attribute
-  "Adds a watch to the offset-agent, so that whenever set-current-offset is
-   called, the specified global attribute will be applied if the offset for the
-   global attribute is between the new last- and current-offset (i.e. if we've
-   crossed the point where the global attribute event occurs).
-
-   Note: this only works moving forward. That is to say, a global attribute
-         change event will only affect the current part and any others that
-         follow it in the score."
-  [attr val]
-  (let [offset *current-offset*]
-    (add-watch offset-agent (str "global-attr-" (swap! global-attribute-id inc))
-               (fn [_ _ _ _]
-                 (when (<= *last-offset* offset *current-offset*)
-                   (set-attribute attr val))))
-    (set-attribute attr val)
-    (GlobalAttribute. offset attr val)))
-
-(defn global-attributes
-  "Convenience fn for setting multiple global attributes at once."
-  [& attrs]
-  (doall
-    (for [[attr num] (partition 2 attrs)]
-      (set-attribute attr num))))
