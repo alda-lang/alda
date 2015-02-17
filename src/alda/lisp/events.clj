@@ -99,7 +99,7 @@
    the chord."
   [& events]
   (let [num-of-events (count (filter #(= (first %) 'note) events))
-        offsets (gensym)]
+        offsets (gensym "offsets")]
     (list* 'let ['start '*current-offset*
                  offsets (list 'atom [])]
            (concat
@@ -122,21 +122,21 @@
   "Voices are chronological sequences of events that each start at the same time.
    The resulting *current-offset* is at the end of the voice that finishes last."
   [& voices]
-  (let [voice-snapshots (gensym)
-        voice-events    (gensym)]
+  (let [voice-snapshots (gensym "voice-snapshots")
+        voice-events    (gensym "voice-events")]
     (list* 'let ['start-snapshot `(snapshot)
-                 voice-snapshots (list 'atom [])
+                 voice-snapshots (list 'atom {})
                  voice-events    (list 'atom {})]
            (concat
              (for [[_ num# & events# :as voice#] voices]
-               (list 'do
-                     `(load-snapshot ~'start-snapshot)
+               (list 'let ['voice-name (keyword (str \v num#))]
+                     `(load-snapshot (get (deref ~voice-snapshots) ~'voice-name
+                                                                   ~'start-snapshot))
                       (list 'swap! voice-events
                         (list 'fn ['m]
-                          (list 'merge-with 'concat 'm {(keyword (str \v num#))
-                                                        (vec events#)})))
-                     `(swap! ~voice-snapshots conj (snapshot))))
-             [`(let [last-voice#
-                     (apply max-key #(get % (var *current-offset*)) (deref ~voice-snapshots))]
+                          (list 'merge-with 'concat 'm {'voice-name (vec events#)})))
+                     `(swap! ~voice-snapshots assoc ~'voice-name (snapshot))))
+             [`(let [last-voice# (apply max-key #(get % (var *current-offset*))
+                                                (vals (deref ~voice-snapshots)))]
                  (load-snapshot last-voice#))
               `(deref ~voice-events)]))))

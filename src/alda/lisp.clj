@@ -6,31 +6,19 @@
 
 ;;; TODO: make this all happen encapsulated in a pod ;;;
 
+(defmacro part
+  "Determines the current instrument(s) and executes the events."
+  [{:keys [names nickname]} & events]
+  "to do")
+
+
 
 
 ;; everything below this line is old and overly complicated -- TODO: rewrite
 
 (comment
 
-
-
 ;;; score-builder utils ;;;
-
-(defn- add-globals
-  "If initial global attributes are set, add them to the first instrument's
-   music-data."
-  [global-attrs instruments]
-  (letfn [(with-global-attrs [[tag & names-and-data :as instrument]]
-            (let [[data & names] (reverse names-and-data)]
-              `(~tag
-                ~@names
-                (music-data ~global-attrs ~@(rest data)))))]
-    (if global-attrs
-      (cons (with-global-attrs (first instruments)) (rest instruments))
-      instruments)))
-
-(defn part [& args]
-  (identity args))
 
 (defn build-parts
   "Walks through a variable number of instrument calls, building a score

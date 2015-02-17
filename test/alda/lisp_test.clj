@@ -145,20 +145,24 @@
                                  (octave :down)
                                  (note (pitch :g))
                                  (note (pitch :g))))]
-    (testing "the first note of each voice should all start at the same time"
-      (is (every? #(= start (:offset %)) (map first [v1 v2 v3]))))
-    (testing "repeated calls to the same voice should append events"
-      (is (= 6 (count v2))))
-    (testing "the voice lasting the longest should bump *current-offset* forward
-              by however long it takes to finish"
-      (is (= *current-offset* (+ start
-                                 (:duration (duration (note-length 1)
-                                                      (note-length 1)))))))
-    (testing "*last-offset* should be updated to the *last-offset* as of the
-              point where the longest voice finishes"
-      (is (= *last-offset* (+ start (:duration (duration (note-length 1))))))))))
+      (testing "the first note of each voice should all start at the same time"
+        (is (every? #(= start (:offset %)) (map first [v1 v2 v3]))))
+      (testing "repeated calls to the same voice should append events"
+        (is (= 6 (count v2))))
+      (testing "the voice lasting the longest should bump *current-offset* forward
+                by however long it takes to finish"
+        (is (= *current-offset* (+ start
+                                   (:duration (duration (note-length 1)
+                                                        (note-length 1)
+                                                        (note-length 1)
+                                                        (note-length 1)))))))
+      (testing "*last-offset* should be updated to the *last-offset* as of the
+                point where the longest voice finishes"
+        (is (= *last-offset* (+ start (:duration (duration (note-length 1)
+                                                           (note-length 1)
+                                                           (note-length 1))))))))))
 
-(deftest global-attribute-test
+(deftest global-attribute-tests
   (testing "a global tempo change:"
     (set-attributes :current-offset 0 :tempo 120)
     (pause (duration (note-length 1)))
@@ -174,6 +178,41 @@
         (pause)
         (is (= *tempo* 60))))) ; now!
   (alter-var-root #'*global-attributes* (constantly (sorted-map))))
+
+(deftest marker-tests
+  (testing "a marker:"
+    (let [current-marker *current-marker*
+          moment *current-offset*]
+      (marker "test-marker")
+      (testing "it should create an entry for the marker in *events*"
+        (is (contains? *events* "test-marker")))
+      (testing "the marker's offset should be correct"
+        (is (= moment (get-in *events* ["test-marker" :offset]))))
+      (testing "placing a marker doesn't change the current marker"
+        (is (= current-marker *current-marker*)))))
+  (testing "at-marker:"
+    (pause (duration (note-length 1) (note-length 1)))
+    (at-marker "test-marker")
+    (testing "new events should be placed from the marker / offset 0"
+      (is (= "test-marker" *current-marker*))
+      (is (zero? (count (get-in *events* ["test-marker" :events]))))
+      (let [first-note (note (pitch :d))]
+        (is (= 1 (count (get-in *events* ["test-marker" :events]))))
+        (is (= 0 (:offset first-note))))))
+  (testing "using at-marker before marker:"
+    (testing "at-marker still works;"
+      (at-marker "test-marker-2")
+      (testing "it sets *current-marker*"
+        (is (= "test-marker-2" *current-marker*)))
+      (testing "new events are placed from the marker / offset 0"
+        (is (zero? (count (get-in *events* ["test-marker-2" :events]))))
+        (let [first-note (note (pitch :e))]
+          (is (= 1 (count (get-in *events* ["test-marker-2" :events]))))
+          (is (= 0 (:offset first-note))))))
+    (testing "marker adds an offset to the marker"
+      (let [moment *current-offset*]
+        (marker "test-marker-2")
+        (is (= moment (get-in *events* ["test-marker-2" :offset])))))))
 
 #_(deftest lisp-test
   (testing "instrument part consolidation"

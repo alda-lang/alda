@@ -52,20 +52,6 @@
   :initial-val []
   :fn-name set-instruments)
 
-(defattribute current-marker
-  "The marker that events will be added to."
-  :initial-val :start
-  :fn-name set-current-marker)
-
-(defattribute events
-  "The master map of events, keyed by time marker.
-   As the score is evaluated, events are added to the appropriate marker,
-   and new markers may be added dynamically."
-  :initial-val {:start {:offset 0, :events []}}
-  :fn-name add-event
-  :transform (fn [event]
-               #(update-in % [*current-marker* :events] conj event)))
-
 (declare new-global-attrs)
 
 (defattribute current-offset
@@ -76,6 +62,28 @@
                (doseq [[attr val] (new-global-attrs offset)]
                  (set-attribute attr val))
                (constantly offset)))
+
+(defattribute current-marker
+  "The marker that events will be added to."
+  :initial-val :start
+  :fn-name at-marker
+  :transform (fn [marker]
+               (set-current-offset 0)
+               (constantly marker)))
+
+(defattribute events
+  "The master map of events, keyed by time marker.
+   As the score is evaluated, events are added to the appropriate marker,
+   and new markers may be added dynamically."
+  :initial-val {:start {:offset 0, :events []}}
+  :fn-name add-event
+  :transform (fn [event]
+               #(update-in % [*current-marker* :events] (fnil conj []) event)))
+
+(defn marker
+  "Places a marker at *current-offset*."
+  [name]
+  (alter-var-root #'*events* assoc-in [name :offset] *current-offset*))
 
 (defattribute last-offset
   "The value of current-offset before it was last changed.
