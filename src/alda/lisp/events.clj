@@ -19,15 +19,15 @@
    A slur may appear as the final argument of a duration, making the current
    note legato (effectively slurring it into the next).
 
-   Returns a map containing the duration in ms (within the context of the
-   current tempo) and whether or not the note is slurred."
+   Returns a map containing a duration-fn, which gives the duration in ms when
+   provide with a tempo, and whether or not the note is slurred."
   [& components]
   (let [[note-lengths slurred] (if (= (last components) :slur)
                                  (conj [(drop-last components)] true)
                                  (conj [components] false))
         beats (apply + note-lengths)]
     (set-duration beats)
-    {:duration (* beats (/ 60000 *tempo*))
+    {:duration-fn (fn [tempo] (* beats (/ 60000 tempo)))
      :slurred slurred}))
 
 (def ^:private intervals
@@ -45,98 +45,175 @@
   (* 440.0 (Math/pow 2.0 (/ (- note 69.0) 12.0))))
 
 (defn pitch
-  "Determines the frequency in Hz, within the context of the current
-   octave."
+  "Returns a fn that will calculate the frequency in Hz, within the context
+   of the octave that an instrument is in."
   [letter & accidentals]
-  (let [midi-note (reduce (fn [number accidental]
-                            (case accidental
-                              :flat  (dec number)
-                              :sharp (inc number)))
-                          (midi-note letter *octave*)
-                          accidentals)]
-    (midi->hz midi-note)))
+  (fn [octave]
+    (let [midi-note (reduce (fn [number accidental]
+                              (case accidental
+                                :flat  (dec number)
+                                :sharp (inc number)))
+                            (midi-note letter octave)
+                            accidentals)]
+      (midi->hz midi-note))))
 
-(defrecord Note [offset instruments volume pitch duration])
+(defrecord Note [offset instrument volume pitch duration])
 
-(defn note
-  ([pitch]
-   {:pre [(number? pitch)]}
-    (note pitch (duration *duration*) false))
-  ([pitch arg2] ; arg2 could be a duration or :slur
-    (cond
-      (map? arg2)    (note pitch arg2 false)
-      (= :slur arg2) (note pitch (duration *duration*) true)))
-  ([pitch {:keys [duration slurred]} slur?]
-    (binding [*quant* (if (or slur? slurred)
-                        1.0
-                        *quant*)]
-      (let [event (map->Note {:offset *current-offset*
-                              :instruments *instruments*
-                              :volume *volume*
-                              :pitch pitch
-                              :duration (* duration *quant*)})]
-        (add-event event)
-        (set-last-offset *current-offset*)
-        (set-current-offset (+ *current-offset* duration))
-        event))))
+(defn note*
+  ([instrument pitch-fn]
+   {:pre [(fn? pitch-fn)]}
+    (note* instrument
+           pitch-fn
+           (duration (-> (*instruments* instrument) :duration))
+           false))
+  ([instrument pitch-fn arg3]
+    (cond ; arg3 could be a duration or :slur
+      (map? arg3)    (note* instrument
+                            pitch-fn
+                            arg3
+                            false)
+      (= :slur arg3) (note* instrument
+                            pitch-fn
+                            (duration (-> (*instruments* instrument)
+                                          :duration))
+                            true)))
+  ([instrument pitch-fn {:keys [duration-fn slurred]} slur?]
+    (let [get-attribute (fn [attr]
+                          (fn []
+                            (-> (*instruments* instrument) attr)))
+          tempo          (get-attribute :tempo)
+          inst-name      (get-attribute :name)
+          volume         (get-attribute :volume)
+          octave         (get-attribute :octave)
+          current-offset (get-attribute :current-offset)
+          quant          (if (or slur? slurred) 1.0 ((get-attribute :quantization)))
+          note-duration  (duration-fn (tempo))
+          event          (map->Note {:offset (current-offset)
+                                     :instrument (inst-name)
+                                     :volume (volume)
+                                     :pitch (pitch-fn (octave))
+                                     :duration (* note-duration quant)})]
+      (add-event instrument event)
+      (set-last-offset instrument (current-offset))
+      (set-current-offset instrument (+ (current-offset) note-duration))
+      event)))
 
-(defrecord Rest [offset duration])
+(defmacro note
+  [& args]
+  `(doall
+     (for [instrument# *current-instruments*]
+       (binding [*current-instruments* #{instrument#}]
+         (note* instrument# ~@args)))))
 
-(defn pause
-  ([]
-    (pause (duration *duration*)))
-  ([{:keys [duration] :as dur}]
+(defrecord Rest [offset instrument duration])
+
+(defn pause*
+  ([instrument]
+    (pause* instrument (duration (-> (*instruments* instrument) :duration))))
+  ([instrument {:keys [duration-fn] :as dur}]
     {:pre [(map? dur)]}
-    (set-last-offset *current-offset*)
-    (set-current-offset (+ *current-offset* duration))
-    (Rest. *last-offset* duration)))
+    (let [get-attribute (fn [attr]
+                          (fn []
+                            (-> (*instruments* instrument) attr)))
+          current-offset (get-attribute :current-offset)
+          last-offset    (get-attribute :last-offset)
+          tempo          (get-attribute :tempo)
+          rest-duration  (duration-fn (tempo))]
+      (set-last-offset instrument (current-offset))
+      (set-current-offset instrument (+ (current-offset) rest-duration))
+      (Rest. (last-offset) instrument rest-duration))))
+
+(defmacro pause
+  [& args]
+  `(doall
+     (for [instrument# *current-instruments*]
+       (binding [*current-instruments* #{instrument#}]
+         (pause* instrument# ~@args)))))
 
 (defrecord Chord [events])
 
-(defmacro chord
+(defmacro chord*
   "Chords contain notes/rests that all start at the same time/offset.
    The resulting *current-offset* is at the end of the shortest note/rest in
    the chord."
-  [& events]
-  (let [num-of-events (count (filter #(= (first %) 'note) events))
-        offsets (gensym "offsets")]
-    (list* 'let ['start '*current-offset*
+  [instrument & events]
+  (let [num-of-events  (count (filter #(= (first %) 'note) events))
+        start          (gensym "start")
+        offsets        (gensym "offsets")
+        current-offset (gensym "current-offset")
+        current-marker (gensym "current-marker")]
+    (list* 'let [current-offset `(fn [] (-> (*instruments* ~instrument)
+                                            :current-offset))
+                 current-marker `(fn [] (-> (*instruments* ~instrument)
+                                            :current-marker))
+                 start   (list current-offset)
                  offsets (list 'atom [])]
            (concat
              (interleave
-               (repeat `(set-current-offset ~'start))
+               (repeat `(set-current-offset ~instrument ~start))
                events
-               (repeat `(swap! ~offsets conj *current-offset*)))
-             [`(set-last-offset ~'start)
-              `(set-current-offset (apply min (remove #(= % ~'start)
-                                                      (deref ~offsets))))
+               (repeat `(swap! ~offsets conj (~current-offset))))
+             [`(set-last-offset ~instrument ~start)
+              `(set-current-offset ~instrument (apply min
+                                                  (remove #(= % ~start)
+                                                          (deref ~offsets))))
               `(Chord. (take-last ~num-of-events
-                                  (get-in *events* [*current-marker* :events])))]))))
+                                  (get-in *events* [(~current-marker) :events])))]))))
+
+(defmacro chord
+  [& args]
+  `(doall
+     (for [instrument# *current-instruments*]
+       (binding [*current-instruments* #{instrument#}]
+         (chord* instrument# ~@args)))))
 
 (defn voice
   "Returns a list of the events, executing them in the process."
   [& events]
-  (remove #(not (contains? #{alda.lisp.Note alda.lisp.Chord} (type %))) events))
+  (remove (fn [event]
+            (not (every? #(contains? #{alda.lisp.Note alda.lisp.Chord} (type %))
+                         event)))
+          events))
 
-(defmacro voices
-  "Voices are chronological sequences of events that each start at the same time.
-   The resulting *current-offset* is at the end of the voice that finishes last."
-  [& voices]
+(defn voice
+  "Returns a list of the events, executing them in the process."
+  [& events]
+  (remove #(not (contains? #{alda.lisp.Note alda.lisp.Chord} (type %)))
+          (flatten events)))
+
+(defmacro voices*
+  "Voices are chronological sequences of events that each start at the same
+   time. The resulting :current-offset is at the end of the voice that finishes
+   last."
+  [instrument & voices]
   (let [voice-snapshots (gensym "voice-snapshots")
         voice-events    (gensym "voice-events")]
-    (list* 'let ['start-snapshot `(snapshot)
+    (list* 'let ['start-snapshot `(snapshot ~instrument)
                  voice-snapshots (list 'atom {})
                  voice-events    (list 'atom {})]
            (concat
              (for [[_ num# & events# :as voice#] voices]
                (list 'let ['voice-name (keyword (str \v num#))]
-                     `(load-snapshot (get (deref ~voice-snapshots) ~'voice-name
-                                                                   ~'start-snapshot))
+                     `(load-snapshot ~instrument
+                                     (get (deref ~voice-snapshots)
+                                          ~'voice-name ~'start-snapshot))
                       (list 'swap! voice-events
                         (list 'fn ['m]
-                          (list 'merge-with 'concat 'm {'voice-name (vec events#)})))
-                     `(swap! ~voice-snapshots assoc ~'voice-name (snapshot))))
-             [`(let [last-voice# (apply max-key #(get % (var *current-offset*))
+                          (list 'merge-with 'concat 'm
+                                {'voice-name
+                                 (list 'vec
+                                       (list 'map 'first (vec events#)))})))
+                     `(swap! ~voice-snapshots assoc ~'voice-name
+                                              (snapshot ~instrument))))
+             [`(let [last-voice# (apply max-key :current-offset
                                                 (vals (deref ~voice-snapshots)))]
-                 (load-snapshot last-voice#))
+                 (load-snapshot ~instrument last-voice#))
               `(deref ~voice-events)]))))
+
+(defmacro voices
+  [& args]
+  `(let [voices-per-instrument#
+         (for [instrument# *current-instruments*]
+           (binding [*current-instruments* #{instrument#}]
+             (voices* instrument# ~@args)))]
+     (apply merge-with (comp vec concat) voices-per-instrument#)))

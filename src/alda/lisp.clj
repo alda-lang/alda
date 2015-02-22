@@ -6,12 +6,23 @@
 
 ;;; TODO: make this all happen encapsulated in a pod ;;;
 
+(defn init-instrument
+  "Initializes an instrument instance with values for tempo, current-offset,
+   volume, octave, etc. Adds it to *instruments* and also returns it."
+  ([name & attrs]
+    (let [attr-map (apply hash-map attrs)
+          instrument (merge *initial-attr-values* {:name name} attr-map)]
+      (alter-var-root #'*instruments* assoc-in [name] instrument)
+      instrument)))
+
 (defmacro part
   "Determines the current instrument(s) and executes the events."
   [{:keys [names nickname]} & events]
-  "to do")
+  `(do ~@events))
 
-
+; test setup
+(init-instrument "piano")
+(alter-var-root (var *current-instruments*) conj "piano")
 
 
 ;; everything below this line is old and overly complicated -- TODO: rewrite
