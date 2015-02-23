@@ -1,6 +1,8 @@
 (ns alda.lisp.attributes)
 (in-ns 'alda.lisp)
 
+(log/debug "Loading alda.lisp.attributes...")
+
 (def ^:dynamic *events* {:start {:offset 0, :events []}})
 (def ^:dynamic *instruments* {})
 (def ^:dynamic *nicknames* {})
@@ -18,7 +20,7 @@
   (fn [attr val] attr))
 
 (defmethod set-attribute :default [attr val]
-  (throw (Exception. (str attr " is not a valid attribute."))))
+  (log/error (str attr " is not a valid attribute.")))
 
 (defn set-attributes
   "Convenience fn for setting multiple attributes at once.
@@ -49,6 +51,11 @@
                  (alter-var-root (var *instruments*) assoc-in
                                                      [instrument# ~kw-name]
                                                      new-val#)
+                 (log/debug (format "%s %s changed from %s to %s."
+                                    instrument#
+                                    ~(str attr-name)
+                                    old-val#
+                                    new-val#))
                  (AttributeChange. instrument# ~(keyword attr-name)
                                    old-val# new-val#))))))
        (defn ~(or fn-name attr-name) [x#]
@@ -149,16 +156,15 @@
 (defrecord Marker [name offset])
 
 (defn marker
-  "Places a marker at :current-offset. Throws an exception if there are
-   multiple instruments active at different offsets."
+  "Places a marker at :current-offset. Logs an error if there are multiple
+   instruments active at different offsets."
   [name]
   (if-let [offset (instruments-all-at-same-offset)]
     (do
       (alter-var-root #'*events* assoc-in [name :offset] offset)
       (Marker. name offset))
-    (throw (Exception. (str "Can't place marker \"" name "\" - offset unclear. "
-                            "There are multiple instruments active with different "
-                            "time offsets.")))))
+    (log/error "Can't place marker \"" name "\" - offset unclear. There are "
+               "multiple instruments active with different time offsets.")))
 
 ;;;
 

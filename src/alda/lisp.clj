@@ -1,7 +1,8 @@
 (ns alda.lisp
   "alda.parser transforms Alda code into Clojure code, which can then be
    evaluated with the help of this namespace."
-  (:require [alda.lisp.attributes]
+  (:require [taoensso.timbre :as log]
+            [alda.lisp.attributes]
             [alda.lisp.events]))
 
 ;;; TODO: make this all happen encapsulated in a pod ;;;

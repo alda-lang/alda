@@ -7,7 +7,8 @@
                  [org.clojure/tools.cli "0.3.1"]
                  [instaparse "1.3.5"]
                  [adzerk/bootlaces "0.1.9" :scope "test"]
-                 [adzerk/boot-test "1.0.3" :scope "test"]])
+                 [adzerk/boot-test "1.0.3" :scope "test"]
+                 [com.taoensso/timbre "3.4.0"]])
 
 (require '[adzerk.bootlaces :refer :all]
          '[adzerk.boot-test :refer :all])

@@ -1,6 +1,8 @@
 (ns alda.lisp.events)
 (in-ns 'alda.lisp)
 
+(log/debug "Loading alda.lisp.events...")
+
 (defn note-length
   "Converts a number, representing a note type, e.g. 4 = quarter, 8 = eighth,
    into a number of beats. Handles dots if present."
@@ -96,6 +98,11 @@
       (add-event instrument event)
       (set-last-offset instrument (current-offset))
       (set-current-offset instrument (+ (current-offset) note-duration))
+      (log/debug (format "%s plays at offset %s for %s ms, at %.2f Hz."
+                         instrument
+                         (int (:offset event))
+                         (int (:duration event))
+                         (:pitch event)))
       event)))
 
 (defmacro note
@@ -121,7 +128,9 @@
           rest-duration  (duration-fn (tempo))]
       (set-last-offset instrument (current-offset))
       (set-current-offset instrument (+ (current-offset) rest-duration))
-      (Rest. (last-offset) instrument rest-duration))))
+      (let [rest (Rest. (last-offset) instrument rest-duration)]
+        (log/debug (format "%s rests for %s ms." instrument rest-duration))
+        rest))))
 
 (defmacro pause
   [& args]
@@ -157,8 +166,12 @@
               `(set-current-offset ~instrument (apply min
                                                   (remove #(= % ~start)
                                                           (deref ~offsets))))
-              `(Chord. (take-last ~num-of-events
-                                  (get-in *events* [(~current-marker) :events])))]))))
+              `(let [chord#
+                     (Chord. (take-last ~num-of-events
+                                        (get-in *events*
+                                                [(~current-marker) :events])))]
+                 ; (log/debug (format "Chord (%d notes)" ~num-of-events))
+                 chord#)]))))
 
 (defmacro chord
   [& args]
