@@ -116,28 +116,6 @@
                   bump (dur-fn (tempo))]
               (is (= (last-offset) (+ start bump))))))))))
 
-(deftest global-attribute-tests
-  (part {:names ["piano"]}
-    (let [piano         (fn [] (*instruments* "piano"))
-          current-tempo (fn [] (:tempo (piano)))]
-      (testing "a global tempo change:"
-        (set-current-offset "piano" 0)
-        (tempo 120)
-        (pause (duration (note-length 1)))
-        (global-attribute :tempo 60)
-        (testing "it should change the tempo"
-          (is (= (current-tempo) 60)))
-        (testing "when another part starts,"
-          (set-current-offset "piano" 0)
-          (tempo 120)
-          (testing "the tempo should change once it encounters the global attribute"
-            (is (= (current-tempo) 120)) ; not yet...
-            (pause (duration (note-length 2 {:dots 1})))
-            (is (= (current-tempo) 120)) ; not yet...
-            (pause)
-            (is (= (current-tempo) 60))))))) ; now!
-  (alter-var-root #'*global-attributes* (constantly (sorted-map))))
-
 (deftest marker-tests
   (part {:names ["piano"]}
     (let [piano              (fn [] (*instruments* "piano"))
@@ -148,11 +126,14 @@
               moment (current-offset)
               test-marker (marker "test-marker")]
           (testing "returns a Marker record"
-            (is (= test-marker (alda.lisp.Marker. "test-marker" moment))))
+            (is (= test-marker
+                   (alda.lisp.Marker. "test-marker"
+                                      (absolute-offset current-marker moment)))))
           (testing "it should create an entry for the marker in *events*"
             (is (contains? *events* "test-marker")))
           (testing "its offset should be correct"
-            (is (= moment (get-in *events* ["test-marker" :offset]))))
+            (is (= (absolute-offset current-marker moment)
+                   (get-in *events* ["test-marker" :offset]))))
           (testing "placing a marker doesn't change the current marker"
             (is (= current-marker (get-current-marker))))))
       (testing "at-marker:"
@@ -175,6 +156,49 @@
               (is (= 1 (count (get-in *events* ["test-marker-2" :events]))))
               (is (= 0 (:offset first-note))))))
         (testing "marker adds an offset to the marker"
-          (let [moment (current-offset)]
-            (marker "test-marker-2")
-            (is (= moment (get-in *events* ["test-marker-2" :offset])))))))))
+          (at-marker "test-marker")
+          (pause (duration (note-length 1)
+                           (note-length 1)
+                           (note-length 1)
+                           (note-length 1)))
+          (marker "test-marker-2")
+          (is (= (absolute-offset "test-marker" (current-offset))
+                 (get-in *events* ["test-marker-2" :offset]))))))))
+
+(deftest global-attribute-tests
+  (part {:names ["piano"]}
+    (let [piano          (fn [] (*instruments* "piano"))
+          current-tempo  (fn [] (:tempo (piano)))
+          current-offset (fn [] (:current-offset (piano)))
+          current-marker (fn [] (:current-marker (piano)))]
+      (testing "a global tempo change:"
+        (set-current-offset "piano" 0)
+        (at-marker :start)
+        (tempo 120)
+        (pause (duration (note-length 1)))
+        (global-attribute :tempo 60) ; 2000 ms from :start
+        (testing "it should change the tempo"
+          (is (= (current-tempo) 60)))
+        (pause (duration (note-length 1) (note-length 1) (note-length 1)))
+        (marker "test-marker-3") ; for later test
+        (testing "when another part starts,"
+          (set-current-offset "piano" 0)
+          (tempo 120)
+          (testing "the tempo should change once it encounters the global attribute"
+            (is (= (current-tempo) 120)) ; not yet...
+            (pause (duration (note-length 2 {:dots 1})))
+            (is (= (current-tempo) 120)) ; not yet...
+            (pause)
+            (is (= (current-tempo) 60)))) ; now!
+        (testing "it should use absolute offset, not relative to marker"
+          (at-marker "test-marker-3")
+          (is (= (current-offset) 0))
+          (is (= (current-marker) "test-marker-3"))
+          (tempo 120)
+          (is (= (current-tempo) 120))
+          (pause (duration (note-length 2 {:dots 1})))
+          (is (= (current-tempo) 120))
+          (pause)
+          (is (= (current-tempo) 120)))))) ; tempo should still be 120,
+                                           ; despite having passed 2000 ms
+  (alter-var-root #'*global-attributes* (constantly (sorted-map))))

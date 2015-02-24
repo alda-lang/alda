@@ -125,13 +125,18 @@
                           (fn []
                             (-> (*instruments* instrument) attr)))
           current-offset (get-attribute :current-offset)
+          current-marker (get-attribute :current-marker)
           last-offset    (get-attribute :last-offset)
           tempo          (get-attribute :tempo)
           rest-duration  (duration-fn (tempo))]
       (set-last-offset instrument (current-offset))
       (set-current-offset instrument (+ (current-offset) rest-duration))
       (let [rest (Rest. (last-offset) instrument rest-duration)]
-        (log/debug (format "%s rests for %s ms." instrument rest-duration))
+        (log/debug (format "%s rests at %s + %s for %s ms."
+                           instrument
+                           (current-marker)
+                           (last-offset)
+                           rest-duration))
         rest))))
 
 (defmacro pause

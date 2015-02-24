@@ -117,12 +117,24 @@
 
 (declare apply-global-attributes)
 
+(defn absolute-offset
+  "Given a marker and an offset relative to the marker, returns the absolute
+   offset from the start of the score. Logs a warning if the marker does not
+   yet have a defined offset."
+  [marker offset]
+  (if-let [marker-offset (-> (*events* marker) :offset)]
+    (+ marker-offset offset)
+    (log/warn "Can't calculate offset - marker" (str \" marker \") "does not"
+              "have a defined offset.")))
+
 (defn set-current-offset
   "Set the offset, in ms, where the next event will occur."
   [instrument offset]
-  (let [old-offset (-> (*instruments* instrument) :current-offset)]
+  (let [old-offset (-> (*instruments* instrument) :current-offset)
+        current-marker (-> (*instruments* instrument) :current-marker)]
     (alter-var-root #'*instruments* assoc-in [instrument :current-offset] offset)
-    (apply-global-attributes instrument offset)
+    (apply-global-attributes instrument
+                             (absolute-offset current-marker offset))
     (AttributeChange. instrument :current-offset old-offset offset)))
 
 (defn set-last-offset
@@ -136,10 +148,14 @@
     (AttributeChange. instrument :last-offset old-offset offset)))
 
 (defn instruments-all-at-same-offset
-  "If all of the *current-instruments* are at the same :current-offset, returns
+  "If all of the *current-instruments* are at the same absolute offset, returns
    that offset. Returns nil otherwise."
   []
-  (let [offsets (map #(-> (*instruments* %) :current-offset) *current-instruments*)]
+  (let [offsets (for [instrument *current-instruments*
+                      :let [get-attr #(-> (*instruments* instrument) %)
+                            current-marker (get-attr :current-marker)
+                            current-offset (get-attr :current-offset)]]
+                  (absolute-offset current-marker current-offset))]
     (when (apply == offsets)
       (first offsets))))
 
@@ -148,7 +164,7 @@
   [marker]
   (doall
     (for [instrument *current-instruments*]
-      (let [old-marker (-> (*instruments* instrument) :marker)]
+      (let [old-marker (-> (*instruments* instrument) :current-marker)]
         (set-current-offset instrument 0)
         (alter-var-root #'*instruments* assoc-in [instrument :current-marker]
                                                  marker)
@@ -158,15 +174,15 @@
 (defrecord Marker [name offset])
 
 (defn marker
-  "Places a marker at :current-offset. Logs an error if there are multiple
-   instruments active at different offsets."
+  "Places a marker at the current absolute offset. Logs an error if there are
+   multiple instruments active at different offsets."
   [name]
   (if-let [offset (instruments-all-at-same-offset)]
     (do
       (alter-var-root #'*events* assoc-in [name :offset] offset)
+      (log/debug "Set marker" (str \" name \") "at offset" (str offset \.))
       (Marker. name offset))
-    (log/error "Can't place marker \"" name "\" - offset unclear. There are "
-               "multiple instruments active with different time offsets.")))
+    (log/error "Can't place marker" (str \" name \") "- offset unclear.")))
 
 ;;;
 
@@ -196,6 +212,7 @@
     (do
       (alter-var-root #'*global-attributes* update-in [offset]
                                             (fnil conj []) [attr val])
+      (log/debug "Set global attribute" attr val "at offset" (str offset \.))
       (GlobalAttribute. offset attr val))
     (throw (Exception. (str "Can't set global attribute " attr " to " val
                             " - offset unclear. There are multiple instruments "
@@ -210,7 +227,12 @@
 
 (defn apply-global-attributes
   [instrument now]
-  (let [last-offset (-> (*instruments* instrument) :last-offset)
+  (let [get-attr       (fn [attr]
+                         (fn [] (-> (*instruments* instrument) attr)))
+        current-marker (get-attr :current-marker)
+        now            (absolute-offset (current-marker) now)
+        last-offset    (absolute-offset (current-marker)
+                                        ((get-attr :last-offset)))
         new-global-attrs (->> *global-attributes*
                               (filter (fn [[offset attrs]]
                                         (<= last-offset offset now)))
