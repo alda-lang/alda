@@ -88,6 +88,7 @@
           volume         (get-attribute :volume)
           octave         (get-attribute :octave)
           current-offset (get-attribute :current-offset)
+          current-marker (get-attribute :current-marker)
           quant          (if (or slur? slurred) 1.0 ((get-attribute :quantization)))
           note-duration  (duration-fn (tempo))
           event          (map->Note {:offset (current-offset)
@@ -98,8 +99,9 @@
       (add-event instrument event)
       (set-last-offset instrument (current-offset))
       (set-current-offset instrument (+ (current-offset) note-duration))
-      (log/debug (format "%s plays at offset %s for %s ms, at %.2f Hz."
+      (log/debug (format "%s plays at %s + %s for %s ms, at %.2f Hz."
                          instrument
+                         (current-marker)
                          (int (:offset event))
                          (int (:duration event))
                          (:pitch event)))

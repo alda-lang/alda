@@ -51,11 +51,12 @@
                  (alter-var-root (var *instruments*) assoc-in
                                                      [instrument# ~kw-name]
                                                      new-val#)
-                 (log/debug (format "%s %s changed from %s to %s."
-                                    instrument#
-                                    ~(str attr-name)
-                                    old-val#
-                                    new-val#))
+                 (if (not= old-val# new-val#)
+                   (log/debug (format "%s %s changed from %s to %s."
+                                      instrument#
+                                      ~(str attr-name)
+                                      old-val#
+                                      new-val#)))
                  (AttributeChange. instrument# ~(keyword attr-name)
                                    old-val# new-val#))))))
        (defn ~(or fn-name attr-name) [x#]
@@ -151,6 +152,7 @@
         (set-current-offset instrument 0)
         (alter-var-root #'*instruments* assoc-in [instrument :current-marker]
                                                  marker)
+        (log/debug instrument "is now at marker" marker)
         (AttributeChange. instrument :current-marker old-marker marker)))))
 
 (defrecord Marker [name offset])
