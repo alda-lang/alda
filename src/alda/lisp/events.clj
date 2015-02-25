@@ -29,7 +29,7 @@
                                  (conj [components] false))
         beats (apply + note-lengths)]
     (set-duration beats)
-    {:duration-fn (fn [tempo] (* beats (/ 60000 tempo)))
+    {:duration-fn (fn [tempo] (float (* beats (/ 60000 tempo))))
      :slurred slurred}))
 
 (def ^:private intervals
@@ -98,11 +98,11 @@
                                      :duration (* note-duration quant)})]
       (add-event instrument event)
       (set-last-offset instrument (current-offset))
-      (set-current-offset instrument (+ (current-offset) note-duration))
+      (set-current-offset instrument (offset+ (current-offset) note-duration))
       (log/debug (format "%s plays at %s + %s for %s ms, at %.2f Hz."
                          instrument
                          (current-marker)
-                         (int (:offset event))
+                         (int (:offset (:offset event)))
                          (int (:duration event))
                          (:pitch event)))
       event)))
@@ -130,13 +130,13 @@
           tempo          (get-attribute :tempo)
           rest-duration  (duration-fn (tempo))]
       (set-last-offset instrument (current-offset))
-      (set-current-offset instrument (+ (current-offset) rest-duration))
+      (set-current-offset instrument (offset+ (current-offset) rest-duration))
       (let [rest (Rest. (last-offset) instrument rest-duration)]
         (log/debug (format "%s rests at %s + %s for %s ms."
                            instrument
                            (current-marker)
-                           (last-offset)
-                           rest-duration))
+                           (int (:offset (last-offset)))
+                           (int rest-duration)))
         rest))))
 
 (defmacro pause
@@ -170,14 +170,13 @@
                events
                (repeat `(swap! ~offsets conj (~current-offset))))
              [`(set-last-offset ~instrument ~start)
-              `(set-current-offset ~instrument (apply min
-                                                  (remove #(= % ~start)
+              `(set-current-offset ~instrument (apply (partial min-key :offset)
+                                                  (remove #(offset= % ~start)
                                                           (deref ~offsets))))
               `(let [chord#
                      (Chord. (take-last ~num-of-events
                                         (get-in *events*
                                                 [(~current-marker) :events])))]
-                 ; (log/debug (format "Chord (%d notes)" ~num-of-events))
                  chord#)]))))
 
 (defmacro chord
@@ -225,8 +224,9 @@
                                        (list 'map 'first (vec events#)))})))
                      `(swap! ~voice-snapshots assoc ~'voice-name
                                               (snapshot ~instrument))))
-             [`(let [last-voice# (apply max-key :current-offset
-                                                (vals (deref ~voice-snapshots)))]
+             [`(let [last-voice#
+                     (apply (partial max-key #(-> % :current-offset :offset))
+                            (vals (deref ~voice-snapshots)))]
                  (load-snapshot ~instrument last-voice#))
               `(deref ~voice-events)]))))
 

@@ -18,11 +18,11 @@
               {:keys [duration offset pitch]}
                (first (note (pitch :c) (duration (note-length 4) :slur)))]
          (testing "should be placed at the current offset"
-           (is (== start offset)))
+           (is (offset= start offset)))
          (testing "should bump :current-offset forward by its duration"
-           (is (== (+ start duration) (current-offset))))
+           (is (offset= (offset+ start duration) (current-offset))))
          (testing "should update :last-offset"
-           (is (== start (last-offset))))
+           (is (offset= start (last-offset))))
          (testing "should have the pitch it was given"
            (is (== pitch c)))))
       (testing "a note event with no duration provided:"
@@ -40,20 +40,21 @@
           tempo          (fn [] (:tempo (piano)))]
       (testing "a chord event:"
         (let [start (current-offset)
-              {:keys [events]} (first
-                                 (chord (note (pitch :c) (duration (note-length 1)))
-                                       (note (pitch :e) (duration (note-length 4)))
-                                       (pause (duration (note-length 8)))
-                                       (note (pitch :g) (duration (note-length 2)))))]
+              {:keys [events]}
+              (first
+                (chord (note (pitch :c) (duration (note-length 1)))
+                       (note (pitch :e) (duration (note-length 4)))
+                       (pause (duration (note-length 8)))
+                       (note (pitch :g) (duration (note-length 2)))))]
           (testing "the notes should all start at the same time"
             (is (every? #(= start (:offset %)) events)))
           (testing ":current-offset should be bumped forward by the shortest
                     note/rest duration"
             (let [dur-fn (:duration-fn (duration (note-length 8)))
                   bump   (dur-fn (tempo))]
-              (is (= (current-offset) (+ start bump)))))
+              (is (= (current-offset) (offset+ start bump)))))
           (testing ":last-offset should be updated correctly"
-            (is (= (last-offset) start))))))))
+            (is (offset= (last-offset) start))))))))
 
 (deftest voice-tests
   (part {:names ["piano"]}
@@ -107,14 +108,14 @@
                                                  (note-length 1)
                                                  (note-length 1)))
                   bump (dur-fn (tempo))]
-              (is (= (current-offset) (+ start bump)))))
+              (is (offset= (current-offset) (offset+ start bump)))))
           (testing ":last-offset should be updated to the :last-offset as of the
                     point where the longest voice finishes"
             (let [dur-fn (:duration-fn (duration (note-length 1)
                                                  (note-length 1)
                                                  (note-length 1)))
                   bump (dur-fn (tempo))]
-              (is (= (last-offset) (+ start bump))))))))))
+              (is (offset= (last-offset) (offset+ start bump))))))))))
 
 (deftest marker-tests
   (part {:names ["piano"]}
@@ -128,12 +129,13 @@
           (testing "returns a Marker record"
             (is (= test-marker
                    (alda.lisp.Marker. "test-marker"
-                                      (absolute-offset current-marker moment)))))
+                                      (alda.lisp.AbsoluteOffset.
+                                        (absolute-offset moment))))))
           (testing "it should create an entry for the marker in *events*"
             (is (contains? *events* "test-marker")))
           (testing "its offset should be correct"
-            (is (= (absolute-offset current-marker moment)
-                   (get-in *events* ["test-marker" :offset]))))
+            (is (offset= moment
+                         (get-in *events* ["test-marker" :offset]))))
           (testing "placing a marker doesn't change the current marker"
             (is (= current-marker (get-current-marker))))))
       (testing "at-marker:"
@@ -144,7 +146,8 @@
           (is (zero? (count (get-in *events* ["test-marker" :events]))))
           (let [first-note (first (note (pitch :d)))]
             (is (= 1 (count (get-in *events* ["test-marker" :events]))))
-            (is (= 0 (:offset first-note))))))
+            (is (offset= (alda.lisp.RelativeOffset. "test-marker" 0)
+                         (:offset first-note))))))
       (testing "using at-marker before marker:"
         (testing "at-marker still works;"
           (at-marker "test-marker-2")
@@ -154,7 +157,8 @@
             (is (zero? (count (get-in *events* ["test-marker-2" :events]))))
             (let [first-note (first (note (pitch :e)))]
               (is (= 1 (count (get-in *events* ["test-marker-2" :events]))))
-              (is (= 0 (:offset first-note))))))
+              (is (offset= (alda.lisp.RelativeOffset. "test-marker-2" 0)
+                           (:offset first-note))))))
         (testing "marker adds an offset to the marker"
           (at-marker "test-marker")
           (pause (duration (note-length 1)
@@ -162,8 +166,8 @@
                            (note-length 1)
                            (note-length 1)))
           (marker "test-marker-2")
-          (is (= (absolute-offset "test-marker" (current-offset))
-                 (get-in *events* ["test-marker-2" :offset]))))))))
+          (is (offset= (current-offset)
+                       (get-in *events* ["test-marker-2" :offset]))))))))
 
 (deftest global-attribute-tests
   (part {:names ["piano"]}
@@ -172,7 +176,7 @@
           current-offset (fn [] (:current-offset (piano)))
           current-marker (fn [] (:current-marker (piano)))]
       (testing "a global tempo change:"
-        (set-current-offset "piano" 0)
+        (set-current-offset "piano" (alda.lisp.AbsoluteOffset. 0))
         (at-marker :start)
         (tempo 120)
         (pause (duration (note-length 1)))
@@ -182,7 +186,7 @@
         (pause (duration (note-length 1) (note-length 1) (note-length 1)))
         (marker "test-marker-3") ; for later test
         (testing "when another part starts,"
-          (set-current-offset "piano" 0)
+          (set-current-offset "piano" (alda.lisp.AbsoluteOffset. 0))
           (tempo 120)
           (testing "the tempo should change once it encounters the global attribute"
             (is (= (current-tempo) 120)) ; not yet...
@@ -192,7 +196,8 @@
             (is (= (current-tempo) 60)))) ; now!
         (testing "it should use absolute offset, not relative to marker"
           (at-marker "test-marker-3")
-          (is (= (current-offset) 0))
+          (is (offset= (current-offset)
+                       (alda.lisp.RelativeOffset. "test-marker-3" 0)))
           (is (= (current-marker) "test-marker-3"))
           (tempo 120)
           (is (= (current-tempo) 120))
