@@ -8,6 +8,10 @@
 
 ;;; TODO: make this all happen encapsulated in a pod ;;;
 
+(def ^:dynamic *instruments* {})
+(def ^:dynamic *current-instruments* #{})
+(def ^:dynamic *nicknames* {})
+
 (defn init-instrument
   "Initializes an instrument instance with values for tempo, current-offset,
    volume, octave, etc. Adds it to *instruments* and also returns it."

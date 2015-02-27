@@ -4,7 +4,7 @@
             [alda.parser :refer :all]
             [instaparse.core :as insta]))
 
-(deftest parser-test
+#_(deftest parser-test
   (testing "parsing valid input"
     (testing "all watched over by machines of loving grace"
       (let [result (parse-input (slurp "test/examples/awobmolg.alda"))]
