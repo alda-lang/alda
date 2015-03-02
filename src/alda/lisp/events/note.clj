@@ -28,7 +28,6 @@
                           (fn []
                             (-> (*instruments* instrument) attr)))
           tempo          (get-attribute :tempo)
-          inst-name      (get-attribute :name)
           volume         (get-attribute :volume)
           octave         (get-attribute :octave)
           current-offset (get-attribute :current-offset)
@@ -36,7 +35,7 @@
           quant          (if (or slur? slurred) 1.0 ((get-attribute :quantization)))
           note-duration  (duration-fn (tempo))
           event          (map->Note {:offset (current-offset)
-                                     :instrument (inst-name)
+                                     :instrument instrument
                                      :volume (volume)
                                      :pitch (pitch-fn (octave))
                                      :duration (* note-duration quant)})]

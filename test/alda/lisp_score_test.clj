@@ -4,44 +4,60 @@
             [alda.lisp :refer :all]
             [alda.parser :refer :all]))
 
-#_(deftest part-tests
+(defn get-instrument
+  "Returns the first instrument in *instruments* with the given stock instrument."
+  [stock-inst]
+  (first (for [[id instrument] *instruments*
+               :when (= (:stock instrument) stock-inst)]
+           instrument)))
+
+(deftest part-tests
   (testing "a part:"
     (part {:names ["piano" "trumpet"] :nickname "trumpiano"}
       (testing "starts at offset 0"
-        (is (zero? (:current-offset (*instruments* "piano"))))
-        (is (zero? (:current-offset (*instruments* "trumpet")))))
+        (is (zero? (:offset (:current-offset (get-instrument "piano")))))
+        (is (zero? (:offset (:current-offset (get-instrument "trumpet"))))))
       (testing "starts at the :start marker"
-        (is (= :start (:current-marker (*instruments* "piano"))))
-        (is (= :start (:current-marker (*instruments* "trumpet")))))
+        (is (= :start (:current-marker (get-instrument "piano"))))
+        (is (= :start (:current-marker (get-instrument "trumpet")))))
       (testing "has the instruments that it has"
-        (is (= #{"piano" "trumpet"} *current-instruments*)))
+        (is (= 2 (count *current-instruments*)))
+        (is (some #(re-matches #"^piano-" %) *current-instruments*))
+        (is (some #(re-matches #"^trumpet-" %) *current-instruments*)))
       (testing "sets a nickname if applicable"
         (is (contains? *nicknames* "trumpiano"))
-        (is (= #{"piano" "trumpet"} (*nicknames* "trumpiano"))))
+        (let [trumpiano (*nicknames* "trumpiano")]
+          (is (= (count trumpiano) 2))
+          (is (some #(re-matches #"^piano-" %) trumpiano))
+          (is (some #(re-matches #"^trumpet-" %) trumpiano))))
       (note (pitch :d) (duration (note-length 2 {:dots 1}))))
-    (def piano-offset (-> (*instruments* "piano") :current-offset))
-    (def trumpet-offset (-> (*instruments* "trumpet") :current-offset))
+    (def piano-offset (-> (get-instrument "piano") :current-offset))
+    (def trumpet-offset (-> (get-instrument "trumpet") :current-offset))
     (testing "instruments from a group can be separated at will"
       (part {:names ["piano"]}
-        (is (= *current-instruments* #{"piano"}))
-        (is (= piano-offset (-> (*instruments* "piano") :current-offset)))
+        (is (= 1 (count *current-instruments*)))
+        (is (re-matches #"^piano-" (first *current-instruments*)))
+        (is (= piano-offset (-> (get-instrument "piano") :current-offset)))
         (chord (note (pitch :a))
                (note (pitch :c :sharp))
                (note (pitch :e))))
       (alter-var-root #'piano-offset
-                      (constantly (-> (*instruments* "piano") :current-offset)))
+                      (constantly (-> (get-instrument "piano") :current-offset)))
       (part {:names ["trumpet"]}
-        (is (= *current-instruments* #{"trumpet"}))
-        (is (= trumpet-offset (-> (*instruments* "trumpet") :current-offset)))
+        (is (= 1 (count *current-instruments*)))
+        (is (re-matches #"^trumpet-" (first *current-instruments*)))
+        (is (= trumpet-offset (-> (get-instrument "trumpet") :current-offset)))
         (note (pitch :d))
         (note (pitch :e))
         (note (pitch :f :sharp)))
       (alter-var-root #'trumpet-offset
-                      (constantly (-> (*instruments* "trumpet") :current-offset)))
-      (is (= piano-offset (-> (*instruments* "piano") :current-offset))))
+                      (constantly (-> (get-instrument "trumpet") :current-offset)))
+      (is (= piano-offset (-> (get-instrument "piano") :current-offset))))
     (testing "referencing a nickname"
       (part {:names ["trumpiano"]}
-        (is (= *current-instruments* #{"piano" "trumpet"}))))))
+        (is (= 2 (count *current-instruments*)))
+        (is (some #(re-matches #"^piano-" %) *current-instruments*))
+        (is (some #(re-matches #"^trumpet-" %) *current-instruments*))))))
 
 #_(deftest lisp-test
   (testing "instrument part consolidation"

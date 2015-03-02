@@ -2,9 +2,16 @@
   (:require [clojure.test :refer :all]
             [alda.lisp :refer :all]))
 
+(defn get-instrument
+  "Returns the first instrument in *instruments* with the given stock instrument."
+  [stock-inst]
+  (first (for [[id instrument] *instruments*
+               :when (= (:stock instrument) stock-inst)]
+           instrument)))
+
 (deftest attribute-tests
   (part {:names ["piano"]}
-    (let [piano (fn [] (*instruments* "piano"))
+    (let [piano (fn [] (get-instrument "piano"))
           current-octave  (fn [] (:octave (piano)))
           current-volume  (fn [] (:volume (piano)))
           current-panning (fn [] (:panning (piano)))

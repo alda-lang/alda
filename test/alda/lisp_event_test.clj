@@ -4,9 +4,16 @@
             [alda.lisp :refer :all]
             [alda.parser :refer :all]))
 
+(defn get-instrument
+  "Returns the first instrument in *instruments* with the given stock instrument."
+  [stock-inst]
+  (first (for [[id instrument] *instruments*
+               :when (= (:stock instrument) stock-inst)]
+           instrument)))
+
 (deftest note-tests
   (part {:names ["piano"]}
-    (let [piano            (fn [] (*instruments* "piano"))
+    (let [piano            (fn [] (get-instrument "piano"))
           current-offset   (fn [] (:current-offset (piano)))
           last-offset      (fn [] (:last-offset (piano)))
           current-duration (fn [] (:duration (piano)))
@@ -34,7 +41,7 @@
 
 (deftest chord-tests
   (part {:names ["piano"]}
-    (let [piano          (fn [] (*instruments* "piano"))
+    (let [piano          (fn [] (get-instrument "piano"))
           current-offset (fn [] (:current-offset (piano)))
           last-offset    (fn [] (:last-offset (piano)))
           tempo          (fn [] (:tempo (piano)))]
@@ -58,7 +65,7 @@
 
 (deftest voice-tests
   (part {:names ["piano"]}
-    (let [piano          (fn [] (*instruments* "piano"))
+    (let [piano          (fn [] (get-instrument "piano"))
           current-offset (fn [] (:current-offset (piano)))
           last-offset    (fn [] (:last-offset (piano)))
           tempo          (fn [] (:tempo (piano)))]
@@ -119,7 +126,7 @@
 
 (deftest marker-tests
   (part {:names ["piano"]}
-    (let [piano              (fn [] (*instruments* "piano"))
+    (let [piano              (fn [] (get-instrument "piano"))
           get-current-marker (fn [] (:current-marker (piano)))
           current-offset     (fn [] (:current-offset (piano)))]
       (testing "a marker:"
@@ -171,12 +178,12 @@
 
 (deftest global-attribute-tests
   (part {:names ["piano"]}
-    (let [piano          (fn [] (*instruments* "piano"))
+    (let [piano          (fn [] (get-instrument "piano"))
           current-tempo  (fn [] (:tempo (piano)))
           current-offset (fn [] (:current-offset (piano)))
           current-marker (fn [] (:current-marker (piano)))]
       (testing "a global tempo change:"
-        (set-current-offset "piano" (alda.lisp.AbsoluteOffset. 0))
+        (set-current-offset (:id (piano)) (alda.lisp.AbsoluteOffset. 0))
         (at-marker :start)
         (tempo 120)
         (pause (duration (note-length 1)))
@@ -186,7 +193,7 @@
         (pause (duration (note-length 1) (note-length 1) (note-length 1)))
         (marker "test-marker-3") ; for later test
         (testing "when another part starts,"
-          (set-current-offset "piano" (alda.lisp.AbsoluteOffset. 0))
+          (set-current-offset (:id (piano)) (alda.lisp.AbsoluteOffset. 0))
           (tempo 120)
           (testing "the tempo should change once it encounters the global attribute"
             (is (= (current-tempo) 120)) ; not yet...

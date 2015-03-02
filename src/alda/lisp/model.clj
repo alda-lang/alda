@@ -5,5 +5,6 @@
             [alda.lisp.model.marker]
             [alda.lisp.model.event]
             [alda.lisp.model.pitch]
-            [alda.lisp.model.duration]))
+            [alda.lisp.model.duration]
+            [alda.lisp.model.instrument]))
 (in-ns 'alda.lisp)
