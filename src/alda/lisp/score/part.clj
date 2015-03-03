@@ -5,7 +5,7 @@
 
 (log/debug "Loading alda.lisp.score.part...")
 
-(def ^:dynamic *nicknames* {})
+(declare ^:dynamic *nicknames*)
 
 (defn generate-id
   [name]
@@ -64,4 +64,6 @@
   `(do
      (alter-var-root (var *current-instruments*)
                      (constantly (determine-instances ~instrument-call)))
+     (doseq [instrument# *current-instruments*]
+       (apply-global-attributes instrument# (AbsoluteOffset. 0)))
      ~@events))

@@ -39,15 +39,17 @@
                                                          %))
           :attribute-change  #(list 'alda.lisp/set-attribute (keyword %1) %2)
           :global-attribute-change
-                             #(list 'alda-lisp/global-attribute (keyword %1) %2)
+                             #(list 'alda.lisp/global-attribute (keyword %1) %2)
           :voice             #(list* 'alda.lisp/voice %&)
           :voices            #(list* 'alda.lisp/voices %&)
           :marker            #(list 'alda.lisp/marker (:name %))
           :at-marker         #(list 'alda.lisp/at-marker (:name %))
           :calls             (fn [& calls]
-                               (let [names    (keep :name calls)
+                               (let [names    (vec (keep :name calls))
                                      nickname (some :nickname calls)]
-                                 {:names names, :nickname nickname}))
+                                 (if nickname
+                                   {:names names, :nickname nickname}
+                                   {:names names})))
           :music-data        #(list* 'alda.lisp/music-data %&)
           :part              #(list* 'alda.lisp/part %&)
           :score             #(list* 'alda.lisp/score %&)})))

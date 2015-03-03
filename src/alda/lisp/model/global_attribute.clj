@@ -18,7 +18,7 @@
    attribute change will only affect the current part and any others that
    follow it in the score.")
 
-(def ^:dynamic *global-attributes* {})
+(declare ^:dynamic *global-attributes*)
 
 (defrecord GlobalAttribute [offset attr val])
 

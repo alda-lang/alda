@@ -9,5 +9,8 @@
             [alda.lisp.score]))
 
 ; test setup
+
+(init-score)
+
 (let [{:keys [id]} (init-instrument "piano")]
   (alter-var-root (var *current-instruments*) conj id))

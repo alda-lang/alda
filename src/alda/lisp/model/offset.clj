@@ -59,11 +59,16 @@
 
 (defn instruments-all-at-same-offset
   "If all of the *current-instruments* are at the same absolute offset, returns
-   that offset. Returns nil otherwise."
+   that offset. Returns nil otherwise.
+
+   (Returns 0 if there are no instruments defined yet, e.g. when placing a
+    marker or a global attribute at the beginning of a score.)"
   []
-  (let [offsets (for [instrument *current-instruments*
-                      :let [get-attr #(-> (*instruments* instrument) %)
-                            current-offset (get-attr :current-offset)]]
-                  (absolute-offset current-offset))]
-    (when (apply == offsets)
-      (AbsoluteOffset. (first offsets)))))
+  (if (empty? *current-instruments*)
+    (AbsoluteOffset. 0)
+    (let [offsets (for [instrument *current-instruments*
+                        :let [get-attr #(-> (*instruments* instrument) %)
+                              current-offset (get-attr :current-offset)]]
+                    (absolute-offset current-offset))]
+      (when (apply == offsets)
+        (AbsoluteOffset. (first offsets))))))

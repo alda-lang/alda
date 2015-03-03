@@ -58,12 +58,3 @@
         (is (= 2 (count *current-instruments*)))
         (is (some #(re-find #"^piano-" %) *current-instruments*))
         (is (some #(re-find #"^trumpet-" %) *current-instruments*))))))
-
-#_(deftest lisp-test
-  (testing "instrument part consolidation"
-    (testing "all watched over by machines of loving grace"
-      (let [result (parse-input (slurp "test/examples/awobmolg.alda"))]
-        (pprint (eval result))))
-    (testing "debussy string quartet"
-      (let [result (parse-input (slurp "test/examples/debussy_quartet.alda"))]
-        (pprint (eval result))))))

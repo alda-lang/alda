@@ -12,7 +12,9 @@
                  [djy "0.1.3"]])
 
 (require '[adzerk.bootlaces :refer :all]
-         '[adzerk.boot-test :refer :all])
+         '[adzerk.boot-test :refer :all]
+         '[alda.core]
+         '[alda.parser :refer (parse-input)])
 
 (def +version+ "0.1.0")
 (bootlaces! +version+)
@@ -38,6 +40,19 @@
   []
   (comp (aot) (pom) (uber) (jar)))
 
+(deftask parse
+  "Parse an input alda file and print the results to the console."
+  [f file FILE str  "The path to a file containing alda code."
+   c code CODE str  "A string of Alda code."
+   l lisp      bool "Parse into alda-lisp code."
+   m map       bool "Evaluate the score and show the resulting instruments/events map."]
+  (let [alda-lisp-code (parse-input (if code code (slurp file)))]
+    (when lisp
+      (prn alda-lisp-code)
+    (when map
+      (require 'alda.lisp)
+      (println)
+      (prn (eval alda-lisp-code))))))
+
 (defn -main [& args]
-  (require 'alda.core)
-  (apply (resolve 'alda.core/-main) args))
+  (apply alda.core/-main args))

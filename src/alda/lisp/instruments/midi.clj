@@ -7,8 +7,20 @@
 
 (definstrument piano
   :aliases ["midi-piano"]
-  :type :midi)
+  :config {:type :midi})
 
 (definstrument trumpet
   :aliases ["midi-trumpet"]
-  :type :midi)
+  :config {:type :midi})
+
+(definstrument cello
+  :aliases ["midi-cello"]
+  :config {:type :midi})
+
+(definstrument violin
+  :aliases ["midi-violin"]
+  :config {:type :midi})
+
+(definstrument viola
+  :aliases ["midi-viola"]
+  :config {:type :midi})
