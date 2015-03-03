@@ -22,21 +22,21 @@
         (is (= :start (:current-marker (get-instrument "trumpet")))))
       (testing "has the instruments that it has"
         (is (= 2 (count *current-instruments*)))
-        (is (some #(re-matches #"^piano-" %) *current-instruments*))
-        (is (some #(re-matches #"^trumpet-" %) *current-instruments*)))
+        (is (some #(re-find #"^piano-" %) *current-instruments*))
+        (is (some #(re-find #"^trumpet-" %) *current-instruments*)))
       (testing "sets a nickname if applicable"
         (is (contains? *nicknames* "trumpiano"))
         (let [trumpiano (*nicknames* "trumpiano")]
           (is (= (count trumpiano) 2))
-          (is (some #(re-matches #"^piano-" %) trumpiano))
-          (is (some #(re-matches #"^trumpet-" %) trumpiano))))
+          (is (some #(re-find #"^piano-" %) trumpiano))
+          (is (some #(re-find #"^trumpet-" %) trumpiano))))
       (note (pitch :d) (duration (note-length 2 {:dots 1}))))
     (def piano-offset (-> (get-instrument "piano") :current-offset))
     (def trumpet-offset (-> (get-instrument "trumpet") :current-offset))
     (testing "instruments from a group can be separated at will"
       (part {:names ["piano"]}
         (is (= 1 (count *current-instruments*)))
-        (is (re-matches #"^piano-" (first *current-instruments*)))
+        (is (re-find #"^piano-" (first *current-instruments*)))
         (is (= piano-offset (-> (get-instrument "piano") :current-offset)))
         (chord (note (pitch :a))
                (note (pitch :c :sharp))
@@ -45,7 +45,7 @@
                       (constantly (-> (get-instrument "piano") :current-offset)))
       (part {:names ["trumpet"]}
         (is (= 1 (count *current-instruments*)))
-        (is (re-matches #"^trumpet-" (first *current-instruments*)))
+        (is (re-find #"^trumpet-" (first *current-instruments*)))
         (is (= trumpet-offset (-> (get-instrument "trumpet") :current-offset)))
         (note (pitch :d))
         (note (pitch :e))
@@ -56,8 +56,8 @@
     (testing "referencing a nickname"
       (part {:names ["trumpiano"]}
         (is (= 2 (count *current-instruments*)))
-        (is (some #(re-matches #"^piano-" %) *current-instruments*))
-        (is (some #(re-matches #"^trumpet-" %) *current-instruments*))))))
+        (is (some #(re-find #"^piano-" %) *current-instruments*))
+        (is (some #(re-find #"^trumpet-" %) *current-instruments*))))))
 
 #_(deftest lisp-test
   (testing "instrument part consolidation"
