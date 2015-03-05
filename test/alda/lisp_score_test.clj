@@ -58,3 +58,21 @@
         (is (= 2 (count *current-instruments*)))
         (is (some #(re-find #"^piano-" %) *current-instruments*))
         (is (some #(re-find #"^trumpet-" %) *current-instruments*))))))
+
+(deftest score-tests
+  (testing "a score:"
+    (let [score (score
+                  (part {:names ["piano" "violin" "cello"]}
+                    (note (pitch :c))
+                    (note (pitch :d))
+                    (note (pitch :e))
+                    (note (pitch :f))
+                    (note (pitch :g))
+                    (note (pitch :a))
+                    (note (pitch :b))
+                    (octave :up)
+                    (note (pitch :c))))]
+      (testing "it has the right number of instruments"
+        (is (= 3 (count (:instruments score)))))
+      (testing "it has the right number of events"
+        (is (= (* 3 8) (count (:events score))))))))
