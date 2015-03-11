@@ -45,11 +45,8 @@
 
 (defn apply-global-attributes
   [instrument now]
-  (let [get-attr       (fn [attr]
-                         (fn [] (-> (*instruments* instrument) attr)))
-        current-marker (get-attr :current-marker)
-        now            (absolute-offset now)
-        last-offset    (absolute-offset ((get-attr :last-offset)))
+  (let [now            (absolute-offset now)
+        last-offset    (absolute-offset ($last-offset instrument))
         new-global-attrs (->> *global-attributes*
                               (filter (fn [[offset attrs]]
                                         (<= last-offset

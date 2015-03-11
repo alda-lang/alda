@@ -12,20 +12,14 @@
   [instrument & events]
   (let [num-of-events  (count (filter #(= (first %) 'note) events))
         start          (gensym "start")
-        offsets        (gensym "offsets")
-        current-offset (gensym "current-offset")
-        current-marker (gensym "current-marker")]
-    (list* 'let [current-offset `(fn [] (-> (*instruments* ~instrument)
-                                            :current-offset))
-                 current-marker `(fn [] (-> (*instruments* ~instrument)
-                                            :current-marker))
-                 start   (list current-offset)
+        offsets        (gensym "offsets")]
+    (list* 'let [start   (list '$current-offset instrument)
                  offsets (list 'atom [])]
            (concat
              (interleave
                (repeat `(set-current-offset ~instrument ~start))
                events
-               (repeat `(swap! ~offsets conj (~current-offset))))
+               (repeat `(swap! ~offsets conj ($current-offset ~instrument))))
              [`(set-last-offset ~instrument ~start)
               `(set-current-offset ~instrument (apply (partial min-key :offset)
                                                   (remove #(offset= % ~start)
@@ -33,7 +27,8 @@
               `(let [chord#
                      (Chord. (take-last ~num-of-events
                                         (get-in *events*
-                                                [(~current-marker) :events])))]
+                                                [($current-marker ~instrument)
+                                                 :events])))]
                  chord#)]))))
 
 (defmacro chord

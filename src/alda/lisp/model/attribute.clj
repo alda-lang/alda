@@ -28,6 +28,8 @@
   (let [{:keys [aliases kw initial-val fn-name transform] :as opts}
         (if (string? (first things)) (rest things) things)
         kw-name      (or kw (keyword attr-name))
+        fn-name      (or fn-name attr-name)
+        getter-fn    (symbol (str \$ attr-name))
         attr-aliases (vec (cons (keyword attr-name) (or aliases [])))
         transform-fn (or transform #(constantly %))]
     `(do
@@ -49,8 +51,11 @@
                                       new-val#)))
                  (AttributeChange. instrument# ~(keyword attr-name)
                                    old-val# new-val#))))))
-       (defn ~(or fn-name attr-name) [x#]
-         (set-attribute ~(keyword attr-name) x#)))))
+       (defn ~fn-name [x#]
+         (set-attribute ~(keyword attr-name) x#))
+       (defn ~getter-fn
+         ([] (~getter-fn (first *current-instruments*)))
+         ([instrument#] (-> (*instruments* instrument#) ~kw-name))))))
 
 (defn snapshot
   [instrument]

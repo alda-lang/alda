@@ -5,6 +5,11 @@
 
 (defrecord Marker [name offset])
 
+(defn $current-marker
+  "Get the :current-marker of an instrument."
+  ([] ($current-marker (first *current-instruments*)))
+  ([instrument] (-> (*instruments* instrument) :current-marker)))
+
 (defn marker
   "Places a marker at the current absolute offset. Logs an error if there are
    multiple instruments active at different offsets."
@@ -22,7 +27,7 @@
   [marker]
   (doall
     (for [instrument *current-instruments*]
-      (let [old-marker (-> (*instruments* instrument) :current-marker)]
+      (let [old-marker ($current-marker instrument)]
         (set-current-offset instrument (RelativeOffset. marker 0))
         (alter-var-root #'*instruments* assoc-in [instrument :current-marker]
                                                  marker)

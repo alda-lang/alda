@@ -38,11 +38,20 @@
 
 ;;;
 
+(defn $current-offset
+  "Get the :current-offset of an instrument."
+  ([] ($current-offset (first *current-instruments*)))
+  ([instrument] (-> (*instruments* instrument) :current-offset)))
+
+(defn $last-offset
+  "Get the :last-offset of an instrument."
+  ([] ($last-offset (first *current-instruments*)))
+  ([instrument] (-> (*instruments* instrument) :last-offset)))
+
 (defn set-current-offset
   "Set the offset, in ms, where the next event will occur."
   [instrument offset]
-  (let [old-offset (-> (*instruments* instrument) :current-offset)
-        current-marker (-> (*instruments* instrument) :current-marker)]
+  (let [old-offset ($current-offset instrument)]
     (alter-var-root #'*instruments* assoc-in [instrument :current-offset] offset)
     (apply-global-attributes instrument offset)
     (AttributeChange. instrument :current-offset old-offset offset)))
@@ -53,7 +62,7 @@
    conjunction with :current-offset to determine whether an event
    occurred within a given window."
   [instrument offset]
-  (let [old-offset (-> (*instruments* instrument) :last-offset)]
+  (let [old-offset ($last-offset instrument)]
     (alter-var-root #'*instruments* assoc-in [instrument :last-offset] offset)
     (AttributeChange. instrument :last-offset old-offset offset)))
 
@@ -66,9 +75,7 @@
   []
   (if (empty? *current-instruments*)
     (AbsoluteOffset. 0)
-    (let [offsets (for [instrument *current-instruments*
-                        :let [get-attr #(-> (*instruments* instrument) %)
-                              current-offset (get-attr :current-offset)]]
-                    (absolute-offset current-offset))]
+    (let [offsets (map (comp absolute-offset $current-offset)
+                       *current-instruments*)]
       (when (apply == offsets)
         (AbsoluteOffset. (first offsets))))))

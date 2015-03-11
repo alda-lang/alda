@@ -2,52 +2,40 @@
   (:require [clojure.test :refer :all]
             [alda.lisp :refer :all]))
 
-(defn get-instrument
-  "Returns the first instrument in *instruments* with the given stock instrument."
-  [stock-inst]
-  (first (for [[id instrument] *instruments*
-               :when (= (:stock instrument) stock-inst)]
-           instrument)))
-
 (deftest attribute-tests
   (part {:names ["piano"]}
-    (let [piano (fn [] (get-instrument "piano"))
-          current-octave  (fn [] (:octave (piano)))
-          current-volume  (fn [] (:volume (piano)))
-          current-panning (fn [] (:panning (piano)))
-          current-quant   (fn [] (:quantization (piano)))]
-      (testing "octaves"
-        (octave 4)
-        (is (= (current-octave) 4))
-        (octave 2)
-        (is (= (current-octave) 2))
-        (octave :down)
-        (is (= (current-octave) 1))
-        (octave :up)
-        (is (= (current-octave) 2))
-        (set-attribute :octave 5)
-        (is (= (current-octave) 5)))
-      (testing "volume"
-        (volume 50)
-        (is (== (current-volume) 0.5))
-        (volume 75)
-        (is (== (current-volume) 0.75))
-        (set-attribute :volume 100)
-        (is (== (current-volume) 1.0)))
-      (testing "panning"
-        (panning 25)
-        (is (== (current-panning) 0.25))
-        (panning 75)
-        (is (== (current-panning) 0.75))
-        (set-attribute :panning 50)
-        (is (== (current-panning) 0.5)))
-      (testing "quantization"
-        (quant 50)
-        (is (== (current-quant) 0.5))
-        (quant 100)
-        (is (== (current-quant) 1.0))
-        (set-attribute :quant 90)
-        (is (== (current-quant) 0.9))))))
+    (testing "octaves"
+      (octave 4)
+      (is (= ($octave) 4))
+      (octave 2)
+      (is (= ($octave) 2))
+      (octave :down)
+      (is (= ($octave) 1))
+      (octave :up)
+      (is (= ($octave) 2))
+      (set-attribute :octave 5)
+      (is (= ($octave) 5)))
+    (testing "volume"
+      (volume 50)
+      (is (== ($volume) 0.5))
+      (volume 75)
+      (is (== ($volume) 0.75))
+      (set-attribute :volume 100)
+      (is (== ($volume) 1.0)))
+    (testing "panning"
+      (panning 25)
+      (is (== ($panning) 0.25))
+      (panning 75)
+      (is (== ($panning) 0.75))
+      (set-attribute :panning 50)
+      (is (== ($panning) 0.5)))
+    (testing "quantization"
+      (quant 50)
+      (is (== ($quantization) 0.5))
+      (quant 100)
+      (is (== ($quantization) 1.0))
+      (set-attribute :quant 90)
+      (is (== ($quantization) 0.9)))))
 
 (deftest duration-tests
   (part {:names ["piano"]}
