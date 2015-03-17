@@ -33,14 +33,21 @@ slur                    = <"~">
 octave-change           = (<"o"> number | ">" | "<") <ows>
 
 <global-attributes>     = <"("> <ows> global-attribute-change+ <")"> <ows>
-global-attribute-change = global-attribute <ows> number <ows> <#"[,;]">? <ows>
-<global-attribute>      = attribute <"!">
+global-attribute-change = (global-attribute-num | global-attribute-dur)
+                          <ows> <#"[,;]">? <ows>
+<global-attribute-num>  = attribute-num <"!"> <ows> number
+<global-attribute-dur>  = attribute-dur <"!"> <ows> duration
+
 <attribute-changes>     = <"("> <ows>
                           (global-attribute-change | attribute-change)+
                           <")"> <ows>
-attribute-change        = attribute <ows> number <ows> <#"[,;]">? <ows>
-<attribute>             = "volume" | #"pan(ning)?" | "tempo" |
+attribute-change        = (attribute-change-num | attribute-change-dur)
+                          <ows> <#"[,;]">? <ows>
+<attribute-change-num>  = attribute-num <ows> number
+<attribute-change-dur>  = attribute-dur <ows> duration
+<attribute-num>         = "volume" | #"pan(ning)?" | "tempo" |
                           #"quant(iz(e|ation))?"
+<attribute-dur>         = "note-length"
 
 marker                  = <"%"> name <ows>
 at-marker               = <"@"> name <ows>

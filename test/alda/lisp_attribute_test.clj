@@ -35,7 +35,12 @@
       (quant 100)
       (is (== ($quantization) 1.0))
       (set-attribute :quant 90)
-      (is (== ($quantization) 0.9)))))
+      (is (== ($quantization) 0.9)))
+    (testing "note-length"
+      (set-attribute :note-length (duration (note-length 2 {:dots 2})))
+      (is (== ($duration) 3.5))
+      (set-attribute :note-length (duration (note-length 1) (note-length 1)))
+      (is (== ($duration) 8)))))
 
 (deftest duration-tests
   (part {:names ["piano"]}

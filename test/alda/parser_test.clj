@@ -41,7 +41,15 @@
     (is (= (test-parse :attribute-change "quant 75")
            '(alda.lisp/set-attribute :quant 75)))
     (is (= (test-parse :attribute-change "panning 0")
-           '(alda.lisp/set-attribute :panning 0))))
+           '(alda.lisp/set-attribute :panning 0)))
+    (is (= (test-parse :attribute-change "note-length 1")
+           '(alda.lisp/set-attribute :note-length
+                                     (alda.lisp/duration
+                                       (alda.lisp/note-length 1)))))
+    (is (= (test-parse :attribute-change "note-length 2..")
+           '(alda.lisp/set-attribute :note-length
+                                     (alda.lisp/duration
+                                       (alda.lisp/note-length 2 {:dots 2}))))))
   (testing "attribute changes"
     (is (= (test-parse :attribute-changes "(volume 50, tempo 100)")
            '((alda.lisp/set-attribute :volume 50)

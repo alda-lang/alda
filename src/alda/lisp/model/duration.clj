@@ -12,9 +12,9 @@
     (/ 4 number))
   ([number {:keys [dots]}]
     (let [value (/ 4 number)]
-      (loop [total value, factor 1/2, dots dots]
+      (loop [total value, factor 0.5, dots dots]
         (if (pos? dots)
-          (recur (+ total (* value factor)) (* factor 1/2) (dec dots))
+          (recur (+ total (* value factor)) (* factor 0.5) (dec dots))
           total)))))
 
 (defn duration
@@ -32,4 +32,5 @@
         beats (apply + note-lengths)]
     (set-duration beats)
     {:duration-fn (fn [tempo] (float (* beats (/ 60000 tempo))))
-     :slurred slurred}))
+     :slurred slurred
+     :beats beats}))

@@ -20,6 +20,18 @@
   :initial-val 1
   :fn-name set-duration)
 
+(defmethod set-attribute :note-length [attr val]
+  "The value for this has to be expressed as (duration (note-length ...)).
+
+   Using (duration (note-length ...)) to express a note duration happens to
+   already set duration via (set-attribute :duration ...), which leaves nothing
+   for (set-attribute :note-length ...) to actually do. Implementing this as a
+   placeholder so that the multimethod doesn't complain that :note-length isn't
+   a valid attribute :)"
+
+  (for [instrument *current-instruments*]
+    (AttributeChange. instrument :duration :??? (:beats val))))
+
 (defattribute octave
   "Current octave. Used to calculate the pitch of notes."
   :initial-val 4
