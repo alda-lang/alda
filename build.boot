@@ -48,11 +48,11 @@
    m map       bool "Evaluate the score and show the resulting instruments/events map."]
   (let [alda-lisp-code (parse-input (if code code (slurp file)))]
     (when lisp
-      (prn alda-lisp-code)
+      (prn alda-lisp-code))
     (when map
       (require 'alda.lisp)
       (println)
-      (prn (eval alda-lisp-code))))))
+      (prn (eval alda-lisp-code)))))
 
 (defn -main [& args]
   (apply alda.core/-main args))
