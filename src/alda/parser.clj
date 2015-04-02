@@ -53,29 +53,3 @@
           :music-data        #(list* 'alda.lisp/music-data %&)
           :part              #(list* 'alda.lisp/part %&)
           :score             #(list* 'alda.lisp/score %&)})))
-
-(comment
-  "To do:
-
-     - Implement a way to embed time markers of some sort among the musical
-       events, so that they end up synchronized between the musical instruments.
-       Each instrument by default starts its musical events at '0', i.e. the
-       beginning, but the composer will be able to specify where a musical event
-       will fall by using markers.
-
-         Special cases:
-           * Chords: each note in the chord starts at the same time mark. The
-                     next event after the chord will be assigned that time mark
-                     + the duration of the shortest note/rest in the chord.
-           * Voices: voices work just like chords. Each voice in the voices
-                     grouping starts at the same time mark. The next event after
-                     the voices grouping (whether via explicit V0: or switching
-                     back from another instrument) will start whenever the last
-                     voice has finished its music data... i.e. the 'largest' time
-                     marking out of all the voices.
-
-     -  At this point, will probably hand off the final parse trees (one per
-        instrument) to alda.sound_generator, which will hopefully be able to
-        create audio segments of each instrument at each time marking, and then
-        use the time markings to layer all the different audio segments together
-        to create the final audio file.")
