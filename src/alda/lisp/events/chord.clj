@@ -13,7 +13,7 @@
   (let [num-of-events  (count (filter #(= (first %) 'note) events))
         start          (gensym "start")
         offsets        (gensym "offsets")]
-    (list* 'let [start   (list '$current-offset instrument)
+    (list* 'let [start   (list `$current-offset instrument)
                  offsets (list 'atom [])]
            (concat
              (interleave
