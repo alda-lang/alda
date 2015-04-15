@@ -47,6 +47,18 @@ all of these existing worlds?
     g8 f+ e d c < b a g | f+ e d c < b a g4
     << g1/>g/>g/b/>d/g
 
+## Quick demo
+
+Try this on for size:
+
+    git clone git@github.com:alda-lang/alda.git
+    cd alda
+    boot play --file test/examples/awobmolg.alda --lead-time 3000
+
+You can also execute arbitrary Alda code, like this:
+
+    boot play --code "piano: c6 d12 e6 g12~4"
+
 ## alda.lisp
 
 Under the hood, Alda transforms input (i.e. Alda code) into Clojure code which, when evaluated, produces a map of score information, which the audio component of Alda can then use to make sound. This Clojure code is written in a DSL called **alda.lisp**. See below for an example of alda.lisp code and the result of evaluating it.

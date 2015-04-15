@@ -20,16 +20,17 @@
         (assoc :note (frequency->note (:pitch e)))
         (dissoc :pitch))))
 
-(defn play! [alda-events & [lead-time]]
-  (let [notes (->midi-notes alda-events)]
-    (with-open [synth (doto (MidiSystem/getSynthesizer) .open)]
-      (let [channel (aget (.getChannels synth) 0)
-            pool    (mk-pool)
-            start   (+ (now) (or lead-time 1000))]
-        (doseq [note notes]
-          (at (+ start (:offset note))
-              (fn []
-                (.noteOn channel (:note note) 127)
-                (Thread/sleep (:duration note))
-                (.noteOff channel (:note note)))
-              pool))))))
+(defn play! [alda-events score-length & [{:keys [lead-time] :as opts}]]
+  (with-open [synth (doto (MidiSystem/getSynthesizer) .open)]
+    (let [channel (aget (.getChannels synth) 0)
+          lead-time (or lead-time 1000)
+          start   (+ (now) lead-time 1000)
+          pool    (mk-pool)]
+      (doseq [note (->midi-notes alda-events)]
+        (at (+ start (:offset note))
+            (fn []
+              (.noteOn channel (:note note) 127)
+              (Thread/sleep (:duration note))
+              (.noteOff channel (:note note)))
+            pool))
+      (Thread/sleep (+ score-length 5000)))))

@@ -65,10 +65,10 @@
   "Parse some Alda code and play the resulting score."
   [f file      FILE str  "The path to a file containing Alda code."
    c code      CODE str  "A string of Alda code."
-   ; TODO: implement smart buffering and remove the --lead option
+   ; TODO: implement smart buffering and remove the --lead-time option
    l lead-time MS   int  "The number of milliseconds of lead time for buffering."]
   (require '[alda.lisp] '[alda.sound])
-  (alda.sound/play! (eval (parse-input (if code code (slurp file)))) lead-time))
+  (alda.sound/play! (eval (parse-input (if code code (slurp file)))) {:lead-time lead-time}))
 
 (defn -main [& args]
   (apply alda.core/-main args))
