@@ -9,7 +9,8 @@
                  [adzerk/bootlaces "0.1.9" :scope "test"]
                  [adzerk/boot-test "1.0.3" :scope "test"]
                  [com.taoensso/timbre "3.4.0"]
-                 [djy "0.1.3"]])
+                 [djy "0.1.3"]
+                 [overtone "0.9.1"]])
 
 (require '[adzerk.bootlaces :refer :all]
          '[adzerk.boot-test :refer :all]
@@ -56,3 +57,54 @@
 
 (defn -main [& args]
   (apply alda.core/-main args))
+
+;;;;;
+
+(require '[overtone.at-at :refer :all]
+         '[alda.lisp])
+
+(defn log [base x]
+  (/ (Math/log x) (Math/log base)))
+
+;;; http://en.wikipedia.org/wiki/MIDI_Tuning_Standard#Frequency_values
+(defn frequency->note
+  [f]
+  (int (+ 69 (* 12 (log 2 (/ f 440))))))
+
+(defn ->notes
+  [evald]
+  (for [e (map #(select-keys % [:offset :pitch :duration]) (:events evald))]
+    (-> e
+        (assoc :note (frequency->note (:pitch e)))
+        (dissoc :pitch))))
+
+(import '(javax.sound.midi MidiSystem Synthesizer))
+
+(def synth (doto (MidiSystem/getSynthesizer) .open))
+(def channel (aget (.getChannels synth) 0))
+(def my-pool (mk-pool))
+
+(defn play-file [f & [lead-time]]
+  (let [parsed (parse-input (slurp f))
+        start (+ (now) (or lead-time 1000))]
+    (doseq [note (->notes (eval parsed))]
+      (at (+ start (:offset note))
+          (fn []
+            (.noteOn channel (:note note) 127)
+            (Thread/sleep (:duration note))
+            (.noteOff channel (:note note)))
+          my-pool))))
+
+(defn play! [compiled]
+  (let [xs (->notes compiled)]
+    (with-open [synth (doto (MidiSystem/getSynthesizer) .open)]
+      (let [channel (aget (.getChannels synth) 0)]
+        (loop [now 0, events (sort-by :offset xs)]
+          (when (seq events)
+            (let [[current later] (split-with #(<= (:offset %) now) events)]
+              (doseq [note current]
+                (println "playing" note)
+                (.noteOn channel (:note note) 127)
+                (Thread/sleep (:duration note))
+                (.noteOff channel (:note note)))
+              (recur (inc now) later))))))))
