@@ -41,11 +41,17 @@
   []
   (comp (aot) (pom) (uber) (jar)))
 
+;; TODO: separate out Boot tasks --
+;;   parse should just parse the code
+;;   print should print it to the console
+;;   play should play it
+;;   save should save it in whatever output format you'd like (wav, mp3, etc.)
+
 (deftask parse
-  "Parse an input alda file and print the results to the console."
-  [f file FILE str  "The path to a file containing alda code."
+  "Parse some Alda code and print the results to the console."
+  [f file FILE str  "The path to a file containing Alda code."
    c code CODE str  "A string of Alda code."
-   l lisp      bool "Parse into alda-lisp code."
+   l lisp      bool "Parse into alda.lisp code."
    m map       bool "Evaluate the score and show the resulting instruments/events map."]
   (let [alda-lisp-code (parse-input (if code code (slurp file)))]
     (when lisp
@@ -55,56 +61,14 @@
       (println)
       (prn (eval alda-lisp-code)))))
 
+(deftask play
+  "Parse some Alda code and play the resulting score."
+  [f file      FILE str  "The path to a file containing Alda code."
+   c code      CODE str  "A string of Alda code."
+   ; TODO: implement smart buffering and remove the --lead option
+   l lead-time MS   int  "The number of milliseconds of lead time for buffering."]
+  (require '[alda.lisp] '[alda.sound])
+  (alda.sound/play! (eval (parse-input (if code code (slurp file)))) lead-time))
+
 (defn -main [& args]
   (apply alda.core/-main args))
-
-;;;;;
-
-(require '[overtone.at-at :refer :all]
-         '[alda.lisp])
-
-(defn log [base x]
-  (/ (Math/log x) (Math/log base)))
-
-;;; http://en.wikipedia.org/wiki/MIDI_Tuning_Standard#Frequency_values
-(defn frequency->note
-  [f]
-  (int (+ 69 (* 12 (log 2 (/ f 440))))))
-
-(defn ->notes
-  [evald]
-  (for [e (map #(select-keys % [:offset :pitch :duration]) (:events evald))]
-    (-> e
-        (assoc :note (frequency->note (:pitch e)))
-        (dissoc :pitch))))
-
-(import '(javax.sound.midi MidiSystem Synthesizer))
-
-(def synth (doto (MidiSystem/getSynthesizer) .open))
-(def channel (aget (.getChannels synth) 0))
-(def my-pool (mk-pool))
-
-(defn play-file [f & [lead-time]]
-  (let [parsed (parse-input (slurp f))
-        start (+ (now) (or lead-time 1000))]
-    (doseq [note (->notes (eval parsed))]
-      (at (+ start (:offset note))
-          (fn []
-            (.noteOn channel (:note note) 127)
-            (Thread/sleep (:duration note))
-            (.noteOff channel (:note note)))
-          my-pool))))
-
-(defn play! [compiled]
-  (let [xs (->notes compiled)]
-    (with-open [synth (doto (MidiSystem/getSynthesizer) .open)]
-      (let [channel (aget (.getChannels synth) 0)]
-        (loop [now 0, events (sort-by :offset xs)]
-          (when (seq events)
-            (let [[current later] (split-with #(<= (:offset %) now) events)]
-              (doseq [note current]
-                (println "playing" note)
-                (.noteOn channel (:note note) 127)
-                (Thread/sleep (:duration note))
-                (.noteOff channel (:note note)))
-              (recur (inc now) later))))))))

@@ -1,6 +1,6 @@
 (ns alda.core
   (:require [clojure.tools.cli :refer (parse-opts)]
-            [alda.sound-generator :as soundgen])
+            [alda.sound :as sound])
   (:gen-class))
 
 (def cli-options
@@ -16,9 +16,9 @@
   "If no output file is specified, plays the file using the specified options.
    If an output file is specified, creates a .wav file using the specified options."
   ([input-file opts]
-    (soundgen/play input-file opts))
+    (sound/play! input-file opts))
   ([input-file output-file opts]
-    (soundgen/make-wav input-file output-file opts)))
+    (sound/make-wav! input-file output-file opts)))
 
 (defn -main
   [& args]
