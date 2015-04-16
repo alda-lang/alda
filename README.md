@@ -49,7 +49,7 @@ all of these existing worlds?
 
 ## Quick demo
 
-Try this on for size:
+Assuming you have [Boot](http://www.boot-clj.com) installed, try this on for size:
 
     git clone git@github.com:alda-lang/alda.git
     cd alda
