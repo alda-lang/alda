@@ -41,12 +41,6 @@
   []
   (comp (aot) (pom) (uber) (jar)))
 
-;; TODO: separate out Boot tasks --
-;;   parse should just parse the code
-;;   print should print it to the console
-;;   play should play it
-;;   save should save it in whatever output format you'd like (wav, mp3, etc.)
-
 (deftask parse
   "Parse some Alda code and print the results to the console."
   [f file FILE str  "The path to a file containing Alda code."
