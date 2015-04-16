@@ -52,7 +52,7 @@
 ; TODO: use different generators for different instruments (MIDI vs. synth, etc.)
 ; TODO: control where to start and stop playing using the start & end keys
 (defn play!
-  "Parses an input file and plays the result, using the specified options."
+  "Plays an Alda score, optionally from given start/end marks."
   [score & [{:keys [start end] :as opts}]]
   (midi/play! score (score-length score) opts))
 
