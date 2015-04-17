@@ -1,0 +1,34 @@
+#!/usr/bin/env boot
+; -*- mode: Clojure;-*-
+
+(import '(javax.sound.midi MidiSystem Synthesizer))
+
+(def ^:dynamic *synth* (MidiSystem/getSynthesizer))
+(def ^:dynamic *channel* (first (.getChannels *synth*)))
+(def ^:dynamic *instruments* (.. *synth* getDefaultSoundbank getInstruments))
+
+(defn load-instrument! [patch-number]
+  (let [instrument (nth *instruments* (dec patch-number))]
+    (.loadInstrument *synth* instrument)
+    (.programChange *channel* (dec patch-number))
+    instrument))
+
+(defn play-note! [{:keys [note duration]}]
+  (. *channel* noteOn note 127)
+  (Thread/sleep duration)
+  (. *channel* noteOff note))
+
+(defn demo! []
+  (let [demo-notes [43 47 50 55 59 62 67 71 74 79]
+        note-maps  (conj (mapv #(hash-map :note % :duration 250)
+                               (drop-last demo-notes))
+                         {:note (last demo-notes), :duration 1000})]
+    (dorun (map play-note! note-maps))))
+
+(defn -main [& [patch-number other-args]]
+  (.open *synth*)
+  (let [patch-number (Integer/parseInt patch-number)
+        instrument   (load-instrument! patch-number)]
+    (println "Patch" (str patch-number \:) (.getName instrument))
+    (demo!))
+  (.close *synth*))
