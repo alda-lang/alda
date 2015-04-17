@@ -29,6 +29,8 @@
   (.open *synth*)
   (let [patch-number (Integer/parseInt patch-number)
         instrument   (load-instrument! patch-number)]
+    (Thread/sleep 500)
     (println "Patch" (str patch-number \:) (.getName instrument))
     (demo!))
+  (Thread/sleep 1500)
   (.close *synth*))
