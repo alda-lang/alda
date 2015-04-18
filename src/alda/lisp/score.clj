@@ -4,7 +4,7 @@
 
 (log/debug "Loading alda.lisp.score...")
 
-(defn init-score
+(defn score*
   []
   (letfn [(init [var val] (alter-var-root var (constantly val)))]
     (init #'*events* {:start {:offset (AbsoluteOffset. 0), :events []}})
@@ -30,14 +30,18 @@
            [marker-name (absolute-offset marker-offset)])
          events-map)))
 
+(defn score-map
+  []
+  {:events (event-set *events*)
+   :markers (markers *events*)
+   :instruments *instruments*})
+
 (defmacro score
   "Initializes a new score, evaluates body, and returns the map containing the
    set of events resulting from evaluating the score, and information about the
    instrument instances, including their states at the end of the score."
   [& body]
   `(do
-     (init-score)
+     (score*)
      ~@body
-     {:events (event-set *events*)
-      :markers (markers *events*)
-      :instruments *instruments*}))
+     (score-map)))

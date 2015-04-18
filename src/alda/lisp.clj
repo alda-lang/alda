@@ -8,9 +8,15 @@
             [alda.lisp.instruments]
             [alda.lisp.score]))
 
-; test setup
+; example: creating a score interactively at the repl
 
-(init-score)
-
-(let [{:keys [id]} (init-instrument "piano")]
-  (alter-var-root (var *current-instruments*) conj id))
+; (in-ns 'alda.lisp)
+; (score*)
+; (part* {:names ["piano"]})
+; (note (pitch :c) (duration (note-length 8)))
+; (note (pitch :d))
+; (note (pitch :e))
+; (chord (note (pitch :b :flat) (duration (note-length 2)))
+;        (octave :up)
+;        (note (pitch :d)))
+; (score-map)

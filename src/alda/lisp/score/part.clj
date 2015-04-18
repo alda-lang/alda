@@ -58,12 +58,16 @@
       (alter-var-root #'*nicknames* assoc nickname instances))
     (set instances)))
 
+(defn part*
+  [instrument-call]
+  (alter-var-root (var *current-instruments*)
+                  (constantly (determine-instances instrument-call)))
+  (doseq [instrument# *current-instruments*]
+    (apply-global-attributes instrument# (AbsoluteOffset. 0))))
+
 (defmacro part
   "Determines the current instrument(s) and executes the events."
   [instrument-call & events]
   `(do
-     (alter-var-root (var *current-instruments*)
-                     (constantly (determine-instances ~instrument-call)))
-     (doseq [instrument# *current-instruments*]
-       (apply-global-attributes instrument# (AbsoluteOffset. 0)))
+     (part* ~instrument-call)
      ~@events))
