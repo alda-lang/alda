@@ -24,6 +24,12 @@
                 (update-in event [:offset] absolute-offset)))
             events-map)))
 
+(defn markers [events-map]
+  (into {}
+    (map (fn [[marker-name {marker-offset :offset}]]
+           [marker-name (absolute-offset marker-offset)])
+         events-map)))
+
 (defmacro score
   "Initializes a new score, evaluates body, and returns the map containing the
    set of events resulting from evaluating the score, and information about the
@@ -33,4 +39,5 @@
      (init-score)
      ~@body
      {:events (event-set *events*)
+      :markers (markers *events*)
       :instruments *instruments*}))
