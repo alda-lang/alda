@@ -1,7 +1,10 @@
 (ns alda.lisp.score.part)
 (in-ns 'alda.lisp)
 
-(require '[djy.char :refer (char-range)])
+(require '[djy.char        :refer (char-range)]
+         '[instaparse.core :as insta]
+         '[clojure.java.io :as io]
+         '[clojure.string :as str])
 
 (log/debug "Loading alda.lisp.score.part...")
 
@@ -58,12 +61,25 @@
       (alter-var-root #'*nicknames* assoc nickname instances))
     (set instances)))
 
-(defn part*
+(defn parse-instrument-call [s]
+  (with-redefs [alda.parser/alda-parser #((insta/parser (io/resource "alda.bnf")) % :start :calls)]
+    (alda.parser/parse-input (-> s
+                                 (str/replace #":$" "")
+                                 (str/replace #"'" "\"")
+                                 (str \:)))))
+
+(defmulti part* type)
+
+(defmethod part* clojure.lang.PersistentArrayMap
   [instrument-call]
   (alter-var-root (var *current-instruments*)
                   (constantly (determine-instances instrument-call)))
   (doseq [instrument# *current-instruments*]
     (apply-global-attributes instrument# (AbsoluteOffset. 0))))
+
+(defmethod part* String
+  [instrument-call]
+  (part* (parse-instrument-call instrument-call)))
 
 (defmacro part
   "Determines the current instrument(s) and executes the events."

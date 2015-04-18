@@ -12,7 +12,7 @@
 
 ; (in-ns 'alda.lisp)
 ; (score*)
-; (part* {:names ["piano"]})
+; (part* "piano")
 ; (note (pitch :c) (duration (note-length 8)))
 ; (note (pitch :d))
 ; (note (pitch :e))

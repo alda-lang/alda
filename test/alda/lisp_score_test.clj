@@ -14,7 +14,7 @@
 (deftest part-tests
   (score*)
   (testing "a part:"
-    (part* {:names ["piano" "trumpet"] :nickname "trumpiano"})
+    (part* "piano/trumpet 'trumpiano'")
     (testing "starts at offset 0"
       (is (zero? (:offset (:current-offset (get-instrument "piano")))))
       (is (zero? (:offset (:current-offset (get-instrument "trumpet"))))))
@@ -35,7 +35,7 @@
     (def piano-offset (-> (get-instrument "piano") :current-offset))
     (def trumpet-offset (-> (get-instrument "trumpet") :current-offset))
     (testing "instruments from a group can be separated at will"
-      (part* {:names ["piano"]})
+      (part* "piano")
       (is (= 1 (count *current-instruments*)))
       (is (re-find #"^piano-" (first *current-instruments*)))
       (is (= piano-offset (-> (get-instrument "piano") :current-offset)))
@@ -45,7 +45,7 @@
       (alter-var-root #'piano-offset
                       (constantly (-> (get-instrument "piano") :current-offset)))
 
-      (part* {:names ["trumpet"]})
+      (part* "trumpet")
       (is (= 1 (count *current-instruments*)))
       (is (re-find #"^trumpet-" (first *current-instruments*)))
       (is (= trumpet-offset (-> (get-instrument "trumpet") :current-offset)))
@@ -56,7 +56,7 @@
                       (constantly (-> (get-instrument "trumpet") :current-offset)))
       (is (= piano-offset (-> (get-instrument "piano") :current-offset))))
     (testing "referencing a nickname"
-      (part* {:names ["trumpiano"]})
+      (part* "trumpiano")
       (is (= 2 (count *current-instruments*)))
       (is (some #(re-find #"^piano-" %) *current-instruments*))
       (is (some #(re-find #"^trumpet-" %) *current-instruments*)))))
@@ -64,7 +64,7 @@
 (deftest score-tests
   (testing "a score:"
     (score*)
-    (part* {:names ["piano" "violin" "cello"]})
+    (part* "piano/violin/cello")
     (note (pitch :c))
     (note (pitch :d))
     (note (pitch :e))

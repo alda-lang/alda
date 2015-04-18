@@ -5,7 +5,7 @@
 (use-fixtures :each
   (fn [run-tests]
     (score*)
-    (part* {:names ["piano"]})
+    (part* "piano")
     (run-tests)))
 
 (deftest attribute-tests
