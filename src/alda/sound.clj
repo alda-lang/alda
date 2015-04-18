@@ -42,19 +42,13 @@
 
       :else filename)))
 
-(defn score-length
-  "Calculates the length of a score in ms."
-  [{:keys [events] :as score}]
-  (letfn [(note-end [{:keys [offset duration] :as note}] (+ offset duration))]
-    (apply max (map note-end events))))
-
 ; just using MIDI for now.
 ; TODO: use different generators for different instruments (MIDI vs. synth, etc.)
 ; TODO: control where to start and stop playing using the start & end keys
 (defn play!
   "Plays an Alda score, optionally from given start/end marks."
   [score & [{:keys [start end] :as opts}]]
-  (midi/play! score (score-length score) opts))
+  (midi/play! score opts))
 
 (defn make-wav!
   "Parses an input file and saves the resulting sound data as a wav file, using the
