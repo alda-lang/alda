@@ -155,7 +155,7 @@
 (deftest global-attribute-tests
   (part {:names ["piano"]}
     (let [piano (first (for [[id instrument] *instruments*
-                             :when (= (:stock instrument) "piano")]
+                             :when (.startsWith id "piano-")]
                          id))]
       (testing "a global tempo change:"
         (set-current-offset piano (alda.lisp.AbsoluteOffset. 0))

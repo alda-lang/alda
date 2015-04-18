@@ -5,10 +5,10 @@
             [alda.parser :refer :all]))
 
 (defn get-instrument
-  "Returns the first instrument in *instruments* with the given stock instrument."
-  [stock-inst]
+  "Returns the first instrument in *instruments* whose id starts with inst-name."
+  [inst-name]
   (first (for [[id instrument] *instruments*
-               :when (= (:stock instrument) stock-inst)]
+               :when (.startsWith id (str inst-name \-))]
            instrument)))
 
 (deftest part-tests

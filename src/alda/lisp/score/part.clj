@@ -50,7 +50,7 @@
                 (:id (init-instrument name))
                 (if-let [existing-inst (first
                                         (for [[id attrs] *instruments*
-                                              :when (= (:stock attrs) name)]
+                                              :when (.startsWith id (str name \-))]
                                           (:id attrs)))]
                   existing-inst
                   (:id (init-instrument name)))))))]
