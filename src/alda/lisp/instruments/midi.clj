@@ -203,7 +203,45 @@
 
 ;; 73-80: PIPE ;;
 
-(comment "TODO")
+(definstrument midi-piccolo
+  :aliases ["piccolo"]
+  :config {:type :midi
+           :patch 73})
+
+(definstrument midi-flute
+  :aliases ["flute"]
+  :config {:type :midi
+           :patch 74})
+
+(definstrument midi-recorder
+  :aliases ["recorder"]
+  :config {:type :midi
+           :patch 75})
+
+(definstrument midi-pan-flute
+  :aliases ["pan-flute"]
+  :config {:type :midi
+           :patch 76})
+
+(definstrument midi-bottle
+  :aliases ["bottle"]
+  :config {:type :midi
+           :patch 77})
+
+(definstrument midi-shakuhachi
+  :aliases ["shakuhachi"]
+  :config {:type :midi
+           :patch 78})
+
+(definstrument midi-whistle
+  :aliases ["whistle"]
+  :config {:type :midi
+           :patch 79})
+
+(definstrument midi-ocarina
+  :aliases ["ocarina"]
+  :config {:type :midi
+           :patch 80})
 
 ;; 81-88: SYNTH LEAD ;;
 
