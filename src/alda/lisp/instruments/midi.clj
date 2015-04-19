@@ -62,7 +62,46 @@
 
 ;; 25-32: GUITAR ;;
 
-(comment "TODO")
+(definstrument midi-acoustic-guitar-nylon
+  :aliases ["midi-acoustic-guitar" "acoustic-guitar" "guitar"]
+  :config {:type :midi
+           :patch 25})
+
+(definstrument midi-acoustic-guitar-steel
+  :aliases []
+  :config {:type :midi
+           :patch 26})
+
+(definstrument midi-electric-guitar-jazz
+  :aliases []
+  :config {:type :midi
+           :patch 27})
+
+(definstrument midi-electric-guitar-clean
+  :aliases ["electric-guitar-clean"]
+  :config {:type :midi
+           :patch 28})
+
+(definstrument midi-electric-guitar-palm-muted
+  :aliases []
+  :config {:type :midi
+           :patch 29})
+
+(definstrument midi-electric-guitar-overdrive
+  :aliases ["electric-guitar-overdrive"]
+  :config {:type :midi
+           :patch 30})
+
+(definstrument midi-electric-guitar-distorted
+  :aliases ["electric-guitar-distorted"]
+  :config {:type :midi
+           :patch 31})
+
+(definstrument midi-electric-guitar-harmonics
+  :aliases ["electric-guitar-harmonics"]
+  :config {:type :midi
+           :patch 32})
+
 
 ;; 33-40: BASS ;;
 
@@ -87,7 +126,7 @@
 
 (definstrument midi-contrabass
   :aliases ["string-bass" "arco-bass" "double-bass" "contrabass"
-            "midi-string-bass" "midi-arco-bass", "midi-double-bass"]
+            "midi-string-bass" "midi-arco-bass" "midi-double-bass"]
   :config {:type :midi
            :patch 44})
 
@@ -102,7 +141,7 @@
            :patch 46})
 
 (definstrument midi-orchestral-harp
-  :aliases ["harp" "orchestral-harp"]
+  :aliases ["harp" "orchestral-harp" "midi-harp"]
   :config {:type :midi
            :patch 47})
 
