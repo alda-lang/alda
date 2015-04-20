@@ -15,7 +15,8 @@
 (require '[adzerk.bootlaces :refer :all]
          '[adzerk.boot-test :refer :all]
          '[alda.core]
-         '[alda.parser :refer (parse-input)])
+         '[alda.parser :refer (parse-input)]
+         '[alda.repl])
 
 (def +version+ "0.1.0")
 (bootlaces! +version+)
@@ -63,6 +64,11 @@
    l lead-time MS   int  "The number of milliseconds of lead time for buffering."]
   (require '[alda.lisp] '[alda.sound])
   (alda.sound/play! (eval (parse-input (if code code (slurp file)))) {:lead-time lead-time}))
+
+(deftask alda-repl
+  "Starts an Alda Read-Evaluate-Play-Loop."
+  []
+  (alda.repl/start-repl +version+))
 
 (defn -main [& args]
   (apply alda.core/-main args))
