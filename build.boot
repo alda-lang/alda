@@ -10,7 +10,8 @@
                  [adzerk/boot-test "1.0.3" :scope "test"]
                  [com.taoensso/timbre "3.4.0"]
                  [djy "0.1.3"]
-                 [overtone "0.9.1"]])
+                 [overtone "0.9.1"]
+                 [reply "0.3.7"]])
 
 (require '[adzerk.bootlaces :refer :all]
          '[adzerk.boot-test :refer :all]
