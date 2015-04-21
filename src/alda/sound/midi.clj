@@ -1,6 +1,7 @@
 (ns alda.sound.midi
   (:require [alda.sound.util :refer (score-length)]
-            [overtone.at-at :refer (mk-pool now at)])
+            [overtone.at-at  :refer (mk-pool now at)]
+            [taoensso.timbre :as    log])
   (:import  (javax.sound.midi MidiSystem Synthesizer)))
 
 ; TODO: do something with the volume values (convert to MIDI velocity? volume?)
@@ -39,12 +40,17 @@
     (.programChange channel (dec patch-number))
     instrument))
 
-(defn play! [score & [{:keys [lead-time] :as opts}]]
-  (with-open [synth (doto (MidiSystem/getSynthesizer) .open)]
-    (let [channels (atom -1)
-          lead-time (or lead-time 1000)
-          start   (+ (now) lead-time 1000)
-          pool    (mk-pool)]
+(defn new-midi-synth []
+  (log/debug "Loading MIDI synth...")
+  (let [synth (doto (MidiSystem/getSynthesizer) .open)]
+    (log/debug "Done loading MIDI synth.")
+    synth))
+
+(defn play! [score & [{:keys [pre-buffer post-buffer synth one-off?] :as opts}]]
+  (let [synth    (or synth (new-midi-synth))
+        channels (atom -1)
+        start    (+ (now) (or pre-buffer 0))
+        pool     (mk-pool)]
       (doseq [[patch events] (midi-channels score)]
         (let [channel (try
                         (->> (swap! channels inc)
@@ -61,4 +67,7 @@
                   (Thread/sleep duration)
                   (.noteOff channel note))
                 pool))))
-      (Thread/sleep (+ (score-length score) 5000)))))
+      (Thread/sleep (try
+                      (+ (score-length score) (or post-buffer 0))
+                      (catch NullPointerException e 0)))
+      (when one-off? (.close synth))))

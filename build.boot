@@ -59,17 +59,23 @@
 
 (deftask play
   "Parse some Alda code and play the resulting score."
-  [f file      FILE str  "The path to a file containing Alda code."
-   c code      CODE str  "A string of Alda code."
-   ; TODO: implement smart buffering and remove the --lead-time option
-   l lead-time MS   int  "The number of milliseconds of lead time for buffering."]
+  [f file        FILE str  "The path to a file containing Alda code."
+   c code        CODE str  "A string of Alda code."
+   ; TODO: implement smart buffering and remove the buffer options
+   p pre-buffer  MS  int  "The number of milliseconds of lead time for buffering. (default: 2000)"
+   P post-buffer MS  int  "The number of milliseconds to keep the synth open after the score ends. (default: 2000)"]
   (require '[alda.lisp] '[alda.sound])
-  (alda.sound/play! (eval (parse-input (if code code (slurp file)))) {:lead-time lead-time}))
+  (alda.sound/play! (eval (parse-input (if code code (slurp file))))
+                    {:pre-buffer  (or pre-buffer  2000)
+                     :post-buffer (or post-buffer 2000)
+                     :one-off?    true}))
 
 (deftask alda-repl
   "Starts an Alda Read-Evaluate-Play-Loop."
-  []
-  (alda.repl/start-repl +version+))
+  [p pre-buffer  MS int "The number of milliseconds of lead time for buffering. (default: 0)"
+   P post-buffer MS int "The number of milliseconds to wait after the score ends. (default: 0)"]
+  (alda.repl/start-repl +version+ {:pre-buffer  pre-buffer
+                                   :post-buffer post-buffer}))
 
 (defn -main [& args]
   (apply alda.core/-main args))

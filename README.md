@@ -53,7 +53,7 @@ Assuming you have [Boot](http://www.boot-clj.com) installed, try this on for siz
 
     git clone git@github.com:alda-lang/alda.git
     cd alda
-    boot play --file test/examples/awobmolg.alda --lead-time 3000
+    boot play --file test/examples/awobmolg.alda --pre-buffer 3000
 
 You can also execute arbitrary Alda code, like this:
 
