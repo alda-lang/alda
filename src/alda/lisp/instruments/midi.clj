@@ -245,7 +245,49 @@
 
 ;; 81-88: SYNTH LEAD ;;
 
-(comment "TODO")
+(definstrument midi-square-lead
+  :aliases ["square" "square-wave" "square-lead"
+            "midi-square" "midi-square-wave"]
+  :config {:type :midi
+           :patch 81})
+
+(definstrument midi-saw-wave
+  :aliases ["sawtooth" "saw-wave" "saw-lead"
+            "midi-sawtooth" "midi-saw-lead"]
+  :config {:type :midi
+           :patch 82})
+
+(definstrument midi-calliope-lead
+  :aliases ["calliope-lead" "calliope"
+            "midi-calliope"]
+  :config {:type :midi
+           :patch 83})
+
+(definstrument midi-chiffer-lead
+  :aliases ["chiffer-lead" "chiffer" "chiff"
+            "midi-chiffer" "midi-chiff"]
+  :config {:type :midi
+           :patch 84})
+
+(definstrument midi-charang
+  :aliases ["charang"]
+  :config {:type :midi
+           :patch 85})
+
+(definstrument midi-solo-vox
+  :aliases ["voice" "midi-voice"]
+  :config {:type :midi
+           :patch 86})
+
+(definstrument midi-fifths
+  :aliases ["midi-sawtooth-fifths"]
+  :config {:type :midi
+           :patch 87})
+
+(definstrument midi-bass-and-lead
+  :aliases ["midi-bass+lead"]
+  :config {:type :midi
+           :patch 88})
 
 ;; 89-96: SYNTH PAD ;;
 

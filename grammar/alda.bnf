@@ -4,7 +4,7 @@ calls                   = name
                           (<ows> <"/"> <ows> name)*
                           (<ows> nickname)?
                           <ows> <":">
-<acceptable-name>       = #"[a-zA-Z]{2}[\w\-'()]*"
+<acceptable-name>       = #"[a-zA-Z]{2}[\w\-+'()]*"
 name                    = acceptable-name
 nickname                = <"\""> acceptable-name <"\"">
 
