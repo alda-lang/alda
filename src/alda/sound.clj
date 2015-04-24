@@ -1,54 +1,73 @@
 (ns alda.sound
-  (:require [alda.sound.midi :as midi])
-  (:import (java.io File)))
+  (:require [alda.sound.midi :as    midi]
+            [overtone.at-at  :refer (mk-pool now at)]
+            [taoensso.timbre :as    log]
+            [alda.util       :refer (check-for)]
+            [defun           :refer (defun)]))
 
-; should this go in a different namespace?
-; also TODO: use this somewhere
-(defn check-for
-  "Checks to see if a given file already exists. If it does, prompts the user
-   whether he/she wants to overwrite the file. If he/she doesn't, then prompts
-   the user to choose a new filename and calls itself to check the new file, etc.
-   Returns a filename that does not exist, or does exist and the user is OK with
-   overwriting it."
-  [filename]
-  (letfn [(prompt []
-            (print "> ") (flush) (read-line))
-          (overwrite-dialog []
-            (println
-              (format "File \"%s\" already exists. Overwrite? (y/n)" filename))
-            (let [response (prompt)]
-              (cond
-                (re-find #"(?i)y(es)?" response)
-                filename
+(defun set-up!
+  "Does any necessary setup for a given audio type.
+   e.g. for MIDI, create a MIDI synth and load the instruments."
+  ([(audio-types :guard coll?) score]
+    (doseq [audio-type audio-types]
+      (set-up! audio-type score)))
+  ([audio-type score]
+    (case audio-type
+      :midi (do
+              (midi/open-midi-synth!)
+              (midi/load-instruments! score))
+      :catch-all---no-action-needed)))
 
-                (re-find #"(?i)no?" response)
-                (do
-                  (println "Please specify a different filename.")
-                  (check-for (prompt)))
+(defn tear-down!
+  "Does any necessary clean-up at the end.
+   e.g. for MIDI, close the MIDI synth."
+  [audio-type score]
+  (case audio-type
+    :midi (midi/close-midi-synth!)
+    :catch-all---no-action-needed))
 
-               :else
-               (do
-                 (println "Answer the question, sir.")
-                 (recur)))))]
-    (cond
-      (.isFile (File. filename))
-      (overwrite-dialog)
+(defmulti play-event!
+  "Plays a note/event, using the appropriate method based on the type of the
+   instrument."
+  (fn [event instrument]
+    (-> instrument :config :type)))
 
-      (.isDirectory (File. filename))
-      (do
-        (println
-          (format "\"%s\" is a directory. Please specify a filename." filename))
-        (recur (prompt)))
+(defmethod play-event! :default
+  [event instrument]
+  (log/errorf "No implementation of play-event! defined for type %s"
+              (-> instrument :config :type)))
 
-      :else filename)))
+(defmethod play-event! :midi
+  [note instrument]
+  (midi/play-note! note))
 
-; just using MIDI for now.
-; TODO: use different generators for different instruments (MIDI vs. synth, etc.)
+(defn- score-length
+  "Calculates the length of a score in ms."
+  [{:keys [events] :as score}]
+  (if (and events (not (empty? events)))
+    (letfn [(note-end [{:keys [offset duration] :as note}] (+ offset duration))]
+      (apply max (map note-end events)))
+    0))
+
+(defn determine-audio-types
+  [score]
+  ; TODO: actually determine audio types
+  [:midi])
+
 ; TODO: control where to start and stop playing using the start & end keys
 (defn play!
   "Plays an Alda score, optionally from given start/end marks."
-  [score & [{:keys [start end] :as opts}]]
-  (midi/play! score opts))
+  [{:keys [events instruments] :as score}
+   & [{:keys [start end pre-buffer post-buffer one-off?] :as opts}]]
+  (let [audio-types (determine-audio-types score)]
+    (when one-off? (set-up! audio-types score))
+    (let [start (+ (now) (or pre-buffer 0))
+          pool  (mk-pool)]
+      (doseq [{:keys [offset instrument] :as event} events]
+        (let [instrument (-> instrument instruments)]
+          (at (+ start offset) #(play-event! event instrument) pool)))
+      (Thread/sleep (+ (score-length score) (or post-buffer 0))))
+    (when one-off? (tear-down! audio-types score))))
 
 (defn make-wav!
   "Parses an input file and saves the resulting sound data as a wav file, using the

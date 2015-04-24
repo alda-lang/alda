@@ -62,7 +62,8 @@
     (set instances)))
 
 (defn parse-instrument-call [s]
-  (with-redefs [alda.parser/alda-parser #((insta/parser (io/resource "alda.bnf")) % :start :calls)]
+  (with-redefs [alda.parser/alda-parser
+                #((insta/parser (io/resource "alda.bnf")) % :start :calls)]
     (alda.parser/parse-input (-> s
                                  (str/replace #":$" "")
                                  (str/replace #"'" "\"")

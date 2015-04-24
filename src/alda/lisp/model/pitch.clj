@@ -21,11 +21,13 @@
   "Returns a fn that will calculate the frequency in Hz, within the context
    of the octave that an instrument is in."
   [letter & accidentals]
-  (fn [octave]
+  (fn [octave & {:keys [midi]}]
     (let [midi-note (reduce (fn [number accidental]
                               (case accidental
                                 :flat  (dec number)
                                 :sharp (inc number)))
                             (midi-note letter octave)
                             accidentals)]
-      (midi->hz midi-note))))
+      (if midi
+        midi-note
+        (midi->hz midi-note)))))

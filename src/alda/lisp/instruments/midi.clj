@@ -102,7 +102,6 @@
   :config {:type :midi
            :patch 32})
 
-
 ;; 33-40: BASS ;;
 
 (comment "TODO")

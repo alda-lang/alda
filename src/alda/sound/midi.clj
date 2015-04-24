@@ -1,7 +1,5 @@
 (ns alda.sound.midi
-  (:require [alda.sound.util :refer (score-length)]
-            [overtone.at-at  :refer (mk-pool now at)]
-            [taoensso.timbre :as    log])
+  (:require [taoensso.timbre :as log])
   (:import  (javax.sound.midi MidiSystem Synthesizer)))
 
 ; TODO: do something with the volume values (convert to MIDI velocity? volume?)
@@ -9,65 +7,81 @@
 ; TODO: enable percussion
 
 ; note: there are 16 channels (1-16), channel 10 is reserved for percussion,
-;       channel 11 can be used for percussion too
+;       channel 11 can be used for percussion too (or non-percussion)
 
-(defn log [base x]
-  (/ (Math/log x) (Math/log base)))
+(declare ^:dynamic *midi-synth*)
+(declare ^:dynamic *midi-channels*)
 
-;;; http://en.wikipedia.org/wiki/MIDI_Tuning_Standard#Frequency_values
-(defn frequency->note
-  [f]
-  (int (+ 69 (* 12 (log 2 (/ f 440))))))
+(defn- next-available
+  "Given a set of available MIDI channels, returns the next available one,
+   bearing in mind that channel 10 can only be used for percussion, and
+   channel 11 can be used for either percussion or non-percussion.
 
-(defn midi-event
-  [event]
-  (-> event
-      (assoc :note (frequency->note (:pitch event)))
-      (dissoc :pitch)))
+   Returns nil if no channels available."
+  [channels & {:keys [percussion]}]
+  (if percussion
+    (first (filter #((set 10 11) %) channels))
+    (first (filter (partial not= 10) channels))))
 
-(defn midi-channels
-  "Returns a map of patch (instrument) numbers to their respective events."
+(defn ids->channels
+  "Inspects a score and generates a map of instrument IDs to MIDI channels.
+   The channel values are maps with keys :channel (the channel number) and
+   :patch (the General MIDI patch number)."
   [{:keys [events instruments] :as score}]
-  (into {}
-    (for [[id events] (group-by :instrument (map midi-event events))
-          :let [patch-number (-> id instruments :config :patch)]]
-      [patch-number events])))
+  (let [channels (atom (apply sorted-set (concat (range 0 9) (range 10 16))))]
+    (reduce (fn [result id]
+              (let [patch   (-> id instruments :config :patch)
+                    channel (if-let [existing (first
+                                                (for [[id {c :channel
+                                                           p :patch}] result
+                                                      :when (= p patch)]
+                                                  c))]
+                              existing
+                              ; TODO: pass ":percussion true" if percussion
+                              (if-let [channel (next-available @channels)]
+                                (do
+                                  (swap! channels disj channel)
+                                  channel)
+                                (throw (Exception.
+                                        "Ran out of MIDI channels! :("))))]
+                (assoc result id {:channel channel
+                                  :patch patch})))
+            {}
+            (set (for [id (map :instrument events)
+                       :when (= :midi (-> id instruments :config :type))]
+                   id)))))
 
-(defn load-instrument! [patch-number synth channel]
-  (let [instruments (.. synth getDefaultSoundbank getInstruments)
+(defn- load-instrument! [patch-number channel]
+  (let [instruments (.. *midi-synth* getDefaultSoundbank getInstruments)
         instrument  (nth instruments (dec patch-number))]
-    (.loadInstrument synth instrument)
-    (.programChange channel (dec patch-number))
-    instrument))
+    (.loadInstrument *midi-synth* instrument)
+    (.programChange channel (dec patch-number))))
 
-(defn new-midi-synth []
+(defn load-instruments! [score]
+  (alter-var-root #'*midi-channels* (constantly (ids->channels score)))
+  (doseq [{:keys [channel patch]} (set (vals *midi-channels*))]
+    (load-instrument! patch (aget (.getChannels *midi-synth*) channel))))
+
+(defn open-midi-synth!
+  "Loads a new MIDI synth into *midi-synth*, and opens it."
+  []
   (log/debug "Loading MIDI synth...")
-  (let [synth (doto (MidiSystem/getSynthesizer) .open)]
-    (log/debug "Done loading MIDI synth.")
-    synth))
+  (alter-var-root #'*midi-synth*
+                  (constantly (doto (MidiSystem/getSynthesizer) .open)))
+  (log/debug "Done loading MIDI synth."))
 
-(defn play! [score & [{:keys [pre-buffer post-buffer synth one-off?] :as opts}]]
-  (let [synth    (or synth (new-midi-synth))
-        channels (atom -1)
-        start    (+ (now) (or pre-buffer 0))
-        pool     (mk-pool)]
-      (doseq [[patch events] (midi-channels score)]
-        (let [channel (try
-                        (->> (swap! channels inc)
-                             ; skip channel 10 (percussion)
-                             (#(if (= 10 %) (swap! channels inc) %))
-                             (aget (.getChannels synth)))
-                        (catch ArrayIndexOutOfBoundsException e
-                          (throw (Exception. "Ran out of MIDI channels! :("))))]
-          (load-instrument! patch synth channel)
-          (doseq [{:keys [offset note duration]} events]
-            (at (+ start offset)
-                (fn []
-                  (.noteOn channel note 127)
-                  (Thread/sleep duration)
-                  (.noteOff channel note))
-                pool))))
-      (Thread/sleep (try
-                      (+ (score-length score) (or post-buffer 0))
-                      (catch NullPointerException e 0)))
-      (when one-off? (.close synth))))
+(defn close-midi-synth!
+  "Closes the MIDI synth referred to by *midi-synth*."
+  []
+  (.close *midi-synth*))
+
+(defn play-note! [{:keys [midi-note instrument duration]}]
+  (let [channel (->> instrument
+                     *midi-channels*
+                     :channel
+                     (aget (.getChannels *midi-synth*)))]
+    (log/debugf "Playing note %s on channel %s." midi-note channel)
+    (.noteOn channel midi-note 127)
+    (Thread/sleep duration)
+    (log/debug "MIDI note off:" midi-note)
+    (.noteOff channel midi-note)))

@@ -11,7 +11,8 @@
                  [com.taoensso/timbre "3.4.0"]
                  [djy "0.1.3"]
                  [overtone "0.9.1"]
-                 [reply "0.3.7"]])
+                 [reply "0.3.7"]
+                 [defun "0.2.0-RC"]])
 
 (require '[adzerk.bootlaces :refer :all]
          '[adzerk.boot-test :refer :all]
@@ -62,20 +63,20 @@
   [f file        FILE str  "The path to a file containing Alda code."
    c code        CODE str  "A string of Alda code."
    ; TODO: implement smart buffering and remove the buffer options
-   p pre-buffer  MS  int  "The number of milliseconds of lead time for buffering. (default: 2000)"
-   P post-buffer MS  int  "The number of milliseconds to keep the synth open after the score ends. (default: 2000)"]
+   p pre-buffer  MS  int  "The number of milliseconds of lead time for buffering. (default: 4000)"
+   P post-buffer MS  int  "The number of milliseconds to keep the synth open after the score ends. (default: 4000)"]
   (require '[alda.lisp] '[alda.sound])
   (alda.sound/play! (eval (parse-input (if code code (slurp file))))
-                    {:pre-buffer  (or pre-buffer  2000)
-                     :post-buffer (or post-buffer 2000)
+                    {:pre-buffer  (or pre-buffer  4000)
+                     :post-buffer (or post-buffer 4000)
                      :one-off?    true}))
 
 (deftask alda-repl
   "Starts an Alda Read-Evaluate-Play-Loop."
   [p pre-buffer  MS int "The number of milliseconds of lead time for buffering. (default: 0)"
    P post-buffer MS int "The number of milliseconds to wait after the score ends. (default: 0)"]
-  (alda.repl/start-repl +version+ {:pre-buffer  pre-buffer
-                                   :post-buffer post-buffer}))
+  (alda.repl/start-repl! +version+ {:pre-buffer  pre-buffer
+                                    :post-buffer post-buffer}))
 
 (defn -main [& args]
   (apply alda.core/-main args))

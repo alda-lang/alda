@@ -11,6 +11,11 @@
   (absolute-offset [this] "Returns the offset in ms from the start of the score.")
   (offset+ [this bump] "Returns a new offset bump ms later."))
 
+(extend-protocol Offset
+  Number
+  (absolute-offset [x] x)
+  (offset+ [x bump] (+ x bump)))
+
 (defrecord AbsoluteOffset [offset]
   Offset
   (absolute-offset [this]
