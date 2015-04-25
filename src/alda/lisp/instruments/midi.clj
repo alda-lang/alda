@@ -54,11 +54,87 @@
 
 ;; 9-16: CHROMATIC PERCUSSION ;;
 
-(comment "TODO")
+(definstrument midi-celesta
+  :aliases ["celesta" "celeste" "midi-celeste"]
+  :config {:type :midi
+           :patch 9})
+
+(definstrument midi-glockenspiel
+  :aliases ["glockenspiel"]
+  :config {:type :midi
+           :patch 10})
+
+(definstrument midi-music-box
+  :aliases ["music-box"]
+  :config {:type :midi
+           :patch 11})
+
+(definstrument midi-vibraphone
+  :aliases ["vibraphone" "vibes" "midi-vibes"]
+  :config {:type :midi
+           :patch 12})
+
+(definstrument midi-marimba
+  :aliases ["marimba"]
+  :config {:type :midi
+           :patch 13})
+
+(definstrument midi-xylophone
+  :aliases ["xylophone"]
+  :config {:type :midi
+           :patch 14})
+
+(definstrument midi-tubular-bells
+  :aliases ["tubular-bells"]
+  :config {:type :midi
+           :patch 15})
+
+(definstrument midi-dulcimer
+  :aliases ["dulcimer"]
+  :config {:type :midi
+           :patch 16})
 
 ;; 17-24: ORGAN ;;
 
-(comment "TODO")
+(definstrument midi-drawbar-organ
+  :aliases []
+  :config {:type :midi
+           :patch 17})
+
+(definstrument midi-percussive-organ
+  :aliases []
+  :config {:type :midi
+           :patch 18})
+
+(definstrument midi-rock-organ
+  :aliases []
+  :config {:type :midi
+           :patch 19})
+
+(definstrument midi-church-organ
+  :aliases ["organ"]
+  :config {:type :midi
+           :patch 20})
+
+(definstrument midi-reed-organ
+  :aliases []
+  :config {:type :midi
+           :patch 21})
+
+(definstrument midi-accordion
+  :aliases ["accordion"]
+  :config {:type :midi
+           :patch 22})
+
+(definstrument midi-harmonica
+  :aliases ["harmonica"]
+  :config {:type :midi
+           :patch 23})
+
+(definstrument midi-tango-accordion
+  :aliases []
+  :config {:type :midi
+           :patch 24})
 
 ;; 25-32: GUITAR ;;
 
@@ -104,7 +180,45 @@
 
 ;; 33-40: BASS ;;
 
-(comment "TODO")
+(definstrument midi-acoustic-bass
+  :aliases ["acoustic-bass" "upright-bass"]
+  :config {:type :midi
+           :patch 33})
+
+(definstrument midi-electric-bass-finger
+  :aliases ["electric-bass-finger"]
+  :config {:type :midi
+           :patch 34})
+
+(definstrument midi-electric-bass-pick
+  :aliases ["electric-bass-pick"]
+  :config {:type :midi
+           :patch 35})
+
+(definstrument midi-fretless-bass
+  :aliases ["fretless-bass"]
+  :config {:type :midi
+           :patch 36})
+
+(definstrument midi-bass-slap
+  :aliases []
+  :config {:type :midi
+           :patch 37})
+
+(definstrument midi-bass-pop
+  :aliases []
+  :config {:type :midi
+           :patch 38})
+
+(definstrument midi-synth-bass-1
+  :aliases []
+  :config {:type :midi
+           :patch 39})
+
+(definstrument midi-synth-bass-2
+  :aliases []
+  :config {:type :midi
+           :patch 40})
 
 ;; 41-48: STRINGS ;;
 
@@ -144,7 +258,7 @@
   :config {:type :midi
            :patch 47})
 
-; no idea why this is in strings, but ok!
+; no idea why this is in strings, but ok! ¯\_(ツ)_/¯
 (definstrument midi-timpani
   :aliases ["timpani"]
   :config {:type :midi
@@ -152,7 +266,45 @@
 
 ;; 49-56: ENSEMBLE ;;
 
-(comment "TODO")
+(definstrument midi-string-ensemble-1
+  :aliases []
+  :config {:type :midi
+           :patch 49})
+
+(definstrument midi-string-ensemble-2
+  :aliases []
+  :config {:type :midi
+           :patch 50})
+
+(definstrument midi-synth-strings-1
+  :aliases []
+  :config {:type :midi
+           :patch 51})
+
+(definstrument midi-synth-strings-2
+  :aliases []
+  :config {:type :midi
+           :patch 52})
+
+(definstrument midi-choir-aahs
+  :aliases []
+  :config {:type :midi
+           :patch 53})
+
+(definstrument midi-voice-oohs
+  :aliases []
+  :config {:type :midi
+           :patch 54})
+
+(definstrument midi-synth-voice
+  :aliases []
+  :config {:type :midi
+           :patch 55})
+
+(definstrument midi-orchestra-hit
+  :aliases []
+  :config {:type :midi
+           :patch 56})
 
 ;; 57-64: BRASS ;;
 
@@ -198,7 +350,49 @@
 
 ;; 65-72: REED ;;
 
-(comment "TODO")
+(definstrument midi-soprano-saxophone
+  :aliases ["midi-soprano-sax"
+            "soprano-saxophone" "soprano-sax"]
+  :config {:type :midi
+           :patch 65})
+
+(definstrument midi-alto-saxophone
+  :aliases ["midi-alto-sax"
+            "alto-saxophone" "alto-sax"]
+  :config {:type :midi
+           :patch 66})
+
+(definstrument midi-tenor-saxophone
+  :aliases ["midi-tenor-sax"
+            "tenor-saxophone" "tenor-sax"]
+  :config {:type :midi
+           :patch 67})
+
+(definstrument midi-baritone-saxophone
+  :aliases ["midi-baritone-sax" "midi-bari-sax"
+            "baritone-saxophone" "baritone-sax" "bari-sax"]
+  :config {:type :midi
+           :patch 68})
+
+(definstrument midi-oboe
+  :aliases ["oboe"]
+  :config {:type :midi
+           :patch 69})
+
+(definstrument midi-english-horn
+  :aliases ["english-horn"]
+  :config {:type :midi
+           :patch 70})
+
+(definstrument midi-bassoon
+  :aliases ["bassoon"]
+  :config {:type :midi
+           :patch 71})
+
+(definstrument midi-clarinet
+  :aliases ["clarinet"]
+  :config {:type :midi
+           :patch 72})
 
 ;; 73-80: PIPE ;;
 
@@ -274,7 +468,7 @@
            :patch 85})
 
 (definstrument midi-solo-vox
-  :aliases ["voice" "midi-voice"]
+  :aliases []
   :config {:type :midi
            :patch 86})
 
@@ -290,20 +484,212 @@
 
 ;; 89-96: SYNTH PAD ;;
 
-(comment "TODO")
+(definstrument midi-synth-pad-new-age
+  :aliases ["midi-new-age-pad"]
+  :config {:type :midi
+           :patch 89})
+
+(definstrument midi-synth-pad-warm
+  :aliases ["midi-warm-pad"]
+  :config {:type :midi
+           :patch 90})
+
+(definstrument midi-pad-polysynth
+  :aliases ["midi-polysynth-pad"]
+  :config {:type :midi
+           :patch 91})
+
+(definstrument midi-pad-choir
+  :aliases ["midi-choir-pad"]
+  :config {:type :midi
+           :patch 92})
+
+(definstrument midi-pad-bowed
+  :aliases ["midi-bowed-pad" "midi-pad-bowed-glass" "midi-bowed-glass-pad"]
+  :config {:type :midi
+           :patch 93})
+
+(definstrument midi-pad-metallic
+  :aliases ["midi-metallic-pad" "midi-pad-metal" "midi-metal-pad"]
+  :config {:type :midi
+           :patch 94})
+
+(definstrument midi-pad-halo
+  :aliases ["midi-halo-pad"]
+  :config {:type :midi
+           :patch 95})
+
+(definstrument midi-pad-sweep
+  :aliases ["midi-sweep-pad"]
+  :config {:type :midi
+           :patch 96})
 
 ;; 97-104: SYNTH EFFECTS ;;
 
-(comment "TODO")
+(definstrument midi-fx-rain
+  :aliases ["midi-fx-ice-rain" "midi-rain" "midi-ice-rain"]
+  :config {:type :midi
+           :patch 97})
+
+(definstrument midi-fx-soundtrack
+  :aliases ["midi-soundtrack"]
+  :config {:type :midi
+           :patch 98})
+
+(definstrument midi-fx-crystal
+  :aliases ["midi-crystal"]
+  :config {:type :midi
+           :patch 99})
+
+(definstrument midi-fx-atmosphere
+  :aliases ["midi-atmosphere"]
+  :config {:type :midi
+           :patch 100})
+
+(definstrument midi-fx-brightness
+  :aliases ["midi-brightness"]
+  :config {:type :midi
+           :patch 101})
+
+(definstrument midi-fx-goblins
+  :aliases ["midi-fx-goblin" "midi-goblins" "midi-goblin"]
+  :config {:type :midi
+           :patch 102})
+
+(definstrument midi-fx-echoes
+  :aliases ["midi-fx-echo-drops" "midi-echoes" "midi-echo-drops"]
+  :config {:type :midi
+           :patch 103})
+
+(definstrument midi-fx-sci-fi
+  :aliases ["midi-sci-fi"]
+  :config {:type :midi
+           :patch 104})
 
 ;; 105-112: ETHNIC (das racist) ;;
 
-(comment "TODO")
+(definstrument midi-sitar
+  :aliases ["sitar"]
+  :config {:type :midi
+           :patch 105})
+
+(definstrument midi-banjo
+  :aliases ["banjo"]
+  :config {:type :midi
+           :patch 106})
+
+(definstrument midi-shamisen
+  :aliases ["shamisen"]
+  :config {:type :midi
+           :patch 107})
+
+(definstrument midi-koto
+  :aliases ["koto"]
+  :config {:type :midi
+           :patch 108})
+
+(definstrument midi-kalimba
+  :aliases ["kalimba"]
+  :config {:type :midi
+           :patch 109})
+
+(definstrument midi-bagpipes
+  :aliases ["bagpipes"]
+  :config {:type :midi
+           :patch 110})
+
+(definstrument midi-fiddle
+  :aliases []
+  :config {:type :midi
+           :patch 111})
+
+(definstrument midi-shehnai
+  :aliases ["shehnai" "shahnai" "shenai" "shanai"
+            "midi-shahnai" "midi-shenai" "midi-shanai"]
+  :config {:type :midi
+           :patch 112})
 
 ;; 113-120: PERCUSSIVE ;;
 
-(comment "TODO")
+(definstrument midi-tinkle-bell
+  :aliases ["midi-tinker-bell"]
+  :config {:type :midi
+           :patch 113})
+
+(definstrument midi-agogo
+  :aliases []
+  :config {:type :midi
+           :patch 114})
+
+(definstrument midi-steel-drums
+  :aliases ["midi-steel-drum"
+            "steel-drums" "steel-drum"]
+  :config {:type :midi
+           :patch 115})
+
+(definstrument midi-woodblock
+  :aliases []
+  :config {:type :midi
+           :patch 116})
+
+(definstrument midi-taiko-drum
+  :aliases []
+  :config {:type :midi
+           :patch 117})
+
+(definstrument midi-melodic-tom
+  :aliases []
+  :config {:type :midi
+           :patch 118})
+
+(definstrument midi-synth-drum
+  :aliases []
+  :config {:type :midi
+           :patch 119})
+
+(definstrument midi-reverse-cymbal
+  :aliases []
+  :config {:type :midi
+           :patch 120})
 
 ;; 121-128: SOUND EFFECTS ;;
 
-(comment "TODO")
+(definstrument midi-guitar-fret-noise
+  :aliases []
+  :config {:type :midi
+           :patch 121})
+
+(definstrument midi-breath-noise
+  :aliases []
+  :config {:type :midi
+           :patch 122})
+
+(definstrument midi-seashore
+  :aliases []
+  :config {:type :midi
+           :patch 123})
+
+(definstrument midi-bird-tweet
+  :aliases []
+  :config {:type :midi
+           :patch 124})
+
+(definstrument midi-telephone-ring
+  :aliases []
+  :config {:type :midi
+           :patch 125})
+
+(definstrument midi-helicopter
+  :aliases []
+  :config {:type :midi
+           :patch 126})
+
+(definstrument midi-applause
+  :aliases []
+  :config {:type :midi
+           :patch 127})
+
+(definstrument midi-gunshot
+  :aliases ["midi-gun-shot"]
+  :config {:type :midi
+           :patch 128})
