@@ -485,42 +485,44 @@
 ;; 89-96: SYNTH PAD ;;
 
 (definstrument midi-synth-pad-new-age
-  :aliases ["midi-new-age-pad"]
+  :aliases ["midi-pad-new-age" "midi-new-age-pad"]
   :config {:type :midi
            :patch 89})
 
 (definstrument midi-synth-pad-warm
-  :aliases ["midi-warm-pad"]
+  :aliases ["midi-pad-warm" "midi-warm-pad"]
   :config {:type :midi
            :patch 90})
 
-(definstrument midi-pad-polysynth
-  :aliases ["midi-polysynth-pad"]
+(definstrument midi-synth-pad-polysynth
+  :aliases ["midi-pad-polysynth" "midi-polysynth-pad"]
   :config {:type :midi
            :patch 91})
 
-(definstrument midi-pad-choir
-  :aliases ["midi-choir-pad"]
+(definstrument midi-synth-pad-choir
+  :aliases ["midi-pad-choir" "midi-choir-pad"]
   :config {:type :midi
            :patch 92})
 
-(definstrument midi-pad-bowed
-  :aliases ["midi-bowed-pad" "midi-pad-bowed-glass" "midi-bowed-glass-pad"]
+(definstrument midi-synth-pad-bowed
+  :aliases ["midi-pad-bowed" "midi-bowed-pad"
+            "midi-pad-bowed-glass" "midi-bowed-glass-pad"]
   :config {:type :midi
            :patch 93})
 
-(definstrument midi-pad-metallic
-  :aliases ["midi-metallic-pad" "midi-pad-metal" "midi-metal-pad"]
+(definstrument midi-synth-pad-metallic
+  :aliases ["midi-pad-metallic" "midi-metallic-pad"
+            "midi-pad-metal" "midi-metal-pad"]
   :config {:type :midi
            :patch 94})
 
-(definstrument midi-pad-halo
-  :aliases ["midi-halo-pad"]
+(definstrument midi-synth-pad-halo
+  :aliases ["midi-pad-halo" "midi-halo-pad"]
   :config {:type :midi
            :patch 95})
 
-(definstrument midi-pad-sweep
-  :aliases ["midi-sweep-pad"]
+(definstrument midi-synth-pad-sweep
+  :aliases ["midi-pad-sweep" "midi-sweep-pad"]
   :config {:type :midi
            :patch 96})
 
