@@ -3,6 +3,7 @@
             [alda.lisp                    :refer :all]
             [alda.sound                   :refer (set-up! tear-down! play!)]
             [alda.sound.midi              :as    midi]
+            [alda.repl.commands           :refer (repl-command)]
             [instaparse.core              :as    insta]
             [boot.from.io.aviso.ansi      :refer :all]
             [boot.from.io.aviso.exception :as    pretty]
@@ -69,7 +70,6 @@
   (println)
   (println (banner version) \newline)
   (let [done?   (atom false)
-        score   (atom "")
         context (atom :part)
         reader  (doto (ConsoleReader.) (.setPrompt "> "))]
     (print "Loading MIDI synth... ")
@@ -81,13 +81,19 @@
         (try
           (cond
             (re-find #"^\s*$" alda-code)
-              :do-nothing
+            :do-nothing
+
+            (re-find #"^:" alda-code)
+            (let [[_ cmd rest-of-line] (re-matches #":(\S+)\s*(.*)" alda-code)]
+              (repl-command cmd rest-of-line))
+
             (re-find #"^(quit|exit|bye)" alda-code)
-              (do
-                (println)
-                (println "score:" \newline @score)
-                (tear-down! :midi {})
-                (reset! done? true))
+            (do
+              (println)
+              (println (str "score:" \newline *score-text*))
+              (tear-down! :midi {})
+              (reset! done? true))
+
             :else
             (do
               (log/debug "Parsing code...")
@@ -100,10 +106,10 @@
                     (let [old-score  (score-map)
                           new-score  (do (eval parsed) (score-map))
                           new-events (set/difference
-                                        (:events new-score)
-                                        (:events old-score))]
+                                       (:events new-score)
+                                       (:events old-score))]
                       (midi/load-instruments! new-score)
                       (play-with-context! @context new-events opts)
-                      (swap! score str \newline alda-code)))))))
-           (catch Throwable e
-             (pretty/write-exception *err* e)))))))
+                      (score-text<< alda-code)))))))
+          (catch Throwable e
+            (pretty/write-exception *err* e)))))))

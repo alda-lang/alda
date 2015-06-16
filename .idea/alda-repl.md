@@ -4,7 +4,7 @@
 
 # REPL commands
 
-- [ ] **:new** / **:new score** -- invokes `(score*)`
+- [X] **:new** / **:new score** -- invokes `(score*)`
 - [ ] **:new part (instrument) (opt. nickname)** -- switches to a new instrument part, creating it if applicable. Should also print a confirmation message like "piano-aXg4k (midi-acoustic-grand-piano) was created." *(Note: as an alternative to this, the user can just enter 'piano "my-piano":' like they would in an Alda file.)* Omitting any args should cue an interactive prompt asking for the instrument(s), then the nickname (enter through if no nickname).
 - [ ] **:part** or **:parts** or **:instruments** shows current instruments, formatted in a friendly way that shows you if the instruments are in a group
 - [ ] **:info** should print a bunch of information about the score, such as the instruments, current instruments, markers, user-readable length of the piece, etc.

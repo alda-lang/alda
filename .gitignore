@@ -11,3 +11,4 @@ pom.xml.asc
 .nrepl-history
 .scores/
 *~
+.ruby-version

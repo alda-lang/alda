@@ -4,9 +4,21 @@
 
 (log/debug "Loading alda.lisp.score...")
 
+;; for alda.repl use ;;
+
+(declare ^:dynamic *score-text*)
+
+(defn score-text<< [s]
+  (if (empty? *score-text*)
+    (alter-var-root #'*score-text* str s)
+    (alter-var-root #'*score-text* str \newline s)))
+
+;;;;;;;;;;;;;;;;;;;;;;;
+
 (defn score*
   []
   (letfn [(init [var val] (alter-var-root var (constantly val)))]
+    (init #'*score-text* "") 
     (init #'*events* {:start {:offset (AbsoluteOffset. 0), :events []}})
     (init #'*global-attributes* {})
     (init #'*instruments* {})
