@@ -1,5 +1,6 @@
 (ns alda.sound.midi
-  (:require [taoensso.timbre :as log])
+  (:require [taoensso.timbre :as log]
+            [midi.soundfont  :refer (load-all-instruments!)])
   (:import  (javax.sound.midi MidiSystem Synthesizer)))
 
 ; TODO: do something with the volume values (convert to MIDI velocity? volume?)
@@ -11,6 +12,7 @@
 
 (declare ^:dynamic *midi-synth*)
 (declare ^:dynamic *midi-channels*)
+(def ^:dynamic *midi-soundfont* nil)
 
 (defn- next-available
   "Given a set of available MIDI channels, returns the next available one,
@@ -52,10 +54,7 @@
                    id)))))
 
 (defn- load-instrument! [patch-number channel]
-  (let [instruments (.. *midi-synth* getDefaultSoundbank getInstruments)
-        instrument  (nth instruments (dec patch-number))]
-    (.loadInstrument *midi-synth* instrument)
-    (.programChange channel (dec patch-number))))
+  (.programChange channel (dec patch-number)))
 
 (defn load-instruments! [score]
   (alter-var-root #'*midi-channels* (constantly (ids->channels score)))
@@ -68,6 +67,10 @@
   (log/debug "Loading MIDI synth...")
   (alter-var-root #'*midi-synth*
                   (constantly (doto (MidiSystem/getSynthesizer) .open)))
+  (when *midi-soundfont* 
+    (log/debug "Loading MIDI soundfont...")
+    (load-all-instruments! *midi-synth* *midi-soundfont*)
+    (log/debug "Done loading MIDI soundfont."))
   (log/debug "Done loading MIDI synth."))
 
 (defn close-midi-synth!

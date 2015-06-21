@@ -4,7 +4,8 @@
 (require '[djy.char        :refer (char-range)]
          '[instaparse.core :as insta]
          '[clojure.java.io :as io]
-         '[clojure.string :as str])
+         '[clojure.string  :as str]
+         '[alda.parser])
 
 (log/debug "Loading alda.lisp.score.part...")
 
