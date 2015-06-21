@@ -1,5 +1,6 @@
 #!/usr/bin/env boot
 ; -*- mode: Clojure;-*-
+; vim: ft=clojure
 
 (import '(javax.sound.midi MidiSystem Synthesizer))
 
