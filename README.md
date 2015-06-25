@@ -53,7 +53,7 @@ Assuming you have [Boot](http://www.boot-clj.com) installed, try this on for siz
 
     git clone git@github.com:alda-lang/alda.git
     cd alda
-    boot play --file test/examples/awobmolg.alda --pre-buffer 3000
+    boot play --file test/examples/awobmolg.alda
 
 > NOTE: The first time you run the `boot play` task, you may need to wait a minute for the FluidR3 MIDI soundfont dependency (~141 MB) to download. Alda uses this soundfont in order to make your JVM's MIDI instruments sound a lot nicer. If you'd prefer to skip this step and use your JVM's default soundfont instead, include the `--stock` flag (i.e. `boot play --stock --file ...`).
 
