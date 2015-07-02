@@ -65,6 +65,15 @@
                                               :events x}}))))]
     (play! y opts)))
 
+(defn determine-context!
+  "Determines the parsing context of a line of Alda code from the REPL,
+   taking into consideration the existing context when applicable.
+   
+   (existing-ctx is an atom)"
+  [existing-ctx alda-code]
+  ; TODO
+  :part)
+
 (defn start-repl!
   [version & [opts]]
   (println)
@@ -83,33 +92,32 @@
             (re-find #"^\s*$" alda-code)
             :do-nothing
 
-            (re-find #"^:" alda-code)
-            (let [[_ cmd rest-of-line] (re-matches #":(\S+)\s*(.*)" alda-code)]
-              (repl-command cmd rest-of-line))
-
-            (re-find #"^(quit|exit|bye)" alda-code)
+            (re-find #"^:?(quit|exit|bye)" alda-code)
             (do
               (println)
               (println (str "score:" \newline *score-text*))
               (tear-down! :midi {})
               (reset! done? true))
 
-            :else
+            (re-find #"^:" alda-code)
+            (let [[_ cmd rest-of-line] (re-matches #":(\S+)\s*(.*)" alda-code)]
+              (repl-command cmd rest-of-line))
+
+           :else
             (do
               (log/debug "Parsing code...")
-              (case @context
-                :part
-                (let [parsed (parse-with-context :part alda-code)]
-                  (log/debug "Done parsing code.")
-                  (if (insta/failure? parsed)
-                    (log/error "Invalid Alda syntax.")
-                    (let [old-score  (score-map)
-                          new-score  (do (eval parsed) (score-map))
-                          new-events (set/difference
-                                       (:events new-score)
-                                       (:events old-score))]
-                      (midi/load-instruments! new-score)
-                      (play-with-context! @context new-events opts)
-                      (score-text<< alda-code)))))))
+              (determine-context! context alda-code) ; sets @context
+              (let [parsed (parse-with-context @context alda-code)]
+                (log/debug "Done parsing code.")
+                (if (insta/failure? parsed)
+                  (log/error "Invalid Alda syntax.")
+                  (let [old-score  (score-map)
+                        new-score  (do (eval parsed) (score-map))
+                        new-events (set/difference
+                                     (:events new-score)
+                                     (:events old-score))]
+                    (midi/load-instruments! new-score)
+                    (play-with-context! @context new-events opts)
+                    (score-text<< alda-code))))))
           (catch Throwable e
             (pretty/write-exception *err* e)))))))
