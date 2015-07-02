@@ -33,7 +33,7 @@
        \newline
        (cyan (text-below-ascii-art version))))
 
-(defn- parse-with-context
+(defn parse-with-start-rule
   "Parse a string of Alda code starting from a particular level of the tree.
    (e.g. starting from :part, will parse the string as a part, not a whole score)
 
@@ -46,33 +46,40 @@
                 #((insta/parser (io/resource "alda.bnf")) % :start start)]
     (parse-input code)))
 
+(defn parse-with-context
+  "Determine the appropriate context to parse a line of code from the Alda 
+   REPL, then parse it within that context.
+   
+   context is an atom representing the existing context -- this function 
+   will reset its value to the determined context."
+  [context alda-code]
+  (letfn [(try-ctxs [[ctx & ctxs]]
+            (if ctx
+              (let [parsed (parse-with-start-rule ctx alda-code)]
+                (if (insta/failure? parsed)
+                  (try-ctxs ctxs)
+                  (do (reset! context ctx) parsed)))
+              (log/error "Invalid Alda syntax.")))]
+    (try-ctxs [:music-data :part :score])))
+
 (defn- asap
   "Tranforms a set of events by making the first one start at offset 0,
    maintaining the intervals between the offsets of all the events."
   [events]
-  (let [earliest (apply min (map :offset events))]
-    (into #{}
-      (map #(update-in % [:offset] - earliest) events))))
+  (if (empty? events) 
+    events
+    (let [earliest (apply min (map :offset events))]
+      (into #{}
+        (map #(update % :offset - earliest) events)))))
 
-(defn play-with-context!
-  "Plays a partial Alda score, within the context of the current score."
-  [context x & [opts]]
-  (let [y (case context
-            :score x
-            :part  (assoc (score-map)
-                     :events (asap (event-set
-                                     {:start {:offset (->AbsoluteOffset 0)
-                                              :events x}}))))]
-    (play! y opts)))
-
-(defn determine-context!
-  "Determines the parsing context of a line of Alda code from the REPL,
-   taking into consideration the existing context when applicable.
-   
-   (existing-ctx is an atom)"
-  [existing-ctx alda-code]
-  ; TODO
-  :part)
+(defn play-new-events!
+  [events & [opts]]
+  (let [one-off-score 
+        (assoc (score-map)
+               :events (asap (event-set
+                               {:start {:offset (->AbsoluteOffset 0)
+                                        :events events}})))]
+    (play! one-off-score opts)))
 
 (defn start-repl!
   [version & [opts]]
@@ -104,20 +111,19 @@
               (repl-command cmd rest-of-line))
 
            :else
-            (do
-              (log/debug "Parsing code...")
-              (determine-context! context alda-code) ; sets @context
-              (let [parsed (parse-with-context @context alda-code)]
-                (log/debug "Done parsing code.")
-                (if (insta/failure? parsed)
-                  (log/error "Invalid Alda syntax.")
-                  (let [old-score  (score-map)
-                        new-score  (do (eval parsed) (score-map))
-                        new-events (set/difference
-                                     (:events new-score)
-                                     (:events old-score))]
-                    (midi/load-instruments! new-score)
-                    (play-with-context! @context new-events opts)
-                    (score-text<< alda-code))))))
+           (let [_          (log/debug "Parsing code...")
+                 parsed     (parse-with-context context alda-code)
+                 _          (log/debug "Done parsing code.")
+                 old-score  (score-map)
+                 new-score  (do (eval (case @context
+                                        :music-data (cons 'do parsed)
+                                        parsed)) 
+                                (score-map))
+                 new-events (set/difference
+                              (:events new-score)
+                              (:events old-score))]
+             (midi/load-instruments! new-score)
+             (play-new-events! new-events opts)
+             (score-text<< alda-code)))
           (catch Throwable e
             (pretty/write-exception *err* e)))))))

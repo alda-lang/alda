@@ -50,6 +50,5 @@
                                  (if nickname
                                    {:names names, :nickname nickname}
                                    {:names names})))
-          :music-data        #(list* 'alda.lisp/music-data %&)
           :part              #(list* 'alda.lisp/part %&)
           :score             #(list* 'alda.lisp/score %&)})))
