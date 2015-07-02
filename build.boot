@@ -3,13 +3,13 @@
 (set-env!
  :source-paths #{"src" "test"}
  :resource-paths #{"grammar"}
- :dependencies '[[org.clojure/clojure   "1.6.0"]
+ :dependencies '[[org.clojure/clojure   "1.7.0"]
                  [org.clojure/tools.cli "0.3.1"]
-                 [instaparse            "1.3.5"]
-                 [adzerk/bootlaces      "0.1.9" :scope "test"]
-                 [adzerk/boot-test      "1.0.3" :scope "test"]
+                 [instaparse            "1.4.1"]
+                 [adzerk/bootlaces      "0.1.11" :scope "test"]
+                 [adzerk/boot-test      "1.0.4"  :scope "test"]
                  [com.taoensso/timbre   "3.4.0"]
-                 [djy                   "0.1.3"]
+                 [djy                   "0.1.4"]
                  [overtone              "0.9.1"]
                  [midi.soundfont        "0.1.0"]
                  [reply                 "0.3.7"]
@@ -79,10 +79,10 @@
   (require '[alda.lisp]
            '[alda.sound])
   (binding [alda.sound.midi/*midi-soundfont* (when-not stock (fluid-r3!))]
-              (alda.sound/play! (eval (parse-input (if code code (slurp file))))
-                                {:pre-buffer  (or pre-buffer  4000)
-                                 :post-buffer (or post-buffer 4000)
-                                 :one-off?    true})))
+    (alda.sound/play! (eval (parse-input (if code code (slurp file))))
+                      {:pre-buffer  (or pre-buffer  4000)
+                       :post-buffer (or post-buffer 4000)
+                       :one-off?    true})))
 
 (deftask alda-repl
   "Starts an Alda Read-Evaluate-Play-Loop."
