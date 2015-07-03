@@ -10,6 +10,7 @@
             [boot.util                    :refer (while-let)]
             [taoensso.timbre              :as    log]
             [clojure.java.io              :as    io]
+            [clojure.string               :as    str]
             [clojure.set                  :as    set])
   (:import  [jline.console ConsoleReader]
             [jline.console.completer Completer]
@@ -81,6 +82,22 @@
                                         :events events}})))]
     (play! one-off-score opts)))
 
+(defn set-repl-prompt!
+  "Sets the REPL prompt to give the user clues about the current context."
+  [rdr]
+  (let [abbrevs (for [inst *current-instruments*]
+                  (if-let [nickname (first (for [[k v] *nicknames*
+                                                 :when (= v (list inst))]
+                                             k))]
+                    (->> (re-seq #"(\w)\w*" nickname)
+                         (map second)
+                         (apply str))
+                    (->> (re-seq #"(\w)\w*-" inst)
+                         (map second)
+                         (apply str))))
+        prompt  (str (str/join "/" abbrevs) "> ")]
+    (.setPrompt rdr prompt)))
+
 (defn start-repl!
   [version & [opts]]
   (println)
@@ -93,6 +110,7 @@
     (println "done." \newline)
     (score*) ; initialize score
     (binding [*out* (.getOutput reader)]
+      (set-repl-prompt! reader)
       (while-let [alda-code (when-not @done? (.readLine reader))]
         (try
           (cond
@@ -110,20 +128,21 @@
             (let [[_ cmd rest-of-line] (re-matches #":(\S+)\s*(.*)" alda-code)]
               (repl-command cmd rest-of-line))
 
-           :else
-           (let [_          (log/debug "Parsing code...")
-                 parsed     (parse-with-context context alda-code)
-                 _          (log/debug "Done parsing code.")
-                 old-score  (score-map)
-                 new-score  (do (eval (case @context
-                                        :music-data (cons 'do parsed)
-                                        parsed)) 
-                                (score-map))
-                 new-events (set/difference
-                              (:events new-score)
-                              (:events old-score))]
-             (midi/load-instruments! new-score)
-             (play-new-events! new-events opts)
-             (score-text<< alda-code)))
+            :else
+            (let [_          (log/debug "Parsing code...")
+                  parsed     (parse-with-context context alda-code)
+                  _          (log/debug "Done parsing code.")
+                  old-score  (score-map)
+                  new-score  (do (eval (case @context
+                                         :music-data (cons 'do parsed)
+                                         parsed)) 
+                                 (score-map))
+                  new-events (set/difference
+                               (:events new-score)
+                               (:events old-score))]
+              (midi/load-instruments! new-score)
+              (play-new-events! new-events opts)
+              (score-text<< alda-code)))
+          (set-repl-prompt! reader)
           (catch Throwable e
             (pretty/write-exception *err* e)))))))
