@@ -26,20 +26,18 @@
 
    Logs an error if the stock instrument hasn't been defined."
   [stock-inst & attrs]
-  (let [attr-map (apply hash-map attrs)
-        id (generate-id stock-inst)
-        instrument (if-let [{:keys [initial-vals]}
-                            (*stock-instruments* stock-inst)]
-                     (merge *initial-attr-values*
-                            {:id id}
-                            initial-vals
-                            attr-map)
-                     (log/error "Stock instrument"
-                                (str \" stock-inst \")
-                                "not defined."))]
-    (when instrument
-      (alter-var-root #'*instruments* assoc-in [id] instrument)
-      instrument)))
+  (when-let [instrument (if-let [{:keys [initial-vals]}
+                               (*stock-instruments* stock-inst)]
+                          (merge *initial-attr-values*
+                                 {:id (generate-id stock-inst)}
+                                 initial-vals
+                                 (apply hash-map attrs))
+                          (log/error "Stock instrument"
+                                     (str \" stock-inst \")
+                                     "not defined."))]
+    (alter-var-root #'*instruments* 
+                    assoc (:id instrument) instrument)
+    instrument))
 
 (defn determine-instances
   "Given an instrument call (as a map with names and nickname keys), determines
