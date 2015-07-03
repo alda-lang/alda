@@ -37,6 +37,10 @@
   (log/errorf "No implementation of play-event! defined for type %s"
               (-> instrument :config :type)))
 
+(defmethod play-event! nil
+  [event instrument]
+  :do-nothing)
+
 (defmethod play-event! :midi
   [note instrument]
   (midi/play-note! note))

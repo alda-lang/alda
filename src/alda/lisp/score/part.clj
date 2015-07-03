@@ -28,17 +28,18 @@
   [stock-inst & attrs]
   (let [attr-map (apply hash-map attrs)
         id (generate-id stock-inst)
-        instrument (merge *initial-attr-values*
-                          {:id id}
-                          (if-let [{:keys [initial-vals]}
-                                   (*stock-instruments* stock-inst)]
+        instrument (if-let [{:keys [initial-vals]}
+                            (*stock-instruments* stock-inst)]
+                     (merge *initial-attr-values*
+                            {:id id}
                             initial-vals
-                            (log/error "Stock instrument"
-                                       (str \" stock-inst \")
-                                       "not defined."))
-                          attr-map)]
-    (alter-var-root #'*instruments* assoc-in [id] instrument)
-    instrument))
+                            attr-map)
+                     (log/error "Stock instrument"
+                                (str \" stock-inst \")
+                                "not defined."))]
+    (when instrument
+      (alter-var-root #'*instruments* assoc-in [id] instrument)
+      instrument)))
 
 (defn determine-instances
   "Given an instrument call (as a map with names and nickname keys), determines
@@ -46,18 +47,20 @@
    Initializes instrument instances / updates nicknames when appropriate."
   [{:keys [names nickname]}]
   (let [instances
-        (flatten
-          (for [name names]
-            (if (contains? *nicknames* name)
-              (*nicknames* name)
-              (if nickname
-                (:id (init-instrument name))
-                (if-let [existing-inst (first
-                                        (for [[id attrs] *instruments*
-                                              :when (.startsWith id (str name \-))]
-                                          (:id attrs)))]
-                  existing-inst
-                  (:id (init-instrument name)))))))]
+        (remove nil?
+          (flatten
+            (for [name names]
+              (if (contains? *nicknames* name)
+                (*nicknames* name)
+                (if nickname
+                  (:id (init-instrument name))
+                  (if-let [existing-inst 
+                           (first
+                             (for [[id attrs] *instruments*
+                                   :when (.startsWith id (str name \-))]
+                               (:id attrs)))]
+                    existing-inst
+                    (:id (init-instrument name))))))))]
     (when nickname
       (alter-var-root #'*nicknames* assoc nickname instances))
     (set instances)))
@@ -76,8 +79,8 @@
   [instrument-call]
   (alter-var-root (var *current-instruments*)
                   (constantly (determine-instances instrument-call)))
-  (doseq [instrument# *current-instruments*]
-    (apply-global-attributes instrument# (AbsoluteOffset. 0))))
+  (doseq [instrument *current-instruments*]
+    (apply-global-attributes instrument (AbsoluteOffset. 0))))
 
 (defmethod part* String
   [instrument-call]
