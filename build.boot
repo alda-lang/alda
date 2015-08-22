@@ -34,10 +34,20 @@
        :license {"name" "Eclipse Public License"
                  "url" "http://www.eclipse.org/legal/epl-v10.html"}}
   jar {:main 'alda.core}
-  test {:namespaces '#{alda.parser-test
-                       alda.lisp-attribute-test
-                       alda.lisp-event-test
-                       alda.lisp-score-test}})
+  test {:namespaces '#{alda.test.parser.attributes
+                       alda.test.parser.duration
+                       alda.test.parser.events
+                       alda.test.parser.score
+                       alda.test.lisp.attributes
+                       alda.test.lisp.chords
+                       alda.test.lisp.duration
+                       alda.test.lisp.global-attributes
+                       alda.test.lisp.markers
+                       alda.test.lisp.notes
+                       alda.test.lisp.parts
+                       alda.test.lisp.pitch
+                       alda.test.lisp.score
+                       alda.test.lisp.voices}})
 
 (deftask build
   "Builds uberjar.
