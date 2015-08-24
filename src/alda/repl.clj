@@ -142,7 +142,7 @@
                                (:events old-score))]
               (midi/load-instruments! new-score)
               (play-new-events! new-events opts)
-              (score-text<< alda-code)))
+              (when parsed (score-text<< alda-code))))
           (set-repl-prompt! reader)
           (catch Throwable e
             (pretty/write-exception *err* e)))))))
