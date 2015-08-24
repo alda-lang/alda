@@ -3,7 +3,7 @@
 
 (log/debug "Loading alda.lisp.events.note...")
 
-(defrecord Note [offset instrument volume midi-note pitch duration])
+(defrecord Note [offset instrument volume total-volume midi-note pitch duration])
 
 (defn note*
   ([instrument pitch-fn]
@@ -26,12 +26,13 @@
     (let [quant          (if (or slur? slurred) 1.0 ($quantization instrument))
           note-duration  (duration-fn ($tempo instrument))
           event          (map->Note
-                           {:offset     ($current-offset instrument)
-                            :instrument instrument
-                            :volume     ($volume instrument)
-                            :midi-note  (pitch-fn ($octave instrument) :midi true)
-                            :pitch      (pitch-fn ($octave instrument))
-                            :duration   (* note-duration quant)})]
+                           {:offset       ($current-offset instrument)
+                            :instrument   instrument
+                            :volume       ($volume instrument)
+                            :track-volume ($track-volume instrument)
+                            :midi-note    (pitch-fn ($octave instrument) :midi true)
+                            :pitch        (pitch-fn ($octave instrument))
+                            :duration     (* note-duration quant)})]
       (add-event instrument event)
       (set-last-offset instrument ($current-offset instrument))
       (set-current-offset instrument (offset+ ($current-offset instrument)

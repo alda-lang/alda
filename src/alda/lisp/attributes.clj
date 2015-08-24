@@ -50,16 +50,23 @@
    e.g. with a quantization value of 90%, a note that would otherwise last
    500 ms will be quantized to last 450 ms. The resulting note event will
    have a duration of 450 ms, and the next event will be set to occur in 500 ms."
-  :var *quant*
   :aliases [:quant :quantize]
   :initial-val 0.9
   :fn-name quant
   :transform percentage)
 
 (defattribute volume
-  "Current volume."
+  "Current volume. For MIDI purposes, the velocity of individual notes."
   :aliases [:vol]
   :initial-val 1.0
+  :transform percentage)
+
+(defattribute track-volume
+  "More general volume for the track as a whole. Although this can be changed
+   just as often as volume, to do so is not idiomatic. For MIDI purposes, this
+   corresponds to the volume of a channel."
+  :aliases [:track-vol]
+  :initial-val (/ 100.0 127.0)
   :transform percentage)
 
 (defattribute panning

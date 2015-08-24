@@ -45,8 +45,8 @@ attribute-change        = (attribute-change-num | attribute-change-dur)
                           <ows> <#"[,;]">? <ows>
 <attribute-change-num>  = attribute-num <ows> number
 <attribute-change-dur>  = attribute-dur <ows> duration
-<attribute-num>         = "volume" | #"pan(ning)?" | "tempo" |
-                          #"quant(iz(e|ation))?"
+<attribute-num>         = #"vol(ume)?" | #"pan(ning)?" | "tempo" |
+                          #"quant(iz(e|ation))?" | #"track-vol(ume)?"
 <attribute-dur>         = "note-length"
 
 marker                  = <"%"> name <ows>

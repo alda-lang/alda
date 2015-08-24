@@ -3,7 +3,6 @@
             [midi.soundfont  :refer (load-all-instruments!)])
   (:import  (javax.sound.midi MidiSystem Synthesizer)))
 
-; TODO: do something with the volume values (convert to MIDI velocity? volume?)
 ; TODO: work around the limitation of 16 MIDI channels?
 ; TODO: enable percussion
 
@@ -20,8 +19,8 @@
    channel 11 can be used for either percussion or non-percussion.
 
    Returns nil if no channels available."
-  [channels & {:keys [percussion]}]
-  (if percussion
+  [channels & {:keys [percussion?]}]
+  (if percussion?
     (first (filter #((set 10 11) %) channels))
     (first (filter (partial not= 10) channels))))
 
@@ -39,7 +38,7 @@
                                                       :when (= p patch)]
                                                   c))]
                               existing
-                              ; TODO: pass ":percussion true" if percussion
+                              ; TODO: pass ":percussion? true" if percussion
                               (if-let [channel (next-available @channels)]
                                 (do
                                   (swap! channels disj channel)
@@ -78,13 +77,12 @@
   []
   (.close *midi-synth*))
 
-(defn play-note! [{:keys [midi-note instrument duration]}]
-  (let [channel (->> instrument
-                     *midi-channels*
-                     :channel
-                     (aget (.getChannels *midi-synth*)))]
-    (log/debugf "Playing note %s on channel %s." midi-note channel)
-    (.noteOn channel midi-note 127)
+(defn play-note! [{:keys [midi-note instrument duration volume track-volume]}]
+  (let [channel-number (-> instrument *midi-channels* :channel)
+        channel (aget (.getChannels *midi-synth*) channel-number)]
+    (.controlChange channel 7 (* 127 track-volume))
+    (log/debugf "Playing note %s on channel %s." midi-note channel-number)
+    (.noteOn channel midi-note (* 127 volume))
     (Thread/sleep duration)
     (log/debug "MIDI note off:" midi-note)
     (.noteOff channel midi-note)))
