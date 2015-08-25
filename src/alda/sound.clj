@@ -67,9 +67,10 @@
     (when one-off? (set-up! audio-types score))
     (let [start (+ (now) (or pre-buffer 0))
           pool  (mk-pool)]
-      (doseq [{:keys [offset instrument] :as event} events]
-        (let [instrument (-> instrument instruments)]
-          (at (+ start offset) #(play-event! event instrument) pool)))
+      (doall (pmap (fn [{:keys [offset instrument] :as event}]
+                     (let [instrument (-> instrument instruments)]
+                       (at (+ start offset) #(play-event! event instrument) pool)))
+                   events))
       (Thread/sleep (+ (score-length score) (or post-buffer 0))))
     (when one-off? (tear-down! audio-types score))))
 

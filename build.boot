@@ -83,15 +83,15 @@
   [f file        FILE str "The path to a file containing Alda code."
    c code        CODE str "A string of Alda code."
    ; TODO: implement smart buffering and remove the buffer options
-   p pre-buffer  MS  int  "The number of milliseconds of lead time for buffering. (default: 4000)"
-   P post-buffer MS  int  "The number of milliseconds to keep the synth open after the score ends. (default: 4000)"
+   p pre-buffer  MS  int  "The number of milliseconds of lead time for buffering. (default: 0)"
+   P post-buffer MS  int  "The number of milliseconds to keep the synth open after the score ends. (default: 1000)"
    s stock           bool "Use the default MIDI soundfont of your JVM, instead of FluidR3."]
   (require '[alda.lisp]
            '[alda.sound])
   (binding [alda.sound.midi/*midi-soundfont* (when-not stock (fluid-r3!))]
     (alda.sound/play! (eval (parse-input (if code code (slurp file))))
-                      {:pre-buffer  (or pre-buffer  4000)
-                       :post-buffer (or post-buffer 4000)
+                      {:pre-buffer  (or pre-buffer  0)
+                       :post-buffer (or post-buffer 1000)
                        :one-off?    true})))
 
 (deftask alda-repl
