@@ -4,6 +4,7 @@
             [alda.sound                   :refer (set-up! tear-down! play!)]
             [alda.sound.midi              :as    midi]
             [alda.repl.commands           :refer (repl-command)]
+            [alda.now                     :as    now]
             [instaparse.core              :as    insta]
             [boot.from.io.aviso.ansi      :refer :all]
             [boot.from.io.aviso.exception :as    pretty]
@@ -62,25 +63,6 @@
                   (do (reset! context ctx) parsed)))
               (log/error "Invalid Alda syntax.")))]
     (try-ctxs [:music-data :part :score])))
-
-(defn- asap
-  "Tranforms a set of events by making the first one start at offset 0,
-   maintaining the intervals between the offsets of all the events."
-  [events]
-  (if (empty? events) 
-    events
-    (let [earliest (apply min (map :offset events))]
-      (into #{}
-        (map #(update % :offset - earliest) events)))))
-
-(defn play-new-events!
-  [events & [opts]]
-  (let [one-off-score 
-        (assoc (score-map)
-               :events (asap (event-set
-                               {:start {:offset (->AbsoluteOffset 0)
-                                        :events events}})))]
-    (play! one-off-score opts)))
 
 (defn set-repl-prompt!
   "Sets the REPL prompt to give the user clues about the current context."
@@ -141,7 +123,7 @@
                                (:events new-score)
                                (:events old-score))]
               (midi/load-instruments! new-score)
-              (play-new-events! new-events opts)
+              (now/play-new-events! new-events opts)
               (when parsed (score-text<< alda-code))))
           (set-repl-prompt! reader)
           (catch Throwable e
