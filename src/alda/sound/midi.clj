@@ -32,19 +32,13 @@
   (let [channels (atom (apply sorted-set (concat (range 0 9) (range 10 16))))]
     (reduce (fn [result id]
               (let [patch   (-> id instruments :config :patch)
-                    channel (if-let [existing (first
-                                                (for [[id {c :channel
-                                                           p :patch}] result
-                                                      :when (= p patch)]
-                                                  c))]
-                              existing
-                              ; TODO: pass ":percussion? true" if percussion
-                              (if-let [channel (next-available @channels)]
-                                (do
-                                  (swap! channels disj channel)
-                                  channel)
-                                (throw (Exception.
-                                        "Ran out of MIDI channels! :("))))]
+                    ; TODO: pass ":percussion? true" if percussion 
+                    channel (if-let [channel (next-available @channels)]
+                              (do
+                                (swap! channels disj channel)
+                                channel)
+                              (throw 
+                                (Exception. "Ran out of MIDI channels! :(")))]
                 (assoc result id {:channel channel
                                   :patch patch})))
             {}
