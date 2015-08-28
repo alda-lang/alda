@@ -3,7 +3,7 @@
 
 (log/debug "Loading alda.lisp.events.note...")
 
-(defrecord Note [offset instrument volume total-volume midi-note pitch duration])
+(defrecord Note [offset instrument volume track-volume midi-note pitch duration])
 
 (defn note*
   ([instrument pitch-fn]
