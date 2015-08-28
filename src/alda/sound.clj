@@ -60,23 +60,33 @@
 
 ; TODO: control where to start and stop playing using the start & end keys
 (defn play!
-  "Plays an Alda score, optionally from given start/end marks."
+  "Plays an Alda score, optionally from given start/end marks.
+   
+   Returns a function that, when called mid-playback, will stop any further
+   events from playing."
   [{:keys [events instruments] :as score}
-   & [{:keys [start end pre-buffer post-buffer one-off?] :as opts}]]
-  (let [audio-types (determine-audio-types score)]
-    (when one-off? (set-up! audio-types score))
-    (let [start (+ (now) (or pre-buffer 0))
-          pool  (mk-pool)]
-      (doall (pmap (fn [{:keys [offset instrument] :as event}]
-                     (let [instrument (-> instrument instruments)]
-                       (at (+ start offset) #(play-event! event instrument) pool)))
-                   events))
+   & [{:keys [start end pre-buffer post-buffer one-off? async?] :as opts}]]
+  (let [audio-types (determine-audio-types score)
+        _           (when one-off? (set-up! audio-types score))
+        pool        (mk-pool)
+        playing?    (atom true)
+        start       (+ (now) (or pre-buffer 0))]
+    (doall (pmap (fn [{:keys [offset instrument] :as event}]
+                   (let [instrument (-> instrument instruments)]
+                     (at (+ start offset) 
+                         #(when @playing? 
+                            (play-event! event instrument)) 
+                         pool)))
+                 events))
+    (when-not async?
+      ; block until the score is done playing
       (Thread/sleep (+ (score-length score) (or post-buffer 0))))
-    (when one-off? (tear-down! audio-types score))))
+    (when one-off? (tear-down! audio-types score))
+    #(reset! playing? false)))
 
 (defn make-wav!
-  "Parses an input file and saves the resulting sound data as a wav file, using the
-   specified options."
+  "Parses an input file and saves the resulting sound data as a wav file, 
+   using the specified options."
   [input-file output-file {:keys [start end]}]
   (let [target-file (check-for output-file)]
     (comment "To do.")))

@@ -92,7 +92,8 @@
     (alda.sound/play! (eval (parse-input (if code code (slurp file))))
                       {:pre-buffer  (or pre-buffer  0)
                        :post-buffer (or post-buffer 1000)
-                       :one-off?    true})))
+                       :one-off?    true})
+    identity))
 
 (deftask alda-repl
   "Starts an Alda Read-Evaluate-Play-Loop."
@@ -101,7 +102,8 @@
    s stock          bool "Use the default MIDI soundfont of your JVM, instead of FluidR3."]
   (binding [alda.sound.midi/*midi-soundfont* (when-not stock (fluid-r3!))]
     (alda.repl/start-repl! +version+ {:pre-buffer  pre-buffer
-                                      :post-buffer post-buffer})))
+                                      :post-buffer post-buffer
+                                      :async?      true})))
 
 (defn -main [& args]
   (apply alda.core/-main args))
