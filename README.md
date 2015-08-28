@@ -12,6 +12,8 @@
 
 ## A music programming language for musicians
 
+[![Clojars Project](http://clojars.org/alda/latest-version.svg)](http://clojars.org/alda)
+
 Inspired by other music/audio programming languages such as [PPMCK][ppmck],
 [LilyPond][lilypond] and [ChucK][chuck], Alda aims to be a
 powerful and flexible programming language for the musician who wants to easily
