@@ -2,29 +2,88 @@
   (:require [alda.sound.midi :as    midi]
             [overtone.at-at  :refer (mk-pool now at)]
             [taoensso.timbre :as    log]
-            [alda.util       :refer (check-for)]
-            [defun           :refer (defun)]))
+            [alda.util       :refer (check-for)]))
 
-(defun set-up!
-  "Does any necessary setup for a given audio type.
-   e.g. for MIDI, create a MIDI synth and load the instruments."
-  ([(audio-types :guard coll?) score]
-    (doseq [audio-type audio-types]
-      (set-up! audio-type score)))
-  ([audio-type score]
-    (case audio-type
-      :midi (do
-              (midi/open-midi-synth!)
-              (midi/load-instruments! score))
-      :catch-all---no-action-needed)))
+(def ^:dynamic *active-audio-types* #{})
+
+(defn set-up?
+  [x]
+  (contains? *active-audio-types* x))
+
+(defmulti set-up-audio-type!
+  (fn [audio-type & [score]] audio-type))
+
+(defmethod set-up-audio-type! :default
+  [audio-type & [score]]
+  (log/errorf "No implementation of set-up-audio-type! defined for type %s" 
+              audio-type))
+
+(defmethod set-up-audio-type! :midi
+  [_ & [score]]
+  (midi/open-midi-synth!))
+
+(defn set-up!
+  "Does any necessary setup for one or more audio types.
+   e.g. for MIDI, create and open a MIDI synth."
+  [audio-type & [score]]
+  (if (coll? audio-type)
+    (doall 
+      (pmap #(set-up! % score) audio-type))
+    (when-not (set-up? audio-type) 
+      (set-up-audio-type! audio-type score)
+      (alter-var-root #'*active-audio-types* conj audio-type))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defmulti refresh-audio-type!
+  (fn [audio-type & [score]] audio-type))
+
+(defmethod refresh-audio-type! :default
+  [audio-type & [score]]
+  (log/errorf "No implementation of refresh-audio-type! defined for type %s" 
+              audio-type))
+
+(defmethod refresh-audio-type! :midi
+  [_ & [score]]
+  (midi/load-instruments! score))
+
+(defn refresh!
+  "Performs any actions that may be needed each time the `play!` function is
+   called. e.g. for MIDI, load instruments into channels (this needs to be
+   done every time `play!` is called because new instruments may have been
+   added to the score between calls to `play!`, when using Alda live.)"
+  [audio-type & [score]]
+  (if (coll? audio-type)
+    (doall 
+      (pmap #(refresh! % score) audio-type))
+    (when (set-up? audio-type) 
+      (refresh-audio-type! audio-type score))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defmulti tear-down-audio-type!
+  (fn [audio-type & [score]] audio-type))
+
+(defmethod tear-down-audio-type! :default
+  [audio-type & [score]]
+  (log/errorf "No implementation of tear-down! defined for type %s" audio-type))
+
+(defmethod tear-down-audio-type! :midi
+  [_ & [score]]
+  (midi/close-midi-synth!))
 
 (defn tear-down!
   "Does any necessary clean-up at the end.
    e.g. for MIDI, close the MIDI synth."
-  [audio-type score]
-  (case audio-type
-    :midi (midi/close-midi-synth!)
-    :catch-all---no-action-needed))
+  [audio-type & [score]]
+  (if (coll? audio-type)
+    (doall 
+      (pmap #(tear-down! % score) audio-type))
+    (when (set-up? audio-type) 
+      (tear-down-audio-type! audio-type score)
+      (alter-var-root #'*active-audio-types* disj audio-type))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defmulti play-event!
   "Plays a note/event, using the appropriate method based on the type of the
@@ -33,7 +92,7 @@
     (-> instrument :config :type)))
 
 (defmethod play-event! :default
-  [event instrument]
+  [_ instrument]
   (log/errorf "No implementation of play-event! defined for type %s"
               (-> instrument :config :type)))
 
@@ -45,6 +104,8 @@
   [note instrument]
   (midi/play-note! note))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defn- score-length
   "Calculates the length of a score in ms."
   [{:keys [events] :as score}]
@@ -54,9 +115,11 @@
     0))
 
 (defn determine-audio-types
-  [score]
-  ; TODO: actually determine audio types
-  [:midi])
+  [{:keys [instruments] :as score}]
+  (set (for [[id {:keys [config]}] instruments]
+         (:type config))))
+
+(def ^:dynamic *play-opts* {})
 
 ; TODO: control where to start and stop playing using the start & end keys
 (defn play!
@@ -64,10 +127,11 @@
    
    Returns a function that, when called mid-playback, will stop any further
    events from playing."
-  [{:keys [events instruments] :as score}
-   & [{:keys [start end pre-buffer post-buffer one-off? async?] :as opts}]]
-  (let [audio-types (determine-audio-types score)
-        _           (when one-off? (set-up! audio-types score))
+  [{:keys [events instruments] :as score}]
+  (let [{:keys [start end pre-buffer post-buffer one-off? async?]} *play-opts*
+        audio-types (determine-audio-types score)
+        _           (set-up! audio-types score)
+        _           (refresh! audio-types score)
         pool        (mk-pool)
         playing?    (atom true)
         start       (+ (now) (or pre-buffer 0))]

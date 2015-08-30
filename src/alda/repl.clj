@@ -80,17 +80,16 @@
         prompt  (str (str/join "/" abbrevs) "> ")]
     (.setPrompt rdr prompt)))
 
-(defn start-repl!
-  [version & [opts]]
+(defn start-repl! [version]
   (println)
   (println (banner version) \newline)
   (let [done?   (atom false)
         context (atom :part)
         reader  (doto (ConsoleReader.) (.setPrompt "> "))]
     (print "Loading MIDI synth... ")
-    (set-up! :midi {})
+    (set-up! :midi)
     (println "done." \newline)
-    (score*) ; initialize score
+    (score*) ; initialize a new score
     (binding [*out* (.getOutput reader)]
       (set-repl-prompt! reader)
       (while-let [alda-code (when-not @done? (.readLine reader))]
@@ -103,7 +102,7 @@
             (do
               (println)
               (println (str "score:" \newline *score-text*))
-              (tear-down! :midi {})
+              (tear-down! :midi)
               (reset! done? true))
 
             (re-find #"^:" alda-code)
@@ -113,17 +112,10 @@
             :else
             (let [_          (log/debug "Parsing code...")
                   parsed     (parse-with-context context alda-code)
-                  _          (log/debug "Done parsing code.")
-                  old-score  (score-map)
-                  new-score  (do (eval (case @context
-                                         :music-data (cons 'do parsed)
-                                         parsed)) 
-                                 (score-map))
-                  new-events (set/difference
-                               (:events new-score)
-                               (:events old-score))]
-              (midi/load-instruments! new-score)
-              (now/play-new-events! new-events opts)
+                  _          (log/debug "Done parsing code.")]
+              (now/play! (eval (case @context
+                                 :music-data (cons 'do parsed)
+                                 parsed)))
               (when parsed (score-text<< alda-code))))
           (set-repl-prompt! reader)
           (catch Throwable e

@@ -28,7 +28,7 @@
   "Inspects a score and generates a map of instrument IDs to MIDI channels.
    The channel values are maps with keys :channel (the channel number) and
    :patch (the General MIDI patch number)."
-  [{:keys [events instruments] :as score}]
+  [{:keys [instruments] :as score}]
   (let [channels (atom (apply sorted-set (concat (range 0 9) (range 10 16))))]
     (reduce (fn [result id]
               (let [patch   (-> id instruments :config :patch)
@@ -42,9 +42,9 @@
                 (assoc result id {:channel channel
                                   :patch patch})))
             {}
-            (set (for [id (map :instrument events)
-                       :when (= :midi (-> id instruments :config :type))]
-                   id)))))
+            (for [[id {:keys [config]}] instruments
+                  :when (= :midi (:type config))]
+              id))))
 
 (defn- load-instrument! [patch-number channel]
   (.programChange channel (dec patch-number)))

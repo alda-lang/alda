@@ -3,6 +3,8 @@
             [alda.lisp   :as lisp]
             [clojure.set :as set]))
 
+(def set-up! sound/set-up!)
+
 (defn- asap
   "Tranforms a set of events by making the first one start at offset 0,
    maintaining the intervals between the offsets of all the events."
@@ -14,13 +16,13 @@
         (map #(update % :offset - earliest) events)))))
 
 (defn play-new-events!
-  [events & [opts]]
+  [events]
   (let [one-off-score 
         (assoc (lisp/score-map)
                :events (asap (lisp/event-set
                                {:start {:offset (lisp/->AbsoluteOffset 0)
                                         :events events}})))]
-    (sound/play! one-off-score opts)))
+    (sound/play! one-off-score)))
 
 (defmacro play!
   "Evaluates some alda.lisp code and plays only the new events."
@@ -30,7 +32,8 @@
          new-events# (set/difference
                        (:events new-score#)
                        (:events old-score#))]
-     (play-new-events! new-events# {:async? true})))
+     (binding [alda.sound/*play-opts* {:async? true}] 
+       (play-new-events! new-events#))))
 
 (defn refresh!
   "Clears all events and resets the current-offset of each instrument to 0.

@@ -44,9 +44,11 @@
 
 (defn score-map
   []
-  {:events (event-set *events*)
-   :markers (markers *events*)
-   :instruments *instruments*})
+  (if (bound? #'*events*)
+    {:events (event-set *events*)
+     :markers (markers *events*)
+     :instruments *instruments*}
+    (log/error "A score must be initialized with (score*) before you can use (score-map).")))
 
 (defmacro score
   "Initializes a new score, evaluates body, and returns the map containing the

@@ -12,8 +12,7 @@
                  [djy                   "0.1.4"]
                  [overtone              "0.9.1"]
                  [midi.soundfont        "0.1.0"]
-                 [reply                 "0.3.7"]
-                 [defun                 "0.2.0-RC"]])
+                 [reply                 "0.3.7"]])
 
 (require '[adzerk.bootlaces :refer :all]
          '[adzerk.boot-test :refer :all]
@@ -21,7 +20,7 @@
          '[alda.parser :refer (parse-input)]
          '[alda.repl])
 
-(def +version+ "0.1.1")
+(def +version+ "0.2.0")
 (bootlaces! +version+)
 
 (task-options!
@@ -88,11 +87,11 @@
    s stock           bool "Use the default MIDI soundfont of your JVM, instead of FluidR3."]
   (require '[alda.lisp]
            '[alda.sound])
-  (binding [alda.sound.midi/*midi-soundfont* (when-not stock (fluid-r3!))]
-    (alda.sound/play! (eval (parse-input (if code code (slurp file))))
-                      {:pre-buffer  (or pre-buffer  0)
-                       :post-buffer (or post-buffer 1000)
-                       :one-off?    true})
+  (binding [alda.sound.midi/*midi-soundfont* (when-not stock (fluid-r3!))
+            alda.sound/*play-opts* {:pre-buffer  (or pre-buffer 0)
+                                    :post-buffer (or post-buffer 1000)
+                                    :one-off?    true}]
+    (alda.sound/play! (eval (parse-input (if code code (slurp file)))))
     identity))
 
 (deftask alda-repl
@@ -100,10 +99,11 @@
   [p pre-buffer  MS int  "The number of milliseconds of lead time for buffering. (default: 0)"
    P post-buffer MS int  "The number of milliseconds to wait after the score ends. (default: 0)"
    s stock          bool "Use the default MIDI soundfont of your JVM, instead of FluidR3."]
-  (binding [alda.sound.midi/*midi-soundfont* (when-not stock (fluid-r3!))]
-    (alda.repl/start-repl! +version+ {:pre-buffer  pre-buffer
-                                      :post-buffer post-buffer
-                                      :async?      true})))
+  (binding [alda.sound.midi/*midi-soundfont* (when-not stock (fluid-r3!))
+            alda.sound/*play-opts* {:pre-buffer  pre-buffer
+                                    :post-buffer post-buffer
+                                    :async?      true}]
+    (alda.repl/start-repl! +version+)))
 
 (defn -main [& args]
   (apply alda.core/-main args))
