@@ -20,7 +20,7 @@
          '[alda.parser :refer (parse-input)]
          '[alda.repl])
 
-(def +version+ "0.2.0")
+(def +version+ "0.2.1")
 (bootlaces! +version+)
 
 (task-options!
@@ -86,13 +86,17 @@
    P post-buffer MS  int  "The number of milliseconds to keep the synth open after the score ends. (default: 1000)"
    s stock           bool "Use the default MIDI soundfont of your JVM, instead of FluidR3."]
   (require '[alda.lisp]
-           '[alda.sound])
+           '[alda.sound]
+           '[instaparse.core])
   (binding [alda.sound.midi/*midi-soundfont* (when-not stock (fluid-r3!))
             alda.sound/*play-opts* {:pre-buffer  (or pre-buffer 0)
                                     :post-buffer (or post-buffer 1000)
                                     :one-off?    true}]
-    (alda.sound/play! (eval (parse-input (if code code (slurp file)))))
-    identity))
+    (let [parsed (parse-input (if code code (slurp file)))]
+      (if (instaparse.core/failure? parsed)
+        (prn parsed) 
+        (alda.sound/play! (eval parsed)))
+      identity)))
 
 (deftask alda-repl
   "Starts an Alda Read-Evaluate-Play-Loop."
