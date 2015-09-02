@@ -55,7 +55,7 @@ at-marker               = <"@"> name <ows>
 ows                     = (#"\s" | comment)*
 
 comment                 = long-comment | short-comment | barline
-long-comment            = "#{" inside-long-comment* "}"
-inside-long-comment     = !("#{" | "}") #".|\n|\r" | long-comment
+long-comment            = "(*" inside-long-comment* "*)"
+inside-long-comment     = !("(*" | "*)") #".|\n|\r" | long-comment
 short-comment           = "#" #".*" #"(\n|\r|$)+"
 barline                 = "|"

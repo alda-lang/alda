@@ -20,7 +20,7 @@
          '[alda.parser :refer (parse-input)]
          '[alda.repl])
 
-(def +version+ "0.2.1")
+(def +version+ "0.3.0")
 (bootlaces! +version+)
 
 (task-options!
@@ -34,6 +34,7 @@
                  "url" "http://www.eclipse.org/legal/epl-v10.html"}}
   jar {:main 'alda.core}
   test {:namespaces '#{alda.test.parser.attributes
+                       alda.test.parser.comments
                        alda.test.parser.duration
                        alda.test.parser.events
                        alda.test.parser.score
