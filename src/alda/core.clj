@@ -3,6 +3,8 @@
             [alda.sound :as sound])
   (:gen-class))
 
+; TODO: merge this namespace with alda.cli
+
 (def cli-options
   [["-h" "--help" "Display help text."]
    ["-s" "--start START"

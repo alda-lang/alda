@@ -1,5 +1,6 @@
 (ns alda.repl
-  (:require [alda.parser                  :refer (parse-input)]
+  (:require [alda.version                 :refer (-version-)] 
+            [alda.parser                  :refer (parse-input)]
             [alda.lisp                    :refer :all]
             [alda.sound                   :refer (set-up! tear-down! play!)]
             [alda.sound.midi              :as    midi]
@@ -25,15 +26,15 @@
        "██║  ██║███████╗██████╔╝██║  ██║" \newline
        "╚═╝  ╚═╝╚══════╝╚═════╝ ╚═╝  ╚═╝"))
 
-(defn text-below-ascii-art [version]
-  (str "            v" version \newline
+(def text-below-ascii-art
+  (str "            v" -version- \newline
        "         repl session"))
 
-(defn banner [version]
+(def banner
   (str (blue ascii-art)
        \newline
        \newline
-       (cyan (text-below-ascii-art version))))
+       (cyan text-below-ascii-art)))
 
 (defn parse-with-start-rule
   "Parse a string of Alda code starting from a particular level of the tree.
@@ -80,9 +81,9 @@
         prompt  (str (str/join "/" abbrevs) "> ")]
     (.setPrompt rdr prompt)))
 
-(defn start-repl! [version]
+(defn start-repl! []
   (println)
-  (println (banner version) \newline)
+  (println banner \newline)
   (let [done?   (atom false)
         context (atom :part)
         reader  (doto (ConsoleReader.) (.setPrompt "> "))]

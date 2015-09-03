@@ -65,13 +65,27 @@ Assuming you have [Boot](http://www.boot-clj.com) installed, try this on for siz
 
     git clone git@github.com:alda-lang/alda.git
     cd alda
-    boot play --file test/examples/awobmolg.alda
+    bin/alda play --file test/examples/awobmolg.alda
 
-> NOTE: The first time you run the `boot play` task, you may need to wait a minute for the FluidR3 MIDI soundfont dependency (~141 MB) to download. Alda uses this soundfont in order to make your JVM's MIDI instruments sound a lot nicer. If you'd prefer to skip this step and use your JVM's default soundfont instead, include the `--stock` flag (i.e. `boot play --stock --file ...`).
+> NOTE: The first time you run the `play` task, you may need to wait a minute for the FluidR3 MIDI soundfont dependency (~141 MB) to download. Alda uses this soundfont in order to make your JVM's MIDI instruments sound a lot nicer. If you'd prefer to skip this step and use your JVM's default soundfont instead, include the `--stock` flag (i.e. `play --stock --file ...`).
 
 You can also execute arbitrary Alda code, like this:
 
-    boot play --code "piano: c6 d12 e6 g12~4"
+    bin/alda play --code "piano: c6 d12 e6 g12~4"
+
+## Installation
+
+The executable file `alda` in the `bin` directory of this repository is a standalone executable script that can be run from anywhere. It will retrieve the latest release version of Alda and run it, passing along any command-line arguments you give it.
+
+This script requires the Clojure build tool [Boot](http://www.boot-clj.com), so you will need to have that installed first. Mac OS X users with [Homebrew](https://github.com/homebrew/homebrew) can run `brew install boot-clj` to install Boot.
+
+To install Alda, simply copy the `alda` script into any directory in your `$PATH`, e.g. `/bin` or `/usr/local/bin`:
+
+    git clone git@github.com:alda-lang/alda.git
+    cd alda
+    cp bin/alda /usr/local/bin
+
+You can now run `alda` from any working directory.
 
 ## alda.lisp
 
@@ -79,9 +93,9 @@ Under the hood, Alda transforms input (i.e. Alda code) into Clojure code which, 
 
 ### Parsing demo
 
-You can use the `parse` Boot task to parse Alda code into alda.lisp (`-l`/`--lisp`) and/or evaluate it to produce a map (`-m`/`--map`) of score information.
+You can use the `parse` task to parse Alda code into alda.lisp (`-l`/`--lisp`) and/or evaluate it to produce a map (`-m`/`--map`) of score information.
 
-    $ boot parse --lisp --map -f test/examples/hello_world.alda
+    $ alda parse --lisp --map -f test/examples/hello_world.alda
     (alda.lisp/score
       (alda.lisp/part {:names ["piano"]}
         (alda.lisp/note (alda.lisp/pitch :c)
@@ -99,7 +113,7 @@ You can use the `parse` Boot task to parse Alda code into alda.lisp (`-l`/`--lis
     {:events #{#alda.lisp.Note{:offset 2000.0, :instrument "piano-VoUlp", :volume 1.0, :pitch 261.6255653005986, :duration 1350.0} #alda.lisp.Note{:offset 0, :instrument "piano-VoUlp", :volume 1.0, :pitch 261.6255653005986, :duration 225.0} #alda.lisp.Note{:offset 250.0, :instrument "piano-VoUlp", :volume 1.0, :pitch 293.6647679174076, :duration 225.0} #alda.lisp.Note{:offset 1250.0, :instrument "piano-VoUlp", :volume 1.0, :pitch 349.2282314330039, :duration 225.0} #alda.lisp.Note{:offset 750.0, :instrument "piano-VoUlp", :volume 1.0, :pitch 349.2282314330039, :duration 225.0} #alda.lisp.Note{:offset 1000.0, :instrument "piano-VoUlp", :volume 1.0, :pitch 391.99543598174927, :duration 225.0} #alda.lisp.Note{:offset 1750.0, :instrument "piano-VoUlp", :volume 1.0, :pitch 293.6647679174076, :duration 225.0} #alda.lisp.Note{:offset 1500.0, :instrument "piano-VoUlp", :volume 1.0, :pitch 329.6275569128699, :duration 225.0} #alda.lisp.Note{:offset 500.0, :instrument "piano-VoUlp", :volume 1.0, :pitch 329.6275569128699, :duration 225.0}},
      :instruments {"piano-VoUlp" {:octave 4, :current-offset #alda.lisp.AbsoluteOffset{:offset 3500.0}, :config {:type :midi}, :duration 3N, :volume 1.0, :last-offset #alda.lisp.AbsoluteOffset{:offset 2000.0}, :id "piano-VoUlp", :quantization 0.9, :tempo 120, :panning 0.5, :current-marker :start, :stock "piano"}}}
 
-    $ boot parse --lisp -c 'cello: c+'
+    $ alda parse --lisp -c 'cello: c+'
     (alda.lisp/score
       (alda.lisp/part {:names ["cello"]}
         (alda.lisp/note (alda.lisp/pitch :c :sharp))))
