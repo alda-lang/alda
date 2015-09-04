@@ -1,8 +1,10 @@
 (ns alda.cli
-  (:require [boot.cli     :refer (defclifn)]
-            [boot.core    :refer (merge-env!)]
-            [alda.parser  :refer (parse-input)]
-            [alda.repl]))
+  (:require [boot.cli       :refer (defclifn)]
+            [boot.core      :refer (merge-env!)]
+            [clojure.string :as str]
+            [alda.parser    :refer (parse-input)]
+            [alda.repl]
+            [alda.version   :refer (-version-)]))
 
 (defn fluid-r3! 
   "Fetches FluidR3 dependency and returns the input stream handle."
@@ -13,24 +15,26 @@
          (require '[midi.soundfont.fluid-r3 :as fluid-r3])
          fluid-r3/sf2)))
 
-(defclifn parse
+(defclifn ^:alda-task parse
   "Parse some Alda code and print the results to the console."
-  [f file FILE str  "The path to a file containing Alda code."
-   c code CODE str  "A string of Alda code."
+  [f file FILE str  "The path to a file containing Alda code to parse."
+   c code CODE str  "The string of Alda code to parse."
    l lisp      bool "Parse into alda.lisp code."
    m map       bool "Evaluate the score and show the resulting instruments/events map."]
-  (let [alda-lisp-code (parse-input (if code code (slurp file)))]
-    (when lisp
-      (prn alda-lisp-code))
-    (when map
-      (require 'alda.lisp)
-      (println)
-      (prn (eval alda-lisp-code)))))
+  (if-not (or file code)
+    (parse "--help")
+    (let [alda-lisp-code (parse-input (if code code (slurp file)))]
+      (when lisp
+        (prn alda-lisp-code))
+      (when map
+        (require 'alda.lisp)
+        (println)
+        (prn (eval alda-lisp-code))))))
 
-(defclifn play
+(defclifn ^:alda-task play
   "Parse some Alda code and play the resulting score."
-  [f file        FILE str "The path to a file containing Alda code."
-   c code        CODE str "A string of Alda code."
+  [f file        FILE str "The path to a file containing Alda code to play."
+   c code        CODE str "The string of Alda code to play."
    ; TODO: implement smart buffering and remove the buffer options
    p pre-buffer  MS  int  "The number of milliseconds of lead time for buffering. (default: 0)"
    P post-buffer MS  int  "The number of milliseconds to keep the synth open after the score ends. (default: 1000)"
@@ -42,13 +46,15 @@
             alda.sound/*play-opts* {:pre-buffer  (or pre-buffer 0)
                                     :post-buffer (or post-buffer 1000)
                                     :one-off?    true}]
-    (let [parsed (parse-input (if code code (slurp file)))]
-      (if (instaparse.core/failure? parsed)
-        (prn parsed) 
-        (alda.sound/play! (eval parsed)))
-      identity)))
+    (if-not (or file code)
+      (play "--help")
+      (let [parsed (parse-input (if code code (slurp file)))]
+        (if (instaparse.core/failure? parsed)
+          (prn parsed) 
+          (alda.sound/play! (eval parsed)))
+        identity))))
 
-(defclifn alda-repl
+(defclifn ^:alda-task repl
   "Starts an Alda Read-Evaluate-Play-Loop."
   [p pre-buffer  MS int  "The number of milliseconds of lead time for buffering. (default: 0)"
    P post-buffer MS int  "The number of milliseconds to wait after the score ends. (default: 0)"
@@ -61,21 +67,41 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(def alda-tasks
+  (-> (into {} 
+        (for [[sym var] (ns-publics *ns*) 
+              :when (:alda-task (meta var))
+              :let [doc (:doc (meta var))
+                    help-blurb (apply str (take-while (partial not= \newline) doc))]]
+          [sym help-blurb]))
+      (merge {'help    "Display this help text."
+              'version "Display Alda version number."})))
+
 (def help-text
-  "alda help text - TODO")
+  (format (str "alda v%s\n\nUsage:\n\n    alda <task> <options>\n\n"
+               "To see options for a task:\n\n    alda <task> --help\n\n"
+               "Tasks:\n\n%s")  
+          -version-
+          (str/join \newline 
+                    (for [[task blurb] alda-tasks]
+                      (str "    " task \tab blurb)))))
 
 (defn- delegate
   [cmd args]
   (if (empty? args)
-    (cmd "--help")
+    (cmd "")
     (apply cmd args)))
 
 (defn -main [& [cmd & args]]
   (case cmd
-    nil      (println help-text)
-    "help"   (println help-text)
-    "--help" (println help-text)
-    "parse"  (delegate parse args)
-    "play"   (delegate play args)
-    "repl"   (delegate alda-repl args)
+    nil         (println help-text)
+    "help"      (println help-text)
+    "--help"    (println help-text)
+    "-h"        (println help-text)
+    "version"   (printf "alda v%s\n" -version-)
+    "--version" (printf "alda v%s\n" -version-)
+    "-v"        (printf "alda v%s\n" -version-)
+    "parse"     (delegate parse args)
+    "play"      (delegate play args)
+    "repl"      (delegate repl args)
     (printf "[alda] Invalid command '%s'.\n\n%s\n" cmd)))
