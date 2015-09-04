@@ -68,14 +68,13 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def alda-tasks
-  (-> (into {} 
-        (for [[sym var] (ns-publics *ns*) 
-              :when (:alda-task (meta var))
-              :let [doc (:doc (meta var))
-                    help-blurb (apply str (take-while (partial not= \newline) doc))]]
-          [sym help-blurb]))
-      (merge {'help    "Display this help text."
-              'version "Display Alda version number."})))
+  (into {'help    "Display this help text."
+         'version "Display Alda version number."} 
+    (for [[sym var] (ns-publics *ns*) 
+          :when (:alda-task (meta var))
+          :let [doc (:doc (meta var))
+                help-blurb (apply str (take-while (partial not= \newline) doc))]]
+      [sym help-blurb])))
 
 (def help-text
   (format (str "alda v%s\n\nUsage:\n\n    alda <task> <options>\n\n"
