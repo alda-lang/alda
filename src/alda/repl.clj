@@ -101,8 +101,8 @@
 
             (re-find #"^:?(quit|exit|bye)" alda-code)
             (do
-              (println)
-              (println (str "score:" \newline *score-text*))
+              #_(println)
+              #_(println (str "score:" \newline *score-text*))
               (tear-down! :midi)
               (reset! done? true))
 
