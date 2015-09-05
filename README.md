@@ -77,15 +77,13 @@ You can also execute arbitrary Alda code, like this:
 
 The executable file `alda` in the `bin` directory of this repository is a standalone executable script that can be run from anywhere. It will retrieve the latest release version of Alda and run it, passing along any command-line arguments you give it.
 
-This script requires the Clojure build tool [Boot](http://www.boot-clj.com), so you will need to have that installed first. Mac OS X users with [Homebrew](https://github.com/homebrew/homebrew) can run `brew install boot-clj` to install Boot.
+To install Alda, simply copy the `alda` script from this repo into any directory in your `$PATH`, e.g. `/bin` or `/usr/local/bin`:
 
-To install Alda, simply copy the `alda` script into any directory in your `$PATH`, e.g. `/bin` or `/usr/local/bin`:
+    curl https://raw.githubusercontent.com/alda-lang/alda/master/bin/alda -o /usr/local/bin/alda && chmod +x /usr/local/bin/alda
 
-    git clone git@github.com:alda-lang/alda.git
-    cd alda
-    cp bin/alda /usr/local/bin
+This script requires the Clojure build tool [Boot](http://www.boot-clj.com), so you will need to have that installed as well. Mac OS X users with [Homebrew](https://github.com/homebrew/homebrew) can run `brew install boot-clj` to install Boot.
 
-You can now run `alda` from any working directory.
+Once you've completed the steps above, you'll be able to run `alda` from any working directory. Running the command `alda` by itself will display the help text.
 
 ## alda.lisp
 
