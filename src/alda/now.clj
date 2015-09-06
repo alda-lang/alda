@@ -13,7 +13,7 @@
     events
     (let [earliest (apply min (map :offset events))]
       (into #{}
-        (map #(update % :offset - earliest) events)))))
+        (map #(update-in % [:offset] - earliest) events)))))
 
 (defn play-new-events!
   [events]
