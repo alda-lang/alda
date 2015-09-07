@@ -1,7 +1,13 @@
-(ns alda.now
-  (:require [alda.sound  :as sound]
-            [alda.lisp   :as lisp]
-            [clojure.set :as set]))
+(ns alda.now)
+
+(require '[alda.sound  :as sound]
+         '[alda.cli]
+         '[clojure.set :as set])
+
+; sets log level to TIMBRE_LEVEL (if set) or :warn
+(alda.cli/set-timbre-level!)
+
+(require '[alda.lisp :as lisp])
 
 (def set-up! sound/set-up!)
 

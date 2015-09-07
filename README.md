@@ -116,11 +116,19 @@ You can use the `parse` task to parse Alda code into alda.lisp (`-l`/`--lisp`) a
       (alda.lisp/part {:names ["cello"]}
         (alda.lisp/note (alda.lisp/pitch :c :sharp))))
 
-## Logging
+## Log levels
 
-Alda uses [timbre](https://github.com/ptaoussanis/timbre) for logging. Every note event, attribute change, etc. is logged at the DEBUG level, which is useful for, well, debugging, but can otherwise be a little distracting. You may want to set Timbre's logging level to WARN, so that you'll only see warnings and errors. You can do that by setting an environment variable:
+Alda uses [timbre](https://github.com/ptaoussanis/timbre) for logging. Every note event, attribute change, etc. is logged at the DEBUG level, which can be useful for debugging purposes.
 
-    export TIMBRE_LOG_LEVEL=warn
+The default logging level is WARN, so by default, you will not see these debug-level logs; you will only see warnings and errors.
+
+To override this setting (e.g. for development and debugging), you can set the `TIMBRE_LEVEL` environment variable.
+
+To see debug logs, for example, you can do this:
+
+    export TIMBRE_LEVEL=debug
+
+When running tests via `boot test`, the log level will default to `debug` unless `TIMBRE_LEVEL` is set to something else.
 
 ## Contributing
 

@@ -1,10 +1,11 @@
 (ns alda.cli
-  (:require [boot.cli       :refer (defclifn)]
-            [boot.core      :refer (merge-env!)]
-            [clojure.string :as str]
-            [alda.parser    :refer (parse-input)]
-            [alda.repl]
-            [alda.version   :refer (-version-)]))
+  (:require [boot.cli        :refer (defclifn)]
+            [taoensso.timbre :as    timbre]
+            [boot.core       :refer (merge-env!)]
+            [clojure.string  :as    str]
+            [alda.parser     :refer (parse-input)]
+            [alda.version    :refer (-version-)]
+            [alda.sound]))
 
 (defn fluid-r3! 
   "Fetches FluidR3 dependency and returns the input stream handle."
@@ -39,8 +40,7 @@
    p pre-buffer  MS  int  "The number of milliseconds of lead time for buffering. (default: 0)"
    P post-buffer MS  int  "The number of milliseconds to keep the synth open after the score ends. (default: 1000)"
    s stock           bool "Use the default MIDI soundfont of your JVM, instead of FluidR3."]
-  (require '[alda.lisp]
-           '[alda.sound]
+  (require '[alda.lisp] 
            '[instaparse.core])
   (binding [alda.sound.midi/*midi-soundfont* (when-not stock (fluid-r3!))
             alda.sound/*play-opts* {:pre-buffer  (or pre-buffer 0)
@@ -63,7 +63,10 @@
             alda.sound/*play-opts* {:pre-buffer  pre-buffer
                                     :post-buffer post-buffer
                                     :async?      true}]
-    (alda.repl/start-repl!)))
+    (eval
+      '(do 
+         (require '[alda.repl])
+         (alda.repl/start-repl!)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -91,7 +94,14 @@
     (cmd "")
     (apply cmd args)))
 
+(defn set-timbre-level!
+  []
+  (timbre/set-level! (if-let [level (System/getenv "TIMBRE_LEVEL")] 
+                       (keyword (str/replace level #":" ""))
+                       :warn)))
+
 (defn -main [& [cmd & args]]
+  (set-timbre-level!) 
   (case cmd
     nil         (println help-text)
     "help"      (println help-text)
