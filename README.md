@@ -122,8 +122,16 @@ Alda uses [timbre](https://github.com/ptaoussanis/timbre) for logging. Every not
 
     export TIMBRE_LOG_LEVEL=warn
 
+## Contributing
+
+Pull requests are warmly welcomed.
+
+- Fork this repository and make changes on your fork.
+- Submit a Pull Request.
+- Your Pull Request should get the Dave Yarwood Seal of Approval™ before being merged. (Don't worry, I'm not hard to win over.)
+
 ## License
 
-Copyright © 2012-2015 Dave Yarwood
+Copyright © 2012-2015 Dave Yarwood et al
 
 Distributed under the Eclipse Public License version 1.0.
