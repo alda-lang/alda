@@ -6,6 +6,7 @@
 - waveform synthesis
 - a "sampler" instrument
 - harness the power of randomness
+- inline Clojure code, à la inline Scheme in LilyPond
 
 ##### alda.repl
 
