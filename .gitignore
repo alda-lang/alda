@@ -10,5 +10,6 @@ pom.xml.asc
 .DS_Store
 .nrepl-history
 .scores/
+.workbench/
 *~
 .ruby-version
