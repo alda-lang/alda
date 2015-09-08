@@ -3,6 +3,7 @@
             [taoensso.timbre :as    timbre]
             [boot.core       :refer (merge-env!)]
             [clojure.string  :as    str]
+            [clojure.pprint  :refer (pprint)]
             [alda.parser     :refer (parse-input)]
             [alda.version    :refer (-version-)]
             [alda.sound]))
@@ -26,11 +27,11 @@
     (parse "--help")
     (let [alda-lisp-code (parse-input (if code code (slurp file)))]
       (when lisp
-        (prn alda-lisp-code))
+        (pprint alda-lisp-code))
       (when map
         (require 'alda.lisp)
         (println)
-        (prn (eval alda-lisp-code))))))
+        (pprint (eval alda-lisp-code))))))
 
 (defclifn ^:alda-task play
   "Parse some Alda code and play the resulting score."
