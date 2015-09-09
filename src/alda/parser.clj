@@ -33,10 +33,9 @@
           :note              #(list* 'alda.lisp/note %&)
           :rest              #(list* 'alda.lisp/pause %&)
           :chord             #(list* 'alda.lisp/chord %&)
-          :octave-change     #(list 'alda.lisp/octave (case %
-                                                         "<" :down
-                                                         ">" :up
-                                                         %))
+          :octave-set        #(list 'alda.lisp/octave %)
+          :octave-up         #(list 'alda.lisp/octave :up)
+          :octave-down       #(list 'alda.lisp/octave :down)
           :attribute-change  #(list 'alda.lisp/set-attribute (keyword %1) %2)
           :global-attribute-change
                              #(list 'alda.lisp/global-attribute (keyword %1) %2)

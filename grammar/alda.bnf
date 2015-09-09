@@ -30,7 +30,10 @@ dots                    = #"\.+"
 <tie>                   = <"~">
 slur                    = <"~">
 
-octave-change           = (<"o"> number | ">" | "<") <ows>
+<octave-change>         = (octave-set | octave-up | octave-down) <ows>
+octave-set              = <"o"> number
+octave-up               = <">">
+octave-down             = <"<">
 
 <global-attributes>     = <"("> <ows> global-attribute-change+ <")"> <ows>
 global-attribute-change = (global-attribute-num | global-attribute-dur)
