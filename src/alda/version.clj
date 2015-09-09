@@ -1,4 +1,4 @@
 (ns alda.version)
 
-(def ^:const -version- "0.4.4")
+(def ^:const -version- "0.5.1")
 
