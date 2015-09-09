@@ -144,7 +144,9 @@
                  events))
     (when-not async?
       ; block until the score is done playing
-      (Thread/sleep (+ (score-length score) (or post-buffer 0))))
+      (Thread/sleep (+ (score-length score) 
+                       (or pre-buffer 0)
+                       (or post-buffer 0))))
     (when one-off? (tear-down! audio-types score))
     #(reset! playing? false)))
 
