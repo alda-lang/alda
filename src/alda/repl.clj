@@ -1,5 +1,5 @@
 (ns alda.repl
-  (:require [alda.version                 :refer (-version-)] 
+  (:require [alda.version                 :refer (-version-)]
             [alda.parser                  :refer (parse-input)]
             [alda.lisp                    :refer :all]
             [alda.sound                   :refer (set-up! tear-down! play!)]
@@ -50,10 +50,10 @@
     (parse-input code)))
 
 (defn parse-with-context
-  "Determine the appropriate context to parse a line of code from the Alda 
+  "Determine the appropriate context to parse a line of code from the Alda
    REPL, then parse it within that context.
-   
-   context is an atom representing the existing context -- this function 
+
+   context is an atom representing the existing context -- this function
    will reset its value to the determined context."
   [context alda-code]
   (letfn [(try-ctxs [[ctx & ctxs]]
@@ -81,6 +81,17 @@
         prompt  (str (str/join "/" abbrevs) "> ")]
     (.setPrompt rdr prompt)))
 
+(defn- interpret
+  "Parse and playback alda-code in given context. Return true iff code was parsable
+"[context alda-code]
+  (log/debug "Parsing code...")
+  (let [parsed (parse-with-context context alda-code)]
+    (log/debug "Done parsing code.")
+    (now/play! (eval (case @context
+                       :music-data (cons 'do parsed)
+                       parsed)))
+    (boolean parsed)))
+
 (defn start-repl! []
   (println)
   (println banner \newline)
@@ -106,18 +117,18 @@
               (tear-down! :midi)
               (reset! done? true))
 
+            (re-find #"^:play\s*" alda-code)
+            (if *score-text*
+              (interpret context *score-text*)
+              (println "Must first :load a score"))
+
             (re-find #"^:" alda-code)
             (let [[_ cmd rest-of-line] (re-matches #":(\S+)\s*(.*)" alda-code)]
               (repl-command cmd reader rest-of-line))
 
             :else
-            (let [_          (log/debug "Parsing code...")
-                  parsed     (parse-with-context context alda-code)
-                  _          (log/debug "Done parsing code.")]
-              (now/play! (eval (case @context
-                                 :music-data (cons 'do parsed)
-                                 parsed)))
-              (when parsed (score-text<< alda-code))))
+            (when (interpret context alda-code)
+              (score-text<< alda-code)))
           (set-repl-prompt! reader)
           (catch Throwable e
             (pretty/write-exception *err* e)))))))
