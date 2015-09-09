@@ -1,18 +1,16 @@
-#!/usr/bin/env boot
-
 (set-env!
- :source-paths #{"src" "test"}
- :resource-paths #{"grammar"}
- :dependencies '[[org.clojure/clojure   "1.7.0"]
-                 [org.clojure/tools.cli "0.3.1"]
-                 [instaparse            "1.4.1"]
-                 [adzerk/bootlaces      "0.1.11" :scope "test"]
-                 [adzerk/boot-test      "1.0.4"  :scope "test"]
-                 [com.taoensso/timbre   "3.4.0"]
-                 [djy                   "0.1.4"]
-                 [overtone              "0.9.1"]
-                 [midi.soundfont        "0.1.0"]
-                 [reply                 "0.3.7"]])
+  :source-paths #{"src" "test"}
+  :resource-paths #{"grammar"}
+  :dependencies '[[org.clojure/clojure   "1.7.0"]
+                  [org.clojure/tools.cli "0.3.1"]
+                  [instaparse            "1.4.1"]
+                  [adzerk/bootlaces      "0.1.12" :scope "test"]
+                  [adzerk/boot-test      "1.0.4"  :scope "test"]
+                  [com.taoensso/timbre   "4.1.1"]
+                  [djy                   "0.1.4"]
+                  [overtone              "0.9.1"]
+                  [midi.soundfont        "0.1.0"]
+                  [reply                 "0.3.7"]])
 
 (require '[adzerk.bootlaces :refer :all]
          '[adzerk.boot-test :refer :all]
@@ -48,5 +46,3 @@
                        alda.test.lisp.score
                        alda.test.lisp.voices}})
 
-(defn -main [& args]
-  (apply alda.cli/-main args))

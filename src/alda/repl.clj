@@ -108,7 +108,7 @@
 
             (re-find #"^:" alda-code)
             (let [[_ cmd rest-of-line] (re-matches #":(\S+)\s*(.*)" alda-code)]
-              (repl-command cmd rest-of-line))
+              (repl-command cmd reader rest-of-line))
 
             :else
             (let [_          (log/debug "Parsing code...")
