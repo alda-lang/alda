@@ -32,22 +32,28 @@ slur                    = <"~">
 
 octave-change           = (<"o"> number | ">" | "<") <ows>
 
+key                     = pitch subkey*
+<subkey>                = <ows> pitch
+
 <global-attributes>     = <"("> <ows> global-attribute-change+ <")"> <ows>
-global-attribute-change = (global-attribute-num | global-attribute-dur)
-                          <ows> <#"[,;]">? <ows>
+global-attribute-change = (global-attribute-num | global-attribute-dur |
+                           global-attribute-key) <ows> <#"[,;]">? <ows>
 <global-attribute-num>  = attribute-num <"!"> <ows> number
 <global-attribute-dur>  = attribute-dur <"!"> <ows> duration
+<global-attribute-key>  = attribute-key <"!"> <ows> key
 
 <attribute-changes>     = <"("> <ows>
                           (global-attribute-change | attribute-change)+
                           <")"> <ows>
-attribute-change        = (attribute-change-num | attribute-change-dur)
-                          <ows> <#"[,;]">? <ows>
+attribute-change        = (attribute-change-num | attribute-change-dur |
+                          attribute-change-key) <ows> <#"[,;]">? <ows>
 <attribute-change-num>  = attribute-num <ows> number
 <attribute-change-dur>  = attribute-dur <ows> duration
+<attribute-change-key>  = attribute-key <ows> key
 <attribute-num>         = #"vol(ume)?" | #"pan(ning)?" | "tempo" |
                           #"quant(iz(e|ation))?" | #"track-vol(ume)?"
 <attribute-dur>         = "note-length"
+<attribute-key>         = "key"
 
 marker                  = <"%"> name <ows>
 at-marker               = <"@"> name <ows>
