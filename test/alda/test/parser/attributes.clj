@@ -4,9 +4,9 @@
 
 (deftest octave-tests
   (testing "octave change"
-    (is (= (test-parse :octave-change ">") '(alda.lisp/octave :up)))
-    (is (= (test-parse :octave-change "<") '(alda.lisp/octave :down)))
-    (is (= (test-parse :octave-change "o5") '(alda.lisp/octave 5)))))
+    (is (= '(alda.lisp/octave :up)   (test-parse :octave-up ">")))
+    (is (= '(alda.lisp/octave :down) (test-parse :octave-down "<")))
+    (is (= '(alda.lisp/octave 5)     (test-parse :octave-set "o5")))))
 
 (deftest misc-attribute-tests
   (testing "volume change"
@@ -45,4 +45,3 @@
     (is (= (test-parse :global-attributes "(tempo! 130, quant! 80)")
            '((alda.lisp/global-attribute :tempo 130)
              (alda.lisp/global-attribute :quant 80))))))
-
