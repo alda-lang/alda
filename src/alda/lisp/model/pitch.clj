@@ -60,9 +60,36 @@
         hz (* ratio base-hz)]
     (if midi? (hz->midi hz) hz)))
 
+(def ^:private rational-intervals
+  [1
+   (/ 256 243)                          ; c+
+   (/ 9 8)                              ; d
+   (/ 32 27)                             ; d+
+   (/ 81 64)                            ; e
+   (/ 4 3)                              ; f
+   (/ 729 512)                          ; f+ (augmented 4th)
+   #_(/ 1024 729)                       ; g- (diminished 5th)
+   (/ 3 2)                              ; g
+   (/ 128 81)                           ; g+ (actually a-, minor 6th)
+   (/ 27 16)                            ; a
+   (/ 16 9)                             ; a+ (minor 7th)
+   (/ 243 128)                          ; b
+   ])
+
+(defn pythagorian
+  [letter octave accidentals midi?]
+  (let [base-hz (midi->hz (midi-note :c octave))
+        offset (accidentals->offset accidentals)
+        semitones (+ (intervals letter) offset)
+        ratio (nth rational-intervals semitones)
+        hz (* ratio base-hz)]
+    (prn letter (hz->midi hz))
+    (if midi? (hz->midi hz) hz)))
+
 (def ^:private tunings
   {:well well-tempered
-   :mean mean-tempered})
+   :mean mean-tempered
+   :pyth pythagorian})
 
 (defn pitch
   "Returns a fn that will calculate the frequency in Hz, within the context

@@ -16,7 +16,7 @@
   (constantly (/ x 100.0)))
 
 (defn- parse-tuning [x]
-  {:pre [(#{"well" "mean"} x)]}
+  {:pre [(#{"well" "mean" "pyth"} x)]}
   (constantly (keyword x)))
 
 (defattribute tempo
