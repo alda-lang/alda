@@ -167,11 +167,9 @@ When running tests via `boot test`, the log level will default to `debug` unless
 
 ## Contributing
 
-Pull requests are warmly welcomed.
+See: [CONTRIBUTING.md](CONTRIBUTING.md)
 
-- Fork this repository and make changes on your fork.
-- Submit a Pull Request.
-- Your Pull Request should get the Dave Yarwood Seal of Approval™ before being merged. (Don't worry, I'm not hard to win over.)
+:clap: :clap: :clap: A big shout-out to our [contributors](https://github.com/alda-lang/alda/graphs/contributors)! :clap: :clap: :clap:
 
 ## License
 
