@@ -86,10 +86,13 @@
     (.controlChange channel 7 (* 127 track-volume))
     (log/debugf "Playing note %s on channel %s." midi-note channel-number)
     (.setPitchBend channel bend)
+    (future (Thread/sleep 10)
+            (.setPitchBend channel bend))
     (.noteOn channel pure-note (* 127 volume))
     (Thread/sleep duration)
     (log/debug "MIDI note off:" midi-note)
-    (.noteOff channel pure-note)))
+    (.noteOff channel pure-note)
+    (.setPitchBend channel 8192)))
 
 (comment
   (defn- test-note! [note]
