@@ -1,4 +1,4 @@
-(ns alda.test.lisp.chords
+(ns alda.lisp.chords-test
   (:require [clojure.test :refer :all]
             [clojure.pprint :refer :all]
             [alda.lisp :refer :all]))

@@ -1,4 +1,4 @@
-(ns alda.test.lisp.global-attributes
+(ns alda.lisp.global-attributes-test
   (:require [clojure.test :refer :all]
             [clojure.pprint :refer :all]
             [alda.lisp :refer :all]))

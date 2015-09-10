@@ -1,4 +1,4 @@
-(ns alda.test.lisp.attributes
+(ns alda.lisp.attributes-test
   (:require [clojure.test :refer :all]
             [alda.lisp :refer :all]))
 
@@ -54,4 +54,3 @@
     (is (== ($duration) 3.5))
     (set-attribute :note-length (duration (note-length 1) (note-length 1)))
     (is (== ($duration) 8))))
-

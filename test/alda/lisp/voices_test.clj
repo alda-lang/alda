@@ -1,4 +1,4 @@
-(ns alda.test.lisp.voices
+(ns alda.lisp.voices-test
   (:require [clojure.test :refer :all]
             [clojure.pprint :refer :all]
             [alda.lisp :refer :all]))

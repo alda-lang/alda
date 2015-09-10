@@ -32,21 +32,21 @@
        :license {"name" "Eclipse Public License"
                  "url" "http://www.eclipse.org/legal/epl-v10.html"}}
   jar {:main 'alda.cli}
-  test {:namespaces '#{alda.test.parser.attributes
-                       alda.test.parser.comments
-                       alda.test.parser.duration
-                       alda.test.parser.events
-                       alda.test.parser.score
-                       alda.test.lisp.attributes
-                       alda.test.lisp.chords
-                       alda.test.lisp.duration
-                       alda.test.lisp.global-attributes
-                       alda.test.lisp.markers
-                       alda.test.lisp.notes
-                       alda.test.lisp.parts
-                       alda.test.lisp.pitch
-                       alda.test.lisp.score
-                       alda.test.lisp.voices}})
+  test {:namespaces '#{alda.parser.attributes-test
+                       alda.parser.comments-test
+                       alda.parser.duration-test
+                       alda.parser.events-test
+                       alda.parser.score-test
+                       alda.lisp.attributes-test
+                       alda.lisp.chords-test
+                       alda.lisp.duration-test
+                       alda.lisp.global-attributes-test
+                       alda.lisp.markers-test
+                       alda.lisp.notes-test
+                       alda.lisp.parts-test
+                       alda.lisp.pitch-test
+                       alda.lisp.score-test
+                       alda.lisp.voices-test}})
 
 (deftask alda
   "Run Alda CLI tasks.
