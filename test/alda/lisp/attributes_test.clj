@@ -45,6 +45,8 @@
     (is (== ($quantization) 0.5))
     (quant 100)
     (is (== ($quantization) 1.0))
+    (quant 9001)
+    (is (== ($quantization) 90.01))
     (set-attribute :quant 90)
     (is (== ($quantization) 0.9))))
 
