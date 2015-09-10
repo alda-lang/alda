@@ -83,7 +83,6 @@
         semitones (+ (intervals letter) offset)
         ratio (nth rational-intervals semitones)
         hz (* ratio base-hz)]
-    (prn letter (hz->midi hz))
     (if midi? (hz->midi hz) hz)))
 
 (def ^:private tunings
