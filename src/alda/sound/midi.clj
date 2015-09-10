@@ -71,12 +71,24 @@
   []
   (.close *midi-synth*))
 
+(defn- fraction->bend
+  "Convert fractional offset from note to pitch-wheel bend, assuming that it is
+   centred at 8192 and set to 2 semitones."
+  [fraction]
+  (let [range (if (pos? fraction) 8192 8191)]
+    (int (+ 8192 (* range fraction 0.5)))))
+
 (defn play-note! [{:keys [midi-note instrument duration volume track-volume]}]
   (let [channel-number (-> instrument *midi-channels* :channel)
-        channel (aget (.getChannels *midi-synth*) channel-number)]
+        channel (aget (.getChannels *midi-synth*) channel-number)
+        pure-note (if (integer? midi-note) midi-note (Math/round midi-note))
+        bend (fraction->bend (- midi-note pure-note))]
     (.controlChange channel 7 (* 127 track-volume))
     (log/debugf "Playing note %s on channel %s." midi-note channel-number)
-    (.noteOn channel midi-note (* 127 volume))
+    (.setPitchBend channel bend)
+    (.noteOn channel pure-note (* 127 volume))
     (Thread/sleep duration)
     (log/debug "MIDI note off:" midi-note)
+    ;; worth setting pitch bend to zero, if we set again on next note?
+    ;; feels safer to skip rather than have subtle races..
     (.noteOff channel midi-note)))
