@@ -89,6 +89,22 @@
     (.noteOn channel pure-note (* 127 volume))
     (Thread/sleep duration)
     (log/debug "MIDI note off:" midi-note)
-    ;; worth setting pitch bend to zero, if we set again on next note?
-    ;; feels safer to skip rather than have subtle races..
-    (.noteOff channel midi-note)))
+    (.noteOff channel pure-note)))
+
+(comment
+  (defn- test-note! [note]
+    (play-note!
+     {:midi-note    note
+      :instrument   "piano-YUbfY"
+      :duration     300.0
+      :volume       1.0
+      :track-volume 0.75}))
+
+  (defn- test-notes! [notes]
+    (doseq [note notes]
+      (future (test-note! note))
+      (Thread/sleep 150)))
+
+  (test-notes! (range 80 82 0.05))
+
+  (test-notes! (shuffle (range 80 82 0.05))))
