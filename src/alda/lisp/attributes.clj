@@ -11,6 +11,10 @@
   {:pre [(<= 0 x 100)]}
   (constantly (/ x 100.0)))
 
+(defn- unbound-percentage [x]
+  {:pre [(<= 0 x)]}
+  (constantly (/ x 100.0)))
+
 (defattribute tempo
   "Current tempo. Used to calculate the duration of notes."
   :initial-val 120)
@@ -53,7 +57,7 @@
   :aliases [:quant :quantize]
   :initial-val 0.9
   :fn-name quant
-  :transform percentage)
+  :transform unbound-percentage)
 
 (defattribute volume
   "Current volume. For MIDI purposes, the velocity of individual notes."
