@@ -8,7 +8,7 @@
             [alda.version    :refer (-version-)]
             [alda.sound]))
 
-(defn fluid-r3! 
+(defn fluid-r3!
   "Fetches FluidR3 dependency and returns the input stream handle."
   []
   (eval
@@ -26,6 +26,9 @@
   (if-not (or file code)
     (parse "--help")
     (let [alda-lisp-code (parse-input (if code code (slurp file)))]
+      (when (instaparse.core/failure? alda-lisp-code)
+        (pprint alda-lisp-code)
+        (System/exit 1))
       (when lisp
         (pprint alda-lisp-code))
       (when map
@@ -41,7 +44,7 @@
    p pre-buffer  MS  int  "The number of milliseconds of lead time for buffering. (default: 0)"
    P post-buffer MS  int  "The number of milliseconds to keep the synth open after the score ends. (default: 1000)"
    s stock           bool "Use the default MIDI soundfont of your JVM, instead of FluidR3."]
-  (require '[alda.lisp] 
+  (require '[alda.lisp]
            '[instaparse.core])
   (binding [alda.sound.midi/*midi-soundfont* (when-not stock (fluid-r3!))
             alda.sound/*play-opts* {:pre-buffer  (or pre-buffer 0)
@@ -51,7 +54,7 @@
       (play "--help")
       (let [parsed (parse-input (if code code (slurp file)))]
         (if (instaparse.core/failure? parsed)
-          (prn parsed) 
+          (do (prn parsed) (System/exit 1))
           (alda.sound/play! (eval parsed)))
         identity))))
 
@@ -65,7 +68,7 @@
                                     :post-buffer post-buffer
                                     :async?      true}]
     (eval
-      '(do 
+      '(do
          (require '[alda.repl])
          (alda.repl/start-repl!)))))
 
@@ -73,8 +76,8 @@
 
 (def alda-tasks
   (into {'help    "Display this help text."
-         'version "Display Alda version number."} 
-    (for [[sym var] (ns-publics *ns*) 
+         'version "Display Alda version number."}
+    (for [[sym var] (ns-publics *ns*)
           :when (:alda-task (meta var))
           :let [doc (:doc (meta var))
                 help-blurb (apply str (take-while (partial not= \newline) doc))]]
@@ -83,9 +86,9 @@
 (def help-text
   (format (str "alda v%s\n\nUsage:\n\n    alda <task> <options>\n\n"
                "To see options for a task:\n\n    alda <task> --help\n\n"
-               "Tasks:\n\n%s")  
+               "Tasks:\n\n%s")
           -version-
-          (str/join \newline 
+          (str/join \newline
                     (for [[task blurb] alda-tasks]
                       (str "    " task \tab blurb)))))
 
@@ -97,12 +100,12 @@
 
 (defn set-timbre-level!
   []
-  (timbre/set-level! (if-let [level (System/getenv "TIMBRE_LEVEL")] 
+  (timbre/set-level! (if-let [level (System/getenv "TIMBRE_LEVEL")]
                        (keyword (str/replace level #":" ""))
                        :warn)))
 
 (defn -main [& [cmd & args]]
-  (set-timbre-level!) 
+  (set-timbre-level!)
   (case cmd
     nil         (println help-text)
     "help"      (println help-text)
