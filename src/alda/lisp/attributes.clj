@@ -15,6 +15,10 @@
   {:pre [(<= 0 x)]}
   (constantly (/ x 100.0)))
 
+(defn- parse-tuning [x]
+  {:pre [(#{"well" "mean"} x)]}
+  (constantly (keyword x)))
+
 (defattribute tempo
   "Current tempo. Used to calculate the duration of notes."
   :initial-val 120)
@@ -78,3 +82,9 @@
   :aliases [:pan]
   :initial-val 0.5
   :transform percentage)
+
+(defattribute tuning
+  "Current tuning."
+  :aliases [:tune]
+  :initial-val :mean
+  :transform parse-tuning)
