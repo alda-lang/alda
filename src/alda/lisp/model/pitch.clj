@@ -68,9 +68,6 @@
   "Returns a fn that will calculate the frequency in Hz, within the context
    of the octave that an instrument is in."
   [letter & accidentals]
-  (fn [octave & rest]
-    (let [tuned? (keyword? (first rest))
-          tuning (when tuned? (first rest))
-          midi (= :midi (->> rest (take-last 2) first))
-          tuning-fn (get tunings tuning well-tempered)]
+  (fn [octave & [tuning & {:keys [midi]}]]
+    (let [tuning-fn (get tunings tuning mean-tempered)]
       (tuning-fn letter octave accidentals midi))))
