@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 0.6.0 (9/11/15)
+
+* Alda REPL `:play` command -- plays the current score from the top.
+
+---
+
 ## 0.5.4 (9/10/15)
 
 * Allow quantization > 100% for overlapping notes. ([crisptrutski](https://github.com/crisptrutski))
