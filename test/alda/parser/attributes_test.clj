@@ -1,6 +1,6 @@
-(ns alda.test.parser.attributes
+(ns alda.parser.attributes-test
   (:require [clojure.test :refer :all]
-            [alda.test.helpers :refer (test-parse)]))
+            [alda.test-helpers :refer (test-parse)]))
 
 (deftest octave-tests
   (testing "octave change"

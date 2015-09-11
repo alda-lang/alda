@@ -1,6 +1,6 @@
-(ns alda.test.parser.events
+(ns alda.parser.events-test
   (:require [clojure.test :refer :all]
-            [alda.test.helpers :refer (test-parse)]))
+            [alda.test-helpers :refer (test-parse)]))
 
 (deftest note-tests
   (testing "notes"

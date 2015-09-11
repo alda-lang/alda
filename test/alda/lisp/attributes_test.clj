@@ -1,4 +1,4 @@
-(ns alda.test.lisp.attributes
+(ns alda.lisp.attributes-test
   (:require [clojure.test :refer :all]
             [alda.lisp :refer :all]))
 
@@ -45,6 +45,8 @@
     (is (== ($quantization) 0.5))
     (quant 100)
     (is (== ($quantization) 1.0))
+    (quant 9001)
+    (is (== ($quantization) 90.01))
     (set-attribute :quant 90)
     (is (== ($quantization) 0.9))))
 
@@ -54,4 +56,3 @@
     (is (== ($duration) 3.5))
     (set-attribute :note-length (duration (note-length 1) (note-length 1)))
     (is (== ($duration) 8))))
-

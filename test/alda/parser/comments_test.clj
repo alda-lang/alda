@@ -1,4 +1,4 @@
-(ns alda.test.parser.comments
+(ns alda.parser.comments-test
   (:require [clojure.test :refer :all]
             [alda.parser  :refer (parse-input)]))
 

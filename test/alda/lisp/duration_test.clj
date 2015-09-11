@@ -1,4 +1,4 @@
-(ns alda.test.lisp.duration
+(ns alda.lisp.duration-test
   (:require [clojure.test :refer :all]
             [alda.lisp :refer :all]))
 

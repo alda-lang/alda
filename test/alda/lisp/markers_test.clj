@@ -1,4 +1,4 @@
-(ns alda.test.lisp.markers
+(ns alda.lisp.markers-test
   (:require [clojure.test :refer :all]
             [clojure.pprint :refer :all]
             [alda.lisp :refer :all]))

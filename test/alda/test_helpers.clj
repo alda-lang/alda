@@ -1,4 +1,4 @@
-(ns alda.test.helpers
+(ns alda.test-helpers
   (:require [alda.parser :refer :all]
             [alda.lisp :refer :all]
             [instaparse.core :as insta]

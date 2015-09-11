@@ -1,7 +1,7 @@
-(ns alda.test.lisp.parts
+(ns alda.lisp.parts-test
   (:require [clojure.test :refer :all]
             [clojure.pprint :refer :all]
-            [alda.test.helpers :refer (get-instrument)]
+            [alda.test-helpers :refer (get-instrument)]
             [alda.lisp :refer :all]
             [alda.parser :refer :all]))
 

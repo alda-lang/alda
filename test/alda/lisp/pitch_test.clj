@@ -1,4 +1,4 @@
-(ns alda.test.lisp.pitch
+(ns alda.lisp.pitch-test
   (:require [clojure.test :refer :all]
             [alda.lisp :refer :all]))
 
