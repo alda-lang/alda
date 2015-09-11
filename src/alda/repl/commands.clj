@@ -1,6 +1,9 @@
 (ns alda.repl.commands
   (:require [alda.lisp               :refer :all]
             [alda.parser             :refer (parse-input)]
+            [alda.repl.core          :as    repl :refer (*repl-reader*
+                                                         *parsing-context*)]
+            [alda.now                :as    now]
             [boot.from.io.aviso.ansi :refer (bold)]
             [clojure.string          :as    str]
             [clojure.pprint          :refer (pprint)]
@@ -22,23 +25,21 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defmulti repl-command (fn [command reader rest-of-line] command))
+(defmulti repl-command (fn [command rest-of-line] command))
 
-(defmethod repl-command :default [_ _ _] 
+(defmethod repl-command :default [_ _] 
   (huh?))
 
 (defmacro defcommand [cmd-name & things]
-  (let [[args & body]        (if (string? (first things))
-                               (rest things)
-                               things)
-        [reader rest-of-line] args]
+  (let [[args & body]  (if (string? (first things)) (rest things) things)
+        [rest-of-line] args]
     `(defmethod repl-command ~(str cmd-name) 
-       [_# ~reader ~rest-of-line] 
+       [_# ~rest-of-line] 
        ~@body)))
 
 (defcommand new
   "Create a new score or part."
-  [_ rest-of-line]
+  [rest-of-line]
   (cond
     (contains? #{"" "score"} rest-of-line)
     (do
@@ -53,21 +54,32 @@
 
 (defcommand score
   "Prints the score (as Alda code)."
-  [_ _]
+  [_]
   (println *score-text*))
 
 (defcommand map
   "Prints the data representation of the score in progress."
-  [_ _]
+  [_]
   (pprint (score-map)))
+
+(defcommand play
+  "Plays the current score.
+   
+   TODO: support `from` and `to` arguments (as markers or minute/second marks)"
+  [rest-of-line]
+  (if (empty? *score-text*)
+    (println "You must first create or :load a score.")  
+    (do
+      (now/refresh!)
+      (repl/interpret! *score-text*))))
 
 (defcommand load
   "Load an Alda score into the current REPL session."
-  [reader filename]
+  [filename]
   (letfn [(confirm-load []
             (println "Are you sure you want to load" (str filename \?))
             (let [yes-no-prompt (str "(" (bold "y") "es/" (bold "n") "o) > ")
-                  response (str/trim (.readLine reader yes-no-prompt))]
+                  response (str/trim (.readLine *repl-reader* yes-no-prompt))]
               (cond
                 (contains? #{"y" "yes"} response) true
                 (contains? #{"n" "no"} response) false
