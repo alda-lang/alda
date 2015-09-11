@@ -1,6 +1,6 @@
 (ns alda.parser.duration-test
   (:require [clojure.test :refer :all]
-            [alda.helpers :refer (test-parse)]))
+            [alda.test-helpers :refer (test-parse)]))
 
 (deftest duration-tests
   (testing "duration"
