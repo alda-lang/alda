@@ -15,6 +15,7 @@
          {:name              #(hash-map :name %)
           :nickname          #(hash-map :nickname %)
           :number            #(Integer/parseInt %)
+          :str               identity
           :voice-number      #(Integer/parseInt %)
           :tie               (constantly :tie)
           :slur              (constantly :slur)

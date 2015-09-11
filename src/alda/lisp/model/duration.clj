@@ -9,13 +9,9 @@
   "Converts a number, representing a note type, e.g. 4 = quarter, 8 = eighth,
    into a number of beats. Handles dots if present."
   ([number]
-    (/ 4 number))
+   (/ 4 number))
   ([number {:keys [dots]}]
-    (let [value (/ 4 number)]
-      (loop [total value, factor 0.5, dots dots]
-        (if (pos? dots)
-          (recur (+ total (* value factor)) (* factor 0.5) (dec dots))
-          total)))))
+   (* (/ 4 number) (- 2 (Math/pow 2 (- dots))))))
 
 (defn duration
   "Combines a variable number of tied note-lengths into one.

@@ -30,8 +30,8 @@
                             :instrument   instrument
                             :volume       ($volume instrument)
                             :track-volume ($track-volume instrument)
-                            :midi-note    (pitch-fn ($octave instrument) :midi true)
-                            :pitch        (pitch-fn ($octave instrument))
+                            :midi-note    (pitch-fn ($octave instrument) ($tuning instrument) :midi true)
+                            :pitch        (pitch-fn ($octave instrument) ($tuning instrument))
                             :duration     (* note-duration quant)})]
       (add-event instrument event)
       (set-last-offset instrument ($current-offset instrument))
