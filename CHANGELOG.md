@@ -1,17 +1,23 @@
 # CHANGELOG
 
+## 0.6.0 (9/11/15)
+
+* Alda REPL `:play` command -- plays the current score from the beginning. ([crisptrutski]/[daveyarwood])
+
+---
+
 ## 0.5.4 (9/10/15)
 
-* Allow quantization > 100% for overlapping notes. ([crisptrutski](https://github.com/crisptrutski))
+* Allow quantization > 100% for overlapping notes. ([crisptrutski])
 
 ## 0.5.3 (9/10/15)
 
-Exit with error code 1 when parsing fails for `alda play` and `alda parse` tasks. ([MadcapJake](https://github.com/MadcapJake))
+Exit with error code 1 when parsing fails for `alda play` and `alda parse` tasks. ([MadcapJake])
 
 ## 0.5.2 (9/9/15)
 
 * Bugfix: add any pre-buffer time to the synchronous wait time -- keeps scores from ending prematurely when using the `alda play` task.
-* Grammar improvement: explicit `octave-set`, `octave-up` and `octave-down` tokens instead of one catch-all `octave-change` token. ([crisptrutski](https://github.com/crisptrutski))
+* Grammar improvement: explicit `octave-set`, `octave-up` and `octave-down` tokens instead of one catch-all `octave-change` token. ([crisptrutski][crisptrutski])
 
 ## 0.5.1 (9/8/15)
 
@@ -80,3 +86,7 @@ Exit with error code 1 when parsing fails for `alda play` and `alda parse` tasks
 ## 0.1.0 (8/27/15)
 
 * "Official" first release of Alda. Finally deployed to clojars, after ~3 years of tinkering. 
+
+[daveyarwood]: https://github.com/daveyarwood
+[crisptrutski]: https://github.com/crisptrutski
+[MadCapJake]: https://github.com/MadcapJake
