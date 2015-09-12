@@ -17,17 +17,38 @@
   [note]
   (* 440.0 (Math/pow 2.0 (/ (- note 69.0) 12.0))))
 
+(defn- check-key
+  "Modifies the accidentals on notes to fit the key signature.
+   If there are no accidentals and this letter is in the signature, 
+   return the letter's signature accidentals, otherwise return 
+   existing accidentals"
+  [signature letter accidentals]
+   (if (empty? accidentals)
+       (get signature letter nil) 
+       (identity accidentals)))
+
 (defn pitch
   "Returns a fn that will calculate the frequency in Hz, within the context
    of the octave that an instrument is in."
-  [letter & accidentals]
-  (fn [octave & {:keys [midi]}]
+  [parsed-pitch]
+  (let [letter (first parsed-pitch) accidentals (rest parsed-pitch)]
+  (fn [octave key-signature & {:keys [midi]}]
     (let [midi-note (reduce (fn [number accidental]
+                              (log/debug (format "number %s accidental %s" number accidental))
                               (case accidental
-                                :flat  (dec number)
-                                :sharp (inc number)))
+                                :flat    (dec number)
+                                :sharp   (inc number)
+                                :natural (identity number)))
                             (midi-note letter octave)
-                            accidentals)]
+                            (check-key key-signature letter accidentals) )]
       (if midi
         midi-note
-        (midi->hz midi-note)))))
+        (midi->hz midi-note))))))
+
+(defn parse-pitch 
+  "Converts the tokenized representation of a pitch into a keyword sequence.
+   For example, ('c' '+' '+') will become (:c :sharp :sharp)"
+  [letter & accidentals]
+  (list* (keyword (str letter))
+        (map {\+ :sharp, \= :natural, \- :flat} accidentals))
+)
