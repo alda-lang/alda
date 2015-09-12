@@ -11,23 +11,18 @@
 
 (def set-up! sound/set-up!)
 
-(defn- asap
-  "Tranforms a set of events by making the first one start at offset 0,
-   maintaining the intervals between the offsets of all the events."
-  [events]
-  (if (empty? events) 
-    events
-    (let [earliest (apply min (map :offset events))]
-      (into #{}
-        (map #(update-in % [:offset] - earliest) events)))))
-
 (defn play-new-events!
-  [events]
-  (let [one-off-score 
-        (assoc (lisp/score-map)
-               :events (asap (lisp/event-set
-                               {:start {:offset (lisp/->AbsoluteOffset 0)
-                                        :events events}})))]
+  [score new-events]
+  (let [events        (lisp/event-set {:start
+                                       {:offset (lisp/->AbsoluteOffset 0)
+                                        :events new-events}})
+        earliest      (apply min 0 (map :offset events))
+        shifted       (alda.sound/shift-events events earliest nil)
+        one-off-score (assoc score
+                             :events shifted
+                             :markers (into {}
+                                            (map (juxt first #(- (last %) earliest)))
+                                            (:markers score)))]
     (sound/play! one-off-score)))
 
 (defmacro play!
@@ -38,12 +33,11 @@
          new-events# (set/difference
                        (:events new-score#)
                        (:events old-score#))]
-     (binding [alda.sound/*play-opts* {:async? true}] 
-       (play-new-events! new-events#))))
+     (play-new-events! new-score# new-events#)))
 
 (defn refresh!
   "Clears all events and resets the current-offset of each instrument to 0.
-   
+
    Useful for playing a new set of notes with multiple instrument parts,
    ensuring that both parts start at the same time, regardless of any prior
    difference in current-offset between the instrument parts.

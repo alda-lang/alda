@@ -1,12 +1,14 @@
 (ns alda.repl.commands
   (:require [alda.lisp               :refer :all]
+            [alda.now                :as    now]
             [alda.parser             :refer (parse-input)]
             [alda.repl.core          :as    repl :refer (*repl-reader*
                                                          *parsing-context*)]
-            [alda.now                :as    now]
+            [alda.sound              :as    sound]
+            [alda.util               :as    util]
             [boot.from.io.aviso.ansi :refer (bold)]
-            [clojure.string          :as    str]
             [clojure.pprint          :refer (pprint)]
+            [clojure.string          :as    str]
             [instaparse.core         :as    insta]))
 
 (defn huh? []
@@ -14,10 +16,10 @@
 
 (defn dirty?
   "Returns whether the current score has any unsaved changes.
-   
-   Note: right now this is just checking to see if the score has ANY changes. 
 
-   TODO: 
+   Note: right now this is just checking to see if the score has ANY changes.
+
+   TODO:
    - implement :save command
    - check whether there is any difference between the score and the last-saved version of the score."
   []
@@ -27,14 +29,14 @@
 
 (defmulti repl-command (fn [command rest-of-line] command))
 
-(defmethod repl-command :default [_ _] 
+(defmethod repl-command :default [_ _]
   (huh?))
 
 (defmacro defcommand [cmd-name & things]
   (let [[args & body]  (if (string? (first things)) (rest things) things)
         [rest-of-line] args]
-    `(defmethod repl-command ~(str cmd-name) 
-       [_# ~rest-of-line] 
+    `(defmethod repl-command ~(str cmd-name)
+       [_# ~rest-of-line]
        ~@body)))
 
 (defcommand new
@@ -64,14 +66,14 @@
 
 (defcommand play
   "Plays the current score.
-   
-   TODO: support `from` and `to` arguments (as markers or minute/second marks)"
+   Can take `from` and `to` arguments, in the form of markers or mm:ss times."
   [rest-of-line]
   (if (empty? *score-text*)
-    (println "You must first create or :load a score.")  
-    (do
+    (println "You must first create or :load a score.")
+    (let [{:keys [from to]} (util/parse-str-opts rest-of-line)]
       (now/refresh! :all)
-      (repl/interpret! *score-text*))))
+      (sound/with-play-opts (util/strip-nil-values {:from from, :to to})
+        (repl/interpret! *score-text*)))))
 
 (defcommand load
   "Load an Alda score into the current REPL session."
@@ -86,7 +88,7 @@
                 :else (confirm-load))))
           (load-score [score-text]
             (let [code (parse-input score-text)]
-              (if (insta/failure? code) 
+              (if (insta/failure? code)
                 (do
                   (println)
                   (println code)
@@ -104,10 +106,9 @@
                           (slurp filename)
                           (catch java.io.FileNotFoundException e nil))]
       (if (dirty?)
-        (do 
+        (do
           (println "You have made changes to the current score that will be"
                    "lost if you load" (str filename "."))
           (confirm-and-load-score score-text))
         (load-score score-text))
       (println "File not found:" filename))))
-

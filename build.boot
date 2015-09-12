@@ -51,6 +51,7 @@
                        alda.lisp.pitch-test
                        alda.lisp.score-test
                        alda.lisp.voices-test
+                       alda.util-test
                        }})
 
 (deftask alda
