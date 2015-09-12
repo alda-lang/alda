@@ -74,3 +74,15 @@
   :aliases [:pan]
   :initial-val 0.5
   :transform percentage)
+
+(defn- parse-key-signature
+  "Transforms a key signature ((:c :sharp :sharp) (:d :flat)) into a letter
+   to accidentals map {:c (:sharp :sharp), :d (:flat)}."
+  [pitches]
+  (into {} (map (fn [pitch] {(first pitch) (rest pitch)}) pitches)))
+
+(defattribute key-signature
+   "The key in which the current instrument is playing."
+   :aliases [:key]
+   :initial-val {}
+   :transform (fn [val] (constantly (parse-key-signature (rest val)))))
