@@ -171,6 +171,10 @@ See: [CONTRIBUTING.md](CONTRIBUTING.md)
 
 :clap: :clap: :clap: A big shout-out to our [contributors](https://github.com/alda-lang/alda/graphs/contributors)! :clap: :clap: :clap:
 
+## Support, Discussion, Comaraderie
+
+Sign up to the universe of Clojure chat @ http://clojurians.net/, then join us on #alda
+
 ## License
 
 Copyright © 2012-2015 Dave Yarwood et al
