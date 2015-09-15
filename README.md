@@ -14,6 +14,8 @@
 
 [![Clojars Project](http://clojars.org/alda/latest-version.svg)](http://clojars.org/alda)
 
+*New to Alda? You may be interested in reading [this blog post][alda-blog-post] as an introduction.*
+
 Inspired by other music/audio programming languages such as [PPMCK][ppmck],
 [LilyPond][lilypond] and [ChucK][chuck], Alda aims to be a
 powerful and flexible programming language for the musician who wants to easily
@@ -39,6 +41,7 @@ their standard notation interface suggests a preference for classical music;
 not have one piece of software that can serve as the Great Tree that supports
 all of these existing worlds?
 
+[alda-blog-post]: http://daveyarwood.github.io/alda/2015/09/05/alda-a-manifesto-and-gentle-introduction
 [ppmck]: http://ppmck.wikidot.com/what-is-ppmck
 [lilypond]: http://www.lilypond.org
 [chuck]: http://chuck.cs.princeton.edu
