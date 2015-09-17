@@ -108,8 +108,6 @@
           (println "You have made changes to the current score that will be"
                    "lost if you load" (str filename "."))
           (confirm-and-load-score score-text))
-        (do
-          (prn :score-text score-text :dirty? (dirty?))
-          (load-score score-text)))
+        (load-score score-text))
       (println "File not found:" filename))))
 
