@@ -6,6 +6,12 @@
 (def ^:private alda-parser
   (insta/parser (io/resource "alda.bnf")))
 
+(defn parse-tree
+  "Returns the intermediate parse tree resulting from parsing a string of Alda
+   code."
+  [alda-code]
+  (alda-parser alda-code))
+
 (defn parse-input
   "Parses a string of Alda code and turns it into Clojure code."
   [alda-code]
@@ -43,6 +49,7 @@
           :voices            #(list* 'alda.lisp/voices %&)
           :marker            #(list 'alda.lisp/marker (:name %))
           :at-marker         #(list 'alda.lisp/at-marker (:name %))
+          :barline           #(list 'alda.lisp/barline)
           :calls             (fn [& calls]
                                (let [names    (vec (keep :name calls))
                                      nickname (some :nickname calls)]

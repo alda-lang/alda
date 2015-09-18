@@ -10,7 +10,7 @@ nickname                = <"\""> acceptable-name <"\"">
 
 <music-data>            = (voices | event)*
 <event>                 = chord | note | rest | octave-change |
-                          attribute-changes | marker | at-marker
+                          attribute-changes | marker | at-marker | barline
 voices                  = voice+ (<voice-zero> | <#"\z">)
 voice                   = voice-number event*
 voice-number            = <"V"> #"[1-9]\d*" <":"> <ows>
@@ -55,10 +55,11 @@ attribute-change        = (attribute-change-num | attribute-change-dur)
 marker                  = <"%"> name <ows>
 at-marker               = <"@"> name <ows>
 
+barline                 = <"|"> <ows>
+
 ows                     = (#"\s" | comment)*
 
-comment                 = long-comment | short-comment | barline
+comment                 = long-comment | short-comment
 long-comment            = "(*" inside-long-comment* "*)"
 inside-long-comment     = !("(*" | "*)") #".|\n|\r" | long-comment
 short-comment           = "#" #".*" #"(\n|\r|$)+"
-barline                 = "|"
