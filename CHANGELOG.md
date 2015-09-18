@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.6.2 (9/18/15)
+
+* Fix regression caused by 0.6.1 -- the `barline` function in `alda.lisp.events.barline` wasn't actually being loaded into `alda.lisp`. Also, add debug log that this namespace was loaded into `alda.lisp`.
+
 ## 0.6.1 (9/17/15)
 
 * Bar lines are now parsed as events (events that do nothing when evaluated) instead of comments; this is done in preparation for being able to generate visual scores.
