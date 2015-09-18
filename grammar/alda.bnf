@@ -22,7 +22,8 @@ chord                   = (note | rest) subchord+
 note                    = pitch duration? <ows> slur?
 rest                    = <"r"> duration? <ows>
 
-pitch                   = !name #"[a-g][+-]*"
+pitch                   = pitch-notation
+pitch-notation          = !name #"[a-g][+-=]*"
 duration                = note-length <ows> (tie <ows> note-length <ows>)* slur?
 note-length             = number dots?
 number                  = #"-?[0-9]+"
@@ -35,22 +36,28 @@ octave-set              = <"o"> number
 octave-up               = <">">
 octave-down             = <"<">
 
+key-signature           = pitch-notation subkey*
+<subkey>                = <ows> pitch-notation
+
 <global-attributes>     = <"("> <ows> global-attribute-change+ <")"> <ows>
-global-attribute-change = (global-attribute-num | global-attribute-dur)
-                          <ows> <#"[,;]">? <ows>
+global-attribute-change = (global-attribute-num | global-attribute-dur |
+                           global-attribute-key) <ows> <#"[,;]">? <ows>
 <global-attribute-num>  = attribute-num <"!"> <ows> number
 <global-attribute-dur>  = attribute-dur <"!"> <ows> duration
+<global-attribute-key>  = attribute-key <"!"> <ows> key-signature
 
 <attribute-changes>     = <"("> <ows>
                           (global-attribute-change | attribute-change)+
                           <")"> <ows>
-attribute-change        = (attribute-change-num | attribute-change-dur)
-                          <ows> <#"[,;]">? <ows>
+attribute-change        = (attribute-change-num | attribute-change-dur |
+                          attribute-change-key) <ows> <#"[,;]">? <ows>
 <attribute-change-num>  = attribute-num <ows> number
 <attribute-change-dur>  = attribute-dur <ows> duration
+<attribute-change-key>  = attribute-key <ows> key-signature
 <attribute-num>         = #"vol(ume)?" | #"pan(ning)?" | "tempo" |
                           #"quant(iz(e|ation))?" | #"track-vol(ume)?"
 <attribute-dur>         = "note-length"
+<attribute-key>         = #"key(-signature)?"
 
 marker                  = <"%"> name <ows>
 at-marker               = <"@"> name <ows>
