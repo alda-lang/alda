@@ -33,6 +33,7 @@
                  "url" "http://www.eclipse.org/legal/epl-v10.html"}}
   jar {:main 'alda.cli}
   test {:namespaces '#{alda.parser.attributes-test
+                       alda.parser.barlines-test
                        alda.parser.comments-test
                        alda.parser.duration-test
                        alda.parser.events-test
