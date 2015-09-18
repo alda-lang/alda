@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.6.1 (9/17/15)
+
+* Bar lines are now parsed as events (events that do nothing when evaluated) instead of comments; this is done in preparation for being able to generate visual scores.
+
 ## 0.6.0 (9/11/15)
 
 * Alda REPL `:play` command -- plays the current score from the beginning. ([crisptrutski]/[daveyarwood])
