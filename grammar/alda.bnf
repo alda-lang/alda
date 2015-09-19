@@ -23,7 +23,8 @@ note                    = pitch duration? <ows> slur?
 rest                    = <"r"> duration? <ows>
 
 pitch                   = !name #"[a-g][+-]*"
-duration                = note-length <ows> (tie <ows> note-length <ows>)* slur?
+duration                = note-length <ows> barline? <ows> subduration* slur?
+<subduration>           = tie <ows> barline? <ows> note-length <ows> barline? <ows>
 note-length             = number dots?
 number                  = #"-?[0-9]+"
 dots                    = #"\.+"

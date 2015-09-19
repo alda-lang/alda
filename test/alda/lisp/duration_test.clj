@@ -26,6 +26,12 @@
       (is (== 500 (duration-fn 120))))
     (let [{:keys [duration-fn]} (duration (note-length 4 {:dots 1}))]
       (is (== 750 (duration-fn 120)))))
+  (testing "barlines don't break duration"
+    (let [{:keys [duration-fn]} (duration (note-length 4)
+                                          (barline)
+                                          (note-length 4)
+                                          :slur)]
+      (is (== 2000 (duration-fn 60)))))
   (testing "quantization quantizes note durations"
     (set-attributes :tempo 120 :quant 100)
     (is (== 500
