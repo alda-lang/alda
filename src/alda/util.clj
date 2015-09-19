@@ -6,8 +6,10 @@
 (defmacro pdoseq
   "A fairly efficient hybrid of `doseq` and `pmap`"
   [binding & body]
-  `(doseq ~binding
-     (future ~@body)))
+  #_`(doseq ~binding
+     (future ~@body))
+  (prn `(doall (pmap #(let [~(first binding) %] ~@body) ~(second binding) )))
+  `(doall (pmap #(let [~(first binding) %] ~@body) ~(second binding) )))
 
 (defn strip-nil-values
   "Strip `nil` values from a map."
