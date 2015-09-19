@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 0.6.3 (9/19/15)
+
+* Fix another regression caused by 0.6.1 -- tying notes across barlines was no longer working because the barlines were evaluating to `nil` and throwing a wrench in duration calculation.
+
+* Add a `--tree` flag to the `alda parse` task, which prints the intermediate parse tree before being transformed to alda.lisp code.
+
 ## 0.6.2 (9/18/15)
 
 * Fix regression caused by 0.6.1 -- the `barline` function in `alda.lisp.events.barline` wasn't actually being loaded into `alda.lisp`. Also, add debug log that this namespace was loaded into `alda.lisp`.
