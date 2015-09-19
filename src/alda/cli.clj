@@ -4,7 +4,7 @@
             [boot.core       :refer (merge-env!)]
             [clojure.string  :as    str]
             [clojure.pprint  :refer (pprint)]
-            [alda.parser     :refer (parse-input)]
+            [alda.parser     :refer (parse-input parse-tree)]
             [alda.version    :refer (-version-)]
             [alda.sound]))
 
@@ -21,20 +21,26 @@
   "Parse some Alda code and print the results to the console."
   [f file FILE str  "The path to a file containing Alda code to parse."
    c code CODE str  "The string of Alda code to parse."
+   t tree      bool "Show the intermediate parse tree."
    l lisp      bool "Parse into alda.lisp code."
    m map       bool "Evaluate the score and show the resulting instruments/events map."]
   (if-not (or file code)
     (parse "--help")
-    (let [alda-lisp-code (parse-input (if code code (slurp file)))]
+    (let [input (if code code (slurp file))
+          alda-lisp-code (parse-input input)]
       (when (instaparse.core/failure? alda-lisp-code)
         (pprint alda-lisp-code)
         (System/exit 1))
+      (when tree
+        (pprint (parse-tree input))
+        (println))
       (when lisp
-        (pprint alda-lisp-code))
+        (pprint alda-lisp-code)
+        (println))
       (when map
         (require 'alda.lisp)
-        (println)
-        (pprint (eval alda-lisp-code))))))
+        (pprint (eval alda-lisp-code))
+        (println)))))
 
 (defclifn ^:alda-task play
   "Parse some Alda code and play the resulting score."
