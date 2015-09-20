@@ -2,7 +2,7 @@
 
 ; this is a minimal dispatch script that fetches the latest version of
 ; alda from clojars (a maven repository for clojure projects) and runs the
-; alda.cli/main method, passing along any command-line arguments.
+; alda.cli/-main method, passing along any command-line arguments.
 
 ; this script will automatically update your version of alda as newer
 ; versions are released.
