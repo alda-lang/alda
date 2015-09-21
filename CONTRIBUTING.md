@@ -26,7 +26,7 @@ yourself editing this file, it may be helpful to read up on Instaparse. [The tut
 
 Code is given to the parser, resulting in a parse tree:
 
-```
+```clojure
 alda.parser=> (alda-parser "piano: c8 e g c1/f/a")
 
 [:score 
@@ -54,7 +54,7 @@ The parse tree is then [transformed](https://github.com/Engelberg/instaparse#tra
 
 Clojure is a Lisp; in Lisp, code is data and data is code. This powerful concept allows us to represent a morsel of code as a list of elements. The first element in the list is a function, and every subsequent element is an argument to that function. These code morsels can even be nested, just like our parse tree. Alda's parser's transformation phase translates each type of node in the parse tree into a Clojure expression that can be evaluated with the help of the `alda.lisp` namespace.
 
-```
+```clojure
 alda.parser=> (parse-input "piano: c8 e g c1/f/a")
 
 (alda.lisp/score 
@@ -78,11 +78,102 @@ alda.parser=> (parse-input "piano: c8 e g c1/f/a")
 
 ### alda.lisp
 
-TODO
+When you evaluate a score [S-expression](https://en.wikipedia.org/wiki/S-expression) like the one above, the result is a map of score information, which provides all of the data that Alda's audio component needs to make an audible version of your score.
+
+```clojure
+{:events
+ #{{:offset 750.0,
+    :instrument "piano-foyYJ",
+    :volume 1.0,
+    :track-volume 0.7874015748031497,
+    :midi-note 69,
+    :pitch 440.0,
+    :duration 1800.0}
+   {:offset 500.0,
+    :instrument "piano-foyYJ",
+    :volume 1.0,
+    :track-volume 0.7874015748031497,
+    :midi-note 67,
+    :pitch 391.99543598174927,
+    :duration 225.0}
+   {:offset 750.0,
+    :instrument "piano-foyYJ",
+    :volume 1.0,
+    :track-volume 0.7874015748031497,
+    :midi-note 65,
+    :pitch 349.2282314330039,
+    :duration 1800.0}
+   {:offset 0,
+    :instrument "piano-foyYJ",
+    :volume 1.0,
+    :track-volume 0.7874015748031497,
+    :midi-note 60,
+    :pitch 261.6255653005986,
+    :duration 225.0}
+   {:offset 750.0,
+    :instrument "piano-foyYJ",
+    :volume 1.0,
+    :track-volume 0.7874015748031497,
+    :midi-note 60,
+    :pitch 261.6255653005986,
+    :duration 1800.0}
+   {:offset 250.0,
+    :instrument "piano-foyYJ",
+    :volume 1.0,
+    :track-volume 0.7874015748031497,
+    :midi-note 64,
+    :pitch 329.6275569128699,
+    :duration 225.0}},
+ :markers {:start 0},
+ :instruments
+ {"piano-foyYJ"
+  {:octave 4,
+   :current-offset {:offset 2750.0},
+   :config {:type :midi, :patch 1},
+   :duration 4,
+   :volume 1.0,
+   :last-offset {:offset 750.0},
+   :id "piano-foyYJ",
+   :quantization 0.9,
+   :tempo 120,
+   :panning 0.5,
+   :current-marker :start,
+   :stock "midi-acoustic-grand-piano",
+   :track-volume 0.7874015748031497}}}
+```
+
+There are 3 keys in this map:
+
+* **events** -- a set of note events
+* **markers** -- a map of marker names to offsets, expressed as milliseconds from the beginning of the score (`:start` is a special marker that is always placed at offset 0)
+* **instruments** -- a map of randomly-generated ids to all of the information that Alda has about an instrument, *at the point where the score ends*.
+
+A note event contains information such as the pitch, MIDI note and duration of a note, which instrument instance is playing the note, and what its offset is relative to the beginning of the score (i.e., where the note is in the score)
+
+Because `alda.lisp` is a Clojure DSL, it's possible to use it to build scores within a Clojure program, as an alternative to using Alda syntax:
+
+```clojure
+(ns my-clj-project.core
+  (:require [alda.lisp :refer :all]))
+
+(score
+  (part "piano"
+    (note (pitch :c) (duration (note-length 8)))
+    (note (pitch :d))
+    (note (pitch :e))
+    (note (pitch :f))
+    (note (pitch :g))
+    (note (pitch :a))
+    (note (pitch :b))
+    (octave :up)
+    (note (pitch :c))))
+```
 
 ### alda.now
 
-TODO
+`alda.now` is an extension of `alda.lisp`, providing a way to work with Alda scores and play music in real-time, within a Clojure application.
+
+TODO: more info
 
 ### alda.repl
 
