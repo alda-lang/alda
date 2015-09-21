@@ -70,7 +70,7 @@
   (if (empty? *score-text*)
     (println "You must first create or :load a score.")  
     (do
-      (now/refresh!)
+      (now/refresh! :all)
       (repl/interpret! *score-text*))))
 
 (defcommand load

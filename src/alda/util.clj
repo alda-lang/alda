@@ -1,5 +1,13 @@
 (ns alda.util
+  (:require [clojure.string  :as str]
+            [taoensso.timbre :as timbre])
   (:import (java.io File)))
+
+(defn set-timbre-level!
+  []
+  (timbre/set-level! (if-let [level (System/getenv "TIMBRE_LEVEL")]
+                       (keyword (str/replace level #":" ""))
+                       :warn)))
 
 (defn check-for
   "Checks to see if a given file already exists. If it does, prompts the user

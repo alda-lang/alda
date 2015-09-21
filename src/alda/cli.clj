@@ -1,12 +1,12 @@
 (ns alda.cli
   (:require [boot.cli        :refer (defclifn)]
-            [taoensso.timbre :as    timbre]
             [boot.core       :refer (merge-env!)]
             [clojure.string  :as    str]
             [clojure.pprint  :refer (pprint)]
             [alda.parser     :refer (parse-input parse-tree)]
             [alda.version    :refer (-version-)]
-            [alda.sound]))
+            [alda.sound]
+            [alda.util       :as    util]))
 
 (defn fluid-r3!
   "Fetches FluidR3 dependency and returns the input stream handle."
@@ -104,14 +104,8 @@
     (cmd "")
     (apply cmd args)))
 
-(defn set-timbre-level!
-  []
-  (timbre/set-level! (if-let [level (System/getenv "TIMBRE_LEVEL")]
-                       (keyword (str/replace level #":" ""))
-                       :warn)))
-
 (defn -main [& [cmd & args]]
-  (set-timbre-level!)
+  (util/set-timbre-level!)
   (case cmd
     nil         (println help-text)
     "help"      (println help-text)
