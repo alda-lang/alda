@@ -12,14 +12,15 @@ If you're confused about how some aspect of the code works (Clojure questions, "
 
 ## Development Guide
 
-* [alda.parser](#parsing-phase)
+* [alda.parser](#aldaparser)
 * [alda.lisp](#aldalisp)
+* [alda.sound](#aldasound)
 * [alda.now](#aldanow)
 * [alda.repl](#aldarepl)
 
 Alda is a program that takes a string of code written in Alda syntax, parses it into executable Clojure code that will create a score, and then plays the score.
 
-### Parsing phase
+### alda.parser
 
 Parsing begins with the `parse-input` function in the [`alda.parser`](https://github.com/alda-lang/alda/blob/master/src/alda/parser.clj) namespace. This function uses a parser built using [Instaparse](https://github.com/Engelberg/instaparse), an excellent parser-generator library for Clojure. The grammar for Alda is [a single file written in BNF](https://github.com/alda-lang/alda/blob/master/grammar/alda.bnf) (with some Instaparse-specific sugar); if you find
 yourself editing this file, it may be helpful to read up on Instaparse. [The tutorial in the README](https://github.com/Engelberg/instaparse) is comprehensive and excellent.
@@ -169,6 +170,18 @@ Because `alda.lisp` is a Clojure DSL, it's possible to use it to build scores wi
     (note (pitch :c))))
 ```
 
+### alda.sound
+
+The `alda.sound` namespace handles the implementation details of playing the score. 
+
+There is an "audio type" abstraction which refers to different ways to generate audio, e.g. MIDI, waveform synthesis, samples, etc. Adding a new audio type is as simple as providing an implementation for each of the multimethods in this namespace, i.e. `set-up-audio-type!`, `refresh-audio-type!`, `tear-down-audio-type!` and `play-event!`.
+
+The `play!` function handles playing an entire Alda score. It does this by using [overtone.at-at](https://github.com/overtone/at-at) to schedule all of the note events to be played via `play-event!`, based on the `:offset` of each event.
+
+#### alda.lisp.instruments
+
+Although technically a part of `alda.lisp`, stock instrument configurations are defined here, which are included in an Alda score map, and then used by `alda.sound` to provide details about how to play an instrument's note events. Each instrument's `:config` field is available to the `alda.sound/play-event!` function via the `:instrument` field of the event.
+
 ### alda.now
 
 `alda.now` is an extension of `alda.lisp`, providing a way to work with Alda scores and play music in real-time, within a Clojure application.
@@ -179,27 +192,27 @@ TODO: more info
 
 TODO
 
-### Testing changes
+## Testing changes
 
 There are a couple of [Boot](http://boot-clj.com) tasks provided to help test changes.
 
-#### `boot test`
+### `boot test`
 
 You should run `boot test` prior to submitting a Pull Request. This will run automated tests that live in the `test` directory.
 
-##### Adding tests
+#### Adding tests
 
 It is a good idea in general to add to the existing tests wherever it makes sense, i.e. if there is a new test case that Alda needs to consider. [Test-driven development](https://en.wikipedia.org/wiki/Test-driven_development) is a good idea.
 
 If you find yourself adding a new file to the tests, be sure to add its namespace to the `test` task option in `build.boot` so that it will be included when you run the tests via `boot test`.
 
-#### `boot alda`
+### `boot alda`
 
 When you run the `alda` executable, it uses the most recent *released* version of Alda. So, if you make any changes locally, they will not be included when you run `alda repl`, `alda play`, etc.
 
 For testing local changes, you can use the `boot alda` task, which uses the current state of the repository, including any local changes you have made.
 
-##### Example usage
+#### Example usage
 
     boot alda -x repl
 
