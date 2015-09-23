@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.6.4 (9/22/15)
+
+* Bugfix: parsing no longer fails when following a voice group with an instrument call.
+
 ## 0.6.3 (9/19/15)
 
 * Fix another regression caused by 0.6.1 -- tying notes across barlines was no longer working because the barlines were evaluating to `nil` and throwing a wrench in duration calculation.

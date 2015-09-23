@@ -11,7 +11,7 @@ nickname                = <"\""> acceptable-name <"\"">
 <music-data>            = (voices | event)*
 <event>                 = chord | note | rest | octave-change |
                           attribute-changes | marker | at-marker | barline
-voices                  = voice+ (<voice-zero> | <#"\z">)
+voices                  = voice+ (<voice-zero> | <#"\z"> | &part)
 voice                   = voice-number event*
 voice-number            = <"V"> #"[1-9]\d*" <":"> <ows>
 <voice-zero>            = <"V0:"> <ows>
