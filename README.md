@@ -152,7 +152,7 @@ You can use the `parse` task to parse Alda code into alda.lisp (`-l`/`--lisp`) a
 
 Alda can also be used as a Clojure library.
 
-> (TODO: documentation on how this works)
+For more details on how this works, see our [Developer Guide](CONTRIBUTING.md#aldanow).
 
 ## Log levels
 
