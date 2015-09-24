@@ -28,7 +28,25 @@
   (testing "commas/semicolons can exist in strings"
     (is (= (test-parse :clj-expr "(println \"hi; hi, hi\")")
            '(clojure.core/println "hi; hi, hi"))))
+  (testing "commas inside [brackets] and {braces} won't break things"
+    (is (= (test-parse :clj-expr "(prn [1,2,3])")
+           '(clojure.core/prn [1 2 3])))
+    (is (= (test-parse :clj-expr "(prn {:a 1, :b 2})")
+           '(clojure.core/prn {:a 1 :b 2}))))
   (testing "comma/semicolon character literals are OK too"
     (is (= (test-parse :clj-expr "(println \\, \\;)")
            '(clojure.core/println \, \;)))))
 
+(deftest paren-tests
+  (testing "parens inside of a string are NOT a clj-expr"
+    (is (= (test-parse :clj-expr "(prn \"a string (with parens)\")")
+           '(clojure.core/prn "a string (with parens)")))
+    (is (= (test-parse :clj-expr "(prn \"a string with just a closing paren)\")")
+           '(clojure.core/prn "a string with just a closing paren)"))))
+  (testing "paren character literals don't break things"
+    (is (= (test-parse :clj-expr "(prn \\()"))
+        '(clojure.core/prn \())
+    (is (= (test-parse :clj-expr "(prn \\))"))
+        '(clojure.core/prn \)))
+    (is (= (test-parse :clj-expr "(prn \\( (+ 1 1) \\))"))
+        '(clojure.core/prn \( (clojure.core/+ 1 1) \)))))
