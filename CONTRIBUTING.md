@@ -184,7 +184,11 @@ Although technically a part of `alda.lisp`, stock instrument configurations are 
 
 ### alda.repl
 
-TODO
+`alda.repl` is the codebase for Alda's **R**ead-**E**val-**P**lay **L**oop, which lets you build a score interactively by entering Alda code one line at a time.
+
+There are built-in commands defined in `alda.repl.commands` that are defined using the `defcommand` macro. Defining a command here makes it available from the Alda REPL prompt by typing a colon before the name of the command, i.e. `:score`.
+
+The core logic for what goes on behind the curtain when you use the REPL lives in `alda.repl.core`. A good practice for implementing a REPL command in `alda.repl.commands` is to move implementation details into `alda.repl.core` (or perhaps into a new sub-namespace of `alda.repl`, if appropriate) if the body of the command definition starts to get too long.
 
 ### alda.now
 
