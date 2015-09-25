@@ -29,41 +29,73 @@
   [code]
   (load-string (format "(alda.parser/alda-lisp-quote %s)" code)))
 
+; wrapping :clj-string nodes in this record so that :clj-expr nodes can
+; differentiate between strings containing commas/semicolons and whitespace 
+; commas/semicolons
+(defrecord StringHack [value])
+
 (defn- read-clj-expr
   "Reads an inline Clojure expression within Alda code.
    
    Special rules:
-     - unless it's a character literal or inside a string, each comma or
-       semicolon will split an S-expression, e.g.:
+     - each comma or semicolon will split an S-expression, e.g.:
          (volume 50, quant 50) => (do (volume 50) (quant 50))
+       - unless:
+         - it's a character literal (prefixed by a backslash)
+         - it's inside of a string
+         - it's inside of [square brackets]
+         - it's inside of {curly braces}
      - symbols will first try to be resolved within the context of alda.lisp,
        then if that fails, the current run-time namespace
 
-   (To do this, we use some regex voodoo adapted from:
-   http://stackoverflow.com/a/6464500/2338327)
-
    Returns ready-to-evaluate Clojure code."
-  [expr]
-  (let [expr   (-> (apply str expr)
-                   (str/replace "," " COMMA SEP ")
-                   (str/replace ";" " SEMICOLON SEP ")
-                   (str/replace "\\ COMMA SEP" "\\,")
-                   (str/replace "\\ SEMICOLON SEP" "\\;"))
-        sep?   #{'COMMA 'SEMICOLON 'SEP}
-        strip? #{'(COMMA) '(SEMICOLON) '(SEP)}
-        forms  (->> (str "(" expr ")")
-                    (read-string)
-                    (partition-by sep?)
-                    (remove strip?))
-        exprs  (map (comp #(str/replace % "COMMA SEP" "")
-                          #(str/replace % "SEMICOLON SEP" "")
-                          #(str/replace % " COMMA SEP " ",")
-                          #(str/replace % " SEMICOLON SEP " ";")
-                          str)
-                    forms)]
+  [exprs]
+  (let [add-if-appropriate (fn [results i current-str]
+                             (if (empty? current-str)
+                               [results i current-str]
+                               [(update results i conj current-str) i ""]))
+        exprs (loop [results [[]]
+                     i 0
+                     current-str ""
+                     [expr & more] exprs]
+                (let [[results i current-str]
+                      (condp = (type expr)
+                        String (if (#{"," ";"} expr)
+                                 [(update results i conj current-str)
+                                  (inc i)
+                                  ""]
+                                 [results i (str current-str expr)])
+                        StringHack (update-in (add-if-appropriate results
+                                                                  i
+                                                                  current-str)
+                                              [0 i]
+                                              conj (:value expr))
+                        (update-in (add-if-appropriate results
+                                                       i
+                                                       current-str)
+                                   [0 i]
+                                   conj expr))]
+                  (if (seq more)
+                    (recur results i current-str more)
+                    (first (add-if-appropriate results i current-str)))))
+        exprs (map #(str \( (apply str %) \)) exprs)]
     (if (> (count exprs) 1)
       (cons 'do (map read-to-alda-lisp exprs))
       (read-to-alda-lisp (first exprs)))))
+
+(defn- read-stringhacks
+  [coll]
+  (map #(if (= StringHack (type %))
+          (:value %)
+          %)
+       coll))
+
+(defn- read-clj-coll
+  [coll format-str]
+  (->> (read-stringhacks coll)
+       (apply str)
+       (format format-str)
+       read-string))
 
 (defn parse-input
   "Parses a string of Alda code and turns it into Clojure code."
@@ -71,7 +103,12 @@
   (->> alda-code
        alda-parser
        (insta/transform
-         {:clj-expr          #(read-clj-expr %&)
+         {:clj-character     #(StringHack. (str \\ %))
+          :clj-string        #(StringHack. (str \" (apply str %&) \"))
+          :clj-vector        #(read-clj-coll %& "[%s]")
+          :clj-map           #(read-clj-coll %& "{%s}")
+          :clj-set           #(read-clj-coll %& "#{%s}")
+          :clj-expr          #(read-clj-expr %&)
           :name              #(hash-map :name %)
           :nickname          #(hash-map :nickname %)
           :number            #(Integer/parseInt %)

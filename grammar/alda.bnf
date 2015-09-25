@@ -1,3 +1,5 @@
+    (* score, part, calls, etc. *)
+
 score                   = <ows> clj-expr* part+
 part                    = calls <ows> music-data
 calls                   = name
@@ -7,6 +9,8 @@ calls                   = name
 <acceptable-name>       = #"[a-zA-Z]{2}[\w\-+'()]*"
 name                    = acceptable-name
 nickname                = <"\""> acceptable-name <"\"">
+
+    (* notes, chords & other events *)
 
 <music-data>            = (voices | event)*
 <event>                 = chord | note | rest | octave-change |
@@ -36,13 +40,34 @@ octave-set              = <"o"> number
 octave-up               = <">">
 octave-down             = <"<">
 
-clj-expr                = <"("> inside-clj-expr* <")"> <ows>
-<inside-clj-expr>       = !( "(" | ")" ) #"(.|\n|\r)" | clj-expr
-
 marker                  = <"%"> name <ows>
 at-marker               = <"@"> name <ows>
 
 barline                 = <"|"> <ows>
+
+    (* inline clojure expressions *)
+
+clj-character           = <"\\"> ( "newline" / "space" / "tab" / 
+                                   "formfeed" / "backspace" / "return" /
+                                   #"(o|u)\d{4}" / #"." )
+
+clj-string              = <"\""> inside-clj-string* <"\"">
+<inside-clj-string>     = !"\"" #".|\n|\r" | "\\\"" 
+
+<inside-clj-coll>       = !( "(" | ")" | 
+                             "[" | "]" | 
+                             "#{" | 
+                             "{" | "}" | 
+                             "\"" | "\\" )
+                          #".|\n|\r" | clj-expr | clj-string | clj-character |
+                          clj-vector | clj-map | clj-set
+
+clj-expr                = <"("> inside-clj-coll* <")"> <ows>
+clj-vector              = <"["> inside-clj-coll* <"]">
+clj-set                 = <"#{"> inside-clj-coll* <"}">
+clj-map                 = <"{"> inside-clj-coll* <"}">
+
+    (* comments & whitespace *)
 
 ows                     = (#"\s" | comment)*
 comment                 = "#" #".*" #"(\n|\r|$)+"

@@ -44,9 +44,42 @@
     (is (= (test-parse :clj-expr "(prn \"a string with just a closing paren)\")")
            '(clojure.core/prn "a string with just a closing paren)"))))
   (testing "paren character literals don't break things"
-    (is (= (test-parse :clj-expr "(prn \\()"))
-        '(clojure.core/prn \())
-    (is (= (test-parse :clj-expr "(prn \\))"))
-        '(clojure.core/prn \)))
-    (is (= (test-parse :clj-expr "(prn \\( (+ 1 1) \\))"))
-        '(clojure.core/prn \( (clojure.core/+ 1 1) \)))))
+    (is (= (test-parse :clj-expr "(prn \\()")
+           '(clojure.core/prn \()))
+    (is (= (test-parse :clj-expr "(prn \\))")
+           '(clojure.core/prn \))))
+    (is (= (test-parse :clj-expr "(prn \\( (+ 1 1) \\))")
+           '(clojure.core/prn \( (clojure.core/+ 1 1) \))))))
+
+(deftest vector-tests
+  (testing "vectors are a thing"
+    (is (= (test-parse :clj-expr "(prn [1 2 3 \\a :b \"c\"])")
+           '(clojure.core/prn [1 2 3 \a :b "c"]))))
+  (testing "vectors can have commas in them"
+    (is (= (test-parse :clj-expr "(prn [1, 2, 3])")
+           '(clojure.core/prn [1 2 3])))))
+
+(deftest map-tests
+  (testing "maps are a thing"
+    (is (= (test-parse :clj-expr "(prn {:a 1 :b 2 :c 3})")
+           '(clojure.core/prn {:a 1 :b 2 :c 3}))))
+  (testing "maps can have commas in them"
+    (is (= (test-parse :clj-expr "(prn {:a 1, :b 2, :c 3})")
+           '(clojure.core/prn {:a 1 :b 2 :c 3})))))
+
+(deftest set-tests
+  (testing "sets are a thing"
+    (is (= (test-parse :clj-expr "(prn #{1 2 3})")
+           '(clojure.core/prn #{1 2 3}))))
+  (testing "sets can have commas in them"
+    (is (= (test-parse :clj-expr "(prn #{1, 2, 3})")
+           '(clojure.core/prn #{1 2 3})))))
+
+(deftest nesting-things
+  (testing "things can be nested and it won't break shit"
+    (is (= (test-parse :clj-expr "(prn [1 2 [3 4] 5])")
+           '(clojure.core/prn [1 2 [3 4] 5])))
+    (is (= (test-parse :clj-expr "(prn #{1 2 #{3 4} 5})")
+           '(clojure.core/prn #{1 2 #{3 4} 5})))
+    (is (= (test-parse :clj-expr "(prn (+ 1 [2 {3 #{4 5}}]))")
+           '(clojure.core/prn (clojure.core/+ 1 [2 {3 #{4 5}}]))))))
