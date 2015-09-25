@@ -1,14 +1,14 @@
-(*
-   ALL WATCHED OVER BY
-   MACHINES OF LOVING GRACE
-   
-   a setting of the poem
-   by Richard Brautigan
-   
-   for piano and voice
-   
-   by Dave Yarwood
-*)
+(comment "
+  ALL WATCHED OVER BY
+  MACHINES OF LOVING GRACE
+  
+  a setting of the poem
+  by Richard Brautigan
+  
+  for piano and voice
+  
+  by Dave Yarwood
+")
 
 (tempo! 90)
 

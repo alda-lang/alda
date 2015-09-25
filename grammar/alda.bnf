@@ -1,4 +1,6 @@
-score                   = <ows> global-attributes? part+
+    (* score, part, calls, etc. *)
+
+score                   = <ows> clj-expr* part+
 part                    = calls <ows> music-data
 calls                   = name
                           (<ows> <"/"> <ows> name)*
@@ -8,16 +10,18 @@ calls                   = name
 name                    = acceptable-name
 nickname                = <"\""> acceptable-name <"\"">
 
+    (* notes, chords & other events *)
+
 <music-data>            = (voices | event)*
 <event>                 = chord | note | rest | octave-change |
-                          attribute-changes | marker | at-marker | barline
+                          clj-expr | marker | at-marker | barline
 voices                  = voice+ (<voice-zero> | <#"\z"> | &part)
 voice                   = voice-number event*
 voice-number            = <"V"> #"[1-9]\d*" <":"> <ows>
 <voice-zero>            = <"V0:"> <ows>
 
 chord                   = (note | rest) subchord+
-<subchord>              = <"/"> <ows> (octave-change | attribute-changes)*
+<subchord>              = <"/"> <ows> (octave-change | clj-expr)*
                                 <ows> (note | rest) <ows>
 note                    = pitch duration? <ows> slur?
 rest                    = <"r"> duration? <ows>
@@ -36,31 +40,34 @@ octave-set              = <"o"> number
 octave-up               = <">">
 octave-down             = <"<">
 
-<global-attributes>     = <"("> <ows> global-attribute-change+ <")"> <ows>
-global-attribute-change = (global-attribute-num | global-attribute-dur)
-                          <ows> <#"[,;]">? <ows>
-<global-attribute-num>  = attribute-num <"!"> <ows> number
-<global-attribute-dur>  = attribute-dur <"!"> <ows> duration
-
-<attribute-changes>     = <"("> <ows>
-                          (global-attribute-change | attribute-change)+
-                          <")"> <ows>
-attribute-change        = (attribute-change-num | attribute-change-dur)
-                          <ows> <#"[,;]">? <ows>
-<attribute-change-num>  = attribute-num <ows> number
-<attribute-change-dur>  = attribute-dur <ows> duration
-<attribute-num>         = #"vol(ume)?" | #"pan(ning)?" | "tempo" |
-                          #"quant(iz(e|ation))?" | #"track-vol(ume)?"
-<attribute-dur>         = "note-length"
-
 marker                  = <"%"> name <ows>
 at-marker               = <"@"> name <ows>
 
 barline                 = <"|"> <ows>
 
-ows                     = (#"\s" | comment)*
+    (* inline clojure expressions *)
 
-comment                 = long-comment | short-comment
-long-comment            = "(*" inside-long-comment* "*)"
-inside-long-comment     = !("(*" | "*)") #".|\n|\r" | long-comment
-short-comment           = "#" #".*" #"(\n|\r|$)+"
+clj-character           = <"\\"> ( "newline" / "space" / "tab" / 
+                                   "formfeed" / "backspace" / "return" /
+                                   #"(o|u)\d{4}" / #"." )
+
+clj-string              = <"\""> inside-clj-string* <"\"">
+<inside-clj-string>     = !"\"" #".|\n|\r" | "\\\"" 
+
+<inside-clj-coll>       = !( "(" | ")" | 
+                             "[" | "]" | 
+                             "#{" | 
+                             "{" | "}" | 
+                             "\"" | "\\" )
+                          #".|\n|\r" | clj-expr | clj-string | clj-character |
+                          clj-vector | clj-map | clj-set
+
+clj-expr                = <"("> inside-clj-coll* <")"> <ows>
+clj-vector              = <"["> inside-clj-coll* <"]">
+clj-set                 = <"#{"> inside-clj-coll* <"}">
+clj-map                 = <"{"> inside-clj-coll* <"}">
+
+    (* comments & whitespace *)
+
+ows                     = (#"\s" | comment)*
+comment                 = "#" #".*" #"(\n|\r|$)+"

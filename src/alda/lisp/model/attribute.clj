@@ -27,14 +27,17 @@
   [attr-name & things]
   (let [{:keys [aliases kw initial-val fn-name transform] :as opts}
         (if (string? (first things)) (rest things) things)
+        aliases      (or aliases [])
+        attr-aliases (vec (cons (keyword attr-name) aliases))
         kw-name      (or kw (keyword attr-name))
-        fn-name      (or fn-name attr-name)
+        transform-fn (or transform #(constantly %))
         getter-fn    (symbol (str \$ attr-name))
-        attr-aliases (vec (cons (keyword attr-name) (or aliases [])))
-        transform-fn (or transform #(constantly %))]
-    `(do
-       (alter-var-root (var *initial-attr-values*) assoc ~kw-name ~initial-val)
-       (doseq [alias# ~attr-aliases]
+        fn-name      (or fn-name attr-name)
+        fn-names     (vec (cons fn-name (map (comp symbol name) aliases)))
+        global-fns   (vec (map (comp symbol #(str % \!)) fn-names))]
+    (list* 'do
+      `(alter-var-root (var *initial-attr-values*) assoc ~kw-name ~initial-val)
+      `(doseq [alias# ~attr-aliases]
          (defmethod set-attribute alias# [attr# val#]
            (doall
              (for [instrument# *current-instruments*]
@@ -50,12 +53,18 @@
                                       old-val#
                                       new-val#)))
                  (AttributeChange. instrument# ~(keyword attr-name)
+
                                    old-val# new-val#))))))
-       (defn ~fn-name [x#]
-         (set-attribute ~(keyword attr-name) x#))
-       (defn ~getter-fn
+      `(defn ~getter-fn
          ([] (~getter-fn (first *current-instruments*)))
-         ([instrument#] (-> (*instruments* instrument#) ~kw-name))))))
+         ([instrument#] (-> (*instruments* instrument#) ~kw-name)))
+       (concat 
+         (for [fn-name fn-names]
+           `(defn ~fn-name [x#]
+              (set-attribute ~(keyword attr-name) x#)))
+         (for [global-fn-name global-fns]
+           `(defn ~global-fn-name [x#]
+              (global-attribute ~(keyword attr-name) x#)))))))
 
 (defn snapshot
   [instrument]

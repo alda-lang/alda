@@ -14,27 +14,3 @@
                                   # d
                                   e")))))
 
-(deftest long-comment-tests
-  (testing "a long comment"
-    (is (= expected (parse-input "piano: c
-                                  (* d *)
-                                  e"))))
-  (testing "a multiline long comment"
-    (is (= expected (parse-input "piano: c
-
-                                  (* 
-                                     d 
-                                  *)
-
-                                  e"))))
-  (testing "nested long comments"
-    (is (= expected (parse-input "piano: c
-   
-                                  (*
-                                     d (*
-                                          f
-                                       *)
-                                  *)
-                                  
-                                  e")))))
-

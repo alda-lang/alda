@@ -11,7 +11,8 @@
                   [str-to-argv           "0.1.0"]
                   [overtone              "0.9.1"]
                   [midi.soundfont        "0.1.0"]
-                  [reply                 "0.3.7"]])
+                  [reply                 "0.3.7"]
+                  [backtick              "0.3.3"]])
 
 (require '[adzerk.bootlaces :refer :all]
          '[adzerk.boot-test :refer :all]
@@ -32,11 +33,13 @@
        :license {"name" "Eclipse Public License"
                  "url" "http://www.eclipse.org/legal/epl-v10.html"}}
   jar {:main 'alda.cli}
-  test {:namespaces '#{alda.parser.attributes-test
+  test {:namespaces '#{
                        alda.parser.barlines-test
+                       alda.parser.clj-exprs-test
                        alda.parser.comments-test
                        alda.parser.duration-test
                        alda.parser.events-test
+                       alda.parser.octaves-test
                        alda.parser.score-test
                        alda.lisp.attributes-test
                        alda.lisp.chords-test
@@ -47,7 +50,8 @@
                        alda.lisp.parts-test
                        alda.lisp.pitch-test
                        alda.lisp.score-test
-                       alda.lisp.voices-test}})
+                       alda.lisp.voices-test
+                       }})
 
 (deftask alda
   "Run Alda CLI tasks.
