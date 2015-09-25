@@ -44,10 +44,23 @@
 
    Returns ready-to-evaluate Clojure code."
   [expr]
-  (let [expr   (apply str expr)
-        voodoo #"(?<!\\)[,;](?=([^\"\\]*(\\.|\"([^\"\\]*\\.)*[^\"\\]*\"))*[^\"]*\z)"
-        exprs (->> (str/split expr voodoo)
-                   (map #(str \( % \))))]
+  (let [expr   (-> (apply str expr)
+                   (str/replace "," " COMMA SEP ")
+                   (str/replace ";" " SEMICOLON SEP ")
+                   (str/replace "\\ COMMA SEP" "\\,")
+                   (str/replace "\\ SEMICOLON SEP" "\\;"))
+        sep?   #{'COMMA 'SEMICOLON 'SEP}
+        strip? #{'(COMMA) '(SEMICOLON) '(SEP)}
+        forms  (->> (str "(" expr ")")
+                    (read-string)
+                    (partition-by sep?)
+                    (remove strip?))
+        exprs  (map (comp #(str/replace % "COMMA SEP" "")
+                          #(str/replace % "SEMICOLON SEP" "")
+                          #(str/replace % " COMMA SEP " ",")
+                          #(str/replace % " SEMICOLON SEP " ";")
+                          str)
+                    forms)]
     (if (> (count exprs) 1)
       (cons 'do (map read-to-alda-lisp exprs))
       (read-to-alda-lisp (first exprs)))))
