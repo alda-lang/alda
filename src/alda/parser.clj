@@ -54,6 +54,7 @@
                              (if (empty? current-str)
                                [results i current-str]
                                [(update results i conj current-str) i ""]))
+        conj* (fn [xs x] (concat xs (list x)))
         exprs (loop [results [[]]
                      i 0
                      current-str ""
@@ -69,12 +70,12 @@
                                                                   i
                                                                   current-str)
                                               [0 i]
-                                              conj (:value expr))
+                                              conj* (:value expr))
                         (update-in (add-if-appropriate results
                                                        i
                                                        current-str)
                                    [0 i]
-                                   conj expr))]
+                                   conj* expr))]
                   (if (seq more)
                     (recur results i current-str more)
                     (first (add-if-appropriate results i current-str)))))
