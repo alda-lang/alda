@@ -29,14 +29,18 @@
   [code]
   (load-string (format "(alda.parser/alda-lisp-quote %s)" code)))
 
-; wrapping :clj-string nodes in this record so that :clj-expr nodes can
-; differentiate between strings containing commas/semicolons and whitespace 
-; commas/semicolons
-(defrecord StringHack [value])
+(defn- split-on [pred coll]
+  (let [f (fn [acc coll]
+            (if (seq coll)
+              (let [grp (take-while (comp not pred) coll)
+                    rst (drop-while pred (drop (count grp) coll))]
+                (recur (conj acc grp) rst))
+              acc))]
+    (f [] coll)))
 
 (defn- read-clj-expr
   "Reads an inline Clojure expression within Alda code.
-   
+
    Special rules:
      - each comma or semicolon will split an S-expression, e.g.:
          (volume 50, quant 50) => (do (volume 50) (quant 50))
@@ -50,53 +54,15 @@
 
    Returns ready-to-evaluate Clojure code."
   [exprs]
-  (let [add-if-appropriate (fn [results i current-str]
-                             (if (empty? current-str)
-                               [results i current-str]
-                               [(update results i conj current-str) i ""]))
-        conj* (fn [xs x] (concat xs (list x)))
-        exprs (loop [results [[]]
-                     i 0
-                     current-str ""
-                     [expr & more] exprs]
-                (let [[results i current-str]
-                      (condp = (type expr)
-                        String (if (#{"," ";"} expr)
-                                 [(update results i conj current-str)
-                                  (inc i)
-                                  ""]
-                                 [results i (str current-str expr)])
-                        StringHack (update-in (add-if-appropriate results
-                                                                  i
-                                                                  current-str)
-                                              [0 i]
-                                              conj* (:value expr))
-                        (update-in (add-if-appropriate results
-                                                       i
-                                                       current-str)
-                                   [0 i]
-                                   conj* expr))]
-                  (if (seq more)
-                    (recur results i current-str more)
-                    (first (add-if-appropriate results i current-str)))))
-        exprs (map #(str \( (apply str %) \)) exprs)]
+  (let [exprs (->> (split-on #{"," ";"} exprs)
+                   (map #(str \( (apply str %) \))))]
     (if (> (count exprs) 1)
       (cons 'do (map read-to-alda-lisp exprs))
       (read-to-alda-lisp (first exprs)))))
 
-(defn- read-stringhacks
-  [coll]
-  (map #(if (= StringHack (type %))
-          (:value %)
-          %)
-       coll))
-
 (defn- read-clj-coll
   [coll format-str]
-  (->> (read-stringhacks coll)
-       (apply str)
-       (format format-str)
-       read-string))
+  (->> coll (apply str) (format format-str) read-string))
 
 (defn parse-input
   "Parses a string of Alda code and turns it into Clojure code."
@@ -104,8 +70,8 @@
   (->> alda-code
        alda-parser
        (insta/transform
-         {:clj-character     #(StringHack. (str \\ %))
-          :clj-string        #(StringHack. (str \" (apply str %&) \"))
+         {:clj-character     #(str \\ %)
+          :clj-string        #(str \" (apply str %&) \")
           :clj-list          #(read-clj-coll %& "(%s)")
           :clj-vector        #(read-clj-coll %& "[%s]")
           :clj-map           #(read-clj-coll %& "{%s}")
