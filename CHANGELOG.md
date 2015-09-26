@@ -1,6 +1,10 @@
 # CHANGELOG
 
-## 0.7.0 (9/23/15)
+## 0.7.1 (9/26/15)
+
+* Fixes a couple of bugs around inline Clojure code. ([crisptrutski])
+
+## 0.7.0 (9/25/15)
 
 ### New features
 
