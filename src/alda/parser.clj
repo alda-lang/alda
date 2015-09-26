@@ -106,6 +106,7 @@
        (insta/transform
          {:clj-character     #(StringHack. (str \\ %))
           :clj-string        #(StringHack. (str \" (apply str %&) \"))
+          :clj-list          #(read-clj-coll %& "(%s)")
           :clj-vector        #(read-clj-coll %& "[%s]")
           :clj-map           #(read-clj-coll %& "{%s}")
           :clj-set           #(read-clj-coll %& "#{%s}")
