@@ -83,3 +83,14 @@
            '(clojure.core/prn #{1 2 #{3 4} 5})))
     (is (= (test-parse :clj-expr "(prn (+ 1 [2 {3 #{4 5}}]))")
            '(clojure.core/prn (clojure.core/+ 1 [2 {3 #{4 5}}]))))))
+
+(deftest quirky-tests
+  (testing "parameter order in subsequent expressions gets weird if there are data structures"
+    (is (= (test-parse :clj-expr "(prn [1, 2], prn [3, 4])")
+           '(do (clojure.core/prn [1 2])
+                (clojure.core/prn [3 4])))))
+  (testing "commas / semis should not get expanded in outer expressions"
+    (is (= (test-parse :clj-expr "(prn [1 2], prn (+ 1, 2))")
+           '(do (clojure.core/prn [1 2])
+                (clojure.core/prn
+                 (clojure.core/+ 1 2)))))))

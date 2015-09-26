@@ -59,10 +59,11 @@ clj-string              = <"\""> inside-clj-string* <"\"">
                              "#{" | 
                              "{" | "}" | 
                              "\"" | "\\" )
-                          #".|\n|\r" | clj-expr | clj-string | clj-character |
+                          #".|\n|\r" | clj-list | clj-string | clj-character |
                           clj-vector | clj-map | clj-set
 
 clj-expr                = <"("> inside-clj-coll* <")"> <ows>
+clj-list                = <"("> inside-clj-coll* <")">
 clj-vector              = <"["> inside-clj-coll* <"]">
 clj-set                 = <"#{"> inside-clj-coll* <"}">
 clj-map                 = <"{"> inside-clj-coll* <"}">
