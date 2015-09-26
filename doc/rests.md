@@ -1,0 +1,1 @@
+# Rests**Rests** work exactly like [notes](notes.md), except it's just the letter `r` (with an optional duration following the same rules as notes). When Alda encounters a rest, it waits for the duration of the rest before placing the next note. (Under the hood, it's just bumping forward the current [offset](offset.md) without creating any note events.) 

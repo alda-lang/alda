@@ -1,0 +1,1 @@
+# Markers**Markers** can be placed and referenced at any point during a score, and in any instrument part. e.g. `%chorus` will place a marker called "chorus" at the current offset, and then using `@chorus` at any point will set the current [offset](offset.md) to that of the "chorus" marker. 

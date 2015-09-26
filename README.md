@@ -12,7 +12,19 @@
 
 ## A music programming language for musicians
 
-[![Clojars Project](http://clojars.org/alda/latest-version.svg)](http://clojars.org/alda)
+<p align="center">
+
+<a href="http://clojars.org/alda">
+  <img src="http://clojars.org/alda/latest-version.svg" alt="Clojars Project">
+</a>
+<br>
+
+<b><a href="#installation">Installation</a></b>
+|
+<b><a href="doc/index.md">Docs</a></b>
+|
+<b><a href="#contributing">Contributing</a></b>
+</p>
 
 *New to Alda? You may be interested in reading [this blog post][alda-blog-post] as an introduction.*
 
@@ -168,9 +180,13 @@ To see debug logs, for example, you can do this:
 
 When running tests via `boot test`, the log level will default to `debug` unless `TIMBRE_LEVEL` is set to something else.
 
+## Documentation
+
+See: [doc/index.md](doc/index.md)
+
 ## Contributing
 
-See: [CONTRIBUTING.md](CONTRIBUTING.md)
+PRs welcome! See: [CONTRIBUTING.md](CONTRIBUTING.md)
 
 :clap: :clap: :clap: A big shout-out to our [contributors](https://github.com/alda-lang/alda/graphs/contributors)! :clap: :clap: :clap:
 

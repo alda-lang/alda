@@ -1,0 +1,1 @@
+# OffsetAlda places notes chronologically by assigning each [note](notes.md) an **offset**. There are two types of offset: absolute and relative. Absolute offset expresses the number of ms from the beginning of the score. Relative offset expresses the number of ms after a [marker](markers.md). 
