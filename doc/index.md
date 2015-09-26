@@ -13,6 +13,8 @@ If you've come here for any other reason, uh, go away, I guess.
 
 ## Where to Start
 
+* Learn about the [etymology](etymology.md) behind the name Alda.
+
 * The article on [scores and parts](scores-and-parts.md) provides some good general information on what an Alda score is. After that, you can start learning about [notes](notes.md), [rests](rests.md), [chords](chords.md), [voices](voices.md), [markers](markers.md), [offset](offset.md)...
 
 ## How to Use the Docs

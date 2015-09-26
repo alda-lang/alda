@@ -36,36 +36,33 @@ Alda is designed in a way that equally favors aesthetics, flexibility and
 ease of use, with (eventual) support for the text-based creation of all manner
 of music: classical, popular, chiptune, electroacoustic, and more!
 
-## Etymology
-
-Alda was originally named after [Yggdrasil][yggdrasil], the venerated tree of Norse legend which held aloft the mythical nine worlds. I thought it to be a fitting name, imagining the realm of sound/music to be an immense tree bearing numerous branches which could represent genres, tonalities, paradigms, etc.
-
-By incredible coincidence, [the company I work for][adzerk] uses Norse mythology as a theme for naming our software projects, and there will soon be a major one in production called Yggdrasil. To be completely honest, I was never totally happy with Yggdrasil as the name for my music programming language (it's a mouthful), so I took this as an opportunity to rename it. *Alda* is [Quenya][quenya] for "tree."
-
-There is a plethora of music software out there, but most of these
-programs tend to specialize or "reside" in at most one or two different realms
--- [FamiTracker][famitracker] and MCK are specifically for the creation of NES
-music; [puredata][pd], [Csound][csound] and ChucK are mostly useful for
-experimental electronic music; Lilypond, [Rosegarden][rosegarden], and
-[MuseScore][musescore] can be used for more than just classical music, but
-their standard notation interface suggests a preference for classical music;
-[Guitar Pro][guitarpro] is targeted toward the creation of guitar-based music. Why
-not have one piece of software that can serve as the Great Tree that supports
-all of these existing worlds?
-
 [alda-blog-post]: http://daveyarwood.github.io/alda/2015/09/05/alda-a-manifesto-and-gentle-introduction
 [ppmck]: http://ppmck.wikidot.com/what-is-ppmck
 [lilypond]: http://www.lilypond.org
 [chuck]: http://chuck.cs.princeton.edu
-[yggdrasil]: http://en.wikipedia.org/wiki/Yggdrasil
-[adzerk]: http://www.adzerk.com
-[quenya]: http://en.wikipedia.org/wiki/Quenya
-[famitracker]: http://famitracker.com
-[pd]: http://puredata.info
-[csound]: http://www.csounds.com
-[rosegarden]: http://www.rosegardenmusic.com
-[musescore]: http://musescore.org
-[guitarpro]: http://www.guitar-pro.com
+
+## Features
+
+* Easy to understand, markup-like syntax
+* Perfect for musicians who don't know how to program and programmers who don't know how to music
+* Represent scores as text files and play them back with the `alda` command-line tool
+* [Interactive REPL](#aldarepl) lets you type Alda code and hear the results in real time
+* Inline Clojure code allows you to [hack the Gibson][hackers] and write scores programmatically
+* Create MIDI music using any of the instruments in the [General MIDI Sound Set][gm-sound-set]
+
+[hackers]: https://www.youtube.com/watch?v=vYNnPx8fZBs
+[gm-sound-set]: http://www.midi.org/techspecs/gm1sound.php
+
+### TODO
+
+* [Define and use waveform synthesis instruments](https://github.com/alda-lang/alda/issues/100) 
+* [Import MIDI files](https://github.com/alda-lang/alda/issues/85)
+* [Export to MusicXML](https://github.com/alda-lang/alda/issues/44) for inter-operability with other music software
+* [A more robust REPL](https://github.com/alda-lang/alda/issues/54), tailor-made for editing scores interactively
+* [A plugin system](https://github.com/alda-lang/alda/issues/37) allowing users to define custom/unofficial syntax in Alda scores
+* [An "alda daemon"](https://github.com/alda-lang/alda/issues/49) with server/client semantics
+
+If you're a developer and you'd like to help, come on in -- [the water's fine](#contributing)!
 
 ## Syntax example
 
@@ -73,6 +70,8 @@ all of these existing worlds?
     g8 a b > c d e f+ g | a b > c d e f+ g4
     g8 f+ e d c < b a g | f+ e d c < b a g4
     << g1/>g/>g/b/>d/g
+
+For more examples, see these [example scores](https://github.com/alda-lang/alda/tree/master/test/examples).
 
 ## Quick demo
 
