@@ -1,8 +1,8 @@
 ```
-                            ________________________________
+                            ________________________________  
                            /    o   oooo ooo oooo   o o o  /\
                           /    oo  ooo  oo  oooo   o o o  / /
-                         /    _________________________  / /
+                         /    _________________________  / /  
                         / // / // /// // /// // /// / / / /
                        /___ //////////////////////////_/ /
                        \____\________________________\_\/
@@ -90,7 +90,9 @@ For more examples, see these [example scores](https://github.com/alda-lang/alda/
 
 ### Installation
 
-> More information can be found in [the docs](doc/installation.md).
+> NOTE: Default JVM soundfonts usually are of low quality. We recommend installing a nice soundfont like FluidR3 to make your MIDI instruments sound a lot nicer. For your convenience, there is a script in this repo that will install the FluidR3 soundfont.
+>
+> More information on this can be found in [the docs](doc/installation.md).
 
 #### Mac OS X / Linux
 

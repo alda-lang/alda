@@ -190,6 +190,36 @@ There are built-in commands defined in `alda.repl.commands` that are defined usi
 
 The core logic for what goes on behind the curtain when you use the REPL lives in `alda.repl.core`. A good practice for implementing a REPL command in `alda.repl.commands` is to move implementation details into `alda.repl.core` (or perhaps into a new sub-namespace of `alda.repl`, if appropriate) if the body of the command definition starts to get too long.
 
+### alda.now
+
+`alda.now`, when coupled with `alda.lisp`, provides a way to work with Alda scores and play music programmatically within a Clojure application.
+
+`alda.now` provides a `play!` macro, which evaluates the body, finds any new note events that were added to the score, and plays them.
+
+Example usage of `alda.now` in a Clojure application:
+
+```clojure
+(require '[alda.lisp :refer :all])
+(require '[alda.now  :refer (set-up! play!)])
+
+(score*)
+(part* "upright-bass")
+
+; This is optional. If left out, Alda will set up the MIDI synth the first
+; time you tell it to play something.
+(set-up! :midi)
+
+(play!
+  (octave 2)
+  (note (pitch :c) (duration (note-length 8)))
+  (note (pitch :d))
+  (note (pitch :e))
+  (note (pitch :f))
+  (note (pitch :g) (duration (note-length 4))))
+```
+
+Of note, `alda.repl` uses `alda.now` to play the score the user is creating during the REPL session, so you could think of `alda.repl` as an `alda.now` "sample project."
+
 ## Testing changes
 
 There are a couple of [Boot](http://boot-clj.com) tasks provided to help test changes.
