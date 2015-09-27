@@ -1,11 +1,11 @@
 ```
                             ________________________________  
-                           /    o   oooo ooo oooo   o o o  /\ 
-                          /    oo  ooo  oo  oooo   o o o  / / 
+                           /    o   oooo ooo oooo   o o o  /\
+                          /    oo  ooo  oo  oooo   o o o  / /
                          /    _________________________  / /  
-                        / // / // /// // /// // /// / / / /   
-                       /___ //////////////////////////_/ /    
-                       \____\________________________\_\/     
+                        / // / // /// // /// // /// / / / /
+                       /___ //////////////////////////_/ /
+                       \____\________________________\_\/
 
                                     ~ alda ~
 ```
@@ -56,7 +56,7 @@ of music: classical, popular, chiptune, electroacoustic, and more!
 
 ### TODO
 
-* [Define and use waveform synthesis instruments](https://github.com/alda-lang/alda/issues/100) 
+* [Define and use waveform synthesis instruments](https://github.com/alda-lang/alda/issues/100)
 * [Import MIDI files](https://github.com/alda-lang/alda/issues/85)
 * [Export to MusicXML](https://github.com/alda-lang/alda/issues/44) for inter-operability with other music software
 * [A more robust REPL](https://github.com/alda-lang/alda/issues/54), tailor-made for editing scores interactively
@@ -78,7 +78,9 @@ For more examples, see these [example scores](https://github.com/alda-lang/alda/
 
 ### Installation
 
-> More information can be found in [the docs](doc/installation.md).
+> NOTE: Default JVM soundfonts usually are of low quality. We recommend installing a nice soundfont like FluidR3 to make your MIDI instruments sound a lot nicer. For your convenience, there is a script in this repo that will install the FluidR3 soundfont.
+>
+> More information on this can be found in [the docs](doc/installation.md).
 
 #### Mac OS X / Linux
 
