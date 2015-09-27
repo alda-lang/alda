@@ -10,7 +10,6 @@
                   [djy                   "0.1.4"]
                   [str-to-argv           "0.1.0"]
                   [overtone              "0.9.1"]
-                  [midi.soundfont        "0.1.0"]
                   [reply                 "0.3.7"]
                   [backtick              "0.3.3"]])
 
@@ -20,7 +19,7 @@
          '[alda.cli]
          '[str-to-argv :refer (split-args)])
 
-; version number is stored in alda.version 
+; version number is stored in alda.version
 (bootlaces! alda.version/-version-)
 
 (task-options!
@@ -55,8 +54,8 @@
 
 (deftask alda
   "Run Alda CLI tasks.
-   
-   Whereas running `bin/alda <cmd> <args>` will use the latest deployed 
+
+   Whereas running `bin/alda <cmd> <args>` will use the latest deployed
    version of Alda, running this task (`boot alda -x '<cmd> <args>'`)
    will use the current (local) version of this repo."
   [x execute ARGS str "The Alda CLI task and args as a single string."]

@@ -1,11 +1,11 @@
 ```
                             ________________________________  
-                           /    o   oooo ooo oooo   o o o  /\ 
-                          /    oo  ooo  oo  oooo   o o o  / / 
+                           /    o   oooo ooo oooo   o o o  /\
+                          /    oo  ooo  oo  oooo   o o o  / /
                          /    _________________________  / /  
-                        / // / // /// // /// // /// / / / /   
-                       /___ //////////////////////////_/ /    
-                       \____\________________________\_\/     
+                        / // / // /// // /// // /// / / / /
+                       /___ //////////////////////////_/ /
+                       \____\________________________\_\/
 
                                     ~ alda ~
 ```
@@ -55,7 +55,7 @@ of music: classical, popular, chiptune, electroacoustic, and more!
 
 ### TODO
 
-* [Define and use waveform synthesis instruments](https://github.com/alda-lang/alda/issues/100) 
+* [Define and use waveform synthesis instruments](https://github.com/alda-lang/alda/issues/100)
 * [Import MIDI files](https://github.com/alda-lang/alda/issues/85)
 * [Export to MusicXML](https://github.com/alda-lang/alda/issues/44) for inter-operability with other music software
 * [A more robust REPL](https://github.com/alda-lang/alda/issues/54), tailor-made for editing scores interactively
@@ -81,7 +81,7 @@ Assuming you have [Boot](http://www.boot-clj.com) installed, try this on for siz
     cd alda
     bin/alda play --file test/examples/awobmolg.alda
 
-> NOTE: The first time you run the `play` task, you may need to wait a minute for the FluidR3 MIDI soundfont dependency (~141 MB) to download. Alda uses this soundfont in order to make your JVM's MIDI instruments sound a lot nicer. If you'd prefer to skip this step and use your JVM's default soundfont instead, include the `--stock` flag (i.e. `play --stock --file ...`).
+> NOTE: Default JVM soundfonts usually are of low quality. You can install FluidR3 soundfont by executing `bin/install-fluidr3`. You may need to wait a minute for the FluidR3 MIDI soundfont dependency (~141 MB) to download. Alda uses this soundfont in order to make your JVM's MIDI instruments sound a lot nicer.
 
 You can also execute arbitrary Alda code, like this:
 
