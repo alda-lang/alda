@@ -15,7 +15,7 @@ If you're confused about how some aspect of the code works (Clojure questions, "
 * [alda.parser](#aldaparser)
 * [alda.lisp](#aldalisp)
 * [alda.sound](#aldasound)
-* [alda.now](#aldanow)
+* [alda.now](doc/alda-now.md)
 * [alda.repl](#aldarepl)
 
 Alda is a program that takes a string of code written in Alda syntax, parses it into executable Clojure code that will create a score, and then plays the score.
@@ -189,40 +189,6 @@ Although technically a part of `alda.lisp`, stock instrument configurations are 
 There are built-in commands defined in `alda.repl.commands` that are defined using the `defcommand` macro. Defining a command here makes it available from the Alda REPL prompt by typing a colon before the name of the command, i.e. `:score`.
 
 The core logic for what goes on behind the curtain when you use the REPL lives in `alda.repl.core`. A good practice for implementing a REPL command in `alda.repl.commands` is to move implementation details into `alda.repl.core` (or perhaps into a new sub-namespace of `alda.repl`, if appropriate) if the body of the command definition starts to get too long.
-
-### alda.now
-
-`alda.now`, when coupled with `alda.lisp`, provides a way to work with Alda scores and play music programmatically within a Clojure application.
-
-`alda.now` provides a `play!` macro, which evaluates the body, finds any new note events that were added to the score, and plays them. 
-
-Example usage of `alda.now` in a Clojure application:
-
-```clojure
-(require '[alda.lisp :refer :all])
-(require '[alda.now  :refer (set-up! play!)])
-
-(score*)
-(part* "upright-bass")
-
-; This is optional. If left out, Alda will set up the MIDI synth the first
-; time you tell it to play something. 
-(set-up! :midi)
-
-(play!
-  (octave 2)
-  (note (pitch :c) (duration (note-length 8)))
-  (note (pitch :d))
-  (note (pitch :e))
-  (note (pitch :f))
-  (note (pitch :g) (duration (note-length 4))))
-```
-
-Of note, `alda.repl` uses `alda.now` to play the score the user is creating during the REPL session, so you could think of `alda.repl` as an `alda.now` "sample project."
-
-Another thing to note is that `alda.now` does not load the FluidR3 MIDI soundfont like the CLI version of Alda does by default. In the near future, Alda may be packaged with FluidR3 and `alda.now` could provide a simple helper method to load FluidR3. Currently, FluidR3 is loaded dynamically by the Alda CLI.
-
-If you are interested in using FluidR3 or other MIDI soundfonts with Alda in a Clojure application, you can use [`midi.soundfont`](https://github.com/daveyarwood/midi.soundfont).
 
 ## Testing changes
 
