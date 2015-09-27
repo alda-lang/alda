@@ -8,15 +8,6 @@
             [alda.sound]
             [alda.util       :as    util]))
 
-(defn fluid-r3!
-  "Fetches FluidR3 dependency and returns the input stream handle."
-  []
-  (eval
-    '(do (merge-env!
-           :dependencies '[[org.bitbucket.daveyarwood/fluid-r3 "0.1.1"]])
-         (require '[midi.soundfont.fluid-r3 :as fluid-r3])
-         fluid-r3/sf2)))
-
 (defclifn ^:alda-task parse
   "Parse some Alda code and print the results to the console."
   [f file FILE str  "The path to a file containing Alda code to parse."
@@ -48,12 +39,10 @@
    c code        CODE str "The string of Alda code to play."
    ; TODO: implement smart buffering and remove the buffer options
    p pre-buffer  MS  int  "The number of milliseconds of lead time for buffering. (default: 0)"
-   P post-buffer MS  int  "The number of milliseconds to keep the synth open after the score ends. (default: 1000)"
-   s stock           bool "Use the default MIDI soundfont of your JVM, instead of FluidR3."]
+   P post-buffer MS  int  "The number of milliseconds to keep the synth open after the score ends. (default: 1000)"]
   (require '[alda.lisp]
            '[instaparse.core])
-  (binding [alda.sound.midi/*midi-soundfont* (when-not stock (fluid-r3!))
-            alda.sound/*play-opts* {:pre-buffer  (or pre-buffer 0)
+  (binding [alda.sound/*play-opts* {:pre-buffer  (or pre-buffer 0)
                                     :post-buffer (or post-buffer 1000)
                                     :one-off?    true}]
     (if-not (or file code)
@@ -67,10 +56,8 @@
 (defclifn ^:alda-task repl
   "Starts an Alda Read-Evaluate-Play-Loop."
   [p pre-buffer  MS int  "The number of milliseconds of lead time for buffering. (default: 0)"
-   P post-buffer MS int  "The number of milliseconds to wait after the score ends. (default: 0)"
-   s stock          bool "Use the default MIDI soundfont of your JVM, instead of FluidR3."]
-  (binding [alda.sound.midi/*midi-soundfont* (when-not stock (fluid-r3!))
-            alda.sound/*play-opts* {:pre-buffer  pre-buffer
+   P post-buffer MS int  "The number of milliseconds to wait after the score ends. (default: 0)"]
+  (binding [alda.sound/*play-opts* {:pre-buffer  pre-buffer
                                     :post-buffer post-buffer
                                     :async?      true}]
     (eval
