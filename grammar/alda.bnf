@@ -58,19 +58,9 @@ clj-character           = <"\\"> ( "newline" / "space" / "tab" /
 clj-string              = <"\""> inside-clj-string* <"\"">
 <inside-clj-string>     = !"\"" #".|\n|\r" | "\\\"" 
 
-<inside-clj-coll>       = !( "(" | ")" | 
-                             "[" | "]" | 
-                             "#{" | 
-                             "{" | "}" | 
-                             "\"" | "\\" )
-                          #".|\n|\r" | clj-list | clj-string | clj-character |
-                          clj-vector | clj-map | clj-set
-
-clj-expr                = <"("> inside-clj-coll* <")"> <ows>
-clj-list                = <"("> inside-clj-coll* <")">
-clj-vector              = <"["> inside-clj-coll* <"]">
-clj-set                 = <"#{"> inside-clj-coll* <"}">
-clj-map                 = <"{"> inside-clj-coll* <"}">
+clj-expr                = <"("> inside-clj-expr* <")"> <ows>
+<inside-clj-expr>       = !( "(" | ")" | "\"" | "\\" )
+                          #".|\n|\r" | clj-string | clj-character | clj-expr
 
     (* comments & whitespace *)
 

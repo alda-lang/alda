@@ -14,17 +14,17 @@
 
 (deftest multiple-attribute-change-tests
   (testing "attribute changes"
-    (is (= (test-parse :clj-expr "(vol 50, tempo 100)")
+    (is (= (test-parse :clj-expr "(do (vol 50) (tempo 100))")
            '(do (alda.lisp/vol 50) (alda.lisp/tempo 100))))
-    (is (= (test-parse :clj-expr "(quant! 50; tempo 90)")
+    (is (= (test-parse :clj-expr "(do (quant! 50) (tempo 90))")
            '(do (alda.lisp/quant! 50) (alda.lisp/tempo 90)))))
   (testing "global attribute changes"
     (is (= (test-parse :clj-expr "(tempo! 126)")
            '(alda.lisp/tempo! 126)))
-    (is (= (test-parse :clj-expr "(tempo! 130, quant! 80)")
+    (is (= (test-parse :clj-expr "(do (tempo! 130) (quant! 80))")
            '(do (alda.lisp/tempo! 130) (alda.lisp/quant! 80))))))
 
-(deftest more-comma-and-semicolon-tests
+(deftest comma-and-semicolon-tests
   (testing "commas/semicolons can exist in strings"
     (is (= (test-parse :clj-expr "(println \"hi; hi, hi\")")
            '(clojure.core/println "hi; hi, hi"))))
@@ -84,13 +84,3 @@
     (is (= (test-parse :clj-expr "(prn (+ 1 [2 {3 #{4 5}}]))")
            '(clojure.core/prn (clojure.core/+ 1 [2 {3 #{4 5}}]))))))
 
-(deftest quirky-tests
-  (testing "parameter order in subsequent expressions gets weird if there are data structures"
-    (is (= (test-parse :clj-expr "(prn [1, 2], prn [3, 4])")
-           '(do (clojure.core/prn [1 2])
-                (clojure.core/prn [3 4])))))
-  (testing "commas / semis should not get expanded in outer expressions"
-    (is (= (test-parse :clj-expr "(prn [1 2], prn (+ 1, 2))")
-           '(do (clojure.core/prn [1 2])
-                (clojure.core/prn
-                 (clojure.core/+ 1 2)))))))

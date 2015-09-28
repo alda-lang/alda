@@ -29,40 +29,15 @@
   [code]
   (load-string (format "(alda.parser/alda-lisp-quote %s)" code)))
 
-(defn- split-on [pred coll]
-  (let [f (fn [acc coll]
-            (if (seq coll)
-              (let [grp (take-while (comp not pred) coll)
-                    rst (drop-while pred (drop (count grp) coll))]
-                (recur (conj acc grp) rst))
-              acc))]
-    (f [] coll)))
-
 (defn- read-clj-expr
   "Reads an inline Clojure expression within Alda code.
 
-   Special rules:
-     - each comma or semicolon will split an S-expression, e.g.:
-         (volume 50, quant 50) => (do (volume 50) (quant 50))
-       - unless:
-         - it's a character literal (prefixed by a backslash)
-         - it's inside of a string
-         - it's inside of [square brackets]
-         - it's inside of {curly braces}
-     - symbols will first try to be resolved within the context of alda.lisp,
-       then if that fails, the current run-time namespace
+   Symbols will first try to be resolved within the context of alda.lisp,
+   then if that fails, the current run-time namespace.
 
    Returns ready-to-evaluate Clojure code."
-  [exprs]
-  (let [exprs (->> (split-on #{"," ";"} exprs)
-                   (map #(str \( (apply str %) \))))]
-    (if (> (count exprs) 1)
-      (cons 'do (map read-to-alda-lisp exprs))
-      (read-to-alda-lisp (first exprs)))))
-
-(defn- read-clj-coll
-  [coll format-str]
-  (->> coll (apply str) (format format-str) read-string))
+  [expr]
+  (read-to-alda-lisp (str \( (apply str expr) \))))
 
 (defn parse-input
   "Parses a string of Alda code and turns it into Clojure code."
@@ -72,10 +47,6 @@
        (insta/transform
          {:clj-character     #(str \\ %)
           :clj-string        #(str \" (apply str %&) \")
-          :clj-list          #(read-clj-coll %& "(%s)")
-          :clj-vector        #(read-clj-coll %& "[%s]")
-          :clj-map           #(read-clj-coll %& "{%s}")
-          :clj-set           #(read-clj-coll %& "#{%s}")
           :clj-expr          #(read-clj-expr %&)
           :name              #(hash-map :name %)
           :nickname          #(hash-map :nickname %)
