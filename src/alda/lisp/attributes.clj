@@ -67,13 +67,26 @@
   :transform percentage)
 
 (defn- parse-key-signature
-  "Transforms a key signature ((:c :sharp :sharp) (:d :flat)) into a letter
-   to accidentals map {:c (:sharp :sharp), :d (:flat)}."
-  [pitches]
-  (into {} (map (fn [pitch] {(first pitch) (rest pitch)}) pitches)))
+  "Transforms a key signature into a letter->accidentals map.
+
+   If the key signature is already provided as a letter->accidentals map
+   (e.g. {:f [:sharp] :c [:sharp] :g [:sharp]}), then it passes through this
+   function unchanged.
+
+   If the key signature is provided as a string, e.g. 'f+ c+ g+', then it is
+   converted to a letter->accidentals map."
+  [key-sig]
+  (constantly
+    (if (map? key-sig)
+      key-sig
+      (into {}
+        (map (fn [[_ _ letter accidentals]]
+               [(keyword letter) (map {\- :flat \+ :sharp \= :natural}
+                                      accidentals)])
+             (re-seq #"(([a-g])([+-=]*))" key-sig))))))
 
 (defattribute key-signature
    "The key in which the current instrument is playing."
-   :aliases [:key]
+   :aliases [:key-sig]
    :initial-val {}
-   :transform (fn [val] (constantly (parse-key-signature (rest val)))))
+   :transform parse-key-signature)

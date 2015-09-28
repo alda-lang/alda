@@ -12,7 +12,7 @@
 (deftest note-tests
   (testing "a note event:"
     (let [start ($current-offset)
-          c ((pitch :c) ($octave))
+          c ((pitch :c) ($octave) ($key-signature))
           {:keys [duration offset pitch]}
           (first (note (pitch :c) (duration (note-length 4) :slur)))]
       (testing "should be placed at the current offset"

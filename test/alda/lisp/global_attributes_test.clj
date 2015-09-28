@@ -43,5 +43,5 @@
         (is (= ($tempo) 120))
         (pause)
         (is (= ($tempo) 120)))))) ; tempo should still be 120,
-; despite having passed 2000 ms
+                                  ; despite having passed 2000 ms
 (alter-var-root #'*global-attributes* (constantly {}))

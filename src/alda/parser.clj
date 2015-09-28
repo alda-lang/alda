@@ -89,8 +89,8 @@
           :dots              #(hash-map :dots (count %))
           :note-length       #(list* 'alda.lisp/note-length %&)
           :duration          #(list* 'alda.lisp/duration %&)
-          :pitch             #(list* 'alda.lisp/pitch %&)
-          :pitch-notation    #(list* 'alda.lisp/parse-pitch %)
+          :pitch             (fn [letter & accidentals] 
+                               (list* 'alda.lisp/pitch (keyword letter) accidentals))
           :note              #(list* 'alda.lisp/note %&)
           :rest              #(list* 'alda.lisp/pause %&)
           :chord             #(list* 'alda.lisp/chord %&)
