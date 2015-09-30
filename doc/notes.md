@@ -36,11 +36,21 @@ Alda keeps track of both the current octave and the current default note duratio
 
 A note in Alda is expressed as a letter from a-g, any number of accidentals (optional), and a note duration (also optional).
 
-Flats and sharps will decrease/increase the pitch by one half step, e.g. C + 1/2 step = C#. Flats and sharps are expressed in Alda as - and +, and you can have multiple sharps or multiple flats, or even combine them, if you'd like. e.g. `c++` = C double-sharp = D. 
+Flats and sharps will decrease/increase the pitch by one half step, e.g. C + 1/2 step = C#. Flats and sharps are expressed in Alda as `-` and `+`, and you can have multiple sharps or multiple flats, or even combine them, if you'd like. e.g. `c++` = C double-sharp = D. 
+
+As an alternative to placing flats and sharps on every note that needs them, you may prefer to set the [key signature](attributes.md#key-signature), which will add the necessary sharps/flats to any note that needs them in order to match the key. See below for an example of using a key signature.
+
+To overwrite the flat/sharp specified by a key signature, you can include an accidental, i.e. `-` or `+` to make the note flat or sharp. You can also override the key signature and force a note to be natural with `=`, i.e. `c=` is a C natural regardless of what key you are in.
 
 ## Example 
 
 The following is a 1-octave B major scale, ascending and descending, starting in octave 4:
 
     o4 b4 > c+8 d+ e f+ g+ a+ b4
-    a+ g+ f+ e d+ c+ < b2.
+    a+8 g+ f+ e d+ c+ < b2.
+
+Here is the same example, using a key signature in order to avoid having to include all of the sharps:
+
+    (key-signature "f+ c+ g+ d+ a+")
+    o4 b4 > c8 d e f g a b4
+    a8 g f e d c < b2.
