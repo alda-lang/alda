@@ -17,17 +17,29 @@
   [note]
   (* 440.0 (Math/pow 2.0 (/ (- note 69.0) 12.0))))
 
+(defn- apply-key
+  "Modifies the accidentals on notes to fit the key signature.
+
+   If there are no accidentals and this letter is in the signature, return the
+   letter's signature accidentals, otherwise return existing accidentals."
+  [signature letter accidentals]
+   (if (empty? accidentals)
+     (get signature letter)
+     accidentals))
+
 (defn pitch
   "Returns a fn that will calculate the frequency in Hz, within the context
-   of the octave that an instrument is in."
+   of an instrument's octave and key signature."
   [letter & accidentals]
-  (fn [octave & {:keys [midi]}]
+  (fn [octave key-sig & {:keys [midi]}]
     (let [midi-note (reduce (fn [number accidental]
                               (case accidental
-                                :flat  (dec number)
-                                :sharp (inc number)))
+                                :flat    (dec number)
+                                :sharp   (inc number)
+                                :natural (identity number)))
                             (midi-note letter octave)
-                            accidentals)]
+                            (apply-key key-sig letter accidentals))]
       (if midi
         midi-note
         (midi->hz midi-note)))))
+

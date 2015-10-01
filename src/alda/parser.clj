@@ -85,16 +85,12 @@
           :slur              (constantly :slur)
           :flat              (constantly :flat)
           :sharp             (constantly :sharp)
+          :natural           (constantly :natural)
           :dots              #(hash-map :dots (count %))
           :note-length       #(list* 'alda.lisp/note-length %&)
           :duration          #(list* 'alda.lisp/duration %&)
-          :pitch             (fn [s]
-                               (list* 'alda.lisp/pitch
-                                      (keyword (str (first s)))
-                                      (map #(case %
-                                              \- :flat
-                                              \+ :sharp)
-                                           (rest s))))
+          :pitch             (fn [letter & accidentals] 
+                               (list* 'alda.lisp/pitch (keyword letter) accidentals))
           :note              #(list* 'alda.lisp/note %&)
           :rest              #(list* 'alda.lisp/pause %&)
           :chord             #(list* 'alda.lisp/chord %&)
