@@ -1,4 +1,5 @@
-(ns alda.lisp.attributes)
+(ns alda.lisp.attributes
+  (:require [alda.lisp.model.key]))
 (in-ns 'alda.lisp)
 
 (log/debug "Loading alda.lisp.attributes...")
@@ -77,13 +78,21 @@
    converted to a letter->accidentals map."
   [key-sig]
   (constantly
-    (if (map? key-sig)
+    (cond
+      (map? key-sig)
       key-sig
+
+      (string? key-sig)
       (into {}
         (map (fn [[_ _ letter accidentals]]
-               [(keyword letter) (map {\- :flat \+ :sharp \= :natural}
-                                      accidentals)])
-             (re-seq #"(([a-g])([+-=]*))" key-sig))))))
+               [(keyword letter) 
+                (map {\- :flat \+ :sharp \= :natural} accidentals)])
+             (re-seq #"(([a-g])([+-=]*))" key-sig)))
+
+      (sequential? key-sig)
+      (let [[scale-type & more]    (reverse key-sig)
+            [letter & accidentals] (reverse more)]
+        (get-key-signature scale-type letter accidentals)))))
 
 (defattribute key-signature
    "The key in which the current instrument is playing."

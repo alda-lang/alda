@@ -36,7 +36,11 @@
     (key-signature {:b [:flat] :e [:flat]})
     (is (= {:b [:flat] :e [:flat]} ($key-signature)))
     (key-sig "f+ c+ g+")
-    (is (= {:f [:sharp] :c [:sharp] :g [:sharp]} ($key-signature))))
+    (is (= {:f [:sharp] :c [:sharp] :g [:sharp]} ($key-signature)))
+    (key-sig [:a :flat :major])
+    (is (= {:b [:flat] :e [:flat] :a [:flat] :d [:flat]} ($key-signature)))
+    (key-sig [:e :minor])
+    (is (= {:f [:sharp]} ($key-signature))))
   (testing "the pitch of a note is affected by the key signature"
     (is (= ((pitch :b) 4 {:b [:flat]})
            ((pitch :b :flat) 4 {})))
