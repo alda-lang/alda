@@ -1,8 +1,16 @@
 # CHANGELOG
 
+## 0.8.0 (9/30/15)
+
+* Added the ability to specify a key signature via the `key-signature` attribute. Accidentals can be left off of notes if they are in the key signature. See [the docs](doc/attributes.md#key-signature) for more info on how to use key signatures. ([FragLegs]/[daveyarwood])
+
+* `=` after a note is now parsed as a natural, e.g. `b=` is a B natural. This can be used to override the key signature, as in traditional music notation.
+
+---
+
 ## 0.7.1 (9/26/15)
 
-* Fixes a couple of bugs around inline Clojure code. ([crisptrutski])
+* Fixed a couple of bugs around inline Clojure code. ([crisptrutski])
 
 ## 0.7.0 (9/25/15)
 
@@ -27,13 +35,13 @@ To preserve backwards compatibility, attributes still work the same way -- they 
 
 ## 0.6.3 (9/19/15)
 
-* Fix another regression caused by 0.6.1 -- tying notes across barlines was no longer working because the barlines were evaluating to `nil` and throwing a wrench in duration calculation.
+* Fixed another regression caused by 0.6.1 -- tying notes across barlines was no longer working because the barlines were evaluating to `nil` and throwing a wrench in duration calculation.
 
-* Add a `--tree` flag to the `alda parse` task, which prints the intermediate parse tree before being transformed to alda.lisp code.
+* Added a `--tree` flag to the `alda parse` task, which prints the intermediate parse tree before being transformed to alda.lisp code.
 
 ## 0.6.2 (9/18/15)
 
-* Fix regression caused by 0.6.1 -- the `barline` function in `alda.lisp.events.barline` wasn't actually being loaded into `alda.lisp`. Also, add debug log that this namespace was loaded into `alda.lisp`.
+* Fixed a regression caused by 0.6.1 -- the `barline` function in `alda.lisp.events.barline` wasn't actually being loaded into `alda.lisp`. Also, add debug log that this namespace was loaded into `alda.lisp`.
 
 ## 0.6.1 (9/17/15)
 
@@ -129,3 +137,4 @@ Exit with error code 1 when parsing fails for `alda play` and `alda parse` tasks
 [daveyarwood]: https://github.com/daveyarwood
 [crisptrutski]: https://github.com/crisptrutski
 [MadCapJake]: https://github.com/MadcapJake
+[FragLegs]: https://github.com/FragLegs
