@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 0.9.0 (10/1/15)
+
+* Implemented panning via the `panning` attribute.
+
+---
+
 ## 0.8.0 (9/30/15)
 
 * Added the ability to specify a key signature via the `key-signature` attribute. Accidentals can be left off of notes if they are in the key signature. See [the docs](doc/attributes.md#key-signature) for more info on how to use key signatures. ([FragLegs]/[daveyarwood])
