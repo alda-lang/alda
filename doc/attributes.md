@@ -155,6 +155,16 @@ cello:
 
 * **Initial Value:** 4
 
+### `panning`
+
+* **Abbreviations:** `pan`
+
+* **Description:** How far left/right the note is panned in your speakers.
+
+* **Value:** a number from 0-100 representing the panning from hard left (0) to hard right (100). 50 is center.
+
+* **Initial Value:** 50
+
 ### `quantization`
 
 * **Abbreviations:** `quant`, `quantize`

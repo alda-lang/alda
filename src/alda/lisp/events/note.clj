@@ -3,7 +3,7 @@
 
 (log/debug "Loading alda.lisp.events.note...")
 
-(defrecord Note [offset instrument volume track-volume midi-note pitch duration])
+(defrecord Note [offset instrument volume track-volume panning midi-note pitch duration])
 
 (defn note*
   ([instrument pitch-fn]
@@ -30,6 +30,7 @@
                             :instrument   instrument
                             :volume       ($volume instrument)
                             :track-volume ($track-volume instrument)
+                            :panning      ($panning instrument)
                             :midi-note    (pitch-fn ($octave instrument) 
                                                     ($key-signature instrument) 
                                                     :midi true)
