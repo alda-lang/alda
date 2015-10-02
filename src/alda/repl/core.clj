@@ -3,40 +3,26 @@
             [taoensso.timbre :as    log]
             [clojure.java.io :as    io]
             [clojure.string  :as    str]
-            [alda.parser     :refer (parse-input)]
+            [alda.parser-util]
             [alda.lisp       :refer :all]
             [alda.now        :as    now]))
 
 (declare ^:dynamic *parsing-context*)
 (declare ^:dynamic *repl-reader*)
 
-(defn parse-with-start-rule
-  "Parse a string of Alda code starting from a particular level of the tree.
-   (e.g. starting from :part, will parse the string as a part, not a whole score)
-
-   With each line of Alda code entered into the REPL, we determine the context of
-   evaluation (Are we starting a new part? Are we appending events to an existing
-   part? Are we continuing a previous voice? Starting a new voice?) and parse the
-   code accordingly."
-  [start code]
-  (with-redefs [alda.parser/alda-parser
-                #((insta/parser (io/resource "alda.bnf")) % :start start)]
-    (parse-input code)))
-
 (defn parse-with-context
   "Determine the appropriate context to parse a line of code from the Alda
-   REPL, then parse it within that context."
+   REPL, then parse it within that context.
+   
+   Sets `*parsing-context*` or logs an error, depending on the outcome of the
+   parse attempt."
   [alda-code]
-  (letfn [(try-ctxs [[ctx & ctxs]]
-            (if ctx
-              (let [parsed (parse-with-start-rule ctx alda-code)]
-                (if (insta/failure? parsed)
-                  (try-ctxs ctxs)
-                  (do
-                    (alter-var-root #'*parsing-context* (constantly ctx))
-                    parsed)))
-              (log/error "Invalid Alda syntax.")))]
-    (try-ctxs [:music-data :part :score])))
+  (let [[context parse-result] (alda.parser-util/parse-with-context alda-code)]
+    (if (= context :parse-failure)
+      (log/error "Invalid Alda syntax.")
+      (do 
+        (alter-var-root #'*parsing-context* (constantly context))
+        parse-result))))
 
 (defn set-prompt!
   "Sets the REPL prompt to give the user clues about the current context."

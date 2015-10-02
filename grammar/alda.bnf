@@ -12,9 +12,10 @@ nickname                = <"\""> acceptable-name <"\"">
 
     (* notes, chords & other events *)
 
-<music-data>            = (voices | event)*
+<music-data>            = <ows> (voices | event)*
 <event>                 = chord | note | rest | octave-change |
-                          clj-expr | marker | at-marker | barline
+                          clj-expr | marker | at-marker | barline |
+                          code-block
 voices                  = voice+ (<voice-zero> | <#"\z"> | &part)
 voice                   = voice-number event*
 voice-number            = <"V"> #"[1-9]\d*" <":"> <ows>
@@ -63,6 +64,11 @@ clj-string              = <"\""> inside-clj-string* <"\"">
 clj-expr                = <"("> inside-clj-expr* <")"> <ows>
 <inside-clj-expr>       = !( "(" | ")" | "\"" | "\\" )
                           #".|\n|\r" | clj-string | clj-character | clj-expr
+
+    (* alda code blocks *)
+
+code-block              = <"["> inside-code-block* <"]"> <ows>
+<inside-code-block>     = !( "[" | "]") #".|\n\r" | code-block
 
     (* comments & whitespace *)
 
