@@ -48,7 +48,7 @@ of music: classical, popular, chiptune, electroacoustic, and more!
 * Represent scores as text files and play them back with the `alda` command-line tool
 * [Interactive REPL](doc/alda-repl.md) lets you type Alda code and hear the results in real time
 * [Underlying Clojure DSL](doc/alda-lisp.md) allows you to [use Alda directly in your Clojure project](doc/alda-now.md).
-* Inline Clojure code allows you to [hack the Gibson][hackers] and write scores programmatically
+* [Inline Clojure code](doc/inline-clojure-code.md) allows you to [hack the Gibson][hackers] and write scores programmatically
 * Create MIDI music using any of the instruments in the [General MIDI Sound Set][gm-sound-set]
 
 [hackers]: https://www.youtube.com/watch?v=vYNnPx8fZBs
