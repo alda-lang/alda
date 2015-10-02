@@ -2,8 +2,7 @@
   (:require [instaparse.core :as insta]
             [clojure.string  :as str]
             [clojure.java.io :as io]
-            [alda.util       :as util]
-            [backtick        :refer (defquote)]))
+            [alda.util       :as util]))
 
 ; sets log level to TIMBRE_LEVEL (if set) or :warn
 (util/set-timbre-level!)
@@ -20,24 +19,15 @@
   [alda-code]
   (alda-parser alda-code))
 
-(defquote alda-lisp-quote
-  #(if-let [{:keys [ns name]} (meta (ns-resolve 'alda.lisp %))]
-     (symbol (str ns "/" name))
-     %))
-
-(defn read-to-alda-lisp
-  [code]
-  (load-string (format "(alda.parser/alda-lisp-quote %s)" code)))
-
 (defn- read-clj-expr
   "Reads an inline Clojure expression within Alda code.
 
-   Symbols will first try to be resolved within the context of alda.lisp,
-   then if that fails, the current run-time namespace.
+   This expression will be evaluated within the `boot.user` context, which has
+   the vars in `alda.lisp` referred in.
 
    Returns ready-to-evaluate Clojure code."
   [expr]
-  (read-to-alda-lisp (str \( (apply str expr) \))))
+  (read-string (str \( (apply str expr) \))))
 
 (defn parse-input
   "Parses a string of Alda code and turns it into Clojure code."

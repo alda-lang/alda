@@ -9,7 +9,8 @@
 
 (set-env! :dependencies '[[alda "LATEST"]])
 
-(require '[alda.cli])
+(require '[alda.cli]
+         '[alda.lisp :refer :all])
 
 (defn -main [& args]
   (apply (resolve 'alda.cli/-main) args))

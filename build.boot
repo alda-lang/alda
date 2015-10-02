@@ -11,14 +11,14 @@
                   [str-to-argv           "0.1.0"]
                   [overtone              "0.9.1"]
                   [midi.soundfont        "0.1.0"]
-                  [reply                 "0.3.7"]
-                  [backtick              "0.3.3"]])
+                  [reply                 "0.3.7"]])
 
 (require '[adzerk.bootlaces :refer :all]
          '[adzerk.boot-test :refer :all]
          '[alda.version]
          '[alda.cli]
-         '[str-to-argv :refer (split-args)])
+         '[alda.lisp        :refer :all]
+         '[str-to-argv      :refer (split-args)])
 
 ; version number is stored in alda.version 
 (bootlaces! alda.version/-version-)
