@@ -67,8 +67,9 @@ clj-expr                = <"("> inside-clj-expr* <")"> <ows>
 
     (* alda code blocks *)
 
-code-block              = <"["> inside-code-block* <"]"> <ows>
-<inside-code-block>     = !( "[" | "]") #".|\n\r" | code-block
+code-block              = code-block-no-ws <ows>
+code-block-no-ws        = <"["> inside-code-block* <"]">
+<inside-code-block>     = !( "[" | "]") #".|\n|\r" | code-block-no-ws
 
     (* comments & whitespace *)
 
