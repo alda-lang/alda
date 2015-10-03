@@ -32,8 +32,8 @@
               (let [parsed (parse-with-start-rule ctx alda-code)]
                 (if (insta/failure? parsed)
                   (try-ctxs ctxs)
-                  (do 
-                    (alter-var-root #'*parsing-context* (constantly ctx)) 
+                  (do
+                    (alter-var-root #'*parsing-context* (constantly ctx))
                     parsed)))
               (log/error "Invalid Alda syntax.")))]
     (try-ctxs [:music-data :part :score])))

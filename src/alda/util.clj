@@ -3,6 +3,61 @@
             [taoensso.timbre :as timbre])
   (:import (java.io File)))
 
+(defmacro pdoseq
+  "A fairly efficient hybrid of `doseq` and `pmap`"
+  [binding & body]
+  `(doseq ~binding (future @body)))
+
+(defmacro pdoseq-block
+  "A fairly efficient hybrid of `doseq` and `pmap`, that blocks."
+  [binding & body]
+  `(let [latch# (atom (count ~(second binding)))
+         done# (promise)]
+     (doseq ~binding
+       (future
+         ~@body
+         (when (zero? (swap! latch# dec))
+           (deliver done# true))))
+     @done#))
+
+(defn strip-nil-values
+  "Strip `nil` values from a map."
+  [hsh]
+  (into (empty hsh) (remove (comp nil? last)) hsh))
+
+(defn parse-str-opts
+  "Transform string based keyword arguments into a regular map, eg.
+   IN:  \"from 0:20 to :third-movement some-junk-at-end\"
+   OUT: {:from  \"0:20\"
+         :to \":third-movement\"}"
+  [opts-str]
+  (let [pairs (partition 2 (str/split opts-str #"\s"))]
+    (into {} (map (fn [[k v]] [(keyword k) v])) pairs)))
+
+(defn parse-time
+  "Convert a human readable duration into milliseconds, eg. \"02:31\" => 151 000"
+  [time-str]
+  (let [[s m h] (as-> (str/split time-str #":") x
+                      (reverse x)
+                      (map #(Double/parseDouble %) x)
+                      (concat x [0 0 0]))]
+    (* (+ (* 60 (+ (* 60 h) m)) s) 1000)))
+
+(def ^:private duration-regex
+  #"^(\d+(\.\d+)?)(:\d+(\.\d+)?)*$")
+
+(defn parse-position
+  "Convert a string denoting a position in a song into the appropriate type.
+   For explicit timepoints this is a double denoting milliseconds, and for
+   markers this is a keyword."
+  [position-str]
+  (when position-str
+    (if (re-find duration-regex position-str)
+      (parse-time position-str)
+      (if (.startsWith position-str ":")
+        (keyword (subs position-str 1))
+        (keyword position-str)))))
+
 (defn set-timbre-level!
   []
   (timbre/set-level! (if-let [level (System/getenv "TIMBRE_LEVEL")]

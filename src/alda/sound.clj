@@ -2,7 +2,7 @@
   (:require [alda.sound.midi :as    midi]
             [overtone.at-at  :refer (mk-pool now at)]
             [taoensso.timbre :as    log]
-            [alda.util       :refer (check-for)]))
+            [alda.util       :refer [check-for parse-time pdoseq-block parse-position]]))
 
 (def ^:dynamic *active-audio-types* #{})
 
@@ -15,7 +15,7 @@
 
 (defmethod set-up-audio-type! :default
   [audio-type & [score]]
-  (log/errorf "No implementation of set-up-audio-type! defined for type %s" 
+  (log/errorf "No implementation of set-up-audio-type! defined for type %s"
               audio-type))
 
 (defmethod set-up-audio-type! :midi
@@ -27,9 +27,9 @@
    e.g. for MIDI, create and open a MIDI synth."
   [audio-type & [score]]
   (if (coll? audio-type)
-    (doall 
-      (pmap #(set-up! % score) audio-type))
-    (when-not (set-up? audio-type) 
+    (pdoseq-block [a-t audio-type]
+      (set-up! a-t score))
+    (when-not (set-up? audio-type)
       (set-up-audio-type! audio-type score)
       (alter-var-root #'*active-audio-types* conj audio-type))))
 
@@ -40,7 +40,7 @@
 
 (defmethod refresh-audio-type! :default
   [audio-type & [score]]
-  (log/errorf "No implementation of refresh-audio-type! defined for type %s" 
+  (log/errorf "No implementation of refresh-audio-type! defined for type %s"
               audio-type))
 
 (defmethod refresh-audio-type! :midi
@@ -54,9 +54,9 @@
    added to the score between calls to `play!`, when using Alda live.)"
   [audio-type & [score]]
   (if (coll? audio-type)
-    (doall 
-      (pmap #(refresh! % score) audio-type))
-    (when (set-up? audio-type) 
+    (pdoseq-block [a-t audio-type]
+      (refresh! a-t score))
+    (when (set-up? audio-type)
       (refresh-audio-type! audio-type score))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -77,11 +77,24 @@
    e.g. for MIDI, close the MIDI synth."
   [audio-type & [score]]
   (if (coll? audio-type)
-    (doall 
-      (pmap #(tear-down! % score) audio-type))
-    (when (set-up? audio-type) 
+    (pdoseq-block [a-t audio-type]
+      (tear-down! a-t score))
+    (when (set-up? audio-type)
       (tear-down-audio-type! audio-type score)
       (alter-var-root #'*active-audio-types* disj audio-type))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn shift-events
+  [events offset cut-off]
+  (let [offset  (or offset 0)
+        cut-off (when cut-off (- cut-off offset))
+        keep?   (if cut-off
+                  #(and (<= 0 %) (> cut-off %))
+                  #(<= 0 %))]
+    (sequence (comp (map #(update-in % [:offset] - offset))
+                    (filter (comp keep? :offset)))
+              events)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -121,38 +134,65 @@
 
 (def ^:dynamic *play-opts* {})
 
-; TODO: control where to start and stop playing using the start & end keys
+(defmacro with-play-opts
+  "Apply `opts` as overrides to *play-opts* when executing `body`"
+  [opts & body]
+  `(binding [*play-opts* (merge *play-opts* ~opts)]
+     ~@body))
+
+(defn- lookup-time [markers pos]
+  (let [pos (if (string? pos)
+              (parse-position pos)
+              pos)]
+    (cond (keyword? pos)
+          (or (markers (name pos))
+              (throw (Exception. (str "Marker " pos " not found."))))
+
+          (or (number? pos) (nil? pos))
+          pos
+
+          :else
+          (throw (Exception. (str "Do not support " (type pos) " as a play time."))))))
+
+(defn start-finish-times [{:keys [from to]} markers]
+  (map (partial lookup-time markers) [from to]))
+
 (defn play!
   "Plays an Alda score, optionally from given start/end marks.
-   
+
    Returns a function that, when called mid-playback, will stop any further
    events from playing."
-  [{:keys [events instruments] :as score}]
-  (let [{:keys [start end pre-buffer post-buffer one-off? async?]} *play-opts*
+  [{:keys [events markers instruments] :as score}]
+  (let [{:keys [pre-buffer post-buffer one-off? async?]} *play-opts*
         audio-types (determine-audio-types score)
         _           (set-up! audio-types score)
         _           (refresh! audio-types score)
         pool        (mk-pool)
         playing?    (atom true)
-        start       (+ (now) (or pre-buffer 0))]
-    (doall (pmap (fn [{:keys [offset instrument] :as event}]
-                   (let [instrument (-> instrument instruments)]
-                     (at (+ start offset) 
-                         #(when @playing? 
-                            (play-event! event instrument)) 
-                         pool)))
-                 events))
+        begin       (+ (now) (or pre-buffer 0))
+        [start end] (start-finish-times *play-opts* markers)
+        events      (shift-events events start end)
+        duration    (- (or end (score-length score))
+                       (or start 0))]
+    (pdoseq-block [{:keys [offset instrument] :as event} events
+                   :let [inst (-> instrument instruments)]]
+      (at (+ begin offset)
+          #(when @playing?
+             (play-event! event inst))
+          pool))
+
     (when-not async?
       ; block until the score is done playing
-      (Thread/sleep (+ (score-length score) 
+      (Thread/sleep (+ duration
                        (or pre-buffer 0)
                        (or post-buffer 0))))
     (when one-off? (tear-down! audio-types score))
     #(reset! playing? false)))
 
 (defn make-wav!
-  "Parses an input file and saves the resulting sound data as a wav file, 
+  "Parses an input file and saves the resulting sound data as a wav file,
    using the specified options."
   [input-file output-file {:keys [start end]}]
   (let [target-file (check-for output-file)]
-    (comment "To do.")))
+    ;; TODO
+    nil))

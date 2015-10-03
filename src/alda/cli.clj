@@ -49,12 +49,16 @@
    ; TODO: implement smart buffering and remove the buffer options
    p pre-buffer  MS  int  "The number of milliseconds of lead time for buffering. (default: 0)"
    P post-buffer MS  int  "The number of milliseconds to keep the synth open after the score ends. (default: 1000)"
-   s stock           bool "Use the default MIDI soundfont of your JVM, instead of FluidR3."]
+   s stock           bool "Use the default MIDI soundfont of your JVM, instead of FluidR3."
+   F from        POS str  "Position to start playback from"
+   T to          POS str  "Position to end playback at"]
   (require '[alda.lisp]
            '[instaparse.core])
   (binding [alda.sound.midi/*midi-soundfont* (when-not stock (fluid-r3!))
             alda.sound/*play-opts* {:pre-buffer  (or pre-buffer 0)
                                     :post-buffer (or post-buffer 1000)
+                                    :from        from
+                                    :to          to
                                     :one-off?    true}]
     (if-not (or file code)
       (play "--help")
