@@ -2,7 +2,7 @@
   (:require [alda.sound.midi :as    midi]
             [overtone.at-at  :refer (mk-pool now at)]
             [taoensso.timbre :as    log]
-            [alda.util       :refer [check-for parse-time pdoseq parse-position]]))
+            [alda.util       :refer [check-for parse-time pdoseq-block parse-position]]))
 
 (def ^:dynamic *active-audio-types* #{})
 
@@ -27,8 +27,8 @@
    e.g. for MIDI, create and open a MIDI synth."
   [audio-type & [score]]
   (if (coll? audio-type)
-    (doall
-      (pmap #(set-up! % score) audio-type))
+    (pdoseq-block [a-t audio-type]
+      (set-up! a-t score))
     (when-not (set-up? audio-type)
       (set-up-audio-type! audio-type score)
       (alter-var-root #'*active-audio-types* conj audio-type))))
@@ -54,8 +54,8 @@
    added to the score between calls to `play!`, when using Alda live.)"
   [audio-type & [score]]
   (if (coll? audio-type)
-    (doall
-      (pmap #(refresh! % score) audio-type))
+    (pdoseq-block [a-t audio-type]
+      (refresh! a-t score))
     (when (set-up? audio-type)
       (refresh-audio-type! audio-type score))))
 
@@ -77,8 +77,8 @@
    e.g. for MIDI, close the MIDI synth."
   [audio-type & [score]]
   (if (coll? audio-type)
-    (doall
-      (pmap #(tear-down! % score) audio-type))
+    (pdoseq-block [a-t audio-type]
+      (tear-down! a-t score))
     (when (set-up? audio-type)
       (tear-down-audio-type! audio-type score)
       (alter-var-root #'*active-audio-types* disj audio-type))))
@@ -174,14 +174,12 @@
         events      (shift-events events start end)
         duration    (- (or end (score-length score))
                        (or start 0))]
-    (doall
-      (pmap (fn [{:keys [offset instrument] :as event}]
-              (let [instrument (-> instrument instruments)]
-                (at (+ begin offset)
-                    #(when @playing?
-                       (play-event! event instrument))
-                    pool)))
-            events))
+    (pdoseq-block [{:keys [offset instrument] :as event} events
+                   :let [inst (-> instrument instruments)]]
+      (at (+ begin offset)
+          #(when @playing?
+             (play-event! event inst))
+          pool))
 
     (when-not async?
       ; block until the score is done playing

@@ -3,12 +3,22 @@
             [taoensso.timbre :as timbre])
   (:import (java.io File)))
 
-;; FIXME
 (defmacro pdoseq
   "A fairly efficient hybrid of `doseq` and `pmap`"
   [binding & body]
-  #_`(doseq ~binding (future @body))
-  #_`(doall (pmap #(let [~(first binding) %] ~@body) ~(second binding))))
+  `(doseq ~binding (future @body)))
+
+(defmacro pdoseq-block
+  "A fairly efficient hybrid of `doseq` and `pmap`, that blocks."
+  [binding & body]
+  `(let [latch# (atom (count ~(second binding)))
+         done# (promise)]
+     (doseq ~binding
+       (future
+         ~@body
+         (when (zero? (swap! latch# dec))
+           (deliver done# true))))
+     @done#))
 
 (defn strip-nil-values
   "Strip `nil` values from a map."
