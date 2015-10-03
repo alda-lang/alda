@@ -1,5 +1,27 @@
 # CHANGELOG
 
+## 0.?.0 (...)
+
+* Simplify inline Clojure expressions -- now they're just like regular Clojure expressions. No monkey business around splitting on commas and semicolons.
+
+### Breaking changes
+
+* This breaks backwards compatibility with "multiple attribute changes," i.e.:
+
+        (volume 50, tempo 100)
+
+    This will now attempt to be read as a Clojure expression `(volume 50 tempo 100)` (since commas are whitespace in Clojure), which will fail because the `volume` function expects only one argument.
+
+    To update your scores that contain this syntax, change the above to:
+
+        (do (volume 50) (tempo 100))
+
+    or just:
+
+        (volume 50) (tempo 100)
+
+---
+
 ## 0.9.0 (10/1/15)
 
 * Implemented panning via the `panning` attribute.
