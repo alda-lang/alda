@@ -9,3 +9,8 @@
   [instrument event]
   (let [marker (-> (*instruments* instrument) :current-marker)]
     (alter-var-root #'*events* update-in [marker :events] (fnil conj []) event)))
+
+(defn add-events
+  [instrument events]
+  (let [marker (-> (*instruments* instrument) :current-marker)]
+    (alter-var-root #'*events* update-in [marker :events] (fnil into []) events)))

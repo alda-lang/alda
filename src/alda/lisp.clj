@@ -7,7 +7,8 @@
             [alda.lisp.events]
             [alda.lisp.instruments]
             [alda.lisp.score]
-            [alda.lisp.code]))
+            [alda.lisp.code]
+            [alda.lisp.cram]))
 
 ; example: creating a score interactively at the repl
 

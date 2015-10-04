@@ -46,6 +46,7 @@
                                                     (str \[ (second x) \])
                                                     x))
                                                 %&)))
+          :cram              #(list* 'alda.lisp/cram %&)
           :name              #(hash-map :name %)
           :nickname          #(hash-map :nickname %)
           :number            identity
