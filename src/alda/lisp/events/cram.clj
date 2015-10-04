@@ -1,6 +1,7 @@
-(ns alda.lisp.cram)
-
+(ns alda.lisp.events.cram)
 (in-ns 'alda.lisp)
+
+(log/debug "Loading alda.lisp.events.cram...")
 
 (def no-events
   {:start {:offset (->AbsoluteOffset 0), :events []}})
