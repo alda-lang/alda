@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 0.10.1 (10/4/15)
+
+* Fix bug where playback hangs if no instruments are defined (#114)
+  May have also caused lock-ups in other situations also.
+
 ## 0.10.0 (10/3/15)
 
 * `from` and `to` arguments allow you to play from/to certain time markings (e.g. 1:02 for 1 minute, 2 seconds in) or markers. This works both from the command-line (`alda play --from 0:02 --to myMarker`) and in the Alda REPL (`:play from 0:02 to myMarker`). ([crisptrutski])
