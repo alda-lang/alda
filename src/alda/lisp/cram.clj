@@ -21,7 +21,6 @@
      ~'alda.lisp/*current-instruments*
      ~'alda.lisp/*global-attributes*]
     (let [start#  (:offset ($current-offset))]
-      (alter-var-root ~'#'alda.lisp/*global-attributes* #(dissoc % :duration))
       ~@body
       (- (:offset ($current-offset)) start#))))
 
