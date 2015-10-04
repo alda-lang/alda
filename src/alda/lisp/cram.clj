@@ -21,16 +21,17 @@
      ~'alda.lisp/*current-instruments*
      ~'alda.lisp/*global-attributes*]
     (let [start#  (:offset ($current-offset))]
+      (set-duration 1)
       ~@body
       (- (:offset ($current-offset)) start#))))
 
 (defmacro cram [& body]
   (let [lst (last body)
-        dur (and (list? lst)
+        dur (and (or (coll? lst))
                  (= 'alda.lisp/duration (first lst))
                  lst)
         body (if dur (butlast body) body)]
-    `(let [b#       (or ~dur ($duration))
+    `(let [b#       (if ~dur (:beats ~dur) ($duration))
            d#       (calc-duration ~@body)
            t#       ((:duration-fn (duration b#)) ($tempo))
            scaling# (* (/ t# d#) ~'alda.lisp/*time-scaling*)]
