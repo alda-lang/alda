@@ -18,7 +18,9 @@
          ~@body
          (when (zero? (swap! latch# dec))
            (deliver done# true))))
-     @done#))
+     ;; don't block if unless loop will run and check latch
+     (when (seq ~(second binding))
+       @done#)))
 
 (defn strip-nil-values
   "Strip `nil` values from a map."
