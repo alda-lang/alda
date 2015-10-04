@@ -16,7 +16,9 @@
   (let [events        (lisp/event-set {:start
                                        {:offset (lisp/->AbsoluteOffset 0)
                                         :events new-events}})
-        earliest      (apply min 0 (map :offset events))
+        earliest      (->> (map :offset events)
+                           (apply min)
+                           (max 0))
         shifted       (alda.sound/shift-events events earliest nil)
         one-off-score (assoc score
                              :events shifted
