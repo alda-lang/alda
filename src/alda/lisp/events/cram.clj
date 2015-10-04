@@ -46,6 +46,7 @@
                     (zipmap is#
                             (map #(* (/ (durs# %) d#) (ts# % 1)) is#)))]
        (binding [~'alda.lisp/*time-scaling* scale#]
+         (set-duration 1)
          ~@body
          (doseq [i# is#]
            (binding [alda.lisp/*current-instruments* #{i#}]
