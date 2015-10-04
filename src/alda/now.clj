@@ -17,7 +17,7 @@
                                        {:offset (lisp/->AbsoluteOffset 0)
                                         :events new-events}})
         earliest      (->> (map :offset events)
-                           (apply min)
+                           (apply min Long/MAX_VALUE)
                            (max 0))
         shifted       (alda.sound/shift-events events earliest nil)
         one-off-score (assoc score
@@ -43,18 +43,18 @@
    Useful for playing a new set of notes with multiple instrument parts,
    ensuring that both parts start at the same time, regardless of any prior
    difference in current-offset between the instrument parts.
-   
+
    When a truthy argument is provided, also resets all the other attributes
    (e.g. volume, track-volume, octave) to their default values."
   [& [all?]]
   (alter-var-root #'alda.lisp/*instruments*
     #(into {}
        (map (fn [[instrument attrs]]
-              [instrument 
-               (merge attrs 
+              [instrument
+               (merge attrs
                       (if all?
                         lisp/*initial-attr-values*
-                        (select-keys lisp/*initial-attr-values* 
+                        (select-keys lisp/*initial-attr-values*
                                      [:current-offset :last-offset])))])
             %)))
   (alter-var-root #'alda.lisp/*events*
