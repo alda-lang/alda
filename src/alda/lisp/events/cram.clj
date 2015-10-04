@@ -32,10 +32,21 @@
                  (= 'alda.lisp/duration (first lst))
                  lst)
         body (if dur (butlast body) body)]
-    `(let [b#       (if ~dur (:beats ~dur) ($duration))
-           d#       (calc-duration ~@body)
-           t#       ((:duration-fn (duration b#)) ($tempo))
-           scaling# (* (/ t# d#) ~'alda.lisp/*time-scaling*)]
-       (binding [~'alda.lisp/*time-scaling* scaling#]
+    `(let [dur#   (:beats ~dur)
+           d#     (calc-duration ~@body)
+           is#    alda.lisp/*current-instruments*
+           ts#    alda.lisp/*time-scaling*
+           beats# (zipmap is# (for [i# is#] (or dur# ($duration i#))))
+           durs#  (zipmap is# (for [i# is#]
+                                (let [f# (:duration-fn
+                                           (duration (beats# i#)))]
+                                  (f# ($tempo i#)))))
+           scale# (merge
+                    ts#
+                    (zipmap is#
+                            (map #(* (/ (durs# %) d#) (ts# % 1)) is#)))]
+       (binding [~'alda.lisp/*time-scaling* scale#]
          ~@body
-         (set-duration b#)))))
+         (doseq [i# is#]
+           (binding [alda.lisp/*current-instruments* #{i#}]
+             (set-duration (beats# i#))))))))
