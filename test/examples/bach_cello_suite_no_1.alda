@@ -1,7 +1,8 @@
 # Prelude, Cello Suite No. 1 in G Major (BMV 1007)
 # J.S. Bach
 
-(tempo! 60, quant! 99)
+(tempo! 60)
+(quant! 99)
 
 cello "main":  
   o2 g16 > d b a b d b d < g > d b a b d b d
@@ -47,7 +48,7 @@ cello "main":
 # cello allows 2 of the same note to be played simultaneously and overlapping.
 cello "aString":
   @twoStringPart
-  (quant 65, volume 70) o3
+  (quant 65) (volume 70) o3
   r16 a8 a a a | a a a a a a a a | a a a a a a a a | a a a a
 
 main:
