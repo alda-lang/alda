@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.10.2 (10/4/15)
+
+* Fix bug in playback `from`/`to` options where playback would always start at offset 0, instead of whenever the first note in the playback slice comes in.
+
 ## 0.10.1 (10/4/15)
 
 * Fix bug where playback hangs if no instruments are defined (#114)
