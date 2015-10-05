@@ -7,6 +7,7 @@
                   [adzerk/bootlaces      "0.1.12" :scope "test"]
                   [adzerk/boot-test      "1.0.4"  :scope "test"]
                   [com.taoensso/timbre   "4.1.1"]
+                  [clj-http              "2.0.0"]
                   [djy                   "0.1.4"]
                   [str-to-argv           "0.1.0"]
                   [overtone/at-at        "1.2.0"]

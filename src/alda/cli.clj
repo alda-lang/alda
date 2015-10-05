@@ -3,6 +3,7 @@
             [boot.core       :refer (merge-env!)]
             [clojure.string  :as    str]
             [clojure.pprint  :refer (pprint)]
+            [clj-http.client :as    client]
             [alda.parser     :refer (parse-input parse-tree)]
             [alda.version    :refer (-version-)]
             [alda.sound]
@@ -69,7 +70,7 @@
         identity))))
 
 (defclifn ^:alda-task repl
-  "Starts an Alda Read-Evaluate-Play-Loop."
+  "Start an Alda Read-Evaluate-Play-Loop."
   [p pre-buffer  MS int  "The number of milliseconds of lead time for buffering. (default: 0)"
    P post-buffer MS int  "The number of milliseconds to wait after the score ends. (default: 0)"
    s stock          bool "Use the default MIDI soundfont of your JVM, instead of FluidR3."]
@@ -81,6 +82,13 @@
       '(do
          (require '[alda.repl])
          (alda.repl/start-repl!)))))
+
+(defclifn ^:alda-task script
+  "Print the latest `alda` start script to STDOUT."
+  []
+  (let [script-url "https://raw.githubusercontent.com/alda-lang/alda/master/bin/alda"
+        script (:body (client/get script-url))]
+    (println script)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -121,4 +129,5 @@
     "parse"     (delegate parse args)
     "play"      (delegate play args)
     "repl"      (delegate repl args)
-    (printf "[alda] Invalid command '%s'.\n\n%s\n" cmd)))
+    "script"    (delegate script args)
+    (printf "[alda] Invalid command '%s'.\n" cmd)))

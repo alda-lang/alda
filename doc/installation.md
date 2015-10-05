@@ -12,6 +12,16 @@ The executable file `alda` in the `bin` directory of this repository is a standa
 
 Once you've completed the steps above, you'll be able to run `alda` from any working directory. Running the command `alda` by itself will display the help text.
 
+### Updating Alda
+
+Alda comes in two pieces: the Alda library (the part that does all the work) and the `alda` start script.
+
+The start script will rarely need to be updated, but if you ever do need to get the latest version, you can do so by running the following command:
+
+    alda script > /usr/local/bin/alda
+
+The Alda library will keep itself updated on your computer each time you run it.
+
 ## Windows
 
 The `alda` script doesn't seem to work for Windows users. If you're a Windows power user, [please feel free to weigh in on this issue](https://github.com/alda-lang/alda/issues/48). Until we have that sorted out, there is a workaround:
