@@ -39,17 +39,17 @@
       [:calls [:name "marimba"]]
       [:note [:pitch "c"]
              [:duration
-               [:note-length [:number "1"]]
+               [:note-length [:positive-number "1"]]
                [:barline]
-               [:note-length [:number "1"]]
+               [:note-length [:positive-number "1"]]
                [:barline]
-               [:note-length [:number "1"]]
+               [:note-length [:positive-number "1"]]
                [:barline]
-               [:note-length [:number "1"]]
+               [:note-length [:positive-number "1"]]
                [:barline]
-               [:note-length [:number "1"]]
+               [:note-length [:positive-number "1"]]
                [:barline]
-               [:note-length [:number "2"] [:dots "."]]]]]])
+               [:note-length [:positive-number "2"] [:dots "."]]]]]])
 
 (def alda-lisp-code-2
   '(alda.lisp/score
