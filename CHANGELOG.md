@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 0.10.4 (10/5/15)
+
+* Bugfix (#120), don't allow negative note lengths.
+
+* Handy `alda script` task allows you to print the latest alda script to STDOUT, so you can pipe it to wherever you keep it on your `$PATH`, e.g. `alda script > /usr/local/bin/alda`.
+
 ## 0.10.3 (10/4/15)
 
 * Fix edge case regression caused by the 0.10.2.
