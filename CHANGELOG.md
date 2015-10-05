@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 0.11.0 (10/5/15)
+
+* Implemented code block literals, which don't do anything yet, but will pave the way for features like repeats.
+
+* `alda-code` function added to the `alda.lisp` namespace, for use in inline Clojure code. This function takes a string of Alda code, parses and evaluates it in the context of the current score. This is useful because it allows you to build up a string of Alda code programmatically via Clojure, then evaluate it as if it were written in the score to begin with! More info on this in [the docs](doc/inline-clojure-code.md#evaluating-strings-of-alda-code).
+
+---
+
 ## 0.10.4 (10/5/15)
 
 * Bugfix (#120), don't allow negative note lengths.
@@ -26,6 +34,8 @@
 * Simplify inline Clojure expressions -- now they're just like regular Clojure expressions. No monkey business around splitting on commas and semicolons.
 
 ### Breaking changes
+
+* The `alda` script has changed in order to pave the way for better/simpler inline Clojure code evaluation. This breaks attribute-setting if you're using an `alda` script from before 0.10.0. You will need to reinstall the latest script to `/usr/local/bin` or wherever you keep it on your `$PATH`.
 
 * This breaks backwards compatibility with "multiple attribute changes," i.e.:
 
