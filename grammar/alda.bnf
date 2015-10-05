@@ -33,8 +33,10 @@ sharp                   = "+"
 natural                 = "="
 duration                = note-length <ows> barline? <ows> subduration* slur?
 <subduration>           = tie <ows> barline? <ows> note-length <ows> barline? <ows>
-note-length             = number dots?
-number                  = #"-?[0-9]+"
+note-length             = positive-number dots?
+number                  = positive-number | negative-number
+positive-number         = #"[0-9]+"
+negative-number         = #"-[0-9]+"
 dots                    = #"\.+"
 <tie>                   = <"~">
 slur                    = <"~">

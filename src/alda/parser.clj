@@ -40,7 +40,9 @@
           :clj-expr          #(read-clj-expr %&)
           :name              #(hash-map :name %)
           :nickname          #(hash-map :nickname %)
-          :number            #(Integer/parseInt %)
+          :number            identity
+          :positive-number   #(Integer/parseInt %)
+          :negative-number   #(Integer/parseInt %)
           :voice-number      #(Integer/parseInt %)
           :tie               (constantly :tie)
           :slur              (constantly :slur)
