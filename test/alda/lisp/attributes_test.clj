@@ -52,7 +52,7 @@
 
 (deftest note-length-tests
   (testing "note-length"
-    (set-attribute :note-length (duration (note-length 2 {:dots 2})))
+    (set-duration (note-length 2 {:dots 2}))
     (is (== ($duration) 3.5))
-    (set-attribute :note-length (duration (note-length 1) (note-length 1)))
+    (set-duration (+ (note-length 1) (note-length 1)))
     (is (== ($duration) 8))))

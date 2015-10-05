@@ -38,6 +38,14 @@
          {:clj-character     #(str \\ %)
           :clj-string        #(str \" (apply str %&) \")
           :clj-expr          #(read-clj-expr %&)
+          :code-block        #(list 'alda.lisp/code-block (second %))
+          :code-block-no-ws  #(list :code-block-no-ws
+                                    (apply str 
+                                           (map (fn [x]
+                                                  (if (list? x)
+                                                    (str \[ (second x) \])
+                                                    x))
+                                                %&)))
           :name              #(hash-map :name %)
           :nickname          #(hash-map :nickname %)
           :number            identity
@@ -73,3 +81,4 @@
                                    {:names names})))
           :part              #(list* 'alda.lisp/part %&)
           :score             #(list* 'alda.lisp/score %&)})))
+

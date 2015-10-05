@@ -37,6 +37,7 @@
   test {:namespaces '#{
                        alda.parser.barlines-test
                        alda.parser.clj-exprs-test
+                       alda.parser.code-blocks-test
                        alda.parser.comments-test
                        alda.parser.duration-test
                        alda.parser.events-test
