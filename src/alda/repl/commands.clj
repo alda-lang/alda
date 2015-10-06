@@ -6,7 +6,7 @@
                                                          *parsing-context*)]
             [alda.sound              :as    sound]
             [alda.util               :as    util]
-            [boot.from.io.aviso.ansi :refer (bold)]
+            [io.aviso.ansi            :refer (bold)]
             [clojure.pprint          :refer (pprint)]
             [clojure.string          :as    str]
             [instaparse.core         :as    insta]))

@@ -5,13 +5,10 @@
             [alda.repl.core               :as    repl :refer (*repl-reader* 
                                                               *parsing-context*)]
             [alda.repl.commands           :refer (repl-command)]
-            [boot.from.io.aviso.ansi      :refer :all]
-            [boot.from.io.aviso.exception :as    pretty]
-            [boot.util                    :refer (while-let)]
-            [clojure.string               :as    str]
-            [taoensso.timbre              :as    log])
-  (:import  [jline.console ConsoleReader]
-            [jline.console.completer Completer]))
+            [io.aviso.ansi                :refer :all]
+            [io.aviso.exception           :as    pretty]
+            [clojure.string               :as    str])
+  (:import  [jline.console ConsoleReader]))
 
 (def ascii-art
   (str " █████╗ ██╗     ██████╗  █████╗ " \newline
@@ -30,6 +27,14 @@
        \newline
        \newline
        (cyan text-below-ascii-art)))
+
+(defmacro while-let
+  "Repeatedly executes body while test expression is true. Test
+  expression is bound to binding.
+  Copied from boot.util."
+  [[binding test] & body]
+  `(loop [~binding ~test]
+     (when ~binding ~@body (recur ~test))))
 
 (defn start-repl! []
   (println)
