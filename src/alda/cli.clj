@@ -129,13 +129,13 @@
     (cond
       (and (contains? options :help) (empty? arguments)) ; Generic help, as opposed to per task help
       (do-and-exit-with-error (println help-text))
-      (contains? options :version) (do-and-exit-with-success (println (format "alda v%s\n\n" -version-)))
+      (contains? options :version) (do-and-exit-with-success (println (format "alda v%s" -version-)))
       :else
       (case (first arguments)
         "help"
         (do-and-exit-with-error (println help-text))
         "version"
-        (do-and-exit-with-error (println (format "alda v%s\n\n" -version-)))
+        (do-and-exit-with-error (println (format "alda v%s" -version-)))
         "parse"
         (let [[{:keys [file code tree lisp]} summary] (command-options args parse-options)]
           (if (or file code)
