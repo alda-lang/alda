@@ -7,6 +7,7 @@
                   [adzerk/bootlaces      "0.1.12" :scope "test"]
                   [adzerk/boot-test      "1.0.4"  :scope "test"]
                   [com.taoensso/timbre   "4.1.1"]
+                  [io.aviso/pretty       "0.1.19"]
                   [djy                   "0.1.4"]
                   [str-to-argv           "0.1.0"]
                   [overtone/at-at        "1.2.0"]
@@ -52,6 +53,15 @@
                        alda.lisp.voices-test
                        alda.util-test
                        }})
+
+(deftask package
+  "Builds an uberjar of this project that can be run with java -jar"
+  []
+  (comp
+   (aot)
+   (pom)
+   (uber)
+   (jar)))
 
 (deftask alda
   "Run Alda CLI tasks.
