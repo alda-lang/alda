@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.12.0 (10/6/15)
+
+* [CRAM](doc/cram.md), a fun way to represent advanced rhythms ([crisptrutski]/[daveyarwood])
+
 ## 0.11.0 (10/5/15)
 
 * Implemented code block literals, which don't do anything yet, but will pave the way for features like repeats.
