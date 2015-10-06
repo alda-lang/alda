@@ -1,0 +1,9 @@
+piano: (duration 4)
+harp:  (duration 2) (octave 3)
+
+piano/harp:
+  {e f g} {a b > c}
+
+harp:
+ {d e f} {g a b}
+

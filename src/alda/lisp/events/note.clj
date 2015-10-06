@@ -3,6 +3,8 @@
 
 (log/debug "Loading alda.lisp.events.note...")
 
+(def ^:dynamic *time-scaling* {})
+
 (defrecord Note [offset instrument volume track-volume panning midi-note pitch duration])
 
 (defn note*
@@ -24,7 +26,8 @@
                             true)))
   ([instrument pitch-fn {:keys [duration-fn slurred]} slur?]
     (let [quant          (if (or slur? slurred) 1.0 ($quantization instrument))
-          note-duration  (duration-fn ($tempo instrument))
+          time-scaling   (*time-scaling* instrument 1)
+          note-duration  (* (duration-fn ($tempo instrument)) time-scaling)
           event          (map->Note
                            {:offset       ($current-offset instrument)
                             :instrument   instrument
