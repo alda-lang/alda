@@ -21,7 +21,7 @@
          '[alda.lisp        :refer :all]
          '[str-to-argv      :refer (split-args)])
 
-; version number is stored in alda.version 
+; version number is stored in alda.version
 (bootlaces! alda.version/-version-)
 
 (task-options!
@@ -44,6 +44,7 @@
                        alda.parser.octaves-test
                        alda.parser.score-test
                        alda.lisp.attributes-test
+                       alda.lisp.cram-test
                        alda.lisp.chords-test
                        alda.lisp.duration-test
                        alda.lisp.global-attributes-test
@@ -58,8 +59,8 @@
 
 (deftask alda
   "Run Alda CLI tasks.
-   
-   Whereas running `bin/alda <cmd> <args>` will use the latest deployed 
+
+   Whereas running `bin/alda <cmd> <args>` will use the latest deployed
    version of Alda, running this task (`boot alda -x '<cmd> <args>'`)
    will use the current (local) version of this repo."
   [x execute ARGS str "The Alda CLI task and args as a single string."]

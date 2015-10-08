@@ -1,6 +1,8 @@
 (ns alda.lisp.model.offset)
 (in-ns 'alda.lisp)
 
+(require '[alda.util :refer (=%)])
+
 (log/debug "Loading alda.lisp.model.offset...")
 
 (declare ^:dynamic *events*
@@ -38,8 +40,8 @@
   [& offsets]
   (if (and (every? #(instance? alda.lisp.RelativeOffset %) offsets)
            (apply = (map :marker offsets)))
-    (apply == (map :offset offsets))
-    (apply == (map absolute-offset offsets))))
+    (apply =% (map :offset offsets))
+    (apply =% (map absolute-offset offsets))))
 
 ;;;
 
