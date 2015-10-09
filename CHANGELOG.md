@@ -1,8 +1,14 @@
 # CHANGELOG
 
+## 0.12.1 (10/8/15)
+
+* Fix minor bug in Alda REPL where ConsoleReader was trying to expand `!` characters like bash does. (#125)
+
 ## 0.12.0 (10/6/15)
 
 * [CRAM](doc/cram.md), a fun way to represent advanced rhythms ([crisptrutski]/[daveyarwood])
+
+---
 
 ## 0.11.0 (10/5/15)
 

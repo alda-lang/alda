@@ -36,6 +36,7 @@
   (println banner \newline)
   (alter-var-root #'*parsing-context* (constantly :part))
   (alter-var-root #'*repl-reader* (constantly (doto (ConsoleReader.) 
+                                                (.setExpandEvents false)
                                                 (.setPrompt "> "))))
   (let [done? (atom false)]
     (print "Loading MIDI synth... ")
