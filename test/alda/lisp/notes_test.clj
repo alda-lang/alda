@@ -1,6 +1,5 @@
 (ns alda.lisp.notes-test
   (:require [clojure.test :refer :all]
-            [clojure.pprint :refer :all]
             [alda.lisp :refer :all]))
 
 (use-fixtures :each
