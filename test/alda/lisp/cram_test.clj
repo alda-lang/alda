@@ -43,8 +43,22 @@
     (cram (note (pitch :c) :slur) ; 250 ms
           (note (pitch :d) (duration (note-length 2)) :slur) ; 500 ms
           (note (pitch :e) (duration (note-length 4)) :slur) ; 250 ms
-          (duration (note-length 2))) ; total length = 1000 ms
-    (let [events (get-in *events* [($current-marker) :events])
-          offsets (sort (map :duration events))]
+          (duration (note-length 2))) ; total duration = 1000 ms
+    (let [events  (get-in *events* [($current-marker) :events])
+          offsets (map :duration events)]
       (testing "notes in a cram scale in proportion to one another"
-        (is (= [250.0 250.0 500.0] offsets))))))
+        (is (= [250.0 500.0 250.0] offsets))))))
+
+(deftest cram-tests-4
+  (testing "nested cram events:"
+    (let [start   ($current-offset)
+          _       (cram (note (pitch :c) :slur) ; 500 ms
+                       (cram (note (pitch :e) :slur)  ; 250 ms
+                             (note (pitch :g) :slur)) ; 250 ms
+                       (duration (note-length 2))) ; total duration = 1000 ms
+          events  (get-in *events* [($current-marker) :events])
+          offsets (map :duration events)]
+      (testing "offset is bumped forward by the duration of the outermost cram"
+        (is (offset= (offset+ start 1000) ($current-offset))))
+      (testing "note durations are divided up correctly"
+        (is (= [500.0 250.0 250.0] offsets))))))
