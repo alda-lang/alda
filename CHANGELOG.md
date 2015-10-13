@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.12.2 (10/13/15)
+
+* Fix bug re: nested CRAM rhythms. (#124)
+
 ## 0.12.1 (10/8/15)
 
 * Fix minor bug in Alda REPL where ConsoleReader was trying to expand `!` characters like bash does. (#125)
