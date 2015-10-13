@@ -21,6 +21,8 @@
     (init #'*score-text* "")
     (init #'*events* {:start {:offset (AbsoluteOffset. 0), :events []}})
     (init #'*global-attributes* {})
+    (init #'*time-scaling* 1)
+    (init #'*beats-tally* nil)
     (init #'*instruments* {})
     (init #'*current-instruments* #{})
     (init #'*nicknames* {})))

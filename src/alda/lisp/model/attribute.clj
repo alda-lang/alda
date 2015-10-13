@@ -53,12 +53,11 @@
                                       old-val#
                                       new-val#)))
                  (AttributeChange. instrument# ~(keyword attr-name)
-
                                    old-val# new-val#))))))
       `(defn ~getter-fn
          ([] (~getter-fn (first *current-instruments*)))
          ([instrument#] (-> (*instruments* instrument#) ~kw-name)))
-       (concat 
+       (concat
          (for [fn-name fn-names]
            `(defn ~fn-name [x#]
               (set-attribute ~(keyword attr-name) x#)))

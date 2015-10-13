@@ -5,6 +5,12 @@
 
 (declare set-duration)
 
+; used by CRAM to proportionately expand or shrink the duration of a group of
+; events; initial value: 1
+(declare ^:dynamic *time-scaling*)
+; used by CRAM to calculate *time-scaling*; initial value: nil
+(declare ^:dynamic *beats-tally*)
+
 (defn note-length
   "Converts a number, representing a note type, e.g. 4 = quarter, 8 = eighth,
    into a number of beats. Handles dots if present."
@@ -36,6 +42,7 @@
                                  (conj [components] false))
         beats (apply + note-lengths)]
     (set-duration beats)
-    {:duration-fn (fn [tempo] (float (* beats (/ 60000 tempo))))
+    {:duration-fn (fn [tempo]
+                    (float (* beats (/ 60000 tempo) *time-scaling*)))
      :slurred slurred
      :beats beats}))

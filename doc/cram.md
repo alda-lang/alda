@@ -21,3 +21,9 @@ You can also include note-lengths on the notes *inside* of a cram, which will ha
 ```
 
 > By default, the first note of each cram expression is a quarter note.
+
+Crams can be nested. Each internal cram will take up the appropriate amount of space within the cram containing it.
+
+```
+{c e {g a b}}1 c
+```

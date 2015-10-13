@@ -3,51 +3,45 @@
 
 (log/debug "Loading alda.lisp.events.cram...")
 
-(def no-events
-  {:start {:offset (->AbsoluteOffset 0), :events []}})
+(require '[alda.util :refer (resetting)])
 
-(defmacro resetting [vars & body]
-  (if (seq vars)
-    (let [[x & xs] vars]
-      `(let [before# ~x
-             result# (resetting ~xs ~@body)]
-         (alter-var-root (var ~x) (constantly before#))
-         result#))
-    `(do ~@body)))
+(defmacro tally-beats [& body]
+  `(resetting [~'alda.lisp/*beats-tally*
+               ~'alda.lisp/*time-scaling*
+               ~'alda.lisp/*instruments*]
+     (alter-var-root (var *beats-tally*) (constantly 0))
+     (set-duration 1)
+     ~@body
+     *beats-tally*))
 
-(defmacro calc-duration [& body]
-  `(resetting
-    [~'alda.lisp/*events*
-     ~'alda.lisp/*instruments*
-     ~'alda.lisp/*current-instruments*
-     ~'alda.lisp/*global-attributes*]
-    (let [start#  (:offset ($current-offset))]
-      (set-duration 1)
-      ~@body
-      (- (:offset ($current-offset)) start#))))
+(defn calculate-time-scaling
+  "Given a *time-scaling* value, the 'outer' length of a cram in beats, and the
+   'inner' length of the cram in beats, calculates the effective time-scaling
+   value."
+  [time-scaling outer-beats inner-beats]
+  (* (/ time-scaling inner-beats) outer-beats))
 
 (defmacro cram [& body]
   (let [lst (last body)
-        dur (and (or (coll? lst))
-                 (= 'alda.lisp/duration (first lst))
+        dur (and (coll? lst)
+                 (contains? #{'duration 'alda.lisp/duration} (first lst))
                  lst)
         body (if dur (butlast body) body)]
-    `(let [dur#   (:beats ~dur)
-           d#     (calc-duration ~@body)
-           is#    alda.lisp/*current-instruments*
-           ts#    alda.lisp/*time-scaling*
-           beats# (zipmap is# (for [i# is#] (or dur# ($duration i#))))
-           durs#  (zipmap is# (for [i# is#]
-                                (let [f# (:duration-fn
-                                           (duration (beats# i#)))]
-                                  (f# ($tempo i#)))))
-           scale# (merge
-                    ts#
-                    (zipmap is#
-                            (map #(* (/ (durs# %) d#) (ts# % 1)) is#)))]
-       (binding [~'alda.lisp/*time-scaling* scale#]
-         (set-duration 1)
-         ~@body
+    `(if *beats-tally*
+       (alter-var-root #'*beats-tally* + (or ~dur ($duration)))
+       (let [dur#   (:beats ~dur)
+             tally# (tally-beats ~@body)
+             is#    alda.lisp/*current-instruments*
+             ts#    alda.lisp/*time-scaling*
+             beats# (zipmap is# (for [i# is#]
+                                  (or dur# ($duration i#))))]
          (doseq [i# is#]
-           (binding [alda.lisp/*current-instruments* #{i#}]
-             (set-duration (beats# i#))))))))
+           (binding [~'alda.lisp/*current-instruments* #{i#}
+                     ~'alda.lisp/*time-scaling* (calculate-time-scaling
+                                                  ts#
+                                                  (or dur# ($duration i#))
+                                                  tally#)]
+             (set-duration 1)
+             ~@body
+             (set-duration (beats# i#))))
+         (alter-var-root #'*time-scaling* (constantly ts#))))))

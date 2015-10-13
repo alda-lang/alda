@@ -13,9 +13,6 @@ midi-woodblock:
   {c {c c c c c} c}
   {c {c c c c c c} c}
   {c {c c c c c c c} c}
-  {c {c c {c c c {c c c c {c c c c c {c c c c c c {c c c c c c c}}}}}}}
-  {c {c c {c c c {c c c c {c c c c c {c c c c c c {c c c c c c c {c c c c c c c c}}}}}}}}
-  {c {c c {c c c {c c c c {c c c c c {c c c c c c {c c c c c c c {c c c c c c c c {c c c c c c c c c}}}}}}}}}
 midi-agogo:
   o3
   r1

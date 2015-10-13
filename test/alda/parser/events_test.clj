@@ -57,6 +57,20 @@
                 (alda.lisp/note (alda.lisp/pitch :f))))))))
 
 (deftest marker-tests
-  (is (= (test-parse :marker "%chorus") '(alda.lisp/marker "chorus")))
-  (is (= (test-parse :at-marker "@verse-1") '(alda.lisp/at-marker "verse-1"))))
+  (testing "markers"
+    (is (= (test-parse :marker "%chorus") '(alda.lisp/marker "chorus")))
+    (is (= (test-parse :at-marker "@verse-1") '(alda.lisp/at-marker "verse-1")))))
 
+(deftest cram-tests
+  (testing "crams"
+    (is (= (test-parse :cram "{c d e}")
+           '(alda.lisp/cram
+              (alda.lisp/note (alda.lisp/pitch :c))
+              (alda.lisp/note (alda.lisp/pitch :d))
+              (alda.lisp/note (alda.lisp/pitch :e)))))
+    (is (= (test-parse :cram "{c d e}2")
+           '(alda.lisp/cram
+              (alda.lisp/note (alda.lisp/pitch :c))
+              (alda.lisp/note (alda.lisp/pitch :d))
+              (alda.lisp/note (alda.lisp/pitch :e))
+              (alda.lisp/duration (alda.lisp/note-length 2)))))))

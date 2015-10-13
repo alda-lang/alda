@@ -22,6 +22,15 @@
      (when (seq ~(second binding))
        @done#)))
 
+(defmacro resetting [vars & body]
+  (if (seq vars)
+    (let [[x & xs] vars]
+      `(let [before# ~x
+             result# (resetting ~xs ~@body)]
+         (alter-var-root (var ~x) (constantly before#))
+         result#))
+    `(do ~@body)))
+
 (defn strip-nil-values
   "Strip `nil` values from a map."
   [hsh]
@@ -59,6 +68,12 @@
       (if (.startsWith position-str ":")
         (keyword (subs position-str 1))
         (keyword position-str)))))
+
+(defn =%
+  "Returns true if all arguments are within 0.01 of each other."
+  [& xs]
+  (let [[x & xs] (sort xs)]
+    (apply <= x (conj (vec xs) (+ x 0.01)))))
 
 (defn set-timbre-level!
   []
