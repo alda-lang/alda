@@ -2,7 +2,7 @@
   (:require [alda.version                 :refer (-version-)]
             [alda.lisp                    :refer :all]
             [alda.sound                   :refer (set-up! tear-down!)]
-            [alda.repl.core               :as    repl :refer (*repl-reader* 
+            [alda.repl.core               :as    repl :refer (*repl-reader*
                                                               *parsing-context*)]
             [alda.repl.commands           :refer (repl-command)]
             [boot.from.io.aviso.ansi      :refer :all]
@@ -26,26 +26,29 @@
        "         repl session"))
 
 (def banner
-  (str (blue ascii-art)
+  (str (blue ascii-art) \newline
        \newline
+       (cyan text-below-ascii-art) \newline
        \newline
-       (cyan text-below-ascii-art)))
+       (bold-white "Type :help for a list of available commands.")))
 
 (defn start-repl! []
   (println)
   (println banner \newline)
   (alter-var-root #'*parsing-context* (constantly :part))
-  (alter-var-root #'*repl-reader* (constantly (doto (ConsoleReader.) 
+  (alter-var-root #'*repl-reader* (constantly (doto (ConsoleReader.)
                                                 (.setExpandEvents false)
                                                 (.setPrompt "> "))))
   (let [done? (atom false)]
     (print "Loading MIDI synth... ")
     (set-up! :midi)
-    (println "done." \newline)
+    (println "done.")
     (score*) ; initialize a new score
     (binding [*out* (.getOutput *repl-reader*)]
       (repl/set-prompt!)
-      (while-let [alda-code (when-not @done? (.readLine *repl-reader*))]
+      (while-let [alda-code (when-not @done?
+                              (println)
+                              (.readLine *repl-reader*))]
         (try
           (cond
             (re-find #"^\s*$" alda-code)
