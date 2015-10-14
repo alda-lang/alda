@@ -37,11 +37,12 @@
   test {:namespaces '#{
                        alda.parser.barlines-test
                        alda.parser.clj-exprs-test
-                       alda.parser.code-blocks-test
+                       alda.parser.event-sequences-test
                        alda.parser.comments-test
                        alda.parser.duration-test
                        alda.parser.events-test
                        alda.parser.octaves-test
+                       alda.parser.repeats-test
                        alda.parser.score-test
                        alda.lisp.attributes-test
                        alda.lisp.cram-test
