@@ -6,3 +6,6 @@ To start the Alda REPL, run:
 
     alda repl
 
+At the REPL prompt, you can either enter Alda code, or use one of the available built-in commands, which start with a colon.
+
+For a list of available commands, enter `:help`.
