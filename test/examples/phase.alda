@@ -1,0 +1,5 @@
+violin: (tempo 100)
+viola: (tempo 105)
+cello: (tempo 110)
+
+violin/viola/cello: [e8 f g]*99
