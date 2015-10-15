@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.12.3 (10/15/15)
+
+* There is now a help system in the Alda REPL. Enter `:help` to see all available commands, or `:help <command>` for additional information about a command.
+
 ## 0.12.2 (10/13/15)
 
 * Fix bug re: nested CRAM rhythms. (#124)
