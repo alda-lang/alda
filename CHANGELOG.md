@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.12.4 (10/15/15)
+
+* Added `:quit` to the list of commands available when you type `:help`.
+
 ## 0.12.3 (10/15/15)
 
 * There is now a help system in the Alda REPL. Enter `:help` to see all available commands, or `:help <command>` for additional information about a command.

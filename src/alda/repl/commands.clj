@@ -32,7 +32,8 @@
 (defmethod repl-command :default [_ _]
   (huh?))
 
-(def repl-commands (atom {}))
+(def repl-commands
+  (atom {"quit" "Exits the Alda REPL session."}))
 
 (defmacro defcommand [cmd-name & things]
   (let [[doc args & body]  (if (string? (first things))
@@ -47,7 +48,7 @@
 
 (defcommand new
   ; TODO: implement ":new part" and then update the docstring
-  "Create a new score."
+  "Creates a new score."
   [rest-of-line]
   (cond
     (contains? #{"" "score"} rest-of-line)
