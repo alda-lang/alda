@@ -38,14 +38,9 @@
          {:clj-character     #(str \\ %)
           :clj-string        #(str \" (apply str %&) \")
           :clj-expr          #(read-clj-expr %&)
-          :code-block        #(list 'alda.lisp/code-block (second %))
-          :code-block-no-ws  #(list :code-block-no-ws
-                                    (apply str
-                                           (map (fn [x]
-                                                  (if (list? x)
-                                                    (str \[ (second x) \])
-                                                    x))
-                                                %&)))
+          :event-sequence    #(list* 'do %&)
+          :repeat            (fn [event n]
+                               (list 'alda.lisp/times n event))
           :cram              #(list* 'alda.lisp/cram %&)
           :name              #(hash-map :name %)
           :nickname          #(hash-map :nickname %)
@@ -64,7 +59,9 @@
           :seconds           #(list 'alda.lisp/ms (* % 1000))
           :duration          #(list* 'alda.lisp/duration %&)
           :pitch             (fn [letter & accidentals]
-                               (list* 'alda.lisp/pitch (keyword letter) accidentals))
+                               (list* 'alda.lisp/pitch
+                                      (keyword letter)
+                                      accidentals))
           :note              #(list* 'alda.lisp/note %&)
           :rest              #(list* 'alda.lisp/pause %&)
           :chord             #(list* 'alda.lisp/chord %&)

@@ -3,13 +3,6 @@
 
 (require '[alda.parser-util :refer (parse-with-context)])
 
-(defn code-block
-  "Represents a literal string of Alda code in alda.lisp.
-   
-   When evaluated, simply returns the string of code."
-  [code]
-  code)
-
 (defn alda-code
   "Attempts to parse a string of text within the context of the current score,
    then evaluates the result."
@@ -20,3 +13,8 @@
             :score         (cons 'do (rest parse-result))
             :parse-failure (log/error (pr-str parse-result))
             parse-result))))
+
+(defmacro times
+  "Evaluates an Alda event (or sequence of events) `n` times."
+  [n event]
+  `(dotimes [_# ~n] ~event))
