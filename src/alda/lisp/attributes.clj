@@ -23,7 +23,11 @@
 (defattribute duration
   "Default note duration in beats."
   :initial-val 1
-  :fn-name set-duration)
+  :fn-name set-duration
+  :transform (fn [val]
+               (constantly (if (map? val)
+                             (:value val)
+                             val))))
 
 (defattribute octave
   "Current octave. Used to calculate the pitch of notes."

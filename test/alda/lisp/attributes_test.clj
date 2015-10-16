@@ -54,5 +54,5 @@
   (testing "note-length"
     (set-duration (note-length 2 {:dots 2}))
     (is (== ($duration) 3.5))
-    (set-duration (+ (note-length 1) (note-length 1)))
+    (duration (note-length 1) (note-length 1))
     (is (== ($duration) 8))))

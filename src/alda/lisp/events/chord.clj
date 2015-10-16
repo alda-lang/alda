@@ -39,8 +39,8 @@
                (repeat `(swap! ~offsets conj ($current-offset ~instrument))))
              [`(set-last-offset ~instrument ~start)
               `(set-current-offset ~instrument (apply (partial min-key :offset)
-                                                  (remove #(offset= % ~start)
-                                                          (deref ~offsets))))
+                                                      (remove #(offset= % ~start)
+                                                              (deref ~offsets))))
               `(let [chord#
                      (Chord. (take-last ~num-of-events
                                         (get-in *events*
