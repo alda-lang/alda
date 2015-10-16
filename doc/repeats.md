@@ -1,6 +1,6 @@
 # Repeats
 
-[Notes](notes.md), [sequences](sequences.md) and other types of events can be **repeat**ed any number of times, by simply appending `*` and a number. Putting whitespace between the event and the `*` is optional.
+[Notes](notes.md), [sequences](sequences.md) and other types of events can be **repeat**ed any number of times, by simply appending `*` and a number. Putting whitespace between the event and the `*` is optional, as is putting whitespace between the `*` and the number of repeats.
 
 For example:
 

@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 0.13.0 (10/16/15)
+
+* Note lengths can now be optionally specified in seconds (`c2s`) or milliseconds (`c2000ms`).
+
+* [Repeats](doc/repeats.md) implemented.
+
+---
+
 ## 0.12.4 (10/15/15)
 
 * Added `:quit` to the list of commands available when you type `:help`.
