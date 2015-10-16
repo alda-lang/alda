@@ -15,7 +15,22 @@
               (do
                 (alda.lisp/note (alda.lisp/pitch :c))
                 (alda.lisp/octave :up)))))
+    (is (= (test-parse :repeat "[ c > ] * 5")
+           '(alda.lisp/times 5
+              (do
+                (alda.lisp/note (alda.lisp/pitch :c))
+                (alda.lisp/octave :up)))))
     (is (= (test-parse :repeat "c8*7")
+           '(alda.lisp/times 7
+              (alda.lisp/note
+                (alda.lisp/pitch :c)
+                (alda.lisp/duration (alda.lisp/note-length 8))))))
+    (is (= (test-parse :repeat "c8 *7")
+           '(alda.lisp/times 7
+              (alda.lisp/note
+                (alda.lisp/pitch :c)
+                (alda.lisp/duration (alda.lisp/note-length 8))))))
+    (is (= (test-parse :repeat "c8 * 7")
            '(alda.lisp/times 7
               (alda.lisp/note
                 (alda.lisp/pitch :c)

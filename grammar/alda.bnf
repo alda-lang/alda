@@ -18,7 +18,7 @@ nickname                = <"\""> acceptable-name <"\"">
                           clj-expr | marker | at-marker | barline |
                           event-sequence | cram
 
-repeat                  = single-event <ows> <"*"> positive-number <ows>
+repeat                  = single-event <ows> <"*"> <ows> positive-number <ows>
 
     (* voices *)
 

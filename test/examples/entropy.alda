@@ -20,12 +20,12 @@
 
 midi-electric-piano-1:
   (panning 25)
-  (dotimes [_ 50] (random-note))
+  (random-note) * 50
 
 midi-timpani:
   (panning 50)
-  (dotimes [_ 50] (random-note))
+  (random-note) * 50
 
 midi-celesta:
   (panning 75)
-  (dotimes [_ 50] (random-note))
+  (random-note) * 50
