@@ -32,12 +32,19 @@ pitch                   = !name #"[a-g]" accidental*
 flat                    = "-"
 sharp                   = "+"
 natural                 = "="
-duration                = note-length <ows> barline? <ows> subduration* slur?
-<subduration>           = tie <ows> barline? <ows> note-length <ows> barline? <ows>
+
+    (* duration *)
+
+duration                = (note-length | seconds | milliseconds)
+                          <ows> barline? <ows> subduration* slur?
+<subduration>           = tie <ows> barline? <ows>
+                          (note-length | seconds | milliseconds) <ows>
+                          barline? <ows>
+
+seconds                 = positive-number <"s">
+milliseconds            = positive-number <"ms">
+
 note-length             = positive-number dots?
-number                  = positive-number | negative-number
-positive-number         = #"[0-9]+"
-negative-number         = #"-[0-9]+"
 dots                    = #"\.+"
 <tie>                   = <"~">
 slur                    = <"~">
@@ -54,12 +61,12 @@ barline                 = <"|"> <ows>
 
     (* inline clojure expressions *)
 
-clj-character           = <"\\"> ( "newline" / "space" / "tab" / 
+clj-character           = <"\\"> ( "newline" / "space" / "tab" /
                                    "formfeed" / "backspace" / "return" /
                                    #"(o|u)\d{4}" / #"." )
 
 clj-string              = <"\""> inside-clj-string* <"\"">
-<inside-clj-string>     = !"\"" #".|\n|\r" | "\\\"" 
+<inside-clj-string>     = !"\"" #".|\n|\r" | "\\\""
 
 clj-expr                = <"("> inside-clj-expr* <")"> <ows>
 <inside-clj-expr>       = !( "(" | ")" | "\"" | "\\" )
@@ -74,6 +81,12 @@ code-block-no-ws        = <"["> inside-code-block* <"]">
     (* cram - rhythmic section *)
 
 cram                    = <"{"> event* <"}"> duration? <ows>
+
+    (* numbers *)
+
+number                  = positive-number | negative-number
+positive-number         = #"[0-9]+"
+negative-number         = #"-[0-9]+"
 
     (* comments & whitespace *)
 

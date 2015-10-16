@@ -10,11 +10,11 @@
 
 (deftest duration-tests
   (testing "note-length converts note length to number of beats"
-    (is (== 1 (note-length 4)))
-    (is (== 1.5 (note-length 4 {:dots 1})))
-    (is (== 4 (note-length 1)))
-    (is (== 6 (note-length 1 {:dots 1})))
-    (is (== 7 (note-length 1 {:dots 2}))))
+    (is (== 1 (:value (note-length 4))))
+    (is (== 1.5 (:value (note-length 4 {:dots 1}))))
+    (is (== 4 (:value (note-length 1))))
+    (is (== 6 (:value (note-length 1 {:dots 1}))))
+    (is (== 7 (:value (note-length 1 {:dots 2})))))
   (testing "duration converts beats to ms"
     (let [{:keys [duration-fn]} (duration (note-length 4) :slur)]
       (is (== 1000 (duration-fn 60))))
