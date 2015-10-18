@@ -19,10 +19,10 @@
 (defn parse-with-context
   "Determine the appropriate context to parse a line of code from the Alda
    REPL, then parse it within that context.
-   
+
    Returns both the context (the name of a parse tree node) and the resulting
    parse tree.
-   
+
    If parsing fails, returns `:parse-failure` and the Instaparse failure object."
   [alda-code]
   (letfn [(try-ctxs [[ctx & ctxs]]

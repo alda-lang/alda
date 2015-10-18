@@ -1,0 +1,3 @@
+<number>                = positive-number | negative-number
+positive-number         = #"[0-9]+"
+negative-number         = #"-[0-9]+"
