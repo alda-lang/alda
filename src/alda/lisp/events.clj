@@ -4,6 +4,7 @@
             [alda.lisp.events.chord]
             [alda.lisp.events.voice]
             [alda.lisp.events.barline]
-            [alda.lisp.events.cram]))
+            [alda.lisp.events.cram]
+            [alda.lisp.events.fn]))
 (in-ns 'alda.lisp)
 

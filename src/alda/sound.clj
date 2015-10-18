@@ -122,10 +122,12 @@
 (defn- score-length
   "Calculates the length of a score in ms."
   [{:keys [events] :as score}]
-  (if (and events (not (empty? events)))
-    (letfn [(note-end [{:keys [offset duration] :as note}] (+ offset duration))]
-      (apply max (map note-end events)))
-    0))
+  (let [events   (filter :duration events)
+        note-end (fn [{:keys [offset duration] :as note}]
+                   (+ offset duration))]
+    (if (and events (not (empty? events)))
+      (apply max (map note-end (filter :duration events)))
+      0)))
 
 (defn determine-audio-types
   [{:keys [instruments] :as score}]
@@ -178,7 +180,9 @@
                    :let [inst (-> instrument instruments)]]
       (at (+ begin offset)
           #(when @playing?
-             (play-event! event inst))
+             (if (= (type event) alda.lisp.Function)
+               ((:function event))
+               (play-event! event inst)))
           pool))
 
     (when-not async?
