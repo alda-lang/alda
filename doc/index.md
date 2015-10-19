@@ -15,7 +15,7 @@ If you've come here for any other reason, uh, go away, I guess.
 
 * Learn about the [etymology](etymology.md) behind the name Alda.
 
-* The article on [scores and parts](scores-and-parts.md) provides some good general information on what an Alda score is. After that, you may be interested in learning about... 
+* The article on [scores and parts](scores-and-parts.md) provides some good general information on what an Alda score is. After that, you may be interested in learning about...
   * [notes](notes.md)
   * [rests](rests.md)
   * [chords](chords.md)
@@ -23,6 +23,8 @@ If you've come here for any other reason, uh, go away, I guess.
   * [markers](markers.md)
   * [offset](offset.md)
   * [attributes](attributes.md)
+
+* Peruse this list of [available instruments](list-of-instruments.md).
 
 ## How to Use the Docs
 

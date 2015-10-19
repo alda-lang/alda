@@ -4,6 +4,8 @@ The top level of a piece of music written in Alda is the **score**. A score cons
 
 Alda is designed to be flexible about how a score is organized. For the same piece of music, a composer can choose to write each instrument part's notes from beginning to end before moving on to the next instrument part (something like ex. 1), or alternate between the instrument parts, organizing the score by section rather than by part (ex. 2).
 
+> Note: Here is a [list of instruments](list-of-instruments.md) available to you when writing a score in Alda.
+
 **Ex. 1**
 
     trumpet:
