@@ -23,6 +23,8 @@
 |
 <b><a href="doc/index.md">Docs</a></b>
 |
+<b><a href="CHANGELOG.md">Changelog</a></b>
+|
 <b><a href="#contributing">Contributing</a></b>
 </p>
 
