@@ -186,7 +186,7 @@
            :patch 33})
 
 (definstrument midi-electric-bass-finger
-  :aliases ["electric-bass-finger"]
+  :aliases ["electric-bass-finger" "electric-bass"]
   :config {:type :midi
            :patch 34})
 
