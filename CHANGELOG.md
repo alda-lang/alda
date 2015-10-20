@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 0.14.0 (10/20/15)
+
+* [Custom events](doc/inline-clojure-code.md#scheduling-custom-events) can now be scheduled via inline Clojure code.
+
+* Added `electric-bass` alias for `midi-electric-bass-finger`.
+
+---
+
 ## 0.13.0 (10/16/15)
 
 * Note lengths can now be optionally specified in seconds (`c2s`) or milliseconds (`c2000ms`).
