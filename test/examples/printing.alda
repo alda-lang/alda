@@ -1,0 +1,8 @@
+# This demonstrates the "schedule" function, which executes a Clojure function
+# at the moment in the score where the function was scheduled.
+
+trombone:
+  (schedule #(println "too")) c6
+  (schedule #(do (print "ma") (flush))) d12
+  (schedule #(println "ny")) e6
+  (schedule #(println "cooks")) g12~4
