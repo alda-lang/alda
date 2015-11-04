@@ -63,12 +63,6 @@
    :clj-string    #(str \" (apply str %&) \")
    :clj-expr      #(read-clj-expr %&)})
 
-(defn parse-tree
-  "Returns the intermediate parse tree resulting from parsing a string of Alda
-   code."
-  [alda-code]
-  (alda-parser alda-code))
-
 (defn- check-for-failure
   "Determines whether its input is an Instaparse failure, throwing an exception
    if it is. If it isn't, passes it through so we can continue parsing."

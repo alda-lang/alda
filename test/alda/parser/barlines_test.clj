@@ -70,9 +70,6 @@
            (alda.lisp/note-length 2 {:dots 1}))))))
 
 (deftest barline-tests
-  (testing "barlines are included in the parse tree"
-    (is (= [:barline] (test-parse :barline "|" {:tree true})))
-    (is (= parse-tree-1 (test-parse :score alda-code-1 {:tree true}))))
   (testing "barlines are included in alda.lisp code (even though they don't do anything)"
     (is (= alda-lisp-code-1 (test-parse :score alda-code-1))))
   (testing "notes can be tied over barlines"

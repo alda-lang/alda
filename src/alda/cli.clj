@@ -4,7 +4,7 @@
             [clojure.string  :as    str]
             [clojure.pprint  :refer (pprint)]
             [clj-http.client :as    client]
-            [alda.parser     :refer (parse-input parse-tree)]
+            [alda.parser     :refer (parse-input)]
             [alda.version    :refer (-version-)]
             [alda.sound]
             [alda.util       :as    util]))
@@ -22,7 +22,6 @@
   "Parse some Alda code and print the results to the console."
   [f file FILE str  "The path to a file containing Alda code to parse."
    c code CODE str  "The string of Alda code to parse."
-   t tree      bool "Show the intermediate parse tree."
    l lisp      bool "Parse into alda.lisp code."
    m map       bool "Evaluate the score and show the resulting instruments/events map."]
   (if-not (or file code)
@@ -32,9 +31,6 @@
       (when (instaparse.core/failure? alda-lisp-code)
         (pprint alda-lisp-code)
         (System/exit 1))
-      (when tree
-        (pprint (parse-tree input))
-        (println))
       (when lisp
         (pprint alda-lisp-code)
         (println))

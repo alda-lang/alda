@@ -1,6 +1,6 @@
 # Contributing to Alda
 
-Pull requests are warmly welcomed. Please feel free to take on whatever [issue](https://github.com/alda-lang/alda/issues) interests you. 
+Pull requests are warmly welcomed. Please feel free to take on whatever [issue](https://github.com/alda-lang/alda/issues) interests you.
 
 ## Instructions
 
@@ -8,7 +8,7 @@ Pull requests are warmly welcomed. Please feel free to take on whatever [issue](
 - Submit a Pull Request.
 - Your Pull Request should get the Dave Yarwood Seal of Approval™ before being merged. (Don't worry, he's not hard to win over.)
 
-If you're confused about how some aspect of the code works (Clojure questions, "what does this piece of code do," etc.), don't hesitate to ask questions on the issue you're working on -- we'll be more than happy to help.
+If you're confused about how some aspect of the code works (Clojure questions, "what does this piece of code do," etc.), don't hesitate to ask questions on the issue you're working on, or pop into the #alda channel in the [Clojurians](http://clojurians.net) Slack network -- we'll be more than happy to help!
 
 ## Development Guide
 
@@ -22,58 +22,56 @@ Alda is a program that takes a string of code written in Alda syntax, parses it 
 
 ### alda.parser
 
-Parsing begins with the `parse-input` function in the [`alda.parser`](https://github.com/alda-lang/alda/blob/master/src/alda/parser.clj) namespace. This function uses a parser built using [Instaparse](https://github.com/Engelberg/instaparse), an excellent parser-generator library for Clojure. The grammar for Alda is [a single file written in BNF](https://github.com/alda-lang/alda/blob/master/grammar/alda.bnf) (with some Instaparse-specific sugar); if you find
-yourself editing this file, it may be helpful to read up on Instaparse. [The tutorial in the README](https://github.com/Engelberg/instaparse) is comprehensive and excellent.
+Parsing begins with the `parse-input` function in the [`alda.parser`](https://github.com/alda-lang/alda/blob/master/src/alda/parser.clj) namespace. This function uses a series of parsers built using [Instaparse](https://github.com/Engelberg/instaparse), an excellent parser-generator library for Clojure.
+The grammars for each step of the parsing process are composed from [small files written in BNF](https://github.com/alda-lang/alda/blob/master/grammar) (with some Instaparse-specific sugar); if you find yourself editing any of these files, it may be helpful to read up on Instaparse. [The tutorial in the Instaparse README](https://github.com/Engelberg/instaparse) is comprehensive and excellent.
 
-Code is given to the parser, resulting in a parse tree:
+The parsers transform Alda code into an intermediate AST, which looks something like this:
 
 ```clojure
-alda.parser=> (alda-parser "piano: c8 e g c1/f/a")
-
-[:score 
-  [:part 
-    [:calls [:name "piano"]] 
-    [:note 
-      [:pitch "c"] 
-      [:duration 
-        [:note-length [:number "8"]]]] 
-    [:note 
-      [:pitch "e"]] 
-    [:note 
-      [:pitch "g"]] 
-    [:chord 
-      [:note 
-        [:pitch "c"] 
-        [:duration [:note-length [:number "1"]]]] 
-      [:note 
-        [:pitch "f"]] 
-      [:note 
+[:score
+  [:part
+    [:calls [:name "piano"]]
+    [:note
+      [:pitch "c"]
+      [:duration
+        [:note-length [:positive-number "8"]]]]
+    [:note
+      [:pitch "e"]]
+    [:note
+      [:pitch "g"]]
+    [:chord
+      [:note
+        [:pitch "c"]
+        [:duration [:note-length [:positive-number "1"]]]]
+      [:note
+        [:pitch "f"]]
+      [:note
         [:pitch "a"]]]]]
 ```
 
-The parse tree is then [transformed](https://github.com/Engelberg/instaparse#transforming-the-tree) into Clojure code which, when run, will produce a data representation of a musical score.
+These parse trees are then [transformed](https://github.com/Engelberg/instaparse#transforming-the-tree) into Clojure code which, when run, will produce a data representation of a musical score.
 
 Clojure is a Lisp; in Lisp, code is data and data is code. This powerful concept allows us to represent a morsel of code as a list of elements. The first element in the list is a function, and every subsequent element is an argument to that function. These code morsels can even be nested, just like our parse tree. Alda's parser's transformation phase translates each type of node in the parse tree into a Clojure expression that can be evaluated with the help of the `alda.lisp` namespace.
 
 ```clojure
 alda.parser=> (parse-input "piano: c8 e g c1/f/a")
 
-(alda.lisp/score 
-  (alda.lisp/part {:names ["piano"]} 
-    (alda.lisp/note 
-      (alda.lisp/pitch :c) 
-      (alda.lisp/duration (alda.lisp/note-length 8))) 
-    (alda.lisp/note 
-      (alda.lisp/pitch :e)) 
-    (alda.lisp/note 
-      (alda.lisp/pitch :g)) 
-    (alda.lisp/chord 
-      (alda.lisp/note 
-        (alda.lisp/pitch :c) 
-        (alda.lisp/duration (alda.lisp/note-length 1))) 
-      (alda.lisp/note 
-        (alda.lisp/pitch :f)) 
-      (alda.lisp/note 
+(alda.lisp/score
+  (alda.lisp/part {:names ["piano"]}
+    (alda.lisp/note
+      (alda.lisp/pitch :c)
+      (alda.lisp/duration (alda.lisp/note-length 8)))
+    (alda.lisp/note
+      (alda.lisp/pitch :e))
+    (alda.lisp/note
+      (alda.lisp/pitch :g))
+    (alda.lisp/chord
+      (alda.lisp/note
+        (alda.lisp/pitch :c)
+        (alda.lisp/duration (alda.lisp/note-length 1)))
+      (alda.lisp/note
+        (alda.lisp/pitch :f))
+      (alda.lisp/note
         (alda.lisp/pitch :a)))))
 ```
 
@@ -172,7 +170,7 @@ Because `alda.lisp` is a Clojure DSL, it's possible to use it to build scores wi
 
 ### alda.sound
 
-The `alda.sound` namespace handles the implementation details of playing the score. 
+The `alda.sound` namespace handles the implementation details of playing the score.
 
 There is an "audio type" abstraction which refers to different ways to generate audio, e.g. MIDI, waveform synthesis, samples, etc. Adding a new audio type is as simple as providing an implementation for each of the multimethods in this namespace, i.e. `set-up-audio-type!`, `refresh-audio-type!`, `tear-down-audio-type!` and `play-event!`.
 
