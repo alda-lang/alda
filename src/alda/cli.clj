@@ -117,4 +117,7 @@
     "play"      (delegate play args)
     "repl"      (delegate repl args)
     "script"    (delegate script args)
-    (printf "[alda] Invalid command '%s'.\n" cmd)))
+    (do
+      (printf "[alda] Invalid command '%s'.\n" cmd)
+      (System/exit 1)))
+  (System/exit 0))
