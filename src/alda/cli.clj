@@ -7,7 +7,8 @@
             [alda.parser     :refer (parse-input)]
             [alda.version    :refer (-version-)]
             [alda.sound]
-            [alda.util       :as    util]))
+            [alda.util       :as    util])
+  (:gen-class))
 
 (defclifn ^:alda-task parse
   "Parse some Alda code and print the results to the console."

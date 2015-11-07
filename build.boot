@@ -61,6 +61,15 @@
                        alda.parser.examples-test
                        }})
 
+(deftask package
+  "Builds an uberjar of this project that can be run with java -jar"
+  []
+  (comp
+   (aot)
+   (pom)
+   (uber)
+   (jar)))
+
 (deftask alda
   "Run Alda CLI tasks.
 
