@@ -3,6 +3,8 @@
   :resource-paths #{"grammar" "examples"}
   :dependencies '[[org.clojure/clojure   "1.7.0"]
                   [org.clojure/tools.cli "0.3.1"]
+                  [boot/core             "2.4.2"]
+                  [boot/base             "2.4.2"]
                   [instaparse            "1.4.1"]
                   [adzerk/bootlaces      "0.1.12" :scope "test"]
                   [adzerk/boot-test      "1.0.4"  :scope "test"]
