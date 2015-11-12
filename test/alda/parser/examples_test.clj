@@ -24,6 +24,7 @@
    hello_world
    key_signature
    multi-poly
+   nesting
    panning
    phase
    poly
@@ -56,10 +57,12 @@
     (doseq [score example-scores]
       (testing (str score)
         (printf "Parsing %s.alda... %s" score (spacing score)) (flush)
-        (let [score-text (-> (str score ".alda") io/resource io/file slurp)
-              [result time-ms] (time+ (parse-input score-text))
-              successful-parse? (not (insta/failure? result))]
-          (if successful-parse?
-            (println (green "OK") (format "(%s ms)" time-ms))
-            (println (red "FAIL") (format "(%s ms)" time-ms)))
-          (is successful-parse?))))))
+        (is
+          (try
+            (let [score-text (-> (str score ".alda") io/resource io/file slurp)
+                  [result time-ms] (time+ (parse-input score-text))]
+              (println (green "OK") (format "(%s ms)" time-ms))
+              true)
+            (catch Exception e
+              (println (red "FAIL"))
+              false)))))))

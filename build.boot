@@ -36,27 +36,27 @@
   jar {:main 'alda.cli}
   test {:namespaces '#{
                        ; general tests
-                       alda.parser.barlines-test
-                       alda.parser.clj-exprs-test
-                       alda.parser.event-sequences-test
-                       alda.parser.comments-test
-                       alda.parser.duration-test
-                       alda.parser.events-test
-                       alda.parser.octaves-test
-                       alda.parser.repeats-test
-                       alda.parser.score-test
-                       alda.lisp.attributes-test
-                       alda.lisp.cram-test
-                       alda.lisp.chords-test
-                       alda.lisp.duration-test
-                       alda.lisp.global-attributes-test
-                       alda.lisp.markers-test
-                       alda.lisp.notes-test
-                       alda.lisp.parts-test
-                       alda.lisp.pitch-test
-                       alda.lisp.score-test
-                       alda.lisp.voices-test
-                       alda.util-test
+                       ; alda.parser.barlines-test
+                       ; alda.parser.clj-exprs-test
+                       ; alda.parser.event-sequences-test
+                       ; alda.parser.comments-test
+                       ; alda.parser.duration-test
+                       ; alda.parser.events-test
+                       ; alda.parser.octaves-test
+                       ; alda.parser.repeats-test
+                       ; alda.parser.score-test
+                       ; alda.lisp.attributes-test
+                       ; alda.lisp.cram-test
+                       ; alda.lisp.chords-test
+                       ; alda.lisp.duration-test
+                       ; alda.lisp.global-attributes-test
+                       ; alda.lisp.markers-test
+                       ; alda.lisp.notes-test
+                       ; alda.lisp.parts-test
+                       ; alda.lisp.pitch-test
+                       ; alda.lisp.score-test
+                       ; alda.lisp.voices-test
+                       ; alda.util-test
 
                        ; benchmarks / smoke tests
                        alda.parser.examples-test

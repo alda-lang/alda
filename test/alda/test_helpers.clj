@@ -7,7 +7,8 @@
 (defn test-parse
   "Uses instaparse's partial parse mode to parse individual pieces of a score."
   [start input]
-  (with-redefs [alda.parser/alda-parser
+  ; FIXME
+  #_(with-redefs [alda.parser/alda-parser
                 #((insta/parser (io/resource "alda.bnf")) % :start start)]
     (parse-input input)))
 

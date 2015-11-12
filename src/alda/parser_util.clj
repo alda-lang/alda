@@ -12,7 +12,8 @@
    part? Are we continuing a previous voice? Starting a new voice?) and parse the
    code accordingly."
   [start code]
-  (with-redefs [alda.parser/alda-parser
+  ; FIXME
+  #_(with-redefs [alda.parser/alda-parser
                 #((insta/parser (io/resource "alda.bnf")) % :start start)]
     (parse-input code)))
 
