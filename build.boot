@@ -1,6 +1,6 @@
 (set-env!
   :source-paths #{"src" "test"}
-  :resource-paths #{"grammar"}
+  :resource-paths #{"grammar" "examples"}
   :dependencies '[[org.clojure/clojure   "1.7.0"]
                   [org.clojure/tools.cli "0.3.1"]
                   [instaparse            "1.4.1"]
@@ -35,6 +35,7 @@
                  "url" "http://www.eclipse.org/legal/epl-v10.html"}}
   jar {:main 'alda.cli}
   test {:namespaces '#{
+                       ; general tests
                        alda.parser.barlines-test
                        alda.parser.clj-exprs-test
                        alda.parser.event-sequences-test
@@ -56,6 +57,9 @@
                        alda.lisp.score-test
                        alda.lisp.voices-test
                        alda.util-test
+
+                       ; benchmarks / smoke tests
+                       alda.parser.examples-test
                        }})
 
 (deftask alda
