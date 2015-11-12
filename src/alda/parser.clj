@@ -8,36 +8,33 @@
 ; sets log level to TIMBRE_LEVEL (if set) or :warn
 (util/set-timbre-level!)
 
-(declare parse-input)
-(require '[alda.lisp :as lisp])
-
 (defn- parser-from-grammars
   "Builds a parser from any number of BNF grammars, concatenated together."
   [& grammars]
   (insta/parser (str/join \newline
                           (map #(slurp (io/resource (str % ".bnf"))) grammars))))
 
-(def ^:private comment-parser (parser-from-grammars "comments"
-                                                    "clojure"))
+(def comment-parser (parser-from-grammars "comments"
+                                          "clojure"))
 
-(def ^:private score-parser   (parser-from-grammars "score"
-                                                    "names"
-                                                    "ows"))
+(def score-parser   (parser-from-grammars "score"
+                                          "names"
+                                          "ows"))
 
-(def ^:private header-parser  (parser-from-grammars "header"
-                                                    "clojure-cached"
-                                                    "ows"))
+(def header-parser  (parser-from-grammars "header"
+                                          "clojure-cached"
+                                          "ows"))
 
-(def ^:private part-parser    (parser-from-grammars "events"
-                                                    "clojure-cached"
-                                                    "voices"
-                                                    "event-sequence"
-                                                    "cram"
-                                                    "duration"
-                                                    "barline"
-                                                    "names"
-                                                    "numbers"
-                                                    "ows"))
+(def part-parser    (parser-from-grammars "events"
+                                          "clojure-cached"
+                                          "voices"
+                                          "event-sequence"
+                                          "cram"
+                                          "duration"
+                                          "barline"
+                                          "names"
+                                          "numbers"
+                                          "ows"))
 
 (defn- read-clj-expr
   "Reads an inline Clojure expression within Alda code.
@@ -49,21 +46,21 @@
   [expr]
   (read-string (str \( (apply str expr) \))))
 
-(def ^:private number-transforms
+(def number-transforms
   {:positive-number #(Integer/parseInt %)
    :negative-number #(Integer/parseInt %)
    :voice-number    #(Integer/parseInt %)})
 
-(def ^:private name-transforms
+(def name-transforms
   {:name     #(hash-map :name %)
    :nickname #(hash-map :nickname %)})
 
-(def ^:private clj-expr-transforms
+(def clj-expr-transforms
   {:clj-character #(str \\ %)
    :clj-string    #(str \" (apply str %&) \")
    :clj-expr      #(read-clj-expr %&)})
 
-(defn- check-for-failure
+(defn check-for-failure
   "Determines whether its input is an Instaparse failure, throwing an exception
    if it is. If it isn't, passes it through so we can continue parsing."
   [x]
@@ -87,7 +84,7 @@
   [cache id]
   (get @cache (symbol id)))
 
-(defn- remove-comments
+(defn remove-comments
   "Strips comments from a string of Alda code.
 
    We have to also parse Clojure expressions at this stage in order to avoid
@@ -110,7 +107,7 @@
                                      %&)})))]
     [code cache]))
 
-(defn- separate-parts
+(defn separate-parts
   "Separates out instrument parts (including subsequent calls to existing
    parts)."
   [[input cache]]
@@ -126,7 +123,7 @@
                               {:names names, :nickname nickname}
                               {:names names})))}))))
 
-(defn- parse-header
+(defn parse-header
   "Parses the (optional) string of non-instrument-specific events that may
    occur at the beginning of an Alda score (e.g. setting variables, global
    attributes, inline Clojure code)."
@@ -138,7 +135,7 @@
          {:header #(list* %&)
           :clj-expr-cached #(get-from-cache cache %)})))
 
-(defn- parse-part
+(defn parse-part
   "Parses the events of a single call to an instrument part."
   [cache part]
   (->> part
