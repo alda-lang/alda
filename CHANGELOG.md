@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.14.2 (11/13/15)
+
+* Minor aesthetic fixes to the way errors are reported in the Alda REPL and when using the `alda parse` task.
+
 ## 0.14.1 (11/13/15)
 
 * Improved parsing performance, especially noticeable for larger scores. More information [here](https://github.com/alda-lang/alda/issues/143), but the TL;DR version is that we now parse each instrument part individually using separate parsers, and we also make an initial pass of the entire score to strip out comments. This should not be a breaking change; you may notice that it takes less time to parse large scores.
