@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 0.14.1 (11/13/15)
+
+* Improved parsing performance, especially noticeable for larger scores. More information [here](https://github.com/alda-lang/alda/issues/143), but the TL;DR version is that we now parse each instrument part individually using separate parsers, and we also make an initial pass of the entire score to strip out comments. This should not be a breaking change; you may notice that it takes less time to parse large scores.
+
+* As a consequence of the above, there is no longer a single parse tree for an entire score, which means parsing errors are less informative and potentially more difficult to understand. We're viewing this as a worthwhile trade-off for the benefits of improved performance and better flexibility in parsing as Alda's syntax grows more complex.
+
+* Minor note that will not affect most users: `alda.parser/parse-input` no longer returns an Instaparse failure object when given invalid Alda code, but instead throws an exception with the Instaparse failure output as a message.
+
 ## 0.14.0 (10/20/15)
 
 * [Custom events](doc/inline-clojure-code.md#scheduling-custom-events) can now be scheduled via inline Clojure code.
