@@ -74,7 +74,7 @@ If you're a developer and you'd like to help, come on in -- [the water's fine](#
     g8 f+ e d c < b a g | f+ e d c < b a g4
     << g1/>g/>g/b/>d/g
 
-For more examples, see these [example scores](https://github.com/alda-lang/alda/tree/master/test/examples).
+For more examples, see these [example scores](https://github.com/alda-lang/alda/tree/master/examples).
 
 ## Quick Start
 
@@ -99,7 +99,7 @@ See [the docs](doc/installation.md#windows).
 
 To play a file:
 
-    alda play --file test/examples/bach_cello_suite_no_1.alda
+    alda play --file examples/bach_cello_suite_no_1.alda
 
 To play arbitrary code:
 
