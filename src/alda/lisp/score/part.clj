@@ -5,7 +5,7 @@
          '[instaparse.core  :as    insta]
          '[clojure.java.io  :as    io]
          '[clojure.string   :as    str]
-         '[alda.parser-util :refer (parse-with-start-rule)])
+         '[alda.parser-util :refer (parse-with-context)])
 
 (log/debug "Loading alda.lisp.score.part...")
 
@@ -64,10 +64,10 @@
     (set instances)))
 
 (defn parse-instrument-call [s]
-  (parse-with-start-rule :calls (-> s
-                                    (str/replace #":$" "")
-                                    (str/replace #"'" "\"")
-                                    (str \:))))
+  (parse-with-context :calls (-> s
+                                 (str/replace #":$" "")
+                                 (str/replace #"'" "\"")
+                                 (str \:))))
 
 (defmulti part* type)
 

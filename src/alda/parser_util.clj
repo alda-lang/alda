@@ -49,37 +49,33 @@
                                {:names names, :nickname nickname}
                                {:names names})))}))))
 
-(defn parse-with-start-rule
-  "Parse a string of Alda code starting from a particular level of the tree.
-   (e.g. starting from :part, will parse the string as a part, not a whole score)
-
-   With each line of Alda code entered into the REPL, we determine the context of
-   evaluation (Are we starting a new part? Are we appending events to an existing
-   part? Are we continuing a previous voice? Starting a new voice?) and parse the
-   code accordingly."
-  [start code]
-  (case start
-    :music-data (test-parse-music-data code)
-    :part       (test-parse-part code)
-    :calls      (test-parse-calls code)
-    :score      (parse-input code)))
-
 (defn parse-with-context
-  "Determine the appropriate context to parse a line of code from the Alda
-   REPL, then parse it within that context.
+  "Parse a string of Alda code within a particular context, e.g. to parse
+   additional music data for an already existing part, or to parse a single
+   instrument part in an already existing score.
 
-   Returns both the context (the name of a parse tree node) and the resulting
-   parse tree.
+   If `ctx` is provided, will attempt to parse the code within that context,
+   which will throw an error if parsing fails.
 
-   If parsing fails, returns `:parse-failure` and the error that was thrown."
-  [alda-code]
-  (letfn [(try-ctxs [[ctx & ctxs]]
+   If `ctx` is NOT provided, will try to parse the code in increasingly broad
+   contexts until it parses successfully. When it does parse successfully,
+   returns a vector containing the context and the parse result. If parsing
+   fails in all contexts, returns a vector containing `:parse-failure` and
+   the error that was thrown at the broadest context level."
+  ([code]
+   (letfn [(try-ctxs [[ctx & ctxs]]
             (try
-              (let [parsed (parse-with-start-rule ctx alda-code)]
+              (let [parsed (parse-with-context ctx code)]
                 [ctx parsed])
               (catch Exception e
                 (if ctxs
                   (try-ctxs ctxs)
                   [:parse-failure e]))))]
     (try-ctxs [:music-data :part :score])))
+  ([ctx code]
+    (case ctx
+      :music-data (test-parse-music-data code)
+      :part       (test-parse-part code)
+      :calls      (test-parse-calls code)
+      :score      (parse-input code))))
 
