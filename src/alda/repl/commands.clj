@@ -113,17 +113,16 @@
                 (contains? #{"n" "no"} response) false
                 :else (confirm-load))))
           (load-score [score-text]
-            (let [code (parse-input score-text)]
-              (if (insta/failure? code)
-                (do
-                  (println)
-                  (println code)
-                  (println "File load aborted."))
-                (do
-                  (score*)
-                  (eval code)
-                  (alter-var-root #'*score-text* (constantly score-text))
-                  (println "Score loaded.")))))
+            (try
+              (let [code (parse-input score-text)]
+                (score*)
+                (eval code)
+                (alter-var-root #'*score-text* (constantly score-text))
+                (println "Score loaded."))
+              (catch Exception e
+                (println)
+                (println (.getMessage e))
+                (println "File load aborted."))))
           (confirm-and-load-score [score-text]
             (if (confirm-load)
               (load-score score-text)

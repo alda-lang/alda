@@ -26,18 +26,19 @@
    m map       bool "Evaluate the score and show the resulting instruments/events map."]
   (if-not (or file code)
     (parse "--help")
-    (let [input (if code code (slurp file))
-          alda-lisp-code (parse-input input)]
-      (when (instaparse.core/failure? alda-lisp-code)
-        (pprint alda-lisp-code)
-        (System/exit 1))
-      (when lisp
-        (pprint alda-lisp-code)
-        (println))
-      (when map
-        (require 'alda.lisp)
-        (pprint (eval alda-lisp-code))
-        (println)))))
+    (try
+      (let [input (if code code (slurp file))
+            alda-lisp-code (parse-input input)]
+        (when lisp
+          (pprint alda-lisp-code)
+          (println))
+        (when map
+          (require 'alda.lisp)
+          (pprint (eval alda-lisp-code))
+          (println)))
+      (catch Exception e
+        (println (.getMessage e))
+        (System/exit 1)))))
 
 (defclifn ^:alda-task play
   "Parse some Alda code and play the resulting score."
@@ -59,11 +60,13 @@
                                     :one-off?    true}]
     (if-not (or file code)
       (play "--help")
-      (let [parsed (parse-input (if code code (slurp file)))]
-        (if (instaparse.core/failure? parsed)
-          (do (prn parsed) (System/exit 1))
-          (alda.sound/play! (eval parsed)))
-        identity))))
+      (try
+        (let [parsed (parse-input (if code code (slurp file)))]
+          (alda.sound/play! (eval parsed))
+          (System/exit 0))
+        (catch Exception e
+          (println (.getMessage e))
+          (System/exit 1))))))
 
 (defclifn ^:alda-task repl
   "Start an Alda Read-Evaluate-Play-Loop."
