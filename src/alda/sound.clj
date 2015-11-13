@@ -2,7 +2,8 @@
   (:require [alda.sound.midi :as    midi]
             [overtone.at-at  :refer (mk-pool now at)]
             [taoensso.timbre :as    log]
-            [alda.util       :refer [check-for parse-time pdoseq-block parse-position]]))
+            [alda.lisp]
+            [alda.util       :refer (check-for parse-time pdoseq-block parse-position)]))
 
 (def ^:dynamic *active-audio-types* #{})
 

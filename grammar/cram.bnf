@@ -1,0 +1,3 @@
+cram          = <"{"> <ows> inside-cram* <ows> <"}"> duration?
+<inside-cram> = !("{" | "}") events
+

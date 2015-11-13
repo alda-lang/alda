@@ -1,7 +1,6 @@
 (ns alda.parser.score-test
   (:require [clojure.test :refer :all]
-            [alda.parser :refer (parse-input)]
-            [alda.test-helpers :refer (test-parse)]))
+            [alda.parser :refer (parse-input)]))
 
 (deftest score-tests
   (is (= (parse-input "theremin: c d e")

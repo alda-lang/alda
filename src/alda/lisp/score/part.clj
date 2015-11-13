@@ -1,11 +1,11 @@
 (ns alda.lisp.score.part)
 (in-ns 'alda.lisp)
 
-(require '[djy.char        :refer (char-range)]
-         '[instaparse.core :as insta]
-         '[clojure.java.io :as io]
-         '[clojure.string  :as str]
-         '[alda.parser])
+(require '[djy.char         :refer (char-range)]
+         '[instaparse.core  :as    insta]
+         '[clojure.java.io  :as    io]
+         '[clojure.string   :as    str]
+         '[alda.parser-util :refer (parse-with-context)])
 
 (log/debug "Loading alda.lisp.score.part...")
 
@@ -35,7 +35,7 @@
                           (log/error "Stock instrument"
                                      (str \" stock-inst \")
                                      "not defined."))]
-    (alter-var-root #'*instruments* 
+    (alter-var-root #'*instruments*
                     assoc (:id instrument) instrument)
     instrument))
 
@@ -52,7 +52,7 @@
                 (*nicknames* name)
                 (if nickname
                   (:id (init-instrument name))
-                  (if-let [existing-inst 
+                  (if-let [existing-inst
                            (first
                              (for [[id attrs] *instruments*
                                    :when (.startsWith id (str name \-))]
@@ -64,12 +64,10 @@
     (set instances)))
 
 (defn parse-instrument-call [s]
-  (with-redefs [alda.parser/alda-parser
-                #((insta/parser (io/resource "alda.bnf")) % :start :calls)]
-    (alda.parser/parse-input (-> s
+  (parse-with-context :calls (-> s
                                  (str/replace #":$" "")
                                  (str/replace #"'" "\"")
-                                 (str \:)))))
+                                 (str \:))))
 
 (defmulti part* type)
 
