@@ -1,12 +1,11 @@
-[![Stories in Ready](https://badge.waffle.io/alda-lang/alda.png?label=ready&title=Ready)](https://waffle.io/alda-lang/alda)
 ```
-                            ________________________________  
-                           /    o   oooo ooo oooo   o o o  /\ 
-                          /    oo  ooo  oo  oooo   o o o  / / 
-                         /    _________________________  / /  
-                        / // / // /// // /// // /// / / / /   
-                       /___ //////////////////////////_/ /    
-                       \____\________________________\_\/     
+                            ________________________________
+                           /    o   oooo ooo oooo   o o o  /\
+                          /    oo  ooo  oo  oooo   o o o  / /
+                         /    _________________________  / /
+                        / // / // /// // /// // /// / / / /
+                       /___ //////////////////////////_/ /
+                       \____\________________________\_\/
 
                                     ~ alda ~
 ```
@@ -20,6 +19,7 @@
 </a>
 <br>
 
+
 <b><a href="#installation">Installation</a></b>
 |
 <b><a href="doc/index.md">Docs</a></b>
@@ -27,6 +27,15 @@
 <b><a href="CHANGELOG.md">Changelog</a></b>
 |
 <b><a href="#contributing">Contributing</a></b>
+
+(
+<a href="https://waffle.io/alda-lang/alda" alt="Features in Progress">
+  <img src="https://badge.waffle.io/alda-lang/alda.png?label=in%20progress&title=In%20Progress:">
+</a>
+)
+
+<br>
+
 </p>
 
 *New to Alda? You may be interested in reading [this blog post][alda-blog-post] as an introduction.*
@@ -59,7 +68,7 @@ of music: classical, popular, chiptune, electroacoustic, and more!
 
 ### TODO
 
-* [Define and use waveform synthesis instruments](https://github.com/alda-lang/alda/issues/100) 
+* [Define and use waveform synthesis instruments](https://github.com/alda-lang/alda/issues/100)
 * [Import MIDI files](https://github.com/alda-lang/alda/issues/85)
 * [Export to MusicXML](https://github.com/alda-lang/alda/issues/44) for inter-operability with other music software
 * [A more robust REPL](https://github.com/alda-lang/alda/issues/54), tailor-made for editing scores interactively

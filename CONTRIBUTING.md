@@ -2,6 +2,8 @@
 
 Pull requests are warmly welcomed. Please feel free to take on whatever [issue](https://github.com/alda-lang/alda/issues) interests you.
 
+For a syrupy visual of what we have on our plate, check out our [waffle.io board](https://waffle.io/alda-lang/alda).
+
 ## Instructions
 
 - Fork this repository and make changes on your fork.
