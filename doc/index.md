@@ -28,7 +28,7 @@ If you've come here for any other reason, uh, go away, I guess.
 
 ## How to Use the Docs
 
-Alda's documentation is a (mostly) interconnected collection of [Markdown](https://daringfireball.net/projects/markdown) files that serve as the "official manual" to Alda: an authorative guide to how to do all the things you want to do in an Alda score.
+Alda's documentation is a (mostly) interconnected collection of [Markdown](https://daringfireball.net/projects/markdown) files that serve as the "official manual" to Alda: the definitive guide to how to do all the things you want to do in an Alda score.
 
 In as many places as it makes sense to do so, relative links are included from one document to another. It's a lot like a [wiki](https://en.wikipedia.org/wiki/Wiki); it is versioned and maintained by the maintainers of the Alda project itself, with help from the community (that's you!). Alda's documentation is a perpetual work-in-progress, and a collaborative effort in which anyone can take part.
 
