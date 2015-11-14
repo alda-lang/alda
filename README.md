@@ -1,3 +1,4 @@
+[![Stories in Ready](https://badge.waffle.io/alda-lang/alda.png?label=ready&title=Ready)](https://waffle.io/alda-lang/alda)
 ```
                             ________________________________  
                            /    o   oooo ooo oooo   o o o  /\ 
