@@ -151,3 +151,17 @@
   [f]
   {:event-type :function
    :function   f})
+
+(defn set-variable
+  "Defines any number of events as a variable so that they can be referenced by
+   name."
+  [var-name & events]
+  {:event-type :set-variable
+   :variable   var-name
+   :events     events})
+
+(defn get-variable
+  "Returns any number of events previously defined as a variable."
+  [var-name]
+  {:event-type :get-variable
+   :variable   var-name})

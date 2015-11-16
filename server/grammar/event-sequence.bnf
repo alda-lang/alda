@@ -1,2 +1,2 @@
-event-sequence          = <"["> <ows> events <ows> <"]"> <ows>
+event-sequence          = <"["> <ows> events <ows> <"]">
 

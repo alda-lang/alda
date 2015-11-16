@@ -1,3 +1,0 @@
-(* optional whitespace *)
-
-ows = #"\s*"

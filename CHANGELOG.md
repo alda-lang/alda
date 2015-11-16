@@ -1,5 +1,29 @@
 # CHANGELOG
 
+## 1.0.0-rc21 (7/18/16)
+
+* Variables implemented! This simple, but powerful feature allows you to define named sequences of musical events and refer to them by name. You can even define variables that refer to other variables, giving you the means to build a score out of modular parts. For details, see [the docs](doc/variables.md).
+
+* Minor parsing performance improvements.
+
+### Breaking Changes
+
+* In order to avoid conflicts between variable names and multiple notes squished together (e.g. "abcdef"), the rules are now more rigid about spaces between notes. Multiple letters back-to-back without spaces in between is now read as a variable name. Multiple letters with spaces between each one (e.g. "a b c d e f") is read as multiple notes.
+
+  Note that this does not only apply to single letters, but to anything else that the parser considers a "note" -- this includes notes that include a duration (e.g. "a4"), notes that include multiple durations tied together (e.g. "a4~4~4"), and notes that end in a final tie/slur, indicating that the note is to be played legato (e.g. "a~").
+
+  A couple of Alda example scores contained examples that broke the "mandatory space between notes" rule, and had to be changed. For example, `awobmolg.alda` contained the following snippet representing 5 notes under a slur:
+
+  ```
+  b4.~b16~a~g~a
+  ```
+
+  The parser was trying to read this as the (legato/slurred) note `b4.~` followed immediately by another note, `b16`. This is now explicitly now allowed. The example was changed to the following (valid) syntax:
+
+  ```
+  b4.~ b16~ a~ g~ a
+  ```
+
 ## 1.0.0-rc20 (6/20/16)
 
 * Fixed a regression caused by 1.0.0-rc19, which was causing scores not to parse correctly.

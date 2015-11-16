@@ -31,6 +31,8 @@
    phase
    poly
    printing
+   variables
+   variables-2
    ])
 
 (def longest-score-name-length

@@ -19,7 +19,7 @@
   ([number]
     (note-length number {:dots 0}))
   ([number {:keys [dots]}]
-   {:pre [(pos? number)]}
+   {:pre [(number? number) (pos? number)]}
     {:type :beats
      :value (* (/ 4 number)
                (- 2 (Math/pow 2 (- dots))))}))

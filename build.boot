@@ -96,6 +96,7 @@
                           alda.parser.octaves-test
                           alda.parser.repeats-test
                           alda.parser.score-test
+                          alda.parser.variables-test
                           alda.lisp.attributes-test
                           alda.lisp.cram-test
                           alda.lisp.chords-test

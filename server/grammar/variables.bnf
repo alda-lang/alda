@@ -1,0 +1,6 @@
+<variable-name> = #"[a-zA-Z]{2}[\w_]*"
+
+get-variable    = variable-name
+
+set-variable    = variable-name <ows-inline> <"="> <ows-inline>
+                  (events-inline / event-sequence)

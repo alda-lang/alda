@@ -23,6 +23,7 @@
     alda.lisp.events.note
     alda.lisp.events.rest
     alda.lisp.events.sequence
+    alda.lisp.events.variable
     alda.lisp.events.voice
     alda.lisp.instruments.midi
     alda.lisp.model.attribute

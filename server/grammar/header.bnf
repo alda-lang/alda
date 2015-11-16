@@ -1,1 +1,1 @@
-header = (clj-expr-cached | <ows>)*
+header = (clj-expr-cached / set-variable / <ows>)*
