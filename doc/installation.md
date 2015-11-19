@@ -26,7 +26,7 @@ The Alda library will keep itself updated on your computer each time you run it.
 
 The `alda` script doesn't seem to work for Windows users. If you're a Windows power user, [please feel free to weigh in on this issue](https://github.com/alda-lang/alda/issues/48). Until we have that sorted out, there is a workaround:
 
-1. Install [Boot](https://github.com/boot-clj/boot#install).
+1. Install [Boot](https://github.com/boot-clj/boot#windows).
 2. Clone this repo and `cd` into it.
 3. You can now run `boot alda -x "<cmd> <args>"` while you are in this directory.
 
