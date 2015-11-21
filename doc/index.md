@@ -2,7 +2,6 @@
 
 Hello! I'm an introductory paragraph, and this is the landing page for Alda's Official Documentation™. If you've come here to learn more about Alda and how to use it to write amazing musical scores, READ ON!
 
-If you've come here for any other reason, uh, go away, I guess.
 
 ## Useful Links
 
