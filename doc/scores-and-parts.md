@@ -86,9 +86,9 @@ You can also nickname a group of instruments:
 
 [The details of how Alda creates and assigns instrument instances](instance-and-group-assignment.md) are slightly complicated, but you should only really need to know this simple rule of thumb: if you need to use more than one of the same instrument (or if you'd like to assign a nickname to a group of instruments), assign a nickname the first time each instrument (or the group) is used, and then use that nickname from then on to refer to that instrument/group.
 
-### Acceptable Nicknames
+### Acceptable Names
 
-Instrument nicknames must adhere to the following rules:
+Instrument names and nicknames must adhere to the following rules:
 
 * They must be at least 2 characters long.
 * The first two characters must be letters (either uppercase or lowercase).
