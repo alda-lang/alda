@@ -103,6 +103,10 @@ For more examples, see these [example scores](https://github.com/alda-lang/alda/
 
 See [the docs](doc/installation.md#windows).
 
+#### Editor Plugins
+
+For the best experience when editing Alda score files, install the [Alda file-type plugin](doc/installation.md/#editor-plugins) for your editor of choice.
+
 ### Demo
 
 > NOTE: The first time you run one of these tasks, you may need to wait a minute for the FluidR3 MIDI soundfont dependency (~141 MB) to download. Alda uses this soundfont in order to make your JVM's MIDI instruments sound a lot nicer. If you'd prefer to skip this step and use your JVM's default soundfont instead, include the `--stock` flag (i.e. `play --stock --file ...`).

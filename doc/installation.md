@@ -1,4 +1,8 @@
-# Installation
+# Installing Alda
+
+* [Mac OS X / Linux](#mac-os-x--linux)
+* [Windows](#windows)
+* [Editor Plugins](#editor-plugins)
 
 ## Mac OS X / Linux
 
@@ -41,4 +45,14 @@ Caveats:
 * It only works if you're in the Alda repo folder.
 * Unlike the `alda` script, running the `boot alda` task will not automatically update Alda; you will have to do so manually by running `git pull`.
 * If the command you're running is longer than one word, you must wrap it in double quotes -- see the examples above.
+
+## Editor Plugins
+
+For the best experience when editing Alda score files, install the Alda file-type plugin for your editor of choice.
+
+> Don't see a plugin for your favorite editor? Write your own and add it here! :)
+
+- [Sublime Text](https://github.com/archimedespi/sublime-alda)
+- [Atom](https://github.com/MadcapJake/language-alda)
+- [Vim](https://github.com/daveyarwood/vim-alda)
 

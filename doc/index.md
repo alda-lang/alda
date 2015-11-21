@@ -1,20 +1,23 @@
-# Alda: The Docs
+# Alda: The Docs™
 
-Hello! I'm an introductory paragraph, and this is the landing page for Alda's Official Documentation™. If you've come here to learn more about Alda and how to use it to write amazing musical scores, READ ON!
-
+Hello! I'm an introductory paragraph, and this is the landing page for Alda's official documentation. If you've come here to learn more about Alda and how to use it to write amazing musical scores, READ ON!
 
 ## Useful Links
 
 * [README](../README.md)
-* [CONTRIBUTING / Developer Guide](../CONTRIBUTING.md)
-* [CHANGELOG](../CHANGELOG.md)
+* [Contributor / Developer Guide](../CONTRIBUTING.md)
+* [CHANGELOG (Version History)](../CHANGELOG.md)
 * [Some background on Alda and a tutorial](http://daveyarwood.github.io/alda/2015/09/05/alda-a-manifesto-and-gentle-introduction)
 
 ## Where to Start
 
+* [Installing Alda](installation.md)
+
+  * [Editor plugins](installation.md#editor-plugins)
+
 * Learn about the [etymology](etymology.md) behind the name Alda.
 
-* The article on [scores and parts](scores-and-parts.md) provides some good general information on what an Alda score is. After that, you may be interested in learning about...
+* The article on [scores and parts](scores-and-parts.md) provides some good general information on what an Alda score is. After that, you may be interested in learning more about the fundamental pieces of an Alda score:
   * [notes](notes.md)
   * [rests](rests.md)
   * [chords](chords.md)
