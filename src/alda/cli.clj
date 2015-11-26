@@ -82,6 +82,19 @@
          (require '[alda.repl])
          (alda.repl/start-repl!)))))
 
+(defclifn ^:alda-task server
+  "Start an Alda server."
+  [p port        PORT int  "The port on which to run the Alda server."
+   b pre-buffer  MS   int  "The number of milliseconds of lead time for buffering. (default: 0)"
+   B post-buffer MS   int  "The number of milliseconds to wait after the score ends. (default: 0)"
+   s stock            bool "Use the default MIDI soundfont of your JVM, instead of FluidR3."]
+  (binding [alda.sound.midi/*midi-soundfont* (when-not stock (fluid-r3!))
+            alda.sound/*play-opts* {:pre-buffer  pre-buffer
+                                    :post-buffer post-buffer
+                                    :async?      true}]
+    (require 'alda.server)
+    ((resolve 'alda.server/start-server!) (or port 27713))))
+
 (defclifn ^:alda-task script
   "Print the latest `alda` start script to STDOUT."
   []
@@ -128,5 +141,6 @@
     "parse"     (delegate parse args)
     "play"      (delegate play args)
     "repl"      (delegate repl args)
+    "server"    (delegate server args)
     "script"    (delegate script args)
     (printf "[alda] Invalid command '%s'.\n" cmd)))
