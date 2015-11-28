@@ -1,6 +1,6 @@
 (set-env!
   :source-paths #{"src" "test"}
-  :resource-paths #{"grammar" "examples"}
+  :resource-paths #{"grammar" "../examples"}
   :dependencies '[[org.clojure/clojure   "1.7.0"]
                   [org.clojure/tools.cli "0.3.1"]
                   [instaparse            "1.4.1"]

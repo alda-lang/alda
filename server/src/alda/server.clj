@@ -9,6 +9,7 @@
             [ring.adapter.jetty       :refer (run-jetty)]
             [compojure.core           :refer :all]
             [compojure.route          :refer (not-found)]
+            [taoensso.timbre          :as    log]
             [clojure.pprint           :refer (pprint)]))
 
 (defn start-alda-environment!
@@ -100,6 +101,13 @@
   (GET "/version" []
     (success (str "alda v" -version-)))
 
+  (GET "/stop" []
+    (log/info "Received request to stop. Shutting down...")
+    (future
+      (Thread/sleep 1000)
+      (System/exit 0))
+    (success "Shutting down."))
+
   (not-found "Invalid route."))
 
 (defn wrap-play-opts
@@ -114,6 +122,8 @@
 
 (defn start-server!
   [port]
+  (log/info "Loading Alda environment...")
   (start-alda-environment!)
+  (log/infof "Starting Alda server on port %s..." port)
   (run-jetty app {:port port}))
 

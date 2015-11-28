@@ -97,7 +97,7 @@ For more examples, see these [example scores](https://github.com/alda-lang/alda/
 1. Install [Boot](http://www.boot-clj.com).
 2. Run this command to place the `alda` script in your `$PATH`:
 
-        curl https://raw.githubusercontent.com/alda-lang/alda/master/bin/alda -o /usr/local/bin/alda && chmod +x /usr/local/bin/alda
+        curl https://raw.githubusercontent.com/alda-lang/alda/master/server/bin/alda -o /usr/local/bin/alda && chmod +x /usr/local/bin/alda
 
 #### Windows
 
