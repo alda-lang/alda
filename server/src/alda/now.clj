@@ -37,6 +37,10 @@
                        (:events old-score#))]
      (play-new-events! new-score# new-events#)))
 
+(defn play-whole-score!
+  []
+  (sound/play! (lisp/score-map)))
+
 (defn refresh!
   "Clears all events and resets the current-offset of each instrument to 0.
 
