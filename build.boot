@@ -69,6 +69,12 @@
    version of Alda, running this task (`boot alda -x '<cmd> <args>'`)
    will use the current (local) version of this repo."
   [x execute ARGS str "The Alda CLI task and args as a single string."]
-  (when execute
-    (let [cli-args (split-args execute)]
-      (apply (resolve 'alda.cli/-main) cli-args))))
+  (fn [next-task]
+    (fn [fileset]
+      (require '[alda.version] :reload-all)
+      (require '[alda.repl] :reload-all)
+      ;(require '[alda.cli] :reload-all)
+      (when execute
+        (let [cli-args (split-args execute)]
+          (apply (resolve 'alda.cli/-main) cli-args)))
+      (next-task fileset))))
