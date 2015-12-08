@@ -13,4 +13,4 @@
          '[alda.lisp :refer :all])
 
 (defn -main [& args]
-  (apply (resolve 'alda.cli/-main) args))
+  ((resolve 'alda.cli/main) args))

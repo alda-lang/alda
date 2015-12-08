@@ -128,7 +128,7 @@
     (cmd "")
     (apply cmd args)))
 
-(defn -main [& [cmd & args]]
+(defn main [[cmd & args]]
   (util/set-timbre-level!)
   (case cmd
     nil         (println help-text)
@@ -143,4 +143,4 @@
     "repl"      (delegate repl args)
     "server"    (delegate server args)
     "script"    (delegate script args)
-    (printf "[alda] Invalid command '%s'.\n" cmd)))
+    (println (format "[alda] Invalid command '%s'.\n" cmd))))
