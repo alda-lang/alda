@@ -10,6 +10,7 @@ import clojure.lang.IFn;
 import clojure.lang.Symbol;
 
 public class Client {
+
   public static void runClojure(String [] args) {
     Symbol mainVar = (Symbol)Clojure.read("alda.cli/main");
     IFn require    = Clojure.var("clojure.core", "require");

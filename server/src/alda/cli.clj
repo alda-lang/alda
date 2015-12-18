@@ -18,56 +18,6 @@
          (require '[midi.soundfont.fluid-r3 :as fluid-r3])
          fluid-r3/sf2)))
 
-(defclifn ^:alda-task parse
-  "Parse some Alda code and print the results to the console."
-  [f file FILE str  "The path to a file containing Alda code to parse."
-   c code CODE str  "The string of Alda code to parse."
-   l lisp      bool "Parse into alda.lisp code."
-   m map       bool "Evaluate the score and show the resulting instruments/events map."]
-  (if-not (or file code)
-    (parse "--help")
-    (try
-      (let [input (if code code (slurp file))
-            alda-lisp-code (parse-input input)]
-        (when lisp
-          (pprint alda-lisp-code)
-          (println))
-        (when map
-          (require 'alda.lisp)
-          (pprint (eval alda-lisp-code))
-          (println)))
-      (catch Exception e
-        (println (.getMessage e))
-        (System/exit 1)))))
-
-(defclifn ^:alda-task play
-  "Parse some Alda code and play the resulting score."
-  [f file        FILE str "The path to a file containing Alda code to play."
-   c code        CODE str "The string of Alda code to play."
-   ; TODO: implement smart buffering and remove the buffer options
-   p pre-buffer  MS  int  "The number of milliseconds of lead time for buffering. (default: 0)"
-   P post-buffer MS  int  "The number of milliseconds to keep the synth open after the score ends. (default: 1000)"
-   s stock           bool "Use the default MIDI soundfont of your JVM, instead of FluidR3."
-   F from        POS str  "Position to start playback from"
-   T to          POS str  "Position to end playback at"]
-  (require '[alda.lisp]
-           '[instaparse.core])
-  (binding [alda.sound.midi/*midi-soundfont* (when-not stock (fluid-r3!))
-            alda.sound/*play-opts* {:pre-buffer  (or pre-buffer 0)
-                                    :post-buffer (or post-buffer 1000)
-                                    :from        from
-                                    :to          to
-                                    :one-off?    true}]
-    (if-not (or file code)
-      (play "--help")
-      (try
-        (let [parsed (parse-input (if code code (slurp file)))]
-          (alda.sound/play! (eval parsed))
-          (System/exit 0))
-        (catch Exception e
-          (println (.getMessage e))
-          (System/exit 1))))))
-
 (defclifn ^:alda-task repl
   "Start an Alda Read-Evaluate-Play-Loop."
   [p pre-buffer  MS int  "The number of milliseconds of lead time for buffering. (default: 0)"
@@ -94,13 +44,6 @@
                                     :async?      true}]
     (require 'alda.server)
     ((resolve 'alda.server/start-server!) (or port 27713))))
-
-(defclifn ^:alda-task script
-  "Print the latest `alda` start script to STDOUT."
-  []
-  (let [script-url "https://raw.githubusercontent.com/alda-lang/alda/master/bin/alda"
-        script (:body (client/get script-url))]
-    (println script)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -138,9 +81,6 @@
     "version"   (printf "alda v%s\n" -version-)
     "--version" (printf "alda v%s\n" -version-)
     "-v"        (printf "alda v%s\n" -version-)
-    "parse"     (delegate parse args)
-    "play"      (delegate play args)
     "repl"      (delegate repl args)
     "server"    (delegate server args)
-    "script"    (delegate script args)
     (println (format "[alda] Invalid command '%s'.\n" cmd))))
