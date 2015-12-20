@@ -4,6 +4,7 @@
             [alda.parser                      :refer (parse-input)]
             [alda.parser-util                 :refer (parse-with-context)]
             [alda.sound                       :refer (*play-opts*)]
+            [alda.sound.midi                  :refer (load-fluid-r3!)]
             [alda.version                     :refer (-version-)]
             [ring.middleware.defaults         :refer (wrap-defaults api-defaults)]
             [ring.middleware.multipart-params :refer (wrap-multipart-params)]
@@ -181,7 +182,9 @@
 (defn start-server!
   [port & {:keys [pre-buffer post-buffer stock]}]
   (log/info "Loading Alda environment...")
+  (when-not stock (load-fluid-r3!))
   (start-alda-environment!)
+
   (log/infof "Starting Alda server on port %s..." port)
   (run-jetty (app :play-opts {:pre-buffer  pre-buffer
                               :post-buffer post-buffer

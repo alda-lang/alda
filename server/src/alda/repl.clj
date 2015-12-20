@@ -2,6 +2,7 @@
   (:require [alda.version                 :refer (-version-)]
             [alda.lisp                    :refer :all]
             [alda.sound                   :refer (set-up! tear-down! *play-opts*)]
+            [alda.sound.midi              :refer (load-fluid-r3!)]
             [alda.repl.core               :as    repl :refer (*repl-reader*
                                                               *parsing-context*)]
             [alda.repl.commands           :refer (repl-command)]
@@ -41,6 +42,7 @@
                                                 (.setPrompt "> "))))
   (let [done? (atom false)]
     (print "Loading MIDI synth... ")
+    (when-not stock (load-fluid-r3!))
     (set-up! :midi)
     (println "done.")
     (score*) ; initialize a new score
@@ -71,3 +73,4 @@
           (repl/set-prompt!)
           (catch Throwable e
             (pretty/write-exception *err* e)))))))
+
