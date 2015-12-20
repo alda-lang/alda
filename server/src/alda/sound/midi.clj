@@ -1,6 +1,7 @@
 (ns alda.sound.midi
   (:require [taoensso.timbre :as log]
-            [midi.soundfont  :refer (load-all-instruments!)])
+            [midi.soundfont  :refer (load-all-instruments!)]
+            [boot.core       :refer (merge-env!)])
   (:import  (javax.sound.midi MidiSystem Synthesizer)))
 
 ; TODO: work around the limitation of 16 MIDI channels?
@@ -32,12 +33,12 @@
   (let [channels (atom (apply sorted-set (concat (range 0 9) (range 10 16))))]
     (reduce (fn [result id]
               (let [patch   (-> id instruments :config :patch)
-                    ; TODO: pass ":percussion? true" if percussion 
+                    ; TODO: pass ":percussion? true" if percussion
                     channel (if-let [channel (next-available @channels)]
                               (do
                                 (swap! channels disj channel)
                                 channel)
-                              (throw 
+                              (throw
                                 (Exception. "Ran out of MIDI channels! :(")))]
                 (assoc result id {:channel channel
                                   :patch patch})))
@@ -71,7 +72,7 @@
   []
   (.close *midi-synth*))
 
-(defn play-note! 
+(defn play-note!
   [{:keys [midi-note instrument duration volume track-volume panning]}]
   (let [channel-number (-> instrument *midi-channels* :channel)
         channel (aget (.getChannels *midi-synth*) channel-number)]

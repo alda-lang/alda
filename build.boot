@@ -29,16 +29,16 @@
 
 (require '[adzerk.bootlaces :refer :all]
          '[adzerk.boot-test :refer :all]
-         '[alda.version]
-         '[alda.cli]
-         '[alda.lisp        :refer :all]
-         '[str-to-argv      :refer (split-args)])
+         '[alda.util]
+         '[alda.version])
+
+; sets log level to TIMBRE_LEVEL (if set) or :warn
+(alda.util/set-timbre-level!)
 
 ; version number is stored in alda.version
 (bootlaces! alda.version/-version-)
 
 (task-options!
-  aot    {:namespace '#{alda.cli}}
   pom    {:project 'alda
           :version alda.version/-version-
           :description "A music programming language for musicians"
@@ -46,7 +46,6 @@
           :scm {:url "https://github.com/alda-lang/alda"}
           :license {"name" "Eclipse Public License"
                     "url" "http://www.eclipse.org/legal/epl-v10.html"}}
-  jar    {:main 'alda.cli}
   target {:dir #{"target"}}
   test   {:namespaces '#{
                          ; general tests
@@ -79,17 +78,8 @@
 (deftask build
   []
   (comp (javac)
+        (pom)
         (uber)
         (jar :main 'alda.Client)
         (target)))
 
-(deftask alda
-  "Run Alda CLI tasks.
-
-   Whereas running `bin/alda <cmd> <args>` will use the latest deployed
-   version of Alda, running this task (`boot alda -x '<cmd> <args>'`)
-   will use the current (local) version of this repo."
-  [x execute ARGS str "The Alda CLI task and args as a single string."]
-  (when execute
-    (let [cli-args (split-args execute)]
-      ((resolve 'alda.cli/main) cli-args))))

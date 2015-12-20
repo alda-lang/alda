@@ -1,7 +1,7 @@
 (ns alda.repl
   (:require [alda.version                 :refer (-version-)]
             [alda.lisp                    :refer :all]
-            [alda.sound                   :refer (set-up! tear-down!)]
+            [alda.sound                   :refer (set-up! tear-down! *play-opts*)]
             [alda.repl.core               :as    repl :refer (*repl-reader*
                                                               *parsing-context*)]
             [alda.repl.commands           :refer (repl-command)]
@@ -32,7 +32,7 @@
        \newline
        (bold-white "Type :help for a list of available commands.")))
 
-(defn start-repl! []
+(defn start-repl! [& {:keys [pre-buffer post-buffer stock]}]
   (println)
   (println banner \newline)
   (alter-var-root #'*parsing-context* (constantly :part))
@@ -44,7 +44,10 @@
     (set-up! :midi)
     (println "done.")
     (score*) ; initialize a new score
-    (binding [*out* (.getOutput *repl-reader*)]
+    (binding [*out*       (.getOutput *repl-reader*)
+              *play-opts* {:pre-buffer  pre-buffer
+                           :post-buffer post-buffer
+                           :async?      true}]
       (repl/set-prompt!)
       (while-let [alda-code (when-not @done?
                               (println)

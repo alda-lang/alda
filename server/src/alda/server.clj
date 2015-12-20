@@ -172,15 +172,20 @@
     (-> (assoc request :play-opts play-opts)
         next-handler)))
 
-(def app
+(defn app
+  [& {:keys [play-opts]}]
   (-> (wrap-defaults server-routes api-defaults)
       (wrap-multipart-params)
-      (wrap-play-opts *play-opts*)))
+      (wrap-play-opts (or play-opts *play-opts*))))
 
 (defn start-server!
-  [port]
+  [port & {:keys [pre-buffer post-buffer stock]}]
   (log/info "Loading Alda environment...")
   (start-alda-environment!)
   (log/infof "Starting Alda server on port %s..." port)
-  (run-jetty app {:port port}))
+  (run-jetty (app :play-opts {:pre-buffer  pre-buffer
+                              :post-buffer post-buffer
+                              :async?      true})
+             {:port  port
+              :join? false}))
 
