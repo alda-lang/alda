@@ -5,18 +5,7 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.beust.jcommander.ParameterException;
 
-import clojure.java.api.Clojure;
-import clojure.lang.IFn;
-import clojure.lang.Symbol;
-
 public class Client {
-
-  public static void runClojure(String [] args) {
-    Symbol mainVar = (Symbol)Clojure.read("alda.cli/main");
-    IFn require    = Clojure.var("clojure.core", "require");
-    require.invoke(Symbol.create(mainVar.getNamespace()));
-    Clojure.var(mainVar.getNamespace(), mainVar.getName()).invoke(args);
-  }
 
   private static class GlobalOptions {
     @Parameter(names = {"-h", "--help"},
@@ -46,6 +35,13 @@ public class Client {
                              "instead of FluidR3")
     public boolean useStockSoundfont = false;
   }
+
+  @Parameters(commandDescription = "Start the Alda server in the foreground.",
+              hidden = true)
+  private static class CommandServer {}
+
+  @Parameters(commandDescription = "Start an interactive Alda REPL session.")
+  private static class CommandRepl {}
 
   @Parameters(commandDescription = "Display this help text")
   private static class CommandHelp {}
@@ -140,23 +136,29 @@ public class Client {
     public boolean showScoreMap = false;
   }
 
-  public static void main(String[] argv) throws InvalidOptionsException {
+  public static void main(String[] argv)
+    throws InvalidOptionsException, java.net.URISyntaxException, java.io.IOException {
     GlobalOptions globalOpts = new GlobalOptions();
 
-    CommandHelp help       = new CommandHelp();
-    CommandStart start     = new CommandStart();
-    CommandStop stop       = new CommandStop();
-    CommandRestart restart = new CommandRestart();
-    CommandStatus status   = new CommandStatus();
-    CommandVersion version = new CommandVersion();
-    CommandPlay play       = new CommandPlay();
-    CommandScore score     = new CommandScore();
-    CommandNew newScore    = new CommandNew();
-    CommandEdit edit       = new CommandEdit();
-    CommandParse parse     = new CommandParse();
+    CommandHelp help        = new CommandHelp();
+    CommandServer serverCmd = new CommandServer();
+    CommandRepl repl        = new CommandRepl();
+    CommandStart start      = new CommandStart();
+    CommandStop stop        = new CommandStop();
+    CommandRestart restart  = new CommandRestart();
+    CommandStatus status    = new CommandStatus();
+    CommandVersion version  = new CommandVersion();
+    CommandPlay play        = new CommandPlay();
+    CommandScore score      = new CommandScore();
+    CommandNew newScore     = new CommandNew();
+    CommandEdit edit        = new CommandEdit();
+    CommandParse parse      = new CommandParse();
 
     JCommander jc = new JCommander(globalOpts);
     jc.setProgramName("alda");
+
+    jc.addCommand("server", serverCmd);
+    jc.addCommand("repl", repl);
 
     jc.addCommand("start", start, "up", "init");
     jc.addCommand("stop", stop, "down");
@@ -181,7 +183,9 @@ public class Client {
       System.exit(1);
     }
 
-    AldaServer server = new AldaServer(globalOpts.host, globalOpts.port);
+    AldaServer server = new AldaServer(globalOpts.host, globalOpts.port,
+                                       globalOpts.preBuffer, globalOpts.postBuffer,
+                                       globalOpts.useStockSoundfont);
 
     try {
       server.msg("%s:%d", server.getHost(), server.getPort());
@@ -202,10 +206,19 @@ public class Client {
         case "help":
           jc.usage();
           break;
+
+        case "server":
+          server.startFg();
+          break;
+
+        case "repl":
+          server.startRepl();
+          break;
+
         case "start":
         case "up":
         case "init":
-          server.start();
+          server.startBg();
           break;
         case "stop":
         case "down":
@@ -221,6 +234,7 @@ public class Client {
           break;
         case "version":
           // TODO
+          System.out.println("getting version...");
           break;
 
         case "play":
