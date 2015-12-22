@@ -1,9 +1,4 @@
 	commands:
-		version = display the version of the alda server
-			* get /version
-			* print error if server down or status != 200
-			* print body (== alda server version)
-
 		play = evaluate and play alda code
 			* validate that only one of "file" or "code" supplied
 			* method = "put" if replace, "post" otherwise

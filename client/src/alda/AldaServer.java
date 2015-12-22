@@ -72,7 +72,7 @@ public class AldaServer {
     return host;
   }
 
-  private void validateNotRemoteHost() throws InvalidOptionsException {
+  private void assertNotRemoteHost() throws InvalidOptionsException {
     String hostWithoutProtocol = host.replaceAll("https?://", "");
 
     if (!hostWithoutProtocol.equals("localhost")) {
@@ -150,28 +150,22 @@ public class AldaServer {
     }
   }
 
-  public void status() throws Exception {
-    try {
-      get("/");
-      serverUp();
-    } catch (HttpResponseException e) {
-      serverDown();
-    } catch (ConnectException e) {
-      serverDown();
-    } catch (ConnectTimeoutException e) {
-      serverDown();
-    } catch (UnknownHostException e) {
-      throw new Exception("Invalid hostname. " +
-                          "Please check to make sure it is correct.");
-    }
-  }
-
-  private boolean checkForConnection() {
+  private boolean checkForConnection() throws Exception {
     try {
       get("/");
       return true;
+    } catch (UnknownHostException e) {
+      throw new Exception("Invalid hostname. " +
+                          "Please check to make sure it is correct.");
     } catch (Exception e) {
       return false;
+    }
+  }
+
+  private void assertServerUp() throws Exception {
+    boolean serverUp = checkForConnection();
+    if (!serverUp) {
+      throw new Exception("The Alda server is down.");
     }
   }
 
@@ -225,9 +219,8 @@ public class AldaServer {
     return serverDown == null ? false : serverDown.booleanValue();
   }
 
-  public void startBg()
-    throws InvalidOptionsException, URISyntaxException, IOException {
-    validateNotRemoteHost();
+  public void startBg() throws Exception {
+    assertNotRemoteHost();
 
     boolean serverAlreadyUp = checkForConnection();
     if (serverAlreadyUp) {
@@ -255,7 +248,7 @@ public class AldaServer {
   }
 
   public void startFg() throws InvalidOptionsException {
-    validateNotRemoteHost();
+    assertNotRemoteHost();
 
     Object[] args = {port,
                      Keyword.intern("pre-buffer"), preBuffer,
@@ -270,7 +263,7 @@ public class AldaServer {
 
   // TODO: rewrite REPL as a client that communicates with a server
   public void startRepl() throws InvalidOptionsException {
-    validateNotRemoteHost();
+    assertNotRemoteHost();
 
     Object[] args = {Keyword.intern("pre-buffer"), preBuffer,
                      Keyword.intern("post-buffer"), postBuffer};
@@ -304,6 +297,20 @@ public class AldaServer {
     stop();
     System.out.println();
     startBg();
+  }
+
+  public void status() throws Exception {
+    boolean serverIsUp = checkForConnection();
+    if (serverIsUp) {
+      serverUp();
+    } else {
+      serverDown();
+    }
+  }
+
+  public void version() throws Exception {
+    assertServerUp();
+    msg(get("/version"));
   }
 
 }

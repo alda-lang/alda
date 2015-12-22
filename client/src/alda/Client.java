@@ -226,8 +226,7 @@ public class Client {
           server.status();
           break;
         case "version":
-          // TODO
-          System.out.println("getting version...");
+          server.version();
           break;
 
         case "play":
