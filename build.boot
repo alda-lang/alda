@@ -24,8 +24,9 @@
                   [jline                 "2.12.1"]
 
                   ; client
-                  [com.beust/jcommander       "1.48"]
-                  [org.fusesource.jansi/jansi "1.11"]
+                  [com.beust/jcommander                 "1.48"]
+                  [org.fusesource.jansi/jansi           "1.11"]
+                  [org.apache.httpcomponents/httpclient "4.5.1"]
                   ])
 
 (require '[adzerk.bootlaces :refer :all]

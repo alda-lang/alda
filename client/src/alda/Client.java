@@ -188,12 +188,6 @@ public class Client {
                                        globalOpts.useStockSoundfont);
 
     try {
-      server.msg("%s:%d", server.getHost(), server.getPort());
-      server.msg("pre-buffer: %d", globalOpts.preBuffer);
-      server.msg("post-buffer: %d", globalOpts.postBuffer);
-      server.msg("use stock soundfont: %s", globalOpts.useStockSoundfont);
-      System.out.println();
-
       if (globalOpts.help) {
         jc.usage();
         return;
@@ -230,7 +224,7 @@ public class Client {
           break;
 
         case "status":
-          // TODO
+          server.status();
           break;
         case "version":
           // TODO

@@ -1,6 +1,5 @@
 	commands:
 		start/up = start the server
-			* validate that host is localhost (alda servers cannot be started remotely)
 			* check for connection
 				* if server already up, print "alda server already up" and exit 0
 			* print "starting alda server..."

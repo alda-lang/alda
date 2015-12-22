@@ -1,10 +1,26 @@
 package alda;
 
+import java.io.IOException;
+import java.net.ConnectException;
+import java.net.UnknownHostException;
+import java.net.URISyntaxException;
+
 import org.fusesource.jansi.AnsiConsole;
 import static org.fusesource.jansi.Ansi.*;
 import static org.fusesource.jansi.Ansi.Color.*;
 
 import clojure.lang.Keyword;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.HttpResponseException;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.ResponseHandler;
+import org.apache.http.conn.ConnectTimeoutException;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.util.EntityUtils;
 
 public class AldaServer {
   private String host;
@@ -12,6 +28,7 @@ public class AldaServer {
   private int preBuffer;
   private int postBuffer;
   private boolean useStockSoundfont;
+  private CloseableHttpClient httpclient;
 
   public String getHost() { return host; }
   public int getPort() { return port; }
@@ -23,6 +40,17 @@ public class AldaServer {
     this.preBuffer = preBuffer;
     this.postBuffer = postBuffer;
     this.useStockSoundfont = useStockSoundfont;
+
+    RequestConfig config = RequestConfig.custom()
+                                        .setConnectTimeout(5000)
+                                        .setConnectionRequestTimeout(5000)
+                                        .setSocketTimeout(5000)
+                                        .build();
+
+    this.httpclient = HttpClientBuilder.create()
+                                       .setDefaultRequestConfig(config)
+                                       .build();
+
     AnsiConsole.systemInstall();
   }
 
@@ -35,7 +63,6 @@ public class AldaServer {
     }
     return host;
   }
-
 
   private void validateNotRemoteHost() throws InvalidOptionsException {
     String hostWithoutProtocol = host.replaceAll("https?://", "");
@@ -71,7 +98,7 @@ public class AldaServer {
   }
 
   public void startBg()
-    throws InvalidOptionsException, java.net.URISyntaxException, java.io.IOException {
+    throws InvalidOptionsException, URISyntaxException, IOException {
     validateNotRemoteHost();
 
     Object[] opts = {"--host", host, "--port", Integer.toString(port),
@@ -114,16 +141,66 @@ public class AldaServer {
     Util.callClojureFn("alda.repl/start-repl!", args);
   }
 
-
   public void stop() {
     msg("Stopping server...");
   }
 
   public void restart()
-    throws InvalidOptionsException, java.net.URISyntaxException, java.io.IOException {
+    throws InvalidOptionsException, URISyntaxException, IOException {
     stop();
     System.out.println();
     startBg();
+  }
+
+  private String get(String endpoint) throws IOException {
+    try {
+      HttpGet httpget = new HttpGet(host + ":" + port + endpoint);
+
+      ResponseHandler<String> responseHandler = new ResponseHandler<String>() {
+        @Override
+        public String handleResponse(final HttpResponse response)
+          throws HttpResponseException, IOException {
+          int status = response.getStatusLine().getStatusCode();
+          if (status < 200 || status > 299) {
+            throw new HttpResponseException(status, "Unexpected response status: " + status);
+          } else if (response.getFirstHeader("X-Alda-Version") == null) {
+            throw new HttpResponseException(status, "Missing X-Alda-Version header. " +
+                                                    "Probably not an Alda server.");
+          } else {
+            HttpEntity entity = response.getEntity();
+            return entity != null ? EntityUtils.toString(entity) : null;
+          }
+        }
+      };
+
+      String responseBody = httpclient.execute(httpget, responseHandler);
+      return responseBody;
+    } finally {
+      httpclient.close();
+    }
+  }
+
+  private void serverUp() {
+    msg(ansi().a("Server up ").fg(GREEN).a("\u2713").reset().toString());
+  }
+
+  private void serverDown() {
+    msg(ansi().a("Server down ").fg(RED).a("\u2717").reset().toString());
+  }
+
+  public void status() throws IOException {
+    try {
+      get("/");
+      serverUp();
+    } catch (HttpResponseException e) {
+      serverDown();
+    } catch (ConnectException e) {
+      serverDown();
+    } catch (ConnectTimeoutException e) {
+      serverDown();
+    } catch (UnknownHostException e) {
+      error("Invalid hostname. Please check to make sure it is correct.");
+    }
   }
 
 }
