@@ -27,6 +27,7 @@
                   [com.beust/jcommander                 "1.48"]
                   [org.fusesource.jansi/jansi           "1.11"]
                   [org.apache.httpcomponents/httpclient "4.5.1"]
+                  [net.jodah/recurrent                  "0.4.0"]
                   ])
 
 (require '[adzerk.bootlaces :refer :all]

@@ -5,6 +5,9 @@ import java.net.ConnectException;
 import java.net.UnknownHostException;
 import java.net.URISyntaxException;
 
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
+
 import org.fusesource.jansi.AnsiConsole;
 import static org.fusesource.jansi.Ansi.*;
 import static org.fusesource.jansi.Ansi.Color.*;
@@ -21,6 +24,9 @@ import org.apache.http.conn.ConnectTimeoutException;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
+
+import net.jodah.recurrent.Recurrent;
+import net.jodah.recurrent.RetryPolicy;
 
 public class AldaServer {
   private String host;
@@ -49,6 +55,8 @@ public class AldaServer {
 
     this.httpclient = HttpClientBuilder.create()
                                        .setDefaultRequestConfig(config)
+                                       .setConnectionManagerShared(true)
+                                       .disableAutomaticRetries()
                                        .build();
 
     AnsiConsole.systemInstall();
@@ -97,59 +105,21 @@ public class AldaServer {
     msg(prefix + message, args);
   }
 
-  public void startBg()
-    throws InvalidOptionsException, URISyntaxException, IOException {
-    validateNotRemoteHost();
+  private final String CHECKMARK = "\u2713";
+  private final String X = "\u2717";
 
-    Object[] opts = {"--host", host, "--port", Integer.toString(port),
-                     "--pre-buffer", Integer.toString(preBuffer),
-                     "--post-buffer", Integer.toString(postBuffer)};
-
-    if (useStockSoundfont) {
-      opts = Util.conj(opts, "--stock");
-    }
-
-    Util.forkProgram(Util.conj(opts, "server"));
-    msg("Starting server...");
+  private void serverUp() {
+    msg(ansi().a("Server up ").fg(GREEN).a(CHECKMARK).reset().toString());
   }
 
-  public void startFg() throws InvalidOptionsException {
-    validateNotRemoteHost();
-
-    Object[] args = {port,
-                     Keyword.intern("pre-buffer"), preBuffer,
-                     Keyword.intern("post-buffer"), postBuffer};
-
-    if (useStockSoundfont) {
-      args = Util.concat(args, new Object[]{Keyword.intern("stock"), true});
-    }
-
-    Util.callClojureFn("alda.server/start-server!", args);
+  private void serverDown(boolean isGood) {
+    Color color = isGood? GREEN : RED;
+    String glyph = isGood ? CHECKMARK : X;
+    msg(ansi().a("Server down ").fg(color).a(glyph).reset().toString());
   }
 
-  // TODO: rewrite REPL as a client that communicates with a server
-  public void startRepl() throws InvalidOptionsException {
-    validateNotRemoteHost();
-
-    Object[] args = {Keyword.intern("pre-buffer"), preBuffer,
-                     Keyword.intern("post-buffer"), postBuffer};
-
-    if (useStockSoundfont) {
-      args = Util.concat(args, new Object[]{Keyword.intern("stock"), true});
-    }
-
-    Util.callClojureFn("alda.repl/start-repl!", args);
-  }
-
-  public void stop() {
-    msg("Stopping server...");
-  }
-
-  public void restart()
-    throws InvalidOptionsException, URISyntaxException, IOException {
-    stop();
-    System.out.println();
-    startBg();
+  private void serverDown() {
+    serverDown(false);
   }
 
   private String get(String endpoint) throws IOException {
@@ -180,15 +150,7 @@ public class AldaServer {
     }
   }
 
-  private void serverUp() {
-    msg(ansi().a("Server up ").fg(GREEN).a("\u2713").reset().toString());
-  }
-
-  private void serverDown() {
-    msg(ansi().a("Server down ").fg(RED).a("\u2717").reset().toString());
-  }
-
-  public void status() throws IOException {
+  public void status() throws Exception {
     try {
       get("/");
       serverUp();
@@ -199,8 +161,149 @@ public class AldaServer {
     } catch (ConnectTimeoutException e) {
       serverDown();
     } catch (UnknownHostException e) {
-      error("Invalid hostname. Please check to make sure it is correct.");
+      throw new Exception("Invalid hostname. " +
+                          "Please check to make sure it is correct.");
     }
+  }
+
+  private boolean checkForConnection() {
+    try {
+      get("/");
+      return true;
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
+  // Keeps trying to connect to the server for 30 seconds.
+  // Returns true if/when it gets a successful response.
+  // Returns false if it doesn't get one within 30 seconds.
+  private boolean waitForConnection() {
+    RetryPolicy retryPolicy = new RetryPolicy()
+      .withDelay(500, TimeUnit.MILLISECONDS)
+      .withMaxDuration(30, TimeUnit.SECONDS)
+      .retryFor(null);
+
+    Callable<Boolean> ping = new Callable<Boolean>() {
+      public Boolean call() throws ConnectException {
+        try {
+          get("/");
+          return new Boolean(true);
+        } catch (ConnectException e) {
+          return null;
+        } catch (Exception e) {
+          return new Boolean(false);
+        }
+      }
+    };
+
+    Boolean serverUp = Recurrent.get(ping, retryPolicy);
+    return serverUp == null ? false : serverUp.booleanValue();
+  }
+
+  // Keeps trying to connect to the server for 30 seconds.
+  // Returns true as soon as it does NOT get a successful response.
+  // Returns false if it's been 30 seconds and it's still getting a response.
+  private boolean waitForLackOfConnection() {
+    RetryPolicy retryPolicy = new RetryPolicy()
+      .withDelay(500, TimeUnit.MILLISECONDS)
+      .withMaxDuration(30, TimeUnit.SECONDS)
+      .retryFor(null);
+
+    Callable<Boolean> ping = new Callable<Boolean>() {
+      public Boolean call() {
+        try {
+          get("/");
+          return null;
+        } catch (Exception e) {
+          return new Boolean(true);
+        }
+      }
+    };
+
+    Boolean serverDown = Recurrent.get(ping, retryPolicy);
+    return serverDown == null ? false : serverDown.booleanValue();
+  }
+
+  public void startBg()
+    throws InvalidOptionsException, URISyntaxException, IOException {
+    validateNotRemoteHost();
+
+    boolean serverAlreadyUp = checkForConnection();
+    if (serverAlreadyUp) {
+      msg("Server already up.");
+      return;
+    }
+
+    Object[] opts = {"--host", host, "--port", Integer.toString(port),
+                     "--pre-buffer", Integer.toString(preBuffer),
+                     "--post-buffer", Integer.toString(postBuffer)};
+
+    if (useStockSoundfont) {
+      opts = Util.conj(opts, "--stock");
+    }
+
+    Util.forkProgram(Util.conj(opts, "server"));
+    msg("Starting Alda server...");
+
+    boolean serverUp = waitForConnection();
+    if (serverUp) {
+      serverUp();
+    } else {
+      serverDown();
+    }
+  }
+
+  public void startFg() throws InvalidOptionsException {
+    validateNotRemoteHost();
+
+    Object[] args = {port,
+                     Keyword.intern("pre-buffer"), preBuffer,
+                     Keyword.intern("post-buffer"), postBuffer};
+
+    if (useStockSoundfont) {
+      args = Util.concat(args, new Object[]{Keyword.intern("stock"), true});
+    }
+
+    Util.callClojureFn("alda.server/start-server!", args);
+  }
+
+  // TODO: rewrite REPL as a client that communicates with a server
+  public void startRepl() throws InvalidOptionsException {
+    validateNotRemoteHost();
+
+    Object[] args = {Keyword.intern("pre-buffer"), preBuffer,
+                     Keyword.intern("post-buffer"), postBuffer};
+
+    if (useStockSoundfont) {
+      args = Util.concat(args, new Object[]{Keyword.intern("stock"), true});
+    }
+
+    Util.callClojureFn("alda.repl/start-repl!", args);
+  }
+
+  public void stop() throws Exception {
+    boolean serverAlreadyDown = !checkForConnection();
+    if (serverAlreadyDown) {
+      msg("Server already down.");
+      return;
+    }
+
+    msg("Stopping Alda server...");
+    get("/stop");
+
+    boolean serverIsDown = waitForLackOfConnection();
+    if (serverIsDown) {
+      serverDown(true);
+    } else {
+      throw new Exception("Failed to stop server.");
+    }
+  }
+
+  public void restart() throws Exception {
+    stop();
+    System.out.println();
+    startBg();
   }
 
 }

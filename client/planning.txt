@@ -1,25 +1,4 @@
 	commands:
-		start/up = start the server
-			* check for connection
-				* if server already up, print "alda server already up" and exit 0
-			* print "starting alda server..."
-				* fork new alda server process in the background
-					* pass in pre-/post-buffer and stock arguments
-				* repeatedly check for connection until established (w/ timeout)
-			* print "server up (check)"
-
-		stop/down = stop the server
-			* check for connection
-				* if down, print "no alda server running" and exit 0
-			* print "stopping alda server..."
-				* get /stop
-				* repeatedly check for lack of connection until established (w/ timeout)
-			* print "server down (check)"
-
-		status = returns whether the server is up
-			* check for connection
-			* print "server down (x)" or "server up (check)"
-
 		version = display the version of the alda server
 			* get /version
 			* print error if server down or status != 200

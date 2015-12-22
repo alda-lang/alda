@@ -136,8 +136,7 @@ public class Client {
     public boolean showScoreMap = false;
   }
 
-  public static void main(String[] argv)
-    throws InvalidOptionsException, java.net.URISyntaxException, java.io.IOException {
+  public static void main(String[] argv) {
     GlobalOptions globalOpts = new GlobalOptions();
 
     CommandHelp help        = new CommandHelp();
@@ -248,8 +247,9 @@ public class Client {
           // TODO
           break;
       }
-    } catch (InvalidOptionsException e) {
+    } catch (Exception e) {
       server.error(e.getMessage());
+      System.exit(1);
     }
   }
 
