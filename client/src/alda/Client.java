@@ -240,7 +240,7 @@ public class Client {
           break;
         case "new":
         case "delete":
-          // TODO
+          server.delete();
           break;
         case "edit":
           // TODO

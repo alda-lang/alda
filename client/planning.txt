@@ -10,9 +10,6 @@
 			TODO (requires server work):
 				* check to see if score is non-empty
 				* ask for confirmation before deleting
-			* delete /score
-			* print error if error or status != 200
-			* print body
 
 		parse = display the result of parsing alda code
 			* validate that only one of "file" or "code" supplied

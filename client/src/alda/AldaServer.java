@@ -19,6 +19,8 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.conn.ConnectTimeoutException;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -122,10 +124,8 @@ public class AldaServer {
     serverDown(false);
   }
 
-  private String get(String endpoint) throws IOException {
+  private String doRequest(HttpRequestBase httpRequest) throws IOException {
     try {
-      HttpGet httpget = new HttpGet(host + ":" + port + endpoint);
-
       ResponseHandler<String> responseHandler = new ResponseHandler<String>() {
         @Override
         public String handleResponse(final HttpResponse response)
@@ -143,16 +143,26 @@ public class AldaServer {
         }
       };
 
-      String responseBody = httpclient.execute(httpget, responseHandler);
+      String responseBody = httpclient.execute(httpRequest, responseHandler);
       return responseBody;
     } finally {
       httpclient.close();
     }
   }
 
+  private String getRequest(String endpoint) throws IOException {
+    HttpGet httpget = new HttpGet(host + ":" + port + endpoint);
+    return doRequest(httpget);
+  }
+
+  private String deleteRequest(String endpoint) throws IOException {
+    HttpDelete httpdelete = new HttpDelete(host + ":" + port + endpoint);
+    return doRequest(httpdelete);
+  }
+
   private boolean checkForConnection() throws Exception {
     try {
-      get("/");
+      getRequest("/");
       return true;
     } catch (UnknownHostException e) {
       throw new Exception("Invalid hostname. " +
@@ -181,7 +191,7 @@ public class AldaServer {
     Callable<Boolean> ping = new Callable<Boolean>() {
       public Boolean call() throws ConnectException {
         try {
-          get("/");
+          getRequest("/");
           return new Boolean(true);
         } catch (ConnectException e) {
           return null;
@@ -207,7 +217,7 @@ public class AldaServer {
     Callable<Boolean> ping = new Callable<Boolean>() {
       public Boolean call() {
         try {
-          get("/");
+          getRequest("/");
           return null;
         } catch (Exception e) {
           return new Boolean(true);
@@ -283,7 +293,7 @@ public class AldaServer {
     }
 
     msg("Stopping Alda server...");
-    get("/stop");
+    getRequest("/stop");
 
     boolean serverIsDown = waitForLackOfConnection();
     if (serverIsDown) {
@@ -310,12 +320,18 @@ public class AldaServer {
 
   public void version() throws Exception {
     assertServerUp();
-    msg(get("/version"));
+    msg(getRequest("/version"));
   }
 
   public void score(String mode) throws Exception {
     assertServerUp();
-    System.out.println(get("/score/" + mode));
+    System.out.println(getRequest("/score/" + mode));
+  }
+
+  public void delete() throws Exception {
+    assertServerUp();
+    deleteRequest("/score");
+    msg("New score initialized.");
   }
 
 }
