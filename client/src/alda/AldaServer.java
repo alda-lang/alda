@@ -313,4 +313,9 @@ public class AldaServer {
     msg(get("/version"));
   }
 
+  public void score(String mode) throws Exception {
+    assertServerUp();
+    System.out.println(get("/score/" + mode));
+  }
+
 }

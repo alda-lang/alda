@@ -1,5 +1,7 @@
 package alda;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 
 import clojure.java.api.Clojure;
@@ -23,7 +25,8 @@ public final class Util {
     return concat(a, new Object[]{b});
   }
 
-  public static void validateOpts(String file, String code) throws InvalidOptionsException {
+  public static void validatePlayOpts(String file, String code)
+    throws InvalidOptionsException {
     if (file == null && code == null) {
       throw new InvalidOptionsException("You must supply either a --file or " +
                                         "--code argument.");
@@ -35,12 +38,32 @@ public final class Util {
     }
   }
 
-  public static String getProgramPath() throws java.net.URISyntaxException {
+  public static String scoreMode(boolean showScoreText,
+                                 boolean showLispCode,
+                                 boolean showScoreMap)
+    throws InvalidOptionsException {
+    boolean[] modes = { showScoreText, showLispCode, showScoreMap };
+    int count = 0; for (boolean mode : modes) { if (mode) { count++; } }
+    if (count > 1) {
+      throw new InvalidOptionsException("You must choose only one mode out " +
+                                        "of --text, --lisp or --map.");
+    } else if (count == 1) {
+      if (showScoreText) { return "text"; }
+      if (showLispCode)  { return "lisp"; }
+      if (showScoreMap)  { return "map"; }
+    }
+
+    // default to text mode if no options provided
+    return "text";
+  }
+
+  public static String getProgramPath() throws URISyntaxException {
     return Client.class.getProtectionDomain().getCodeSource().getLocation()
                  .toURI().getPath();
   }
 
-  public static void forkProgram(Object... args) throws java.net.URISyntaxException, java.io.IOException {
+  public static void forkProgram(Object... args)
+    throws URISyntaxException, IOException {
     String programPath = getProgramPath();
 
     Object[] program;

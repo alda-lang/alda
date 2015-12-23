@@ -230,10 +230,13 @@ public class Client {
           break;
 
         case "play":
-          Util.validateOpts(play.file, play.code);
+          Util.validatePlayOpts(play.file, play.code);
           break;
         case "score":
-          // TODO
+          String mode = Util.scoreMode(score.showScoreText,
+                                       score.showLispCode,
+                                       score.showScoreMap);
+          server.score(mode);
           break;
         case "new":
         case "delete":
