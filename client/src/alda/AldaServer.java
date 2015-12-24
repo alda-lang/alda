@@ -1,10 +1,10 @@
 package alda;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.UnknownHostException;
 import java.net.URISyntaxException;
-
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
@@ -18,13 +18,20 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.HttpResponseException;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.conn.ConnectTimeoutException;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.FileEntity;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
 import net.jodah.recurrent.Recurrent;
@@ -158,6 +165,44 @@ public class AldaServer {
   private String deleteRequest(String endpoint) throws IOException {
     HttpDelete httpdelete = new HttpDelete(host + ":" + port + endpoint);
     return doRequest(httpdelete);
+  }
+
+  private String postRequest(String endpoint, HttpEntity entity)
+    throws IOException {
+    HttpPost httppost = new HttpPost(host + ":" + port + endpoint);
+    httppost.setEntity(entity);
+    return doRequest(httppost);
+  }
+
+  private String postString(String endpoint, String payload)
+    throws IOException {
+    StringEntity entity = new StringEntity(payload);
+    return postRequest(endpoint, entity);
+  }
+
+  private String postFile(String endpoint, File payload)
+    throws IOException {
+    FileEntity entity = new FileEntity(payload);
+    return postRequest(endpoint, entity);
+  }
+
+  private String putRequest(String endpoint, HttpEntity entity)
+    throws IOException {
+    HttpPut httpput = new HttpPut(host + ":" + port + endpoint);
+    httpput.setEntity(entity);
+    return doRequest(httpput);
+  }
+
+  private String putString(String endpoint, String payload)
+    throws IOException {
+    StringEntity entity = new StringEntity(payload);
+    return putRequest(endpoint, entity);
+  }
+
+  private String putFile(String endpoint, File payload)
+    throws IOException {
+    FileEntity entity = new FileEntity(payload);
+    return putRequest(endpoint, entity);
   }
 
   private boolean checkForConnection() throws Exception {
@@ -332,6 +377,26 @@ public class AldaServer {
     assertServerUp();
     deleteRequest("/score");
     msg("New score initialized.");
+  }
+
+  public void play() throws Exception {
+    assertServerUp();
+    getRequest("/play");
+    msg("Playing score...");
+  }
+
+  public void play(String code, boolean replaceScore) throws Exception {
+    assertServerUp();
+    String result = replaceScore ? putString("/play", code)
+                                 : postString("/play", code);
+    msg("Playing code...");
+  }
+
+  public void play(File file, boolean replaceScore) throws Exception {
+    assertServerUp();
+    String result = replaceScore ? putFile("/play", file)
+                                 : postFile("/play", file);
+    msg("Playing file...");
   }
 
 }

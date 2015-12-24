@@ -1,5 +1,6 @@
 package alda;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Arrays;
@@ -25,16 +26,21 @@ public final class Util {
     return concat(a, new Object[]{b});
   }
 
-  public static void validatePlayOpts(String file, String code)
+  public static String playInputType(File file, String code)
     throws InvalidOptionsException {
     if (file == null && code == null) {
-      throw new InvalidOptionsException("You must supply either a --file or " +
-                                        "--code argument.");
+      return "score";
     }
 
     if (file != null && code != null) {
       throw new InvalidOptionsException("You must supply either a --file or " +
                                         "--code argument (not both).");
+    }
+
+    if (file != null) {
+      return "file";
+    } else {
+      return "code";
     }
   }
 

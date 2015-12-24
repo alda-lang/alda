@@ -1,11 +1,21 @@
 package alda;
 
+import java.io.File;
+
+import com.beust.jcommander.IStringConverter;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.beust.jcommander.ParameterException;
 
 public class Client {
+
+  public static class FileConverter implements IStringConverter<File> {
+    @Override
+    public File convert(String value) {
+      return new File(value);
+    }
+  }
 
   private static class GlobalOptions {
     @Parameter(names = {"-h", "--help"},
@@ -64,10 +74,9 @@ public class Client {
   @Parameters(commandDescription = "Evaluate and play Alda code")
   private static class CommandPlay {
     @Parameter(names = {"-f", "--file"},
-               description = "Read Alda code from a file")
-    // TODO: make this a File? (JCommander custom type)
-    // perhaps with a validator that the file exists/is readable
-    public String file;
+               description = "Read Alda code from a file",
+               converter = FileConverter.class)
+    public File file;
 
     @Parameter(names = {"-c", "--code"},
                description = "Supply Alda code as a string")
@@ -117,10 +126,9 @@ public class Client {
   @Parameters(commandDescription = "Display the result of parsing Alda code")
   private static class CommandParse {
     @Parameter(names = {"-f", "--file"},
-               description = "Read Alda code from a file")
-    // TODO: make this a File? (JCommander custom type)
-    // perhaps with a validator that the file exists/is readable
-    public String file;
+               description = "Read Alda code from a file",
+               converter = FileConverter.class)
+    public File file;
 
     @Parameter(names = {"-c", "--code"},
                description = "Supply Alda code as a string")
@@ -230,7 +238,19 @@ public class Client {
           break;
 
         case "play":
-          Util.validatePlayOpts(play.file, play.code);
+          String inputType = Util.playInputType(play.file, play.code);
+
+          switch (inputType) {
+            case "score":
+              server.play();
+              break;
+            case "file":
+              server.play(play.file, play.replaceScore);
+              break;
+            case "code":
+              server.play(play.code, play.replaceScore);
+              break;
+          }
           break;
         case "score":
           String mode = Util.scoreMode(score.showScoreText,
