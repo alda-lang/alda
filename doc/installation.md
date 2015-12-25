@@ -6,6 +6,8 @@
 
 ## Mac OS X / Linux
 
+### Installing Alda
+
 The executable file `alda` in the `bin` directory of this repository is a standalone executable script that can be run from anywhere. It will retrieve the latest release version of Alda and run it, passing along any command-line arguments you give it.
 
 * To install Alda, simply copy the `alda` script from this repo into any directory in your `$PATH`, e.g. `/bin` or `/usr/local/bin`:
@@ -15,6 +17,12 @@ The executable file `alda` in the `bin` directory of this repository is a standa
 * This script requires the Clojure build tool [Boot](http://www.boot-clj.com), so you will need to have that installed as well. Mac OS X users with [Homebrew](https://github.com/homebrew/homebrew) can run `brew install boot-clj` to install Boot. Otherwise, [see here](https://github.com/boot-clj/boot#install) for more details about installing Boot.
 
 Once you've completed the steps above, you'll be able to run `alda` from any working directory. Running the command `alda` by itself will display the help text.
+
+### Installing FluidR3
+
+Default JVM soundfonts usually are of low quality. We recommend using a soundfont like FluidR3 in order to make your JVM's MIDI instruments sound a lot nicer.
+
+For your convenience, we've included a script that will allow you to install the FluidR3 soundfont by running `bin/install-fluidr3` in the root directory of the Alda git repo. You may need to wait a minute for the FluidR3 MIDI soundfont dependency (~125 MB) to download. It's worth the wait!
 
 ### Updating Alda
 
@@ -27,6 +35,8 @@ The start script will rarely need to be updated, but if you ever do need to get 
 The Alda library will keep itself updated on your computer each time you run it.
 
 ## Windows
+
+### Installing Alda
 
 The `alda` script doesn't seem to work for Windows users. If you're a Windows power user, [please feel free to weigh in on this issue](https://github.com/alda-lang/alda/issues/48). Until we have that sorted out, there is a workaround:
 
@@ -46,6 +56,12 @@ Caveats:
 * Unlike the `alda` script, running the `boot alda` task will not automatically update Alda; you will have to do so manually by running `git pull`.
 * If the command you're running is longer than one word, you must wrap it in double quotes -- see the examples above.
 
+### Installing FluidR3
+
+Default JVM soundfonts usually are of low quality. We recommend using a soundfont like FluidR3 in order to make your JVM's MIDI instruments sound a lot nicer.
+
+There is an `install-fluidr3` script for Unix users in the `bin/` folder of this repo, but it will not work for Windows users. If you know more about installing FluidR3 for Windows users, please let us know!
+
 ## Editor Plugins
 
 For the best experience when editing Alda score files, install the Alda file-type plugin for your editor of choice.
@@ -55,4 +71,3 @@ For the best experience when editing Alda score files, install the Alda file-typ
 - [Sublime Text](https://github.com/archimedespi/sublime-alda)
 - [Atom](https://github.com/MadcapJake/language-alda)
 - [Vim](https://github.com/daveyarwood/vim-alda)
-

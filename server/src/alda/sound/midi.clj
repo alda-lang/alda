@@ -1,7 +1,5 @@
 (ns alda.sound.midi
-  (:require [taoensso.timbre :as log]
-            [midi.soundfont  :refer (load-all-instruments!)]
-            [boot.core       :refer (merge-env!)])
+  (:require [taoensso.timbre :as log])
   (:import  (javax.sound.midi MidiSystem Synthesizer)))
 
 ; TODO: work around the limitation of 16 MIDI channels?
@@ -12,24 +10,6 @@
 
 (declare ^:dynamic *midi-synth*)
 (declare ^:dynamic *midi-channels*)
-(def ^:dynamic *midi-soundbank* nil)
-
-(defn fluid-r3!
-  "Fetches FluidR3 dependency and returns its soundbank."
-  []
-  (eval
-    '(do (boot.core/merge-env!
-           :dependencies '[[org.bitbucket.daveyarwood/fluid-r3 "0.1.1"]])
-         (require '[midi.soundfont.fluid-r3 :as fluid-r3])
-         (javax.sound.midi.MidiSystem/getSoundbank fluid-r3/sf2))))
-
-(defn load-fluid-r3!
-  "If FluidR3 is already loaded, does nothing.
-
-   Otherwise, fetches the FluidR3 soundbank and loads it into *midi-soundbank*."
-  []
-  (when-not *midi-soundbank*
-    (alter-var-root #'*midi-soundbank* (constantly (fluid-r3!)))))
 
 (defn- next-available
   "Given a set of available MIDI channels, returns the next available one,
@@ -78,10 +58,6 @@
   (log/debug "Loading MIDI synth...")
   (alter-var-root #'*midi-synth*
                   (constantly (doto (MidiSystem/getSynthesizer) .open)))
-  (when *midi-soundbank*
-    (log/debug "Loading MIDI soundfont...")
-    (load-all-instruments! *midi-synth* *midi-soundbank*)
-    (log/debug "Done loading MIDI soundfont."))
   (log/debug "Done loading MIDI synth."))
 
 (defn close-midi-synth!

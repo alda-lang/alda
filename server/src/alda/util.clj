@@ -113,7 +113,9 @@
 
       (.isDirectory (File. filename))
       (do
-        (printf "\"%s\" is a directory. Please specify a filename.\n" filename)
+        (println (format (str "\"%s\" is a directory. "
+                              "Please specify a filename.")
+                         filename))
         (recur (prompt)))
 
       :else

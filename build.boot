@@ -6,8 +6,11 @@
                   ; server
                   [org.clojure/clojure   "1.7.0"]
                   [org.clojure/tools.cli "0.3.1"]
+                  [boot/core             "2.4.2"]
+                  [boot/base             "2.4.2"]
                   [instaparse            "1.4.1"]
                   [adzerk/bootlaces      "0.1.12" :scope "test"]
+                  [adzerk/boot-jar2bin   "1.0.0"  :scope "test"]
                   [adzerk/boot-test      "1.0.4"  :scope "test"]
                   [boot/core             "2.5.2"]
                   [boot/base             "2.5.2"]
@@ -30,8 +33,9 @@
                   [net.jodah/recurrent                  "0.4.0"]
                   ])
 
-(require '[adzerk.bootlaces :refer :all]
-         '[adzerk.boot-test :refer :all]
+(require '[adzerk.bootlaces    :refer :all]
+         '[adzerk.boot-jar2bin :refer :all]
+         '[adzerk.boot-test    :refer :all]
          '[alda.util]
          '[alda.version])
 
@@ -49,6 +53,12 @@
           :scm {:url "https://github.com/alda-lang/alda"}
           :license {"name" "Eclipse Public License"
                     "url" "http://www.eclipse.org/legal/epl-v10.html"}}
+  jar    {:main    'alda.Client}
+  exe    {:name    'alda
+          :main    'alda.Client
+          :version alda.version/-version-
+          :desc    "A music programming language for musicians"
+          :copyright "2015 Dave Yarwood et al"}
   target {:dir #{"target"}}
   test   {:namespaces '#{
                          ; general tests
@@ -78,11 +88,28 @@
                          alda.parser.examples-test
                          }})
 
-(deftask build
+(deftask package
+  "Builds an uberjar."
   []
-  (comp (javac)
-        (pom)
-        (uber)
-        (jar :main 'alda.Client)
-        (target)))
+  (comp (javac) (pom) (uber) (jar) (target)))
+
+(deftask build
+  "Builds an uberjar and executable binaries for Unix/Linux and Windows."
+  [f file       PATH file "The path to an already-built uberjar."
+   o output-dir PATH str  "The directory in which to places the binaries."]
+  (if file
+    (comp
+      (bin :file file :output-dir output-dir)
+      (exe :file file :output-dir output-dir)
+      (target))
+    (comp
+      (package)
+      (bin :output-dir output-dir)
+      (exe :output-dir output-dir)
+      (target))))
+
+(deftask deploy
+  "Builds uberjar, installs it to local Maven repo, and deploys it to Clojars."
+  []
+  (comp (package) (install) (push-release)))
 

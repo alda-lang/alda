@@ -41,8 +41,7 @@
                                                 (.setExpandEvents false)
                                                 (.setPrompt "> "))))
   (let [done? (atom false)]
-    (print "Loading MIDI synth... ")
-    (when-not stock (load-fluid-r3!))
+    (print "Loading MIDI synth... ") (flush)
     (set-up! :midi)
     (println "done.")
     (score*) ; initialize a new score
