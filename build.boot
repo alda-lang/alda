@@ -20,7 +20,6 @@
                   [djy                   "0.1.4"]
                   [str-to-argv           "0.1.0"]
                   [overtone/at-at        "1.2.0"]
-                  [midi.soundfont        "0.1.1"]
                   [jline                 "2.12.1"]
 
                   ; client
