@@ -1,15 +1,14 @@
 (ns alda.repl.commands
-  (:require [alda.lisp               :refer :all]
-            [alda.now                :as    now]
-            [alda.parser             :refer (parse-input)]
-            [alda.repl.core          :as    repl :refer (*repl-reader*
-                                                         *parsing-context*)]
-            [alda.sound              :as    sound]
-            [alda.util               :as    util]
-            [boot.from.io.aviso.ansi :refer (bold)]
-            [clojure.pprint          :refer (pprint)]
-            [clojure.string          :as    str]
-            [instaparse.core         :as    insta]))
+  (:require [alda.lisp       :refer :all]
+            [alda.now        :as    now]
+            [alda.parser     :refer (parse-input)]
+            [alda.repl.core  :as    repl :refer (*repl-reader* *parsing-context*)]
+            [alda.sound      :as    sound]
+            [alda.util       :as    util]
+            [io.aviso.ansi   :refer (bold)]
+            [clojure.pprint  :refer (pprint)]
+            [clojure.string  :as    str]
+            [instaparse.core :as    insta]))
 
 (defn huh? []
   (println "Sorry, what? I don't understand that command."))

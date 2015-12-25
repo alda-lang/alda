@@ -1,9 +1,9 @@
 (ns alda.parser.examples-test
-  (:require [clojure.test            :refer :all]
-            [clojure.java.io         :as    io]
-            [alda.parser             :refer (parse-input)]
-            [instaparse.core         :as    insta]
-            [boot.from.io.aviso.ansi :refer :all]))
+  (:require [clojure.test    :refer :all]
+            [clojure.java.io :as    io]
+            [alda.parser     :refer (parse-input)]
+            [instaparse.core :as    insta]
+            [io.aviso.ansi   :refer :all]))
 
 (def example-scores
   ; Ideally, we would be able to dynamically test all .alda files in the

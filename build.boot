@@ -3,15 +3,15 @@
   :resource-paths #{"server/src" "server/test"
                     "server/grammar" "examples"}
   :dependencies '[
-                  ; server
-                  [org.clojure/clojure   "1.7.0"]
-                  [org.clojure/tools.cli "0.3.1"]
-                  [boot/core             "2.4.2"]
-                  [boot/base             "2.4.2"]
-                  [instaparse            "1.4.1"]
+                  ; dev
                   [adzerk/bootlaces      "0.1.12" :scope "test"]
                   [adzerk/boot-jar2bin   "1.0.0"  :scope "test"]
                   [adzerk/boot-test      "1.0.4"  :scope "test"]
+
+                  ; server
+                  [org.clojure/clojure   "1.7.0"]
+                  [instaparse            "1.4.1"]
+                  [io.aviso/pretty       "0.1.20"]
                   [com.taoensso/timbre   "4.1.1"]
                   [clj-http              "2.0.0"]
                   [ring                  "1.4.0"]

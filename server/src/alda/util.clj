@@ -3,6 +3,15 @@
             [taoensso.timbre :as timbre])
   (:import (java.io File)))
 
+ (defmacro while-let
+  "Repeatedly executes body while test expression is true. Test
+  expression is bound to binding.
+
+  (copied from boot.util)"
+  [[binding test] & body]
+  `(loop [~binding ~test]
+     (when ~binding ~@body (recur ~test))))
+
 (defmacro pdoseq
   "A fairly efficient hybrid of `doseq` and `pmap`"
   [binding & body]

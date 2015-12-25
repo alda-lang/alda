@@ -1,16 +1,14 @@
 (ns alda.repl
-  (:require [alda.version                 :refer (-version-)]
-            [alda.lisp                    :refer :all]
-            [alda.sound                   :refer (set-up! tear-down! *play-opts*)]
-            [alda.repl.core               :as    repl :refer (*repl-reader*
-                                                              *parsing-context*)]
-            [alda.repl.commands           :refer (repl-command)]
-            [alda.util]
-            [boot.from.io.aviso.ansi      :refer :all]
-            [boot.from.io.aviso.exception :as    pretty]
-            [boot.util                    :refer (while-let)]
-            [clojure.string               :as    str]
-            [taoensso.timbre              :as    log])
+  (:require [alda.version       :refer (-version-)]
+            [alda.lisp          :refer :all]
+            [alda.sound         :refer (set-up! tear-down! *play-opts*)]
+            [alda.repl.core     :as    repl :refer (*repl-reader* *parsing-context*)]
+            [alda.repl.commands :refer (repl-command)]
+            [alda.util          :refer (while-let)]
+            [io.aviso.ansi      :refer :all]
+            [io.aviso.exception :as    pretty]
+            [clojure.string     :as    str]
+            [taoensso.timbre    :as    log])
   (:import  [jline.console ConsoleReader]
             [jline.console.completer Completer]))
 
