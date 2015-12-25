@@ -270,6 +270,9 @@ public class Client {
             case "code":
               server.play(play.code, play.replaceScore);
               break;
+            case "stdin":
+              server.play(Util.getStdIn(), play.replaceScore);
+              break;
           }
           break;
 
@@ -284,6 +287,12 @@ public class Client {
             case "code":
               server.parse(parse.code, mode);
               break;
+            case "stdin":
+              server.parse(Util.getStdIn(), mode);
+              break;
+            default:
+              throw new Exception("Please provide some Alda code in the form " +
+                                  "of a string, file, or STDIN.");
           }
           break;
 
@@ -298,6 +307,12 @@ public class Client {
             case "code":
               server.append(append.code);
               break;
+            case "stdin":
+              server.append(Util.getStdIn());
+              break;
+            default:
+              throw new Exception("Please provide some Alda code in the form " +
+                                  "of a string, file, or STDIN.");
           }
           break;
 

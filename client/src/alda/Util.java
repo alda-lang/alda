@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Arrays;
+import java.util.Scanner;
 
 import clojure.java.api.Clojure;
 import clojure.lang.IFn;
@@ -29,7 +30,13 @@ public final class Util {
   public static String inputType(File file, String code)
     throws InvalidOptionsException {
     if (file == null && code == null) {
-      return "score";
+      // check to see if we're receiving input from STDIN
+      if (System.console() == null) {
+        return "stdin";
+      } else {
+        // if not, input type is the existing score in its entirety
+        return "score";
+      }
     }
 
     if (file != null && code != null) {
@@ -42,6 +49,15 @@ public final class Util {
     } else {
       return "code";
     }
+  }
+
+  public static String getStdIn() {
+    String fromStdIn = "";
+    Scanner scanner = new Scanner(System.in);
+    while (scanner.hasNextLine()) {
+      fromStdIn += scanner.nextLine();
+    }
+    return fromStdIn;
   }
 
   public static String scoreMode(boolean showLispCode,

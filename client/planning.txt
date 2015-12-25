@@ -1,6 +1,3 @@
-misc TODO:
-  * handle STDIN
-
 commands:
 	new/delete = delete the score and start a new one
 		TODO (requires server work):
