@@ -1,8 +1,6 @@
 (ns alda.lisp.events.note)
 (in-ns 'alda.lisp)
 
-(log/debug "Loading alda.lisp.events.note...")
-
 (defrecord Note [offset instrument volume track-volume panning midi-note pitch duration])
 
 (defn note*

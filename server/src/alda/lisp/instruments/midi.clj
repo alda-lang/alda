@@ -1,8 +1,6 @@
 (ns alda.lisp.instruments.midi)
 (in-ns 'alda.lisp)
 
-(log/debug "Loading alda.lisp.instruments.midi...")
-
 ; NOTE: For the time being, some of these instruments have non-prefixed names
 ;       like "piano" and "trumpet" as aliases. I eventually want to re-map
 ;       those names to more realistic-sounding, sampled instruments instead of

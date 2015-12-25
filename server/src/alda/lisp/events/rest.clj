@@ -1,8 +1,6 @@
 (ns alda.lisp.events.rest)
 (in-ns 'alda.lisp)
 
-(log/debug "Loading alda.lisp.events.rest...")
-
 (defrecord Rest [offset instrument duration])
 
 (defn pause*

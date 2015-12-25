@@ -3,8 +3,6 @@
 
 (require '[alda.util :refer (=%)])
 
-(log/debug "Loading alda.lisp.model.offset...")
-
 (declare ^:dynamic *events*
          ^:dynamic *current-instruments*
          apply-global-attributes)

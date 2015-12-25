@@ -1,8 +1,6 @@
 (ns alda.lisp.events.cram)
 (in-ns 'alda.lisp)
 
-(log/debug "Loading alda.lisp.events.cram...")
-
 (require '[alda.util :refer (resetting)])
 
 (defmacro tally-beats [& body]

@@ -1,8 +1,6 @@
 (ns alda.lisp.model.global-attribute)
 (in-ns 'alda.lisp)
 
-(log/debug "Loading alda.lisp.model.global-attribute...")
-
 (comment
   "*global-attributes* is a map of offsets to the global attribute changes that
    occur (for all instruments) at each offset.

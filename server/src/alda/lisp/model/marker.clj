@@ -1,8 +1,6 @@
 (ns alda.lisp.model.marker)
 (in-ns 'alda.lisp)
 
-(log/debug "Loading alda.lisp.model.marker...")
-
 (defrecord Marker [name offset])
 
 (defn $current-marker

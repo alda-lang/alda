@@ -2,8 +2,6 @@
   (:require [alda.lisp.model.key]))
 (in-ns 'alda.lisp)
 
-(log/debug "Loading alda.lisp.attributes...")
-
 (def ^:dynamic *initial-attr-values* {:current-offset (AbsoluteOffset. 0)
                                       :last-offset (AbsoluteOffset. 0)
                                       :current-marker :start})

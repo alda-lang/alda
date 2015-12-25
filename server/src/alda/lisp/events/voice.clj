@@ -1,8 +1,6 @@
 (ns alda.lisp.events.voice)
 (in-ns 'alda.lisp)
 
-(log/debug "Loading alda.lisp.events.voice...")
-
 (defn voice
   "Returns a list of the events, executing them in the process."
   [& events]

@@ -7,8 +7,6 @@
          '[clojure.string   :as    str]
          '[alda.parser-util :refer (parse-with-context)])
 
-(log/debug "Loading alda.lisp.score.part...")
-
 (declare ^:dynamic *nicknames*)
 
 (defn generate-id

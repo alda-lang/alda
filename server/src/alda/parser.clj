@@ -2,11 +2,7 @@
   (:require [instaparse.core :as insta]
             [clojure.string  :as str]
             [clojure.java.io :as io]
-            [alda.util       :as util]
             [taoensso.timbre :as log]))
-
-; sets log level to TIMBRE_LEVEL (if set) or :warn
-(util/set-timbre-level!)
 
 (defn- parser-from-grammars
   "Builds a parser from any number of BNF grammars, concatenated together."

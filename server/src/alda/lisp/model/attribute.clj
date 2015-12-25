@@ -1,8 +1,6 @@
 (ns alda.lisp.model.attribute)
 (in-ns 'alda.lisp)
 
-(log/debug "Loading alda.lisp.model.attribute...")
-
 (declare ^:dynamic *instruments*)
 
 (defmulti set-attribute

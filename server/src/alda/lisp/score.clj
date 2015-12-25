@@ -2,8 +2,6 @@
   (:require [alda.lisp.score.part]))
 (in-ns 'alda.lisp)
 
-(log/debug "Loading alda.lisp.score...")
-
 ;; for alda.repl use ;;
 
 (declare ^:dynamic *score-text*)

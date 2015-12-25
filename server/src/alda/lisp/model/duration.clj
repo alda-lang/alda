@@ -1,8 +1,6 @@
 (ns alda.lisp.model.duration)
 (in-ns 'alda.lisp)
 
-(log/debug "Loading alda.lisp.model.duration...")
-
 (declare set-duration)
 
 ; used by CRAM to proportionately expand or shrink the duration of a group of

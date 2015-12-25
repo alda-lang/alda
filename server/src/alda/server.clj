@@ -4,6 +4,7 @@
             [alda.parser                      :refer (parse-input)]
             [alda.parser-util                 :refer (parse-with-context)]
             [alda.sound                       :refer (*play-opts*)]
+            [alda.util]
             [alda.version                     :refer (-version-)]
             [ring.middleware.defaults         :refer (wrap-defaults api-defaults)]
             [ring.middleware.multipart-params :refer (wrap-multipart-params)]
@@ -12,6 +13,9 @@
             [compojure.route                  :refer (not-found)]
             [taoensso.timbre                  :as    log]
             [clojure.pprint                   :refer (pprint)]))
+
+; sets log level to TIMBRE_LEVEL (if set) or :warn
+(alda.util/set-timbre-level!)
 
 (defn start-alda-environment!
   []

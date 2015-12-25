@@ -1,8 +1,6 @@
 (ns alda.lisp.events.chord)
 (in-ns 'alda.lisp)
 
-(log/debug "Loading alda.lisp.events.chord...")
-
 (defrecord Chord [events])
 
 (defmacro tally-chord-duration

@@ -1,8 +1,6 @@
 (ns alda.lisp.model.pitch)
 (in-ns 'alda.lisp)
 
-(log/debug "Loading alda.lisp.model.pitch...")
-
 (def ^:private intervals
   {:c 0, :d 2, :e 4, :f 5, :g 7, :a 9, :b 11})
 

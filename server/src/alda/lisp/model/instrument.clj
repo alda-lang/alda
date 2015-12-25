@@ -1,8 +1,6 @@
 (ns alda.lisp.model.instrument)
 (in-ns 'alda.lisp)
 
-(log/debug "Loading alda.lisp.model.instrument...")
-
 (declare ^:dynamic *initial-attr-values*)
 
 (def ^:dynamic *stock-instruments* {})

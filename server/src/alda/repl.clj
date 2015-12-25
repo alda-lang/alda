@@ -5,6 +5,7 @@
             [alda.repl.core               :as    repl :refer (*repl-reader*
                                                               *parsing-context*)]
             [alda.repl.commands           :refer (repl-command)]
+            [alda.util]
             [boot.from.io.aviso.ansi      :refer :all]
             [boot.from.io.aviso.exception :as    pretty]
             [boot.util                    :refer (while-let)]
@@ -12,6 +13,9 @@
             [taoensso.timbre              :as    log])
   (:import  [jline.console ConsoleReader]
             [jline.console.completer Completer]))
+
+; sets log level to TIMBRE_LEVEL (if set) or :warn
+(alda.util/set-timbre-level!)
 
 (def ascii-art
   (str " █████╗ ██╗     ██████╗  █████╗ " \newline
