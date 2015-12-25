@@ -138,14 +138,16 @@ public class AldaServer {
         public String handleResponse(final HttpResponse response)
           throws HttpResponseException, IOException {
           int status = response.getStatusLine().getStatusCode();
-          if (status < 200 || status > 299) {
-            throw new HttpResponseException(status, "Unexpected response status: " + status);
-          } else if (response.getFirstHeader("X-Alda-Version") == null) {
+          HttpEntity entity = response.getEntity();
+          String responseBody = entity != null ? EntityUtils.toString(entity) : null;
+
+          if (response.getFirstHeader("X-Alda-Version") == null) {
             throw new HttpResponseException(status, "Missing X-Alda-Version header. " +
                                                     "Probably not an Alda server.");
+          } else if (status < 200 || status > 299) {
+            throw new HttpResponseException(status, responseBody);
           } else {
-            HttpEntity entity = response.getEntity();
-            return entity != null ? EntityUtils.toString(entity) : null;
+            return responseBody;
           }
         }
       };
