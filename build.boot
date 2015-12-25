@@ -113,8 +113,7 @@
   (comp
     (if-not file (package) identity)
     (bin :file file :output-dir output-dir)
-    (exe :file file :output-dir output-dir)
-    (target)))
+    (exe :file file :output-dir output-dir)))
 
 (deftask deploy
   "Builds uberjar, installs it to local Maven repo, and deploys it to Clojars."
