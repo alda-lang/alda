@@ -399,4 +399,14 @@ public class AldaServer {
     msg("Playing file...");
   }
 
+  public void parse(String code, String mode) throws Exception {
+    assertServerUp();
+    System.out.println(postString("/parse/" + mode, code));
+  }
+
+  public void parse(File file, String mode) throws Exception {
+    assertServerUp();
+    System.out.println(postFile("/parse/" + mode, file));
+  }
+
 }

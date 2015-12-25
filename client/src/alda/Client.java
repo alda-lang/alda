@@ -203,6 +203,10 @@ public class Client {
       String command = jc.getParsedCommand();
       command = command == null ? "help" : command;
 
+      // used for play and parse commands
+      String mode;
+      String inputType;
+
       switch (command) {
         case "help":
           jc.usage();
@@ -238,7 +242,7 @@ public class Client {
           break;
 
         case "play":
-          String inputType = Util.playInputType(play.file, play.code);
+          inputType = Util.inputType(play.file, play.code);
 
           switch (inputType) {
             case "score":
@@ -253,9 +257,9 @@ public class Client {
           }
           break;
         case "score":
-          String mode = Util.scoreMode(score.showScoreText,
-                                       score.showLispCode,
-                                       score.showScoreMap);
+          mode = Util.scoreMode(score.showScoreText,
+                                score.showLispCode,
+                                score.showScoreMap);
           server.score(mode);
           break;
         case "new":
@@ -266,7 +270,17 @@ public class Client {
           // TODO
           break;
         case "parse":
-          // TODO
+          mode = Util.scoreMode(parse.showLispCode, parse.showScoreMap);
+          inputType = Util.inputType(parse.file, parse.code);
+
+          switch (inputType) {
+            case "file":
+              server.parse(parse.file, mode);
+              break;
+            case "code":
+              server.parse(parse.code, mode);
+              break;
+          }
           break;
       }
     } catch (Exception e) {

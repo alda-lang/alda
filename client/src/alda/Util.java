@@ -26,7 +26,7 @@ public final class Util {
     return concat(a, new Object[]{b});
   }
 
-  public static String playInputType(File file, String code)
+  public static String inputType(File file, String code)
     throws InvalidOptionsException {
     if (file == null && code == null) {
       return "score";
@@ -42,6 +42,23 @@ public final class Util {
     } else {
       return "code";
     }
+  }
+
+  public static String scoreMode(boolean showLispCode,
+                                 boolean showScoreMap)
+    throws InvalidOptionsException {
+    boolean[] modes = { showLispCode, showScoreMap };
+    int count = 0; for (boolean mode : modes) { if (mode) { count++; } }
+    if (count > 1) {
+      throw new InvalidOptionsException("You must choose either --lisp or " +
+                                        "--map mode (not both).");
+    } else if (count == 1) {
+      if (showLispCode)  { return "lisp"; }
+      if (showScoreMap)  { return "map"; }
+    }
+
+    // default to lisp mode if no options provided
+    return "lisp";
   }
 
   public static String scoreMode(boolean showScoreText,

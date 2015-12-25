@@ -10,7 +10,6 @@ commands:
 			* ask for confirmation before deleting
 
 	parse = display the result of parsing alda code
-		* validate that only one of "file" or "code" supplied
-		* validate lisp/map arguments (there can be only one, or default: lisp)
-		* pass code/file to the appropriate /parse endpoint
-
+		TODO (requires server work):
+      * don't overwrite the current score when parsing code
+        (score evaluation should be more immutable and not rely on top-level vars)
