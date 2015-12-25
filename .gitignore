@@ -1,4 +1,5 @@
 /target
+/server/target
 /classes
 /checkouts
 pom.xml
