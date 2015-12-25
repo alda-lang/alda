@@ -1,8 +1,8 @@
 ```
-                            ________________________________  
+                            ________________________________
                            /    o   oooo ooo oooo   o o o  /\
                           /    oo  ooo  oo  oooo   o o o  / /
-                         /    _________________________  / /  
+                         /    _________________________  / /
                         / // / // /// // /// // /// / / / /
                        /___ //////////////////////////_/ /
                        \____\________________________\_\/
@@ -73,7 +73,6 @@ of music: classical, popular, chiptune, electroacoustic, and more!
 * [Export to MusicXML](https://github.com/alda-lang/alda/issues/44) for inter-operability with other music software
 * [A more robust REPL](https://github.com/alda-lang/alda/issues/54), tailor-made for editing scores interactively
 * [A plugin system](https://github.com/alda-lang/alda/issues/37) allowing users to define custom/unofficial syntax in Alda scores
-* [An "alda daemon"](https://github.com/alda-lang/alda/issues/49) with server/client semantics
 
 If you're a developer and you'd like to help, come on in -- [the water's fine](#contributing)!
 
@@ -86,32 +85,64 @@ If you're a developer and you'd like to help, come on in -- [the water's fine](#
 
 For more examples, see these [example scores](https://github.com/alda-lang/alda/tree/master/examples).
 
-## Quick Start
+## Installation
 
-### Installation
-
-> NOTE: Default JVM soundfonts usually are of low quality. We recommend installing a nice soundfont like FluidR3 to make your MIDI instruments sound a lot nicer. For your convenience, there is a script in this repo that will install the FluidR3 soundfont.
+> You must have [Java](https://www.java.com/en/download) installed on your system in order to run Alda.
 >
-> More information on this can be found in [the docs](doc/installation.md).
+> (Chances are, you already have Java installed.)
 
-#### Mac OS X / Linux
+### Mac OS X / Linux
 
-1. Install [Boot](http://www.boot-clj.com).
-2. Run this command to place the `alda` script in your `$PATH`:
+* Go to the [latest release](https://github.com/alda-lang/alda/releases/latest) page and download `alda`.
 
-        curl https://raw.githubusercontent.com/alda-lang/alda/master/server/bin/alda -o /usr/local/bin/alda && chmod +x /usr/local/bin/alda
+* Make the file executable:
 
-#### Windows
+        chmod +x alda
 
-See [the docs](doc/installation.md#windows).
+* Make `alda` available on your `$PATH`:
 
-#### Editor Plugins
+  > Using `/usr/local/bin` here as an example;
+  > you can use any directory on your `$PATH`.
 
-For the best experience when editing Alda score files, install the [Alda file-type plugin](doc/installation.md/#editor-plugins) for your editor of choice.
+        mv alda /usr/local/bin
 
-### Demo
+### Windows
 
-> NOTE: The first time you run one of these tasks, you may need to wait a minute for the FluidR3 MIDI soundfont dependency (~141 MB) to download. Alda uses this soundfont in order to make your JVM's MIDI instruments sound a lot nicer. If you'd prefer to skip this step and use your JVM's default soundfont instead, include the `--stock` flag (i.e. `play --stock --file ...`).
+* Go to the [latest release](https://github.com/alda-lang/alda/releases/latest) page and download `alda.exe`.
+
+* Make the `alda` command available by moving `alda.exe` to your system root path:
+
+        C:\> move alda.exe %SystemRoot%
+
+### MIDI soundfonts
+
+Default JVM soundfonts usually are of low quality. We recommend installing a good freeware soundfont like FluidR3 to make your MIDI instruments sound a lot nicer. For your convenience, there is a script in this repo that will install the FluidR3 soundfont for Mac and Linux users.
+
+> If you're a Windows user and you know how to install a MIDI soundfont to the Java Virtual Machine, please let us know!
+
+To install FluidR3 on your Mac or Linux system, clone this repo and run:
+
+    scripts/install-fluidr3
+
+This will download FluidR3 and replace `~/.gervill/soundbank-emg.sf2` (your JVM's default soundfont) with it.
+
+### Editor Plugins
+
+For the best experience when editing Alda score files, install the Alda file-type plugin for your editor of choice.
+
+> Don't see a plugin for your favorite editor? Write your own and open a Pull Request to add it here! :)
+
+- [Sublime Text](https://github.com/archimedespi/sublime-alda)
+- [Atom](https://github.com/MadcapJake/language-alda)
+- [Vim](https://github.com/daveyarwood/vim-alda)
+
+### Updating Alda
+
+We're still working on [improving the Alda update process](https://github.com/alda-lang/alda/issues/82). Ideally you'll be able to just type `alda update` to get the latest version.
+
+For now, you can update Alda by downloading the [latest release](https://github.com/alda-lang/alda/releases/latest) and repeating the install process.
+
+## Demo
 
 To play a file:
 

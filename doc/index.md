@@ -5,15 +5,18 @@ Hello! I'm an introductory paragraph, and this is the landing page for Alda's of
 ## Useful Links
 
 * [README](../README.md)
-* [Contributor / Developer Guide](../CONTRIBUTING.md)
+* [Contributing to Alda](../CONTRIBUTING.md)
+* [Development Guide](development-guide.md)
 * [CHANGELOG (Version History)](../CHANGELOG.md)
 * [Some background on Alda and a tutorial](http://daveyarwood.github.io/alda/2015/09/05/alda-a-manifesto-and-gentle-introduction)
 
 ## Where to Start
 
-* [Installing Alda](installation.md)
+* [Installing Alda](../README.md#installation)
 
-  * [Editor plugins](installation.md#editor-plugins)
+  * [MIDI soundfonts](../README.md#midi-soundfonts)
+
+  * [Editor plugins](../README.md#editor-plugins)
 
 * Learn about the [etymology](etymology.md) behind the name Alda.
 
