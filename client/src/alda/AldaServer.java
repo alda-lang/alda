@@ -224,6 +224,14 @@ public class AldaServer {
     }
   }
 
+  private void startServerIfNeeded() throws Exception {
+    try {
+      assertServerUp();
+    } catch (Exception e) {
+      startBg();
+    }
+  }
+
   // Keeps trying to connect to the server for 30 seconds.
   // Returns true if/when it gets a successful response.
   // Returns false if it doesn't get one within 30 seconds.
@@ -386,26 +394,26 @@ public class AldaServer {
   }
 
   public void play(String code, boolean replaceScore) throws Exception {
-    assertServerUp();
+    startServerIfNeeded();
     String result = replaceScore ? putString("/play", code)
                                  : postString("/play", code);
     msg("Playing code...");
   }
 
   public void play(File file, boolean replaceScore) throws Exception {
-    assertServerUp();
+    startServerIfNeeded();
     String result = replaceScore ? putFile("/play", file)
                                  : postFile("/play", file);
     msg("Playing file...");
   }
 
   public void parse(String code, String mode) throws Exception {
-    assertServerUp();
+    startServerIfNeeded();
     System.out.println(postString("/parse/" + mode, code));
   }
 
   public void parse(File file, String mode) throws Exception {
-    assertServerUp();
+    startServerIfNeeded();
     System.out.println(postFile("/parse/" + mode, file));
   }
 
