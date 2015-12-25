@@ -419,4 +419,16 @@ public class AldaServer {
     System.out.println(postFile("/parse/" + mode, file));
   }
 
+  public void append(String code) throws Exception {
+    startServerIfNeeded();
+    postString("/add", code);
+    msg("Appended code to score.");
+  }
+
+  public void append(File file) throws Exception {
+    startServerIfNeeded();
+    postFile("/add", file);
+    msg("Appended file to score.");
+  }
+
 }

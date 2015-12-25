@@ -1,7 +1,5 @@
 misc TODO:
   * handle STDIN
-  * add a command for just adding to a score without playing it
-    * should parse and eval the code
 
 commands:
 	new/delete = delete the score and start a new one

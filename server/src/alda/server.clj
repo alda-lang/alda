@@ -43,7 +43,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn handle-code
-  [code]
+  [code & {:keys [append-only?]}]
   (try
     (require '[alda.lisp :refer :all])
     (let [[context parse-result] (parse-with-context code)]
@@ -51,10 +51,13 @@
         (user-error "Invalid Alda syntax.")
         (do
           (score-text<< code)
-          (now/play! (eval (case context
+          (let [clj-code (case context
                            :music-data (cons 'do parse-result)
                            :score (cons 'do (rest parse-result))
-                           parse-result)))
+                           parse-result)]
+            (if append-only?
+              (eval clj-code)
+              (now/play! (eval clj-code))))
           (success "OK"))))
     (catch Throwable e
       (server-error (str "ERROR: " (.getMessage e))))))
@@ -70,15 +73,6 @@
     (catch Throwable e
       (server-error (str "ERROR: " (.getMessage e))))))
 
-(defn handle-score-play
-  []
-  (try
-    (require '[alda.lisp :refer :all])
-    (now/play-whole-score!)
-    (success "OK")
-    (catch Throwable e
-      (server-error (str "ERROR: " (.getMessage e))))))
-
 (defn stop-server!
   []
   (log/info "Received request to stop. Shutting down...")
@@ -88,6 +82,11 @@
   (success "Shutting down."))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn- get-input [params body]
+  (slurp (if-let [file (:file params)]
+           (:tempfile file)
+           body)))
 
 (defroutes server-routes
   ; ping for server status
@@ -102,40 +101,43 @@
   ; (will require refactoring alda.lisp to not use top-level vars)
 
   ; parse code and return the resulting alda.lisp code
-  (POST "/parse" {:keys [body] :as request}
-    (let [code (slurp body)]
+  (POST "/parse" {:keys [params body] :as request}
+    (let [code (get-input params body)]
       (handle-code-parse code)))
-  (POST "/parse/lisp" {:keys [body] :as request}
-    (let [code (slurp body)]
+  (POST "/parse/lisp" {:keys [params body] :as request}
+    (let [code (get-input params body)]
       (handle-code-parse code :mode :lisp)))
 
   ; parse + evaluate code and return the resulting score map
-  (POST "/parse/map" {:keys [body] :as request}
-    (let [code (slurp body)]
+  (POST "/parse/map" {:keys [params body] :as request}
+    (let [code (get-input params body)]
       (handle-code-parse code :mode :map)))
 
   ; play the full score (default), or from `from` to `to` params
   (GET "/play" {:keys [play-opts params] :as request}
     (let [{:keys [from to]} params]
       (binding [*play-opts* (assoc play-opts :from from :to to)]
-        (handle-score-play))))
+        (let [score-text *score-text*]
+          (score*)
+          (handle-code score-text)))))
 
   ; evaluate/play code within the context of the current score
   (POST "/play" {:keys [play-opts params body]:as request}
-    (let [code (slurp (if-let [file (:file params)]
-                        (:tempfile file)
-                        body))]
+    (let [code (get-input params body)]
       (binding [*play-opts* play-opts]
         (handle-code code))))
 
   ; overwrite the current score and play it
   (PUT "/play" {:keys [play-opts params body] :as request}
-    (let [code (slurp (if-let [file (:file params)]
-                        (:tempfile file)
-                        body))]
+    (let [code (get-input params body)]
       (score*)
       (binding [*play-opts* play-opts]
         (handle-code code))))
+
+  ; add to the current score without playing anything
+  (POST "/add" {:keys [params body] :as request}
+    (let [code (get-input params body)]
+      (handle-code code :append-only? true)))
 
   ; get the current score text
   (GET "/score" []
