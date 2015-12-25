@@ -55,7 +55,7 @@
           :main    'alda.Client
           :version alda.version/-version-
           :desc    "A music programming language for musicians"
-          :copyright "2015 Dave Yarwood et al"}
+          :copyright "2016 Dave Yarwood et al"}
   target {:dir #{"target"}}
   test   {:namespaces '#{
                          ; general tests

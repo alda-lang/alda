@@ -172,6 +172,6 @@ Sign up to the universe of Clojure chat @ http://clojurians.net/, then join us o
 
 ## License
 
-Copyright © 2012-2015 Dave Yarwood et al
+Copyright © 2012-2016 Dave Yarwood et al
 
 Distributed under the Eclipse Public License version 1.0.
