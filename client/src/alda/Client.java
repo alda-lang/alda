@@ -267,7 +267,17 @@ public class Client {
           server.delete();
           break;
         case "edit":
-          // TODO
+          String editor = System.getenv("EDITOR");
+          if (editor == null) {
+            throw new Exception("EDITOR environment variable is not set.");
+          }
+          // TODO:
+          // - add filename property to alda scores
+          // - expose filename via server (alda info command?)
+          // - alda save, open/load, edit
+          // - teach server to know if the score-in-memory has changes
+          // - do the right thing depending on whether this is the case
+          // - guard against filename not being set (i.e. new score)
           break;
         case "parse":
           mode = Util.scoreMode(parse.showLispCode, parse.showScoreMap);
