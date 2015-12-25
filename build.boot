@@ -12,9 +12,6 @@
                   [adzerk/bootlaces      "0.1.12" :scope "test"]
                   [adzerk/boot-jar2bin   "1.0.0"  :scope "test"]
                   [adzerk/boot-test      "1.0.4"  :scope "test"]
-                  [boot/core             "2.5.2"]
-                  [boot/base             "2.5.2"]
-                  [boot/aether           "2.5.2"]
                   [com.taoensso/timbre   "4.1.1"]
                   [clj-http              "2.0.0"]
                   [ring                  "1.4.0"]
@@ -53,7 +50,8 @@
           :scm {:url "https://github.com/alda-lang/alda"}
           :license {"name" "Eclipse Public License"
                     "url" "http://www.eclipse.org/legal/epl-v10.html"}}
-  jar    {:main    'alda.Client}
+  jar    {:file    "alda.jar"
+          :main    'alda.Client}
   exe    {:name    'alda
           :main    'alda.Client
           :version alda.version/-version-
@@ -91,22 +89,17 @@
 (deftask package
   "Builds an uberjar."
   []
-  (comp (javac) (pom) (uber) (jar) (target)))
+  (comp (javac) (pom) (uber) (jar)))
 
 (deftask build
   "Builds an uberjar and executable binaries for Unix/Linux and Windows."
   [f file       PATH file "The path to an already-built uberjar."
    o output-dir PATH str  "The directory in which to places the binaries."]
-  (if file
-    (comp
-      (bin :file file :output-dir output-dir)
-      (exe :file file :output-dir output-dir)
-      (target))
-    (comp
-      (package)
-      (bin :output-dir output-dir)
-      (exe :output-dir output-dir)
-      (target))))
+  (comp
+    (if-not file (package) identity)
+    (bin :file file :output-dir output-dir)
+    (exe :file file :output-dir output-dir)
+    (target)))
 
 (deftask deploy
   "Builds uberjar, installs it to local Maven repo, and deploys it to Clojars."

@@ -2,7 +2,6 @@
   (:require [alda.version                 :refer (-version-)]
             [alda.lisp                    :refer :all]
             [alda.sound                   :refer (set-up! tear-down! *play-opts*)]
-            [alda.sound.midi              :refer (load-fluid-r3!)]
             [alda.repl.core               :as    repl :refer (*repl-reader*
                                                               *parsing-context*)]
             [alda.repl.commands           :refer (repl-command)]
@@ -50,6 +49,7 @@
                            :post-buffer post-buffer
                            :async?      true}]
       (repl/set-prompt!)
+      (require '[alda.lisp :refer :all])
       (while-let [alda-code (when-not @done?
                               (println)
                               (.readLine *repl-reader*))]
@@ -71,5 +71,6 @@
             (when (repl/interpret! alda-code) (score-text<< alda-code)))
           (repl/set-prompt!)
           (catch Throwable e
-            (pretty/write-exception *err* e)))))))
+            (pretty/write-exception *err* e))))))
+  (System/exit 0))
 

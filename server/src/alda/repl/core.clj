@@ -13,14 +13,14 @@
 (defn parse-with-context
   "Determine the appropriate context to parse a line of code from the Alda
    REPL, then parse it within that context.
-   
+
    Sets `*parsing-context*` or logs an error, depending on the outcome of the
    parse attempt."
   [alda-code]
   (let [[context parse-result] (alda.parser-util/parse-with-context alda-code)]
     (if (= context :parse-failure)
       (log/error "Invalid Alda syntax.")
-      (do 
+      (do
         (alter-var-root #'*parsing-context* (constantly context))
         parse-result))))
 
@@ -46,6 +46,7 @@
   (log/debug "Parsing code...")
   (let [parsed (parse-with-context alda-code)]
     (log/debug "Done parsing code.")
+    (require '[alda.lisp :refer :all])
     (now/play! (eval (case *parsing-context*
                        :music-data (cons 'do parsed)
                        :score (cons 'do (rest parsed))
