@@ -39,11 +39,6 @@ public class Client {
                description = "A number of milliseconds to wait after playing " +
                              "the score, before exiting")
     public int postBuffer = 1000;
-
-    @Parameter(names = {"-s", "--stock"},
-               description = "Use the default MIDI soundfont of your JVM, " +
-                             "instead of FluidR3")
-    public boolean useStockSoundfont = false;
   }
 
   @Parameters(commandDescription = "Start the Alda server in the foreground.",
@@ -208,8 +203,7 @@ public class Client {
     }
 
     AldaServer server = new AldaServer(globalOpts.host, globalOpts.port,
-                                       globalOpts.preBuffer, globalOpts.postBuffer,
-                                       globalOpts.useStockSoundfont);
+                                       globalOpts.preBuffer, globalOpts.postBuffer);
 
     try {
       if (globalOpts.help) {

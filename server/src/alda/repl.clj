@@ -36,7 +36,7 @@
        \newline
        (bold-white "Type :help for a list of available commands.")))
 
-(defn start-repl! [& {:keys [pre-buffer post-buffer stock]}]
+(defn start-repl! [& {:keys [pre-buffer post-buffer]}]
   (println)
   (println banner \newline)
   (alter-var-root #'*parsing-context* (constantly :part))

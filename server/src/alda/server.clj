@@ -185,7 +185,7 @@
       (wrap-play-opts (or play-opts *play-opts*))))
 
 (defn start-server!
-  [port & {:keys [pre-buffer post-buffer stock]}]
+  [port & {:keys [pre-buffer post-buffer]}]
   (log/info "Loading Alda environment...")
   (start-alda-environment!)
 

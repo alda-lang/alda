@@ -42,19 +42,16 @@ public class AldaServer {
   private int port;
   private int preBuffer;
   private int postBuffer;
-  private boolean useStockSoundfont;
   private CloseableHttpClient httpclient;
 
   public String getHost() { return host; }
   public int getPort() { return port; }
 
-  public AldaServer(String host, int port, int preBuffer, int postBuffer,
-                    boolean useStockSoundfont) {
+  public AldaServer(String host, int port, int preBuffer, int postBuffer) {
     this.host = normalizeHost(host);
     this.port = port;
     this.preBuffer = preBuffer;
     this.postBuffer = postBuffer;
-    this.useStockSoundfont = useStockSoundfont;
 
     RequestConfig config = RequestConfig.custom()
                                         .setConnectTimeout(5000)
@@ -297,10 +294,6 @@ public class AldaServer {
                      "--pre-buffer", Integer.toString(preBuffer),
                      "--post-buffer", Integer.toString(postBuffer)};
 
-    if (useStockSoundfont) {
-      opts = Util.conj(opts, "--stock");
-    }
-
     Util.forkProgram(Util.conj(opts, "server"));
     msg("Starting Alda server...");
 
@@ -319,10 +312,6 @@ public class AldaServer {
                      Keyword.intern("pre-buffer"), preBuffer,
                      Keyword.intern("post-buffer"), postBuffer};
 
-    if (useStockSoundfont) {
-      args = Util.concat(args, new Object[]{Keyword.intern("stock"), true});
-    }
-
     Util.callClojureFn("alda.server/start-server!", args);
   }
 
@@ -332,10 +321,6 @@ public class AldaServer {
 
     Object[] args = {Keyword.intern("pre-buffer"), preBuffer,
                      Keyword.intern("post-buffer"), postBuffer};
-
-    if (useStockSoundfont) {
-      args = Util.concat(args, new Object[]{Keyword.intern("stock"), true});
-    }
 
     Util.callClojureFn("alda.repl/start-repl!", args);
   }
