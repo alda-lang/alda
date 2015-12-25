@@ -41,49 +41,65 @@
 ; version number is stored in alda.version
 (bootlaces! alda.version/-version-)
 
-(task-options!
-  pom    {:project 'alda
-          :version alda.version/-version-
-          :description "A music programming language for musicians"
-          :url "https://github.com/alda-lang/alda"
-          :scm {:url "https://github.com/alda-lang/alda"}
-          :license {"name" "Eclipse Public License"
-                    "url" "http://www.eclipse.org/legal/epl-v10.html"}}
-  jar    {:file    "alda.jar"
-          :main    'alda.Client}
-  exe    {:name    'alda
-          :main    'alda.Client
-          :version alda.version/-version-
-          :desc    "A music programming language for musicians"
-          :copyright "2016 Dave Yarwood et al"}
-  target {:dir #{"target"}}
-  test   {:namespaces '#{
-                         ; general tests
-                         alda.parser.barlines-test
-                         alda.parser.clj-exprs-test
-                         alda.parser.event-sequences-test
-                         alda.parser.comments-test
-                         alda.parser.duration-test
-                         alda.parser.events-test
-                         alda.parser.octaves-test
-                         alda.parser.repeats-test
-                         alda.parser.score-test
-                         alda.lisp.attributes-test
-                         alda.lisp.cram-test
-                         alda.lisp.chords-test
-                         alda.lisp.duration-test
-                         alda.lisp.global-attributes-test
-                         alda.lisp.markers-test
-                         alda.lisp.notes-test
-                         alda.lisp.parts-test
-                         alda.lisp.pitch-test
-                         alda.lisp.score-test
-                         alda.lisp.voices-test
-                         alda.util-test
+(defn- exe-version
+  "Convert non-exe-friendly version numbers like 1.0.0-rc1 to four-number
+   version numbers like 1.0.0.1 that launch4j can use to make exe files."
+  [version]
+  (if-let [[_ n rc] (re-matches #"(.*)-rc(\d+)" version)]
+    (format "%s.%s" n rc)
+    (if-let [[_ n _] (re-matches #"(.*)-SNAPSHOT" version)]
+      (format "%s.999" n)
+      version)))
 
-                         ; benchmarks / smoke tests
-                         alda.parser.examples-test
-                         }})
+(task-options!
+  pom     {:project 'alda
+           :version alda.version/-version-
+           :description "A music programming language for musicians"
+           :url "https://github.com/alda-lang/alda"
+           :scm {:url "https://github.com/alda-lang/alda"}
+           :license {"name" "Eclipse Public License"
+                     "url" "http://www.eclipse.org/legal/epl-v10.html"}}
+
+  install {:pom "alda/alda"}
+
+  jar     {:file "alda.jar"
+           :main 'alda.Client}
+
+  exe     {:name      'alda
+           :main      'alda.Client
+           :version   (exe-version alda.version/-version-)
+           :desc      "A music programming language for musicians"
+           :copyright "2016 Dave Yarwood et al"}
+
+  target  {:dir #{"target"}}
+
+  test    {:namespaces '#{
+                          ; general tests
+                          alda.parser.barlines-test
+                          alda.parser.clj-exprs-test
+                          alda.parser.event-sequences-test
+                          alda.parser.comments-test
+                          alda.parser.duration-test
+                          alda.parser.events-test
+                          alda.parser.octaves-test
+                          alda.parser.repeats-test
+                          alda.parser.score-test
+                          alda.lisp.attributes-test
+                          alda.lisp.cram-test
+                          alda.lisp.chords-test
+                          alda.lisp.duration-test
+                          alda.lisp.global-attributes-test
+                          alda.lisp.markers-test
+                          alda.lisp.notes-test
+                          alda.lisp.parts-test
+                          alda.lisp.pitch-test
+                          alda.lisp.score-test
+                          alda.lisp.voices-test
+                          alda.util-test
+
+                          ; benchmarks / smoke tests
+                          alda.parser.examples-test
+                          }})
 
 (deftask package
   "Builds an uberjar."
@@ -103,5 +119,5 @@
 (deftask deploy
   "Builds uberjar, installs it to local Maven repo, and deploys it to Clojars."
   []
-  (comp (package) (install) (push-release)))
+  (comp (build-jar) (push-release)))
 
