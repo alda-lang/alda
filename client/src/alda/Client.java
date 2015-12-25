@@ -149,7 +149,8 @@ public class Client {
   @Parameters(commandDescription = "Delete the score and start a new one")
   private static class CommandNew {}
 
-  @Parameters(commandDescription = "Edit the score in progress")
+  @Parameters(commandDescription = "Edit the score in progress",
+              hidden = true)
   private static class CommandEdit {
     @Parameter(names = {"-e", "--editor"},
                description = "pass the file to a custom command instead of " +
@@ -340,6 +341,7 @@ public class Client {
           // - teach server to know if the score-in-memory has changes
           // - do the right thing depending on whether this is the case
           // - guard against filename not being set (i.e. new score)
+          // - remember to un-hide this command :)
           break;
 
       }
