@@ -27,6 +27,7 @@
                   [org.fusesource.jansi/jansi           "1.11"]
                   [org.apache.httpcomponents/httpclient "4.5.1"]
                   [net.jodah/recurrent                  "0.4.0"]
+                  [us.bpsm/edn-java                     "0.4.6"]
                   ])
 
 (require '[adzerk.bootlaces    :refer :all]

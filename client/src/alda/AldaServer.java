@@ -3,6 +3,8 @@ package alda;
 import java.io.File;
 import java.io.IOException;
 import java.net.ConnectException;
+import java.util.List;
+import java.util.Map;
 import java.net.UnknownHostException;
 import java.net.URISyntaxException;
 import java.util.concurrent.Callable;
@@ -13,6 +15,11 @@ import static org.fusesource.jansi.Ansi.*;
 import static org.fusesource.jansi.Ansi.Color.*;
 
 import clojure.lang.Keyword;
+
+import static us.bpsm.edn.Keyword.newKeyword;
+import us.bpsm.edn.parser.Parseable;
+import us.bpsm.edn.parser.Parser;
+import us.bpsm.edn.parser.Parsers;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -361,6 +368,39 @@ public class AldaServer {
   public void version() throws Exception {
     assertServerUp();
     msg(getRequest("/version"));
+  }
+
+  public void info() throws Exception {
+    assertServerUp();
+    String ednString = getRequest("/");
+    Parseable pbr = Parsers.newParseable(ednString);
+    Parser p = Parsers.newParser(Parsers.defaultConfiguration());
+    Map<?, ?> m = (Map<?, ?>) p.nextValue(pbr);
+
+    String status   = (String) m.get(newKeyword("status"));
+    String version  = (String) m.get(newKeyword("version"));
+    String filename = (String) m.get(newKeyword("filename"));
+    Long lineCount  = (Long) m.get(newKeyword("line-count"));
+    Long charCount  = (Long) m.get(newKeyword("char-count"));
+    @SuppressWarnings("unchecked") List<Map<?, ?>> instruments =
+      (List<Map<?, ?>>) m.get(newKeyword("instruments"));
+
+    msg("Server status: " + status);
+    msg("Server version: " + version);
+    msg("Filename: " + (filename != null ? filename : "(new score)"));
+    msg("Line count: " + lineCount);
+    msg("Character count: " + charCount);
+    if (instruments.isEmpty()) {
+      msg("Instruments: (none)");
+    } else {
+      msg("Instruments:");
+      for (Map<?, ?> instrument : instruments) {
+        String instrumentName  = (String) instrument.get(newKeyword("name"));
+        String instrumentStock = (String) instrument.get(newKeyword("stock"));
+        String instrumentString = instrumentStock + " (" + instrumentName + ")";
+        msg("  \u2022 " + instrumentString);
+      }
+    }
   }
 
   public void score(String mode) throws Exception {

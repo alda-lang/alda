@@ -12,7 +12,8 @@
             [compojure.core                   :refer :all]
             [compojure.route                  :refer (not-found)]
             [taoensso.timbre                  :as    log]
-            [clojure.pprint                   :refer (pprint)]))
+            [clojure.pprint                   :refer (pprint)]
+            [clojure.string                   :as    str]))
 
 ; sets log level to TIMBRE_LEVEL (if set) or :warn
 (alda.util/set-timbre-level!)
@@ -23,6 +24,31 @@
   (now/set-up! :midi)
   ; initialize a new score
   (score*))
+
+; TODO:
+;
+; - represent scores as self-contained maps, instead of a combination of things
+;   defined at the top-level
+;
+; - do one of two things:
+;
+;   a) include the filename as a key in the map;
+;      manage the whole thing as an atom
+;
+;   b) manage the filename and the current score as refs
+
+(def filename (atom nil))
+
+(defn score-info
+  []
+  {:status      "up"
+   :version     -version-
+   :filename    @filename
+   :line-count  (count (str/split *score-text* #"[\n\r]+"))
+   :char-count  (count *score-text*)
+   :instruments (for [[k v] (:instruments (score-map))]
+                  {:name  k
+                   :stock (:stock v)})})
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -94,7 +120,7 @@
 (defroutes server-routes
   ; ping for server status
   (GET "/" []
-    (success "Server up."))
+    (edn-response (score-info)))
 
   ; stop the server and exits
   (DELETE "/" []

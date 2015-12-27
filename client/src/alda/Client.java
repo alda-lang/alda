@@ -23,6 +23,10 @@ public class Client {
                description = "Print this help text")
     public boolean help = false;
 
+    @Parameter(names = {"-v", "--verbose"},
+               description = "Enable verbose output")
+    public boolean verbose = false;
+
     @Parameter(names = {"-H", "--host"},
                description = "The hostname of the Alda server")
     public String host = "localhost";
@@ -65,6 +69,9 @@ public class Client {
 
   @Parameters(commandDescription = "Display the version of the Alda server")
   private static class CommandVersion {}
+
+  @Parameters(commandDescription = "Display information about the Alda server")
+  private static class CommandInfo {}
 
   @Parameters(commandDescription = "Evaluate and play Alda code")
   private static class CommandPlay {
@@ -156,23 +163,26 @@ public class Client {
   public static void main(String[] argv) {
     GlobalOptions globalOpts = new GlobalOptions();
 
-    CommandHelp help        = new CommandHelp();
-    CommandServer serverCmd = new CommandServer();
-    CommandRepl repl        = new CommandRepl();
-    CommandStart start      = new CommandStart();
-    CommandStop stop        = new CommandStop();
-    CommandRestart restart  = new CommandRestart();
-    CommandStatus status    = new CommandStatus();
-    CommandVersion version  = new CommandVersion();
-    CommandPlay play        = new CommandPlay();
-    CommandParse parse      = new CommandParse();
-    CommandAppend append    = new CommandAppend();
-    CommandScore score      = new CommandScore();
-    CommandNew newScore     = new CommandNew();
-    CommandEdit edit        = new CommandEdit();
+    CommandHelp    help      = new CommandHelp();
+    CommandServer  serverCmd = new CommandServer();
+    CommandRepl    repl      = new CommandRepl();
+    CommandStart   start     = new CommandStart();
+    CommandStop    stop      = new CommandStop();
+    CommandRestart restart   = new CommandRestart();
+    CommandStatus  status    = new CommandStatus();
+    CommandVersion version   = new CommandVersion();
+    CommandInfo    info      = new CommandInfo();
+    CommandPlay    play      = new CommandPlay();
+    CommandParse   parse     = new CommandParse();
+    CommandAppend  append    = new CommandAppend();
+    CommandScore   score     = new CommandScore();
+    CommandNew     newScore  = new CommandNew();
+    CommandEdit    edit      = new CommandEdit();
 
     JCommander jc = new JCommander(globalOpts);
     jc.setProgramName("alda");
+
+    jc.addCommand("help", help);
 
     jc.addCommand("server", serverCmd);
     jc.addCommand("repl", repl);
@@ -183,7 +193,7 @@ public class Client {
 
     jc.addCommand("status", status);
     jc.addCommand("version", version);
-    jc.addCommand("help", help);
+    jc.addCommand("info", info);
 
     jc.addCommand("play", play);
     jc.addCommand("parse", parse);
@@ -202,8 +212,10 @@ public class Client {
       System.exit(1);
     }
 
-    AldaServer server = new AldaServer(globalOpts.host, globalOpts.port,
-                                       globalOpts.preBuffer, globalOpts.postBuffer);
+    AldaServer server = new AldaServer(globalOpts.host,
+                                       globalOpts.port,
+                                       globalOpts.preBuffer,
+                                       globalOpts.postBuffer);
 
     try {
       if (globalOpts.help) {
@@ -250,6 +262,9 @@ public class Client {
           break;
         case "version":
           server.version();
+          break;
+        case "info":
+          server.info();
           break;
 
         case "play":
@@ -341,6 +356,10 @@ public class Client {
       }
     } catch (Exception e) {
       server.error(e.getMessage());
+      if (globalOpts.verbose) {
+        System.out.println();
+        e.printStackTrace();
+      }
       System.exit(1);
     }
   }
