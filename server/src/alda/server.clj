@@ -198,6 +198,13 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defn wrap-print-request
+  "For debug purposes."
+  [next-handler]
+  (fn [request]
+    (prn request)
+    (next-handler request)))
+
 (defn wrap-play-opts
   [next-handler play-opts]
   (fn [request]
@@ -208,7 +215,8 @@
   [& {:keys [play-opts]}]
   (-> (wrap-defaults server-routes api-defaults)
       (wrap-multipart-params)
-      (wrap-play-opts (or play-opts *play-opts*))))
+      (wrap-play-opts (or play-opts *play-opts*))
+      #_(wrap-print-request)))
 
 (defn start-server!
   [port & {:keys [pre-buffer post-buffer]}]
