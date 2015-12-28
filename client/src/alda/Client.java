@@ -59,10 +59,20 @@ public class Client {
   private static class CommandStart {}
 
   @Parameters(commandDescription = "Stop the Alda server")
-  private static class CommandStop {}
+  private static class CommandStop {
+    @Parameter (names = {"-y", "--yes"},
+                description = "Auto-respond 'y' to confirm discarding " +
+                              "unsaved changes")
+    public boolean autoConfirm = false;
+  }
 
   @Parameters(commandDescription = "Restart the Alda server")
-  private static class CommandRestart {}
+  private static class CommandRestart {
+    @Parameter (names = {"-y", "--yes"},
+                description = "Auto-respond 'y' to confirm discarding " +
+                              "unsaved changes")
+    public boolean autoConfirm = false;
+  }
 
   @Parameters(commandDescription = "Display whether the server is up")
   private static class CommandStatus {}
@@ -96,6 +106,10 @@ public class Client {
     @Parameter(names = {"-r", "--replace"},
                description = "Replace the existing score with new code")
     public boolean replaceScore = false;
+
+    @Parameter (names = {"-y", "--yes"},
+                description = "Auto-respond 'y' to confirm e.g. score replacement")
+    public boolean autoConfirm = false;
   }
 
   @Parameters(commandDescription = "Display the result of parsing Alda code")
@@ -117,6 +131,10 @@ public class Client {
     @Parameter(names = {"-m", "--map"},
                description = "Display the map of score data")
     public boolean showScoreMap = false;
+
+    @Parameter (names = {"-y", "--yes"},
+                description = "Auto-respond 'y' to confirm e.g. score replacement")
+    public boolean autoConfirm = false;
   }
 
   @Parameters(commandDescription = "Evaluate Alda code and append it to the " +
@@ -149,7 +167,12 @@ public class Client {
   }
 
   @Parameters(commandDescription = "Delete the score and start a new one")
-  private static class CommandNew {}
+  private static class CommandNew {
+    @Parameter (names = {"-y", "--yes"},
+                description = "Auto-respond 'y' to confirm discarding " +
+                              "unsaved changes")
+    public boolean autoConfirm = false;
+  }
 
   @Parameters(commandDescription = "Edit the score in progress",
               hidden = true)
@@ -250,11 +273,11 @@ public class Client {
           break;
         case "stop":
         case "down":
-          server.stop();
+          server.stop(stop.autoConfirm);
           break;
         case "restart":
         case "downup":
-          server.restart();
+          server.restart(restart.autoConfirm);
           break;
 
         case "status":
@@ -275,13 +298,13 @@ public class Client {
               server.play();
               break;
             case "file":
-              server.play(play.file, play.replaceScore);
+              server.play(play.file, play.replaceScore, play.autoConfirm);
               break;
             case "code":
-              server.play(play.code, play.replaceScore);
+              server.play(play.code, play.replaceScore, play.autoConfirm);
               break;
             case "stdin":
-              server.play(Util.getStdIn(), play.replaceScore);
+              server.play(Util.getStdIn(), play.replaceScore, play.autoConfirm);
               break;
           }
           break;
@@ -292,13 +315,13 @@ public class Client {
 
           switch (inputType) {
             case "file":
-              server.parse(parse.file, mode);
+              server.parse(parse.file, mode, parse.autoConfirm);
               break;
             case "code":
-              server.parse(parse.code, mode);
+              server.parse(parse.code, mode, parse.autoConfirm);
               break;
             case "stdin":
-              server.parse(Util.getStdIn(), mode);
+              server.parse(Util.getStdIn(), mode, parse.autoConfirm);
               break;
             default:
               throw new Exception("Please provide some Alda code in the form " +
@@ -335,7 +358,7 @@ public class Client {
 
         case "new":
         case "delete":
-          server.delete();
+          server.delete(newScore.autoConfirm);
           break;
 
         case "edit":

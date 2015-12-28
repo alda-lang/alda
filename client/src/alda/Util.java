@@ -1,5 +1,6 @@
 package alda;
 
+import java.io.Console;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -25,6 +26,35 @@ public final class Util {
 
   public static Object[] conj(Object[] a, Object b) {
     return concat(a, new Object[]{b});
+  }
+
+  public static boolean promptForConfirmation(String prompt, boolean autoConfirm) {
+    if (autoConfirm) {
+      System.out.println(prompt + "\n");
+      System.out.println("(-y/--yes flag set. Responding yes on your behalf.)");
+      return true;
+    }
+
+    Console console = System.console();
+    if (System.console() != null) {
+      Boolean confirm = null;
+      while (confirm == null) {
+        String response = console.readLine(prompt + " (y/n) ");
+        if (response.toLowerCase().startsWith("y")) {
+          confirm = true;
+        } else if (response.toLowerCase().startsWith("n")) {
+          confirm = false;
+        }
+      }
+      return confirm.booleanValue();
+    } else {
+      System.out.println(prompt + "\n");
+      System.out.println("Unable to get a response because you are " +
+                         "redirecting input.\nI'm just gonna assume the " +
+                         "answer is no.\n\n" +
+                         "To auto-respond yes, use the -y/--yes option.");
+      return false;
+    }
   }
 
   public static String inputType(File file, String code)
