@@ -135,7 +135,8 @@ public class AldaServer {
     serverDown(false);
   }
 
-  private String doRequest(HttpRequestBase httpRequest) throws IOException {
+  private String doRequest(HttpRequestBase httpRequest)
+    throws IOException, UnsavedChangesException {
     try {
       ResponseHandler<String> responseHandler = new ResponseHandler<String>() {
         @Override
@@ -148,6 +149,13 @@ public class AldaServer {
           if (response.getFirstHeader("X-Alda-Version") == null) {
             throw new HttpResponseException(status, "Missing X-Alda-Version header. " +
                                                     "Probably not an Alda server.");
+          } else if (status == 409) {
+            // We can't actually throw an UnsavedChangesException here because
+            // the overridden method does not throw UnsavedChangesException.
+            //
+            // (I hate this.)
+            String body = responseBody != null ? responseBody : "";
+            return "UnsavedChangesException:" + body;
           } else if (status < 200 || status > 299) {
             throw new HttpResponseException(status, responseBody);
           } else {
@@ -157,58 +165,117 @@ public class AldaServer {
       };
 
       String responseBody = httpclient.execute(httpRequest, responseHandler);
+      // (I still hate this.)
+      if (responseBody.startsWith("UnsavedChangesException:")) {
+        int colon = responseBody.indexOf(":");
+        throw new UnsavedChangesException(responseBody.substring(colon + 1));
+      }
       return responseBody;
     } finally {
       httpclient.close();
     }
   }
 
-  private String getRequest(String endpoint) throws IOException {
+  private String getRequest(String endpoint)
+    throws IOException, UnsavedChangesException {
+    return getRequest(endpoint, false);
+  }
+
+  private String getRequest(String endpoint, boolean confirming)
+    throws IOException, UnsavedChangesException {
     HttpGet httpget = new HttpGet(host + ":" + port + endpoint);
+    if (confirming) {
+      httpget.addHeader("X-Alda-Confirm", "yes");
+    }
     return doRequest(httpget);
   }
 
-  private String deleteRequest(String endpoint) throws IOException {
+  private String deleteRequest(String endpoint)
+    throws IOException, UnsavedChangesException {
+    return deleteRequest(endpoint, false);
+  }
+
+  private String deleteRequest(String endpoint, boolean confirming)
+    throws IOException, UnsavedChangesException {
     HttpDelete httpdelete = new HttpDelete(host + ":" + port + endpoint);
+    if (confirming) {
+      httpdelete.addHeader("X-Alda-Confirm", "yes");
+    }
     return doRequest(httpdelete);
   }
 
   private String postRequest(String endpoint, HttpEntity entity)
-    throws IOException {
+  throws IOException, UnsavedChangesException {
+    return postRequest(endpoint, entity, false);
+  }
+
+  private String postRequest(String endpoint, HttpEntity entity, boolean confirming)
+    throws IOException, UnsavedChangesException {
     HttpPost httppost = new HttpPost(host + ":" + port + endpoint);
     httppost.setEntity(entity);
+    if (confirming) {
+      httppost.addHeader("X-Alda-Confirm", "yes");
+    }
     return doRequest(httppost);
   }
 
   private String postString(String endpoint, String payload)
-    throws IOException {
+    throws IOException, UnsavedChangesException {
+    return postString(endpoint, payload, false);
+  }
+
+  private String postString(String endpoint, String payload, boolean confirming)
+    throws IOException, UnsavedChangesException {
     StringEntity entity = new StringEntity(payload);
-    return postRequest(endpoint, entity);
+    return postRequest(endpoint, entity, confirming);
   }
 
   private String postFile(String endpoint, File payload)
-    throws IOException {
+    throws IOException, UnsavedChangesException {
+    return postFile(endpoint, payload, false);
+  }
+
+  private String postFile(String endpoint, File payload, boolean confirming)
+    throws IOException, UnsavedChangesException {
     FileEntity entity = new FileEntity(payload);
-    return postRequest(endpoint, entity);
+    return postRequest(endpoint, entity, confirming);
   }
 
   private String putRequest(String endpoint, HttpEntity entity)
-    throws IOException {
+    throws IOException, UnsavedChangesException {
+    return putRequest(endpoint, entity, false);
+  }
+
+  private String putRequest(String endpoint, HttpEntity entity, boolean confirming)
+    throws IOException, UnsavedChangesException {
     HttpPut httpput = new HttpPut(host + ":" + port + endpoint);
     httpput.setEntity(entity);
+    if (confirming) {
+      httpput.addHeader("X-Alda-Confirm", "yes");
+    }
     return doRequest(httpput);
   }
 
   private String putString(String endpoint, String payload)
-    throws IOException {
+    throws IOException, UnsavedChangesException {
+    return putString(endpoint, payload, false);
+  }
+
+  private String putString(String endpoint, String payload, boolean confirming)
+    throws IOException, UnsavedChangesException {
     StringEntity entity = new StringEntity(payload);
-    return putRequest(endpoint, entity);
+    return putRequest(endpoint, entity, confirming);
   }
 
   private String putFile(String endpoint, File payload)
-    throws IOException {
+    throws IOException, UnsavedChangesException {
+    return putFile(endpoint, payload, false);
+  }
+
+  private String putFile(String endpoint, File payload, boolean confirming)
+    throws IOException, UnsavedChangesException {
     FileEntity entity = new FileEntity(payload);
-    return putRequest(endpoint, entity);
+    return putRequest(endpoint, entity, confirming);
   }
 
   private boolean checkForConnection() throws Exception {
@@ -332,7 +399,7 @@ public class AldaServer {
     Util.callClojureFn("alda.repl/start-repl!", args);
   }
 
-  public void stop() throws Exception {
+  public void stop(boolean autoConfirm) throws Exception {
     boolean serverAlreadyDown = !checkForConnection();
     if (serverAlreadyDown) {
       msg("Server already down.");
@@ -340,7 +407,22 @@ public class AldaServer {
     }
 
     msg("Stopping Alda server...");
-    getRequest("/stop");
+    try {
+      getRequest("/stop");
+    } catch (UnsavedChangesException e) {
+      System.out.println();
+      boolean confirm =
+        Util.promptForConfirmation("The score has unsaved changes that will be " +
+                                   "lost.\nAre you sure you want to stop the " +
+                                   "server?", autoConfirm);
+      if (confirm) {
+        System.out.println();
+        msg("Stopping Alda server...");
+        getRequest("/stop", true);
+      } else {
+        return;
+      }
+    }
 
     boolean serverIsDown = waitForLackOfConnection();
     if (serverIsDown) {
@@ -350,8 +432,8 @@ public class AldaServer {
     }
   }
 
-  public void restart() throws Exception {
-    stop();
+  public void restart(boolean autoConfirm) throws Exception {
+    stop(autoConfirm);
     System.out.println();
     startBg();
   }
@@ -377,17 +459,19 @@ public class AldaServer {
     Parser p = Parsers.newParser(Parsers.defaultConfiguration());
     Map<?, ?> m = (Map<?, ?>) p.nextValue(pbr);
 
-    String status   = (String) m.get(newKeyword("status"));
-    String version  = (String) m.get(newKeyword("version"));
-    String filename = (String) m.get(newKeyword("filename"));
-    Long lineCount  = (Long) m.get(newKeyword("line-count"));
-    Long charCount  = (Long) m.get(newKeyword("char-count"));
+    String status      = (String) m.get(newKeyword("status"));
+    String version     = (String) m.get(newKeyword("version"));
+    String filename    = (String) m.get(newKeyword("filename"));
+    Boolean isModified = (Boolean) m.get(newKeyword("modified?"));
+    Long lineCount     = (Long) m.get(newKeyword("line-count"));
+    Long charCount     = (Long) m.get(newKeyword("char-count"));
     @SuppressWarnings("unchecked") List<Map<?, ?>> instruments =
       (List<Map<?, ?>>) m.get(newKeyword("instruments"));
 
     msg("Server status: " + status);
     msg("Server version: " + version);
     msg("Filename: " + (filename != null ? filename : "(new score)"));
+    msg("Modified: " + (isModified ? "yes" : "no"));
     msg("Line count: " + lineCount);
     msg("Character count: " + charCount);
     if (instruments.isEmpty()) {
@@ -408,9 +492,24 @@ public class AldaServer {
     System.out.println(getRequest("/score/" + mode));
   }
 
-  public void delete() throws Exception {
+  public void delete(boolean autoConfirm) throws Exception {
     assertServerUp();
-    deleteRequest("/score");
+
+    try {
+      deleteRequest("/score");
+    } catch (UnsavedChangesException e) {
+      System.out.println();
+      boolean confirm =
+        Util.promptForConfirmation("The score has unsaved changes that will " +
+                                   "be lost.\nAre you sure you want to start a " +
+                                   "new score?", autoConfirm);
+      if (confirm) {
+        deleteRequest("/score", true);
+      } else {
+        return;
+      }
+    }
+
     msg("New score initialized.");
   }
 
@@ -420,28 +519,95 @@ public class AldaServer {
     msg("Playing score...");
   }
 
-  public void play(String code, boolean replaceScore) throws Exception {
+  public void play(String code, boolean replaceScore, boolean autoConfirm) throws Exception {
     startServerIfNeeded();
-    String result = replaceScore ? putString("/play", code)
-                                 : postString("/play", code);
+
+    if (replaceScore) {
+      try {
+        putString("/play", code);
+      } catch (UnsavedChangesException e) {
+        System.out.println();
+        boolean confirm =
+          Util.promptForConfirmation("The current score has unsaved changes " +
+                                     "that will be lost.\nAre you sure you " +
+                                     "want to proceed?", autoConfirm);
+        if (confirm) {
+          putString("/play", code, true);
+        } else {
+          return;
+        }
+      }
+    } else {
+      postString("/play", code);
+    }
+
     msg("Playing code...");
   }
 
-  public void play(File file, boolean replaceScore) throws Exception {
+  public void play(File file, boolean replaceScore, boolean autoConfirm) throws Exception {
     startServerIfNeeded();
-    String result = replaceScore ? putFile("/play", file)
-                                 : postFile("/play", file);
+
+    if (replaceScore) {
+      try {
+        putFile("/play", file);
+      } catch (UnsavedChangesException e) {
+        System.out.println();
+        boolean confirm =
+          Util.promptForConfirmation("The current score has unsaved changes " +
+                                     "that will be lost.\nAre you sure you " +
+                                     "want to proceed?", autoConfirm);
+        if (confirm) {
+          putFile("/play", file, true);
+        } else {
+          return;
+        }
+      }
+    } else {
+      postFile("/play", file);
+    }
+
     msg("Playing file...");
   }
 
-  public void parse(String code, String mode) throws Exception {
+  public void parse(String code, String mode, boolean autoConfirm) throws Exception {
     startServerIfNeeded();
-    System.out.println(postString("/parse/" + mode, code));
+
+    try {
+      String result = postString("/parse/" + mode, code);
+      System.out.println(result);
+    } catch (UnsavedChangesException e) {
+      System.out.println();
+      boolean confirm =
+        Util.promptForConfirmation("The current score has unsaved changes " +
+                                   "that will be lost.\nAre you sure you " +
+                                   "want to proceed?", autoConfirm);
+      if (confirm) {
+        String result = postString("/parse/" + mode, code, true);
+        System.out.println(result);
+      } else {
+        return;
+      }
+    }
   }
 
-  public void parse(File file, String mode) throws Exception {
+  public void parse(File file, String mode, boolean autoConfirm) throws Exception {
     startServerIfNeeded();
-    System.out.println(postFile("/parse/" + mode, file));
+    try {
+      String result = postFile("/parse/" + mode, file);
+      System.out.println(result);
+    } catch (UnsavedChangesException e) {
+      System.out.println();
+      boolean confirm =
+        Util.promptForConfirmation("The current score has unsaved changes " +
+                                   "that will be lost.\nAre you sure you " +
+                                   "want to proceed?", autoConfirm);
+      if (confirm) {
+        String result = postFile("/parse/" + mode, file, true);
+        System.out.println(result);
+      } else {
+        return;
+      }
+    }
   }
 
   public void append(String code) throws Exception {

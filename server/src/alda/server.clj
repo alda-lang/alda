@@ -39,11 +39,23 @@
 
 (def filename (atom nil))
 
+(defn modified?
+  []
+  (if @filename
+    "TODO"
+    (not (empty? *score-text*))))
+
+(defn confirming?
+  [{:keys [headers] :as request}]
+  (let [confirm-header (get headers "x-alda-confirm" "false")]
+    (not (contains? #{"" "no" "false"} (.toLowerCase confirm-header)))))
+
 (defn score-info
   []
   {:status      "up"
    :version     -version-
    :filename    @filename
+   :modified?   (modified?)
    :line-count  (count (str/split *score-text* #"[\n\r]+"))
    :char-count  (count *score-text*)
    :instruments (for [[k v] (:instruments (score-map))]
@@ -63,6 +75,12 @@
 (def ^:private success      (response 200))
 (def ^:private user-error   (response 400))
 (def ^:private server-error (response 500))
+
+(def unsaved-changes-response
+  ((response 409) (str "Warning: the score has unsaved changes. Are you sure "
+                       "you want to do this?\n\n"
+                       "If so, please re-submit your request and include the "
+                       "header X-Alda-Confirm:yes.")))
 
 (defn- edn-response
   [x]
@@ -105,9 +123,12 @@
 (defn stop-server!
   []
   (log/info "Received request to stop. Shutting down...")
-  (future
-    (Thread/sleep 300)
-    (System/exit 0))
+  (try
+    (future
+      (Thread/sleep 300)
+      (System/exit 0))
+    (catch Throwable e
+      (server-error (str "ERROR: " (.getMessage e)))))
   (success "Shutting down."))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -126,9 +147,6 @@
   (DELETE "/" []
     (stop-server!))
 
-  ; TODO: make the /parse/map endpoint not overwrite the current score
-  ; (will require refactoring alda.lisp to not use top-level vars)
-
   ; parse code and return the resulting alda.lisp code
   (POST "/parse" {:keys [params body] :as request}
     (let [code (get-input params body)]
@@ -137,10 +155,15 @@
     (let [code (get-input params body)]
       (handle-code-parse code :mode :lisp)))
 
+  ; TODO: make the /parse/map endpoint not overwrite the current score
+  ; (will require refactoring alda.lisp to not use top-level vars)
+
   ; parse + evaluate code and return the resulting score map
   (POST "/parse/map" {:keys [params body] :as request}
     (let [code (get-input params body)]
-      (handle-code-parse code :mode :map)))
+      (if (and (modified?) (not (confirming? request)))
+        unsaved-changes-response
+        (handle-code-parse code :mode :map))))
 
   ; play the full score (default), or from `from` to `to` params
   (GET "/play" {:keys [play-opts params] :as request}
@@ -158,10 +181,12 @@
 
   ; overwrite the current score and play it
   (PUT "/play" {:keys [play-opts params body] :as request}
-    (let [code (get-input params body)]
-      (score*)
-      (binding [*play-opts* play-opts]
-        (handle-code code))))
+    (if (and (modified?) (not (confirming? request)))
+      unsaved-changes-response
+      (let [code (get-input params body)]
+        (score*)
+        (binding [*play-opts* play-opts]
+          (handle-code code)))))
 
   ; add to the current score without playing anything
   (POST "/add" {:keys [params body] :as request}
@@ -183,20 +208,32 @@
     (edn-response (score-map)))
 
   ; delete the current score and start a new one
-  (DELETE "/score" []
-    (score*)
-    (success "New score initialized."))
+  (DELETE "/score" {:as request}
+    (if (and (modified?) (not (confirming? request)))
+      unsaved-changes-response
+      (do
+        (score*)
+        (success "New score initialized."))))
 
   ; stop the server (alias for DELETE "/")
-  (GET "/stop" []
-    (stop-server!))
+  (GET "/stop" {:as request}
+    (if (and (modified?) (not (confirming? request)))
+      unsaved-changes-response
+      (stop-server!)))
 
   (GET "/version" []
     (success (str "alda v" -version-)))
 
-  (not-found "Invalid route."))
+  (not-found (user-error "Invalid route.")))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn wrap-print-request
+  "For debug purposes."
+  [next-handler]
+  (fn [request]
+    (prn request)
+    (next-handler request)))
 
 (defn wrap-play-opts
   [next-handler play-opts]
@@ -208,7 +245,8 @@
   [& {:keys [play-opts]}]
   (-> (wrap-defaults server-routes api-defaults)
       (wrap-multipart-params)
-      (wrap-play-opts (or play-opts *play-opts*))))
+      (wrap-play-opts (or play-opts *play-opts*))
+      #_(wrap-print-request)))
 
 (defn start-server!
   [port & {:keys [pre-buffer post-buffer]}]

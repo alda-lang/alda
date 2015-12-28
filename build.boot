@@ -102,6 +102,22 @@
                           alda.parser.examples-test
                           }})
 
+(deftask dev
+  "Runs the Alda server for development.
+
+   There is a middleware that reloads all the server namespaces before each
+   request, so that the server does not need to be restarted after making
+   changes."
+  []
+  (comp
+    (with-pre-wrap fs
+      (require 'alda.server)
+      (require 'alda.util)
+      ((resolve 'alda.util/set-timbre-level!) :debug)
+      ((resolve 'alda.server/start-server!) 27713)
+      fs)
+    (wait)))
+
 (deftask package
   "Builds an uberjar."
   []
