@@ -39,11 +39,18 @@
 
 (def filename (atom nil))
 
+(defn modified?
+  []
+  (if @filename
+    "TODO"
+    (not (empty? *score-text*))))
+
 (defn score-info
   []
   {:status      "up"
    :version     -version-
    :filename    @filename
+   :modified?   (modified?)
    :line-count  (count (str/split *score-text* #"[\n\r]+"))
    :char-count  (count *score-text*)
    :instruments (for [[k v] (:instruments (score-map))]

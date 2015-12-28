@@ -377,17 +377,19 @@ public class AldaServer {
     Parser p = Parsers.newParser(Parsers.defaultConfiguration());
     Map<?, ?> m = (Map<?, ?>) p.nextValue(pbr);
 
-    String status   = (String) m.get(newKeyword("status"));
-    String version  = (String) m.get(newKeyword("version"));
-    String filename = (String) m.get(newKeyword("filename"));
-    Long lineCount  = (Long) m.get(newKeyword("line-count"));
-    Long charCount  = (Long) m.get(newKeyword("char-count"));
+    String status      = (String) m.get(newKeyword("status"));
+    String version     = (String) m.get(newKeyword("version"));
+    String filename    = (String) m.get(newKeyword("filename"));
+    Boolean isModified = (Boolean) m.get(newKeyword("modified?"));
+    Long lineCount     = (Long) m.get(newKeyword("line-count"));
+    Long charCount     = (Long) m.get(newKeyword("char-count"));
     @SuppressWarnings("unchecked") List<Map<?, ?>> instruments =
       (List<Map<?, ?>>) m.get(newKeyword("instruments"));
 
     msg("Server status: " + status);
     msg("Server version: " + version);
     msg("Filename: " + (filename != null ? filename : "(new score)"));
+    msg("Modified: " + (isModified ? "yes" : "no"));
     msg("Line count: " + lineCount);
     msg("Character count: " + charCount);
     if (instruments.isEmpty()) {
