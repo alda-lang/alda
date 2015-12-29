@@ -513,6 +513,50 @@ public class AldaServer {
     msg("New score initialized.");
   }
 
+  public void load(File file, boolean autoConfirm) throws Exception {
+    startServerIfNeeded();
+
+    try {
+      putFile("/load", file);
+      putString("/filename", file.getAbsolutePath());
+    } catch (UnsavedChangesException e) {
+      System.out.println();
+      boolean confirm =
+        Util.promptForConfirmation("The current score has unsaved changes " +
+                                   "that will be lost.\nAre you sure you " +
+                                   "want to proceed?", autoConfirm);
+      if (confirm) {
+        putFile("/load", file, true);
+        putString("/filename", file.getAbsolutePath());
+      } else {
+        return;
+      }
+    }
+
+    msg("Loaded file.");
+  }
+
+  public void load(String code, boolean autoConfirm) throws Exception {
+    startServerIfNeeded();
+
+    try {
+      putString("/load", code);
+    } catch (UnsavedChangesException e) {
+      System.out.println();
+      boolean confirm =
+        Util.promptForConfirmation("The current score has unsaved changes " +
+                                   "that will be lost.\nAre you sure you " +
+                                   "want to proceed?", autoConfirm);
+      if (confirm) {
+        putString("/load", code, true);
+      } else {
+        return;
+      }
+    }
+
+    msg("Loaded code.");
+  }
+
   public void play() throws Exception {
     assertServerUp();
     getRequest("/play");
@@ -550,6 +594,7 @@ public class AldaServer {
     if (replaceScore) {
       try {
         putFile("/play", file);
+        putString("/filename", file.getAbsolutePath());
       } catch (UnsavedChangesException e) {
         System.out.println();
         boolean confirm =
@@ -558,6 +603,7 @@ public class AldaServer {
                                      "want to proceed?", autoConfirm);
         if (confirm) {
           putFile("/play", file, true);
+          putString("/filename", file.getAbsolutePath());
         } else {
           return;
         }

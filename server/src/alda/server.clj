@@ -12,6 +12,7 @@
             [compojure.core                   :refer :all]
             [compojure.route                  :refer (not-found)]
             [taoensso.timbre                  :as    log]
+            [clojure.java.io                  :as    io]
             [clojure.pprint                   :refer (pprint)]
             [clojure.string                   :as    str]))
 
@@ -37,12 +38,19 @@
 ;
 ;   b) manage the filename and the current score as refs
 
-(def filename (atom nil))
+(def score-filename (atom nil))
 
 (defn modified?
   []
-  (if @filename
-    "TODO"
+  (if @score-filename
+    (try
+      (let [file-contents (slurp (io/file @score-filename))]
+        (not= *score-text* file-contents))
+      (catch java.io.FileNotFoundException e
+        ; if the file no longer exists (e.g. has been deleted since opening),
+        ; consider the score to have been modified -- this should prompt the
+        ; user to save changes, which will re-create the file
+        true))
     (not (empty? *score-text*))))
 
 (defn confirming?
@@ -54,7 +62,7 @@
   []
   {:status      "up"
    :version     -version-
-   :filename    @filename
+   :filename    @score-filename
    :modified?   (modified?)
    :line-count  (count (str/split *score-text* #"[\n\r]+"))
    :char-count  (count *score-text*)
@@ -90,24 +98,35 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn handle-code
-  [code & {:keys [append-only?]}]
+  [code & {:keys [replace-score? ; replace the existing score
+                  silent?        ; add to/replace the score only, don't play
+                  ]}]
   (try
     (require '[alda.lisp :refer :all])
     (let [[context parse-result] (parse-with-context code)]
-      (if (= context :parse-failure)
+      (cond
+        (and replace-score? (not
+                              (or (= context :score)
+                                  (= context :part))))
         (user-error "Invalid Alda syntax.")
+
+        (= context :parse-failure)
+        (user-error "Invalid Alda syntax.")
+
+        :else
         (do
+          (if replace-score? (score*))
           (score-text<< code)
           (let [clj-code (case context
                            :music-data (cons 'do parse-result)
                            :score (cons 'do (rest parse-result))
                            parse-result)]
-            (if append-only?
+            (if silent?
               (eval clj-code)
               (now/play! (eval clj-code))))
           (success "OK"))))
     (catch Throwable e
-      (server-error (str "ERROR: " (.getMessage e))))))
+      (server-error (.getMessage e)))))
 
 (defn handle-code-parse
   [code & {:keys [mode] :or {mode :lisp}}]
@@ -118,7 +137,7 @@
                       :lisp parse-result
                       :map (eval parse-result))))
     (catch Throwable e
-      (server-error (str "ERROR: " (.getMessage e))))))
+      (server-error (.getMessage e)))))
 
 (defn stop-server!
   []
@@ -128,7 +147,7 @@
       (Thread/sleep 300)
       (System/exit 0))
     (catch Throwable e
-      (server-error (str "ERROR: " (.getMessage e)))))
+      (server-error (.getMessage e))))
   (success "Shutting down."))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -146,6 +165,28 @@
   ; stop the server and exits
   (DELETE "/" []
     (stop-server!))
+
+  ; add to the current score without playing anything
+  (POST "/add" {:keys [params body] :as request}
+    (let [code (get-input params body)]
+      (handle-code code :silent? true)))
+
+  ; (implementation detail, for use by alda client)
+  ; sets the filename of the score
+  (PUT "/filename" {:keys [params body] :as request}
+    (let [filename (get-input params body)]
+      (reset! score-filename filename)
+      (success "OK")))
+
+  ; replace the current score with code from a file or string
+  (PUT "/load" {:keys [params body] :as request}
+    (let [code (get-input params body)]
+      (if (and (modified?) (not (confirming? request)))
+        unsaved-changes-response
+        (do
+          (reset! score-filename nil)
+          (handle-code code :silent? true
+                            :replace-score? true)))))
 
   ; parse code and return the resulting alda.lisp code
   (POST "/parse" {:keys [params body] :as request}
@@ -184,14 +225,9 @@
     (if (and (modified?) (not (confirming? request)))
       unsaved-changes-response
       (let [code (get-input params body)]
-        (score*)
+        (reset! score-filename nil)
         (binding [*play-opts* play-opts]
-          (handle-code code)))))
-
-  ; add to the current score without playing anything
-  (POST "/add" {:keys [params body] :as request}
-    (let [code (get-input params body)]
-      (handle-code code :append-only? true)))
+          (handle-code code :replace-score? true)))))
 
   ; get the current score text
   (GET "/score" []
@@ -213,6 +249,7 @@
       unsaved-changes-response
       (do
         (score*)
+        (reset! score-filename nil)
         (success "New score initialized."))))
 
   ; stop the server (alias for DELETE "/")

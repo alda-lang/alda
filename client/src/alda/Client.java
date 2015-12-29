@@ -174,6 +174,23 @@ public class Client {
     public boolean autoConfirm = false;
   }
 
+  @Parameters(commandDescription = "Load a score from a file or string")
+  private static class CommandLoad {
+    @Parameter(names = {"-f", "--file"},
+               description = "A file containing an Alda score",
+               converter = FileConverter.class)
+    public File file;
+
+    @Parameter(names = {"-c", "--code"},
+               description = "A string of Alda code")
+    public String code;
+
+    @Parameter (names = {"-y", "--yes"},
+                description = "Auto-respond 'y' to confirm discarding " +
+                              "unsaved changes")
+    public boolean autoConfirm = false;
+  }
+
   @Parameters(commandDescription = "Edit the score in progress",
               hidden = true)
   private static class CommandEdit {
@@ -200,6 +217,7 @@ public class Client {
     CommandAppend  append    = new CommandAppend();
     CommandScore   score     = new CommandScore();
     CommandNew     newScore  = new CommandNew();
+    CommandLoad    load      = new CommandLoad();
     CommandEdit    edit      = new CommandEdit();
 
     JCommander jc = new JCommander(globalOpts);
@@ -224,6 +242,7 @@ public class Client {
 
     jc.addCommand("score", score);
     jc.addCommand("new", newScore, "delete");
+    jc.addCommand("load", load, "open");
     jc.addCommand("edit", edit);
 
     try {
@@ -359,6 +378,26 @@ public class Client {
         case "new":
         case "delete":
           server.delete(newScore.autoConfirm);
+          break;
+
+        case "load":
+        case "open":
+          inputType = Util.inputType(load.file, load.code);
+
+          switch (inputType) {
+            case "file":
+              server.load(load.file, load.autoConfirm);
+              break;
+            case "code":
+              server.load(load.code, load.autoConfirm);
+              break;
+            case "stdin":
+              server.load(Util.getStdIn(), load.autoConfirm);
+              break;
+            default:
+              throw new Exception("Please provide some Alda code in the form " +
+                                  "of a string, file, or STDIN.");
+          }
           break;
 
         case "edit":
