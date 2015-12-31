@@ -148,6 +148,11 @@ public final class Util {
     Runtime.getRuntime().exec(execArgs);
   }
 
+  public static void runProgramInFg(String... args)
+  throws IOException, InterruptedException {
+    new ProcessBuilder(args).inheritIO().start().waitFor();
+  }
+
   public static void callClojureFn(String fn, Object... args) {
     Symbol var = (Symbol)Clojure.read(fn);
     IFn require = Clojure.var("clojure.core", "require");

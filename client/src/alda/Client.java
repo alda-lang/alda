@@ -191,8 +191,7 @@ public class Client {
     public boolean autoConfirm = false;
   }
 
-  @Parameters(commandDescription = "Edit the score in progress",
-              hidden = true)
+  @Parameters(commandDescription = "Edit the score in progress")
   private static class CommandEdit {
     @Parameter(names = {"-e", "--editor"},
                description = "pass the file to a custom command instead of " +
@@ -402,19 +401,33 @@ public class Client {
 
         case "edit":
           String editor = System.getenv("EDITOR");
+          if (edit.editor != null) {
+            editor = edit.editor;
+          }
           if (editor == null) {
             throw new Exception("EDITOR environment variable is not set.");
           }
-          // TODO:
-          // - add filename property to alda scores
-          // - expose filename via server (alda info command?)
-          // - alda save, open/load, edit
-          // - teach server to know if the score-in-memory has changes
-          // - do the right thing depending on whether this is the case
-          // - guard against filename not being set (i.e. new score)
-          // - remember to un-hide this command :)
-          break;
 
+          AldaServerInfo scoreInfo = server.getInfo();
+
+          if (scoreInfo.isModified) {
+            boolean saveFirst = Util.promptForConfirmation(
+              "Your score has unsaved changes that will be lost unless you " +
+              "save first.\nWould you like to save before editing?", false);
+
+            if (saveFirst) {
+              System.out.println("TODO: save");
+            }
+          }
+
+          if (scoreInfo.filename == null) {
+            server.msg("Score has not been saved yet. There is no file to " +
+                       "edit.");
+          } else {
+            Util.runProgramInFg(editor, scoreInfo.filename);
+            System.out.println("TODO: save edited file");
+          }
+          break;
       }
     } catch (Exception e) {
       server.error(e.getMessage());

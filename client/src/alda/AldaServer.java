@@ -452,8 +452,7 @@ public class AldaServer {
     msg(getRequest("/version"));
   }
 
-  public void info() throws Exception {
-    assertServerUp();
+  public AldaServerInfo getInfo() throws Exception {
     String ednString = getRequest("/");
     Parseable pbr = Parsers.newParseable(ednString);
     Parser p = Parsers.newParser(Parsers.defaultConfiguration());
@@ -468,17 +467,25 @@ public class AldaServer {
     @SuppressWarnings("unchecked") List<Map<?, ?>> instruments =
       (List<Map<?, ?>>) m.get(newKeyword("instruments"));
 
-    msg("Server status: " + status);
-    msg("Server version: " + version);
-    msg("Filename: " + (filename != null ? filename : "(new score)"));
-    msg("Modified: " + (isModified ? "yes" : "no"));
-    msg("Line count: " + lineCount);
-    msg("Character count: " + charCount);
-    if (instruments.isEmpty()) {
+    return new AldaServerInfo(status, version, filename, isModified, lineCount,
+                              charCount, instruments);
+  }
+
+  public void info() throws Exception {
+    assertServerUp();
+    AldaServerInfo info = getInfo();
+
+    msg("Server status: " + info.status);
+    msg("Server version: " + info.version);
+    msg("Filename: " + (info.filename != null ? info.filename : "(new score)"));
+    msg("Modified: " + (info.isModified ? "yes" : "no"));
+    msg("Line count: " + info.lineCount);
+    msg("Character count: " + info.charCount);
+    if (info.instruments.isEmpty()) {
       msg("Instruments: (none)");
     } else {
       msg("Instruments:");
-      for (Map<?, ?> instrument : instruments) {
+      for (Map<?, ?> instrument : info.instruments) {
         String instrumentName  = (String) instrument.get(newKeyword("name"));
         String instrumentStock = (String) instrument.get(newKeyword("stock"));
         String instrumentString = instrumentStock + " (" + instrumentName + ")";
