@@ -168,6 +168,11 @@ public class Client {
 
   @Parameters(commandDescription = "Delete the score and start a new one")
   private static class CommandNew {
+    @Parameter (names = {"-f", "--file"},
+                description = "A filename for the new score",
+                converter = FileConverter.class)
+    public File file;
+
     @Parameter (names = {"-y", "--yes"},
                 description = "Auto-respond 'y' to confirm discarding " +
                               "unsaved changes")
@@ -191,7 +196,20 @@ public class Client {
     public boolean autoConfirm = false;
   }
 
-  @Parameters(commandDescription = "Edit the score in progress")
+  @Parameters(commandDescription = "Save the score to a file")
+  private static class CommandSave {
+    @Parameter(names = {"-f", "--file"},
+               description = "The path to a file to which to save the score",
+               converter = FileConverter.class)
+    public File file;
+
+    @Parameter (names = {"-y", "--yes"},
+                description = "Auto-respond 'y' to confirm overwriting an " +
+                              "existing file")
+    public boolean autoConfirm = false;
+  }
+
+  @Parameters(commandDescription = "Edit the score")
   private static class CommandEdit {
     @Parameter(names = {"-e", "--editor"},
                description = "pass the file to a custom command instead of " +
@@ -217,6 +235,7 @@ public class Client {
     CommandScore   score     = new CommandScore();
     CommandNew     newScore  = new CommandNew();
     CommandLoad    load      = new CommandLoad();
+    CommandSave    save      = new CommandSave();
     CommandEdit    edit      = new CommandEdit();
 
     JCommander jc = new JCommander(globalOpts);
@@ -242,6 +261,7 @@ public class Client {
     jc.addCommand("score", score);
     jc.addCommand("new", newScore, "delete");
     jc.addCommand("load", load, "open");
+    jc.addCommand("save", save);
     jc.addCommand("edit", edit);
 
     try {
@@ -377,6 +397,9 @@ public class Client {
         case "new":
         case "delete":
           server.delete(newScore.autoConfirm);
+          if (newScore.file != null) {
+            server.save(newScore.file, newScore.autoConfirm);
+          }
           break;
 
         case "load":
@@ -399,6 +422,24 @@ public class Client {
           }
           break;
 
+        case "save":
+          inputType = Util.inputType(save.file, null);
+
+          switch (inputType) {
+            // "score" is returned when no filename is supplied
+            case "score":
+              server.save();
+              break;
+            case "file":
+              server.save(save.file, save.autoConfirm);
+              break;
+            case "stdin":
+              File file = new File(Util.getStdIn().trim());
+              server.save(file, save.autoConfirm);
+              break;
+          }
+          break;
+
         case "edit":
           String editor = System.getenv("EDITOR");
           if (edit.editor != null) {
@@ -410,23 +451,26 @@ public class Client {
 
           AldaServerInfo scoreInfo = server.getInfo();
 
+          if (scoreInfo.filename == null) {
+            server.msg("Score has not been saved yet. There is no file to " +
+                       "edit.");
+            break;
+          }
+
+          File file = new File(scoreInfo.filename);
+
           if (scoreInfo.isModified) {
             boolean saveFirst = Util.promptForConfirmation(
               "Your score has unsaved changes that will be lost unless you " +
               "save first.\nWould you like to save before editing?", false);
 
             if (saveFirst) {
-              System.out.println("TODO: save");
+              server.save();
             }
           }
 
-          if (scoreInfo.filename == null) {
-            server.msg("Score has not been saved yet. There is no file to " +
-                       "edit.");
-          } else {
-            Util.runProgramInFg(editor, scoreInfo.filename);
-            System.out.println("TODO: save edited file");
-          }
+          Util.runProgramInFg(editor, scoreInfo.filename);
+          server.loadWithoutAsking(file);
           break;
       }
     } catch (Exception e) {
