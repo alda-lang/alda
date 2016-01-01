@@ -191,9 +191,11 @@ Because `alda.lisp` is a Clojure DSL, it's possible to use it to build scores wi
 
 The `alda.sound` namespace handles the implementation details of playing the score.
 
-There is an "audio type" abstraction which refers to different ways to generate audio, e.g. MIDI, waveform synthesis, samples, etc. Adding a new audio type is as simple as providing an implementation for each of the multimethods in this namespace, i.e. `set-up-audio-type!`, `refresh-audio-type!`, `tear-down-audio-type!` and `play-event!`.
+There is an "audio type" abstraction which refers to different ways to generate audio, e.g. MIDI, waveform synthesis, samples, etc. Adding a new audio type is as simple as providing an implementation for each of the multimethods in this namespace, i.e. `set-up-audio-type!`, `refresh-audio-type!`, `tear-down-audio-type!`, `start-event!` and `stop-event!`.
 
-The `play!` function handles playing an entire Alda score. It does this by using [overtone.at-at](https://github.com/overtone/at-at) to schedule all of the note events to be played via `play-event!`, based on the `:offset` of each event.
+The `play!` function handles playing an entire Alda score. It does this by using a [JSyn](http://www.softsynth.com/jsyn) SynthesisEngine to schedule all of the note events to be played in realtime. The time that each event starts and stops is determined by its `:offset` and `:duration`.
+
+What happens, exactly, at the beginning and end of an event, is determined by the `start-event!`/`stop-event!` implementations for each instrument type. For example, for MIDI instruments, `start-event!` sets parameters such as volume and panning and sends a MIDI note-on message at the beginning of the score plus `:offset` milliseconds, and `stop-event!` sends a note-off message `:duration` milliseconds later.
 
 #### alda.lisp.instruments
 
