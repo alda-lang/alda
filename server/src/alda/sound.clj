@@ -1,11 +1,13 @@
 (ns alda.sound
   (:require [alda.sound.midi :as    midi]
-            [overtone.at-at  :refer (mk-pool now at)]
             [taoensso.timbre :as    log]
             [alda.lisp]
-            [alda.util       :refer (check-for parse-time pdoseq-block parse-position)]))
+            [alda.util       :refer (check-for parse-time pdoseq-block parse-position)])
+  (:import [com.softsynth.shared.time TimeStamp ScheduledCommand]
+           [com.jsyn.engine SynthesisEngine]))
 
 (def ^:dynamic *active-audio-types* #{})
+(def ^:dynamic *synthesis-engine* (doto (SynthesisEngine.) .start))
 
 (defn set-up?
   [x]
@@ -99,24 +101,45 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defmulti play-event!
-  "Plays a note/event, using the appropriate method based on the type of the
+(defmulti start-event!
+  "Kicks off a note/event, using the appropriate method based on the type of the
    instrument."
   (fn [event instrument]
     (-> instrument :config :type)))
 
-(defmethod play-event! :default
+(defmethod start-event! :default
   [_ instrument]
-  (log/errorf "No implementation of play-event! defined for type %s"
+  (log/errorf "No implementation of start-event! defined for type %s"
               (-> instrument :config :type)))
 
-(defmethod play-event! nil
+(defmethod start-event! nil
   [event instrument]
   :do-nothing)
 
-(defmethod play-event! :midi
+(defmethod start-event! :midi
   [note instrument]
   (midi/play-note! note))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defmulti stop-event!
+  "Ends a note/event, using the appropriate method based on the type of the
+   instrument."
+  (fn [event instrument]
+    (-> instrument :config :type)))
+
+(defmethod stop-event! :default
+  [_ instrument]
+  (log/errorf "No implementation of start-event! defined for type %s"
+              (-> instrument :config :type)))
+
+(defmethod stop-event! nil
+  [event instrument]
+  :do-nothing)
+
+(defmethod stop-event! :midi
+  [note instrument]
+  (midi/stop-note! note))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -170,24 +193,33 @@
         audio-types (determine-audio-types score)
         _           (set-up! audio-types score)
         _           (refresh! audio-types score)
-        pool        (mk-pool)
         playing?    (atom true)
-        begin       (+ (now) (or pre-buffer 0))
+        begin       (+ (.getCurrentTime *synthesis-engine*)
+                       (or pre-buffer 0))
         [start end] (start-finish-times *play-opts* markers)
         events      (shift-events events start end)
         duration    (- (or end (score-length score))
                        (or start 0))]
-    (pdoseq-block [{:keys [offset instrument] :as event} events
+    (pdoseq-block [{:keys [offset instrument duration] :as event} events
                    :let [inst (-> instrument instruments)]]
-      (at (+ begin offset)
-          #(when @playing?
-             (if (= (type event) alda.lisp.Function)
-               ((:function event))
-               (play-event! event inst)))
-          pool))
-
+      (let [start-ts (TimeStamp. (+ begin (/ offset 1000.0)))
+            stop-ts  (TimeStamp. (+ begin (/ offset 1000.0)
+                                          (/ duration 1000.0)))
+            start-cmd (proxy [ScheduledCommand] []
+                        (run []
+                          (when @playing?
+                            (if (= (type event) alda.lisp.Function)
+                              ((:function event))
+                              (start-event! event inst)))))
+            stop-cmd  (proxy [ScheduledCommand] []
+                        (run []
+                          (when-not (= (type event) alda.lisp.Function)
+                            (stop-event! event inst))))]
+        (.scheduleCommand *synthesis-engine* start-ts start-cmd)
+        (.scheduleCommand *synthesis-engine* stop-ts stop-cmd)))
     (when-not async?
       ; block until the score is done playing
+      ; TODO: find a way to handle this that doesn't involve Thread/sleep
       (Thread/sleep (+ duration
                        (or pre-buffer 0)
                        (or post-buffer 0))))

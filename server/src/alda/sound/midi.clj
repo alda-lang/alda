@@ -66,13 +66,17 @@
   (.close *midi-synth*))
 
 (defn play-note!
-  [{:keys [midi-note instrument duration volume track-volume panning]}]
+  [{:keys [midi-note instrument volume track-volume panning]}]
   (let [channel-number (-> instrument *midi-channels* :channel)
         channel (aget (.getChannels *midi-synth*) channel-number)]
     (.controlChange channel 7 (* 127 track-volume))
     (.controlChange channel 10 (* 127 panning))
     (log/debugf "Playing note %s on channel %s." midi-note channel-number)
-    (.noteOn channel midi-note (* 127 volume))
-    (Thread/sleep duration)
+    (.noteOn channel midi-note (* 127 volume))))
+
+(defn stop-note!
+  [{:keys [midi-note instrument]}]
+  (let [channel-number (-> instrument *midi-channels* :channel)
+        channel (aget (.getChannels *midi-synth*) channel-number)]
     (log/debug "MIDI note off:" midi-note)
     (.noteOff channel midi-note)))
