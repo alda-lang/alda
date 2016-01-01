@@ -543,6 +543,13 @@ public class AldaServer {
     msg("Loaded file.");
   }
 
+  public void loadWithoutAsking(File file) throws Exception {
+    startServerIfNeeded();
+    putFile("/load", file, true);
+    putString("/filename", file.getAbsolutePath());
+    msg("Loaded file.");
+  }
+
   public void load(String code, boolean autoConfirm) throws Exception {
     startServerIfNeeded();
 
@@ -562,6 +569,38 @@ public class AldaServer {
     }
 
     msg("Loaded code.");
+  }
+
+  public void save() throws Exception {
+    assertServerUp();
+    getRequest("/save");
+    msg("File saved.");
+  }
+
+  public void save(File file, boolean autoConfirm) throws Exception {
+    assertServerUp();
+
+    String filename = file.getAbsolutePath();
+
+    try {
+      putString("/save", filename);
+      msg("File saved.");
+    } catch (UnsavedChangesException e) {
+      System.out.println();
+      boolean confirm =
+        Util.promptForConfirmation("There is an existing file with the " +
+                                   "filename you specified. Saving the score " +
+                                   "to this file will erase whatever is " +
+                                   "already there.\n\n" +
+                                   "Are you sure you want to do this?",
+                                   autoConfirm);
+      if (confirm) {
+        putString("/save", filename, true);
+        msg("File saved.");
+      } else {
+        return;
+      }
+    }
   }
 
   public void play() throws Exception {

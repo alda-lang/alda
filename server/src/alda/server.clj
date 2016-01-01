@@ -90,6 +90,14 @@
                        "If so, please re-submit your request and include the "
                        "header X-Alda-Confirm:yes.")))
 
+(def existing-file-response
+  ((response 409) (str "Warning: there is an existing file with the filename "
+                       "you specified. Saving the score to this file will "
+                       "erase whatever is already there. Are you sure you "
+                       "want to do this?\n\n"
+                       "If so, please re-submit your request and include the "
+                       "header X-Alda-Confirm:yes.")))
+
 (defn- edn-response
   [x]
   (-> (success (with-out-str (pprint x)))
@@ -228,6 +236,25 @@
         (reset! score-filename nil)
         (binding [*play-opts* play-opts]
           (handle-code code :replace-score? true)))))
+
+  ; save changes to a score's file
+  (GET "/save" []
+    (if @score-filename
+      (do
+        (spit @score-filename *score-text*)
+        (success "File saved."))
+      (user-error "You must supply a filename.")))
+
+  ; save changes to a file
+  (PUT "/save" {:keys [params body] :as request}
+    (let [filename (str/trim (get-input params body))]
+      (prn :filename filename :exists? (.exists (io/as-file filename)))
+      (if (and (.exists (io/as-file filename)) (not (confirming? request)))
+        existing-file-response
+        (do
+          (spit filename *score-text*)
+          (reset! score-filename filename)
+          (success "File saved.")))))
 
   ; get the current score text
   (GET "/score" []
