@@ -242,19 +242,18 @@
     (if @score-filename
       (do
         (spit @score-filename *score-text*)
-        (success "File saved."))
+        (success (str "File saved: " @score-filename)))
       (user-error "You must supply a filename.")))
 
   ; save changes to a file
   (PUT "/save" {:keys [params body] :as request}
     (let [filename (str/trim (get-input params body))]
-      (prn :filename filename :exists? (.exists (io/as-file filename)))
       (if (and (.exists (io/as-file filename)) (not (confirming? request)))
         existing-file-response
         (do
           (spit filename *score-text*)
           (reset! score-filename filename)
-          (success "File saved.")))))
+          (success (str "File saved: " @score-filename))))))
 
   ; get the current score text
   (GET "/score" []

@@ -168,6 +168,11 @@ public class Client {
 
   @Parameters(commandDescription = "Delete the score and start a new one")
   private static class CommandNew {
+    @Parameter (names = {"-f", "--file"},
+                description = "A filename for the new score",
+                converter = FileConverter.class)
+    public File file;
+
     @Parameter (names = {"-y", "--yes"},
                 description = "Auto-respond 'y' to confirm discarding " +
                               "unsaved changes")
@@ -392,6 +397,9 @@ public class Client {
         case "new":
         case "delete":
           server.delete(newScore.autoConfirm);
+          if (newScore.file != null) {
+            server.save(newScore.file, newScore.autoConfirm);
+          }
           break;
 
         case "load":

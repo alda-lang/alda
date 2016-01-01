@@ -574,7 +574,7 @@ public class AldaServer {
   public void save() throws Exception {
     assertServerUp();
     getRequest("/save");
-    msg("File saved.");
+    msg("File saved: " + getInfo().filename);
   }
 
   public void save(File file, boolean autoConfirm) throws Exception {
@@ -584,7 +584,7 @@ public class AldaServer {
 
     try {
       putString("/save", filename);
-      msg("File saved.");
+      msg("File saved: " + filename);
     } catch (UnsavedChangesException e) {
       System.out.println();
       boolean confirm =
@@ -596,7 +596,7 @@ public class AldaServer {
                                    autoConfirm);
       if (confirm) {
         putString("/save", filename, true);
-        msg("File saved.");
+        msg("File saved: " + filename);
       } else {
         return;
       }
