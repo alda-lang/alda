@@ -1,17 +1,23 @@
 package alda;
 
+import java.io.BufferedReader;
 import java.io.Console;
 import java.io.File;
+import java.io.InputStreamReader;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import clojure.java.api.Clojure;
 import clojure.lang.IFn;
 import clojure.lang.ISeq;
 import clojure.lang.Symbol;
 import clojure.lang.ArraySeq;
+
+import org.apache.commons.lang3.SystemUtils;
 
 public final class Util {
 
@@ -151,6 +157,36 @@ public final class Util {
   public static void runProgramInFg(String... args)
   throws IOException, InterruptedException {
     new ProcessBuilder(args).inheritIO().start().waitFor();
+  }
+
+  public static void listServers() throws Exception {
+    if (SystemUtils.IS_OS_UNIX) {
+      Process p = Runtime.getRuntime().exec("ps -e");
+      InputStreamReader isr = new InputStreamReader(p.getInputStream());
+      BufferedReader input = new BufferedReader(isr);
+      String line;
+      while ((line = input.readLine()) != null) {
+        if (line.contains("alda-fingerprint")) {
+          Matcher a = Pattern.compile("^\\s*(\\d+).*").matcher(line);
+          Matcher b = Pattern.compile(".*--port (\\d+).*").matcher(line);
+          if (a.find()) {
+            int pid = Integer.parseInt(a.group(1));
+            if (b.find()) {
+              int port = Integer.parseInt(b.group(1));
+              AldaServer server = new AldaServer("localhost", port, 0, 0);
+              server.status();
+            } else {
+              System.out.println("[???] Mysterious server running on unknown " +
+                                 "port (pid: " + pid + ")");
+            }
+          }
+        }
+      }
+      input.close();
+    } else {
+      System.out.println("Sorry -- listing running servers is not currently " +
+                         "supported for Windows users.");
+    }
   }
 
   public static void callClojureFn(String fn, Object... args) {
