@@ -23,9 +23,10 @@
                   [org.clojars.sidec/jsyn "16.7.3"]
 
                   ; client
+                  [org.apache.commons/commons-lang3     "3.4"]
+                  [org.apache.httpcomponents/httpclient "4.5.1"]
                   [com.beust/jcommander                 "1.48"]
                   [org.fusesource.jansi/jansi           "1.11"]
-                  [org.apache.httpcomponents/httpclient "4.5.1"]
                   [net.jodah/recurrent                  "0.4.0"]
                   [us.bpsm/edn-java                     "0.4.6"]
                   ])
@@ -107,14 +108,25 @@
 
    There is a middleware that reloads all the server namespaces before each
    request, so that the server does not need to be restarted after making
-   changes."
-  []
+   changes.
+
+   The -F/--alda-fingerprint option technically does nothing, but including it
+   as a long-style option when running this task from the command line* allows
+   the Alda client to identify the dev server process as an Alda server and
+   include it in the list of running servers.
+
+   * e.g.: boot dev --port 27713 --alda-fingerprint
+
+   Take care to include the --port long option as well, so the client knows
+   the port on which the dev server is running."
+  [p port             PORT int  "The port on which to start the server."
+   F alda-fingerprint      bool "Allow the Alda client to identify this as an Alda server."]
   (comp
     (with-pre-wrap fs
       (require 'alda.server)
       (require 'alda.util)
       ((resolve 'alda.util/set-timbre-level!) :debug)
-      ((resolve 'alda.server/start-server!) 27713)
+      ((resolve 'alda.server/start-server!) (or port 27713))
       fs)
     (wait)))
 

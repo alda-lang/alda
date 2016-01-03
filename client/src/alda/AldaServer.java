@@ -366,7 +366,8 @@ public class AldaServer {
 
     Object[] opts = {"--host", host, "--port", Integer.toString(port),
                      "--pre-buffer", Integer.toString(preBuffer),
-                     "--post-buffer", Integer.toString(postBuffer)};
+                     "--post-buffer", Integer.toString(postBuffer),
+                     "--alda-fingerprint"};
 
     Util.forkProgram(Util.conj(opts, "server"));
     msg("Starting Alda server...");

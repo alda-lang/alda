@@ -18,6 +18,11 @@ public class Client {
   }
 
   private static class GlobalOptions {
+    @Parameter(names = {"--alda-fingerprint"},
+               description = "Used to identify this as an Alda process",
+               hidden = true)
+    public boolean aldaFingerprint = false;
+
     @Parameter(names = {"-h", "--help"},
                help = true,
                description = "Print this help text")
@@ -73,6 +78,9 @@ public class Client {
                               "unsaved changes")
     public boolean autoConfirm = false;
   }
+
+  @Parameters(commandDescription = "List running Alda servers.")
+  private static class CommandList {}
 
   @Parameters(commandDescription = "Display whether the server is up")
   private static class CommandStatus {}
@@ -226,6 +234,7 @@ public class Client {
     CommandStart   start     = new CommandStart();
     CommandStop    stop      = new CommandStop();
     CommandRestart restart   = new CommandRestart();
+    CommandList    list      = new CommandList();
     CommandStatus  status    = new CommandStatus();
     CommandVersion version   = new CommandVersion();
     CommandInfo    info      = new CommandInfo();
@@ -250,6 +259,7 @@ public class Client {
     jc.addCommand("stop", stop, "down");
     jc.addCommand("restart", restart, "downup");
 
+    jc.addCommand("list", list);
     jc.addCommand("status", status);
     jc.addCommand("version", version);
     jc.addCommand("info", info);
@@ -318,6 +328,9 @@ public class Client {
           server.restart(restart.autoConfirm);
           break;
 
+        case "list":
+          Util.listServers();
+          break;
         case "status":
           server.status();
           break;
