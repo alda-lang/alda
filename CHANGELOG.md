@@ -1,5 +1,25 @@
 # CHANGELOG
 
+## 1.0.0-rc2 (1/2/16)
+
+* Alda now uses [JSyn](http://www.softsynth.com/jsyn) for higher precision of note-scheduling by doing it in realtime. This solves a handful of issues, such as [#134][issue133], [#144][issue144], and [#160][issue160]. Performance is probably noticeably better now.
+* Running `alda new` now asks you for confirmation if there are unsaved changes to the score you're about to delete in order to start one.
+* A heaping handful of new Alda client commands:
+  * `alda info` prints useful information about a running Alda server
+  * `alda list` (currently Mac/Linux only) lists Alda servers currently running on your system
+  * `alda load` loads a score from a file (without playing it)
+    * prompts you for confirmation if there are unsaved changes to the current score
+  * `alda save` saves the current score to a file
+    * prompts you for confirmation if you're saving a new score to an existing file
+    * `alda new` will call this function implicitly if you give it a filename, e.g. `alda new -f my-new-score.alda`
+  * `alda edit` opens the current score file in your `$EDITOR`
+    * `alda edit -e <editor-command-here>` opens the score in a different editor
+
+[issue133]: https://github.com/alda-lang/alda/issues/134
+[issue144]: https://github.com/alda-lang/alda/issues/144
+[issue160]: https://github.com/alda-lang/alda/issues/160
+
+
 ## 1.0.0-rc1 (12/25/15) :christmas_tree:
 
 * Server/client relationship allows you to run Alda servers in the background and interact with them via a much more lightweight CLI, implemented in Java. Everything is packaged into a single uberjar containing both the server and the client. The client is able to manage/start/stop servers as well as interact with them by handing them Alda code to play, etc.
@@ -8,6 +28,8 @@
 * Starting with this release, we'll be releasing Unix and Windows executables on GitHub. These are standalone programs; all you need to run them is Java. [Boot](http://boot-clj.com) is no longer a dependency to run Alda, just something we use to build it and create releases. For development builds, running `boot build -o directory_name` will generate `alda.jar`, `alda`, and `alda.exe` files which can be run directly.
 * In light of the above, the `bin/alda` Boot script that we were previously using as an entrypoint to the application is no longer needed, and has been removed.
 * Now that we are packaging everything together and not using Boot as a dependency, it is no longer feasible to include a MIDI soundfont with Alda. It is easy to install the FluidR3 soundfont into your Java Virtual Machine, and this is what we recommend doing. We've made this even easier (for Mac & Linux users, at least) by including a script (`scripts/install-fluid-r3`). Running it will download FluidR3 and replace `~/.gervill/soundbank-emg.sf2` (your JVM's default soundfont) with it. (If you're a Windows user and you know how to install a MIDI soundfont on a Windows system, please let us know!)
+
+---
 
 ## 0.14.2 (11/13/15)
 
