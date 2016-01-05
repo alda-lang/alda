@@ -1,16 +1,16 @@
 ```
-                            ________________________________
-                           /    o   oooo ooo oooo   o o o  /\
-                          /    oo  ooo  oo  oooo   o o o  / /
-                         /    _________________________  / /
-                        / // / // /// // /// // /// / / / /
-                       /___ //////////////////////////_/ /
-                       \____\________________________\_\/
+                                       ________________________________
+                                      /    o   oooo ooo oooo   o o o  /\
+                                     /    oo  ooo  oo  oooo   o o o  / /
+                                    /    _________________________  / /
+                                   / // / // /// // /// // /// / / / /
+                                  /___ //////////////////////////_/ /
+                                  \____\________________________\_\/
 
-                                    ~ alda ~
+                                               ~ alda ~
 ```
 
-## A music programming language for musicians
+<h2 align=center>a music programming language for musicians</h2>
 
 <p align="center">
 
