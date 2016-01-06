@@ -1,7 +1,12 @@
-(ns alda.lisp.events.chord)
-(in-ns 'alda.lisp)
-
-(defrecord Chord [events])
+(ns alda.lisp.events.chord
+  (:require [alda.lisp.model.event   :refer (set-current-offset
+                                             set-last-offset)]
+            [alda.lisp.model.marker  :refer ($current-marker)]
+            [alda.lisp.model.offset  :refer ($current-offset offset=)]
+            [alda.lisp.model.records :refer (->Chord)]
+            [alda.lisp.score.context :refer (*beats-tally*
+                                             *current-instruments*
+                                             *events*)]))
 
 (defmacro tally-chord-duration
   "Determines the duration of all events in the chord and adds the longest one
@@ -13,7 +18,7 @@
                  tallies (list 'atom [])]
            (concat
              (interleave
-               (repeat `(alter-var-root (var *beats-tally*) 
+               (repeat `(alter-var-root (var *beats-tally*)
                                         (constantly ~start)))
                events
                (repeat `(swap! ~tallies conj *beats-tally*)))
@@ -40,7 +45,7 @@
                                                       (remove #(offset= % ~start)
                                                               (deref ~offsets))))
               `(let [chord#
-                     (Chord. (take-last ~num-of-events
+                     (->Chord (take-last ~num-of-events
                                         (get-in *events*
                                                 [($current-marker ~instrument)
                                                  :events])))]

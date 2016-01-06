@@ -1,7 +1,8 @@
 (ns alda.lisp.markers-test
-  (:require [clojure.test :refer :all]
-            [clojure.pprint :refer :all]
-            [alda.lisp :refer :all]))
+  (:require [clojure.test            :refer :all]
+            [clojure.pprint          :refer :all]
+            [alda.lisp               :refer :all]
+            [alda.lisp.score.context :refer :all]))
 
 (use-fixtures :each
   (fn [run-tests]
@@ -16,9 +17,9 @@
           test-marker (marker "test-marker")]
       (testing "returns a Marker record"
         (is (= test-marker
-               (alda.lisp.Marker. "test-marker"
-                                  (alda.lisp.AbsoluteOffset.
-                                    (absolute-offset moment))))))
+               (alda.lisp.model.records.Marker. "test-marker"
+                 (alda.lisp.model.records.AbsoluteOffset.
+                   (absolute-offset moment))))))
       (testing "it should create an entry for the marker in *events*"
         (is (contains? *events* "test-marker")))
       (testing "its offset should be correct"
@@ -33,7 +34,7 @@
       (is (zero? (count (get-in *events* ["test-marker" :events]))))
       (let [first-note (first (note (pitch :d)))]
         (is (= 1 (count (get-in *events* ["test-marker" :events]))))
-        (is (offset= (alda.lisp.RelativeOffset. "test-marker" 0)
+        (is (offset= (alda.lisp.model.records.RelativeOffset. "test-marker" 0)
                      (:offset first-note))))))
   (testing "using at-marker before marker:"
     (testing "at-marker still works;"
@@ -44,7 +45,7 @@
         (is (zero? (count (get-in *events* ["test-marker-2" :events]))))
         (let [first-note (first (note (pitch :e)))]
           (is (= 1 (count (get-in *events* ["test-marker-2" :events]))))
-          (is (offset= (alda.lisp.RelativeOffset. "test-marker-2" 0)
+          (is (offset= (alda.lisp.model.records.RelativeOffset. "test-marker-2" 0)
                        (:offset first-note))))))
     (testing "marker adds an offset to the marker"
       (at-marker "test-marker")

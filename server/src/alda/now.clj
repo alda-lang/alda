@@ -7,14 +7,18 @@
 ; sets log level to TIMBRE_LEVEL (if set) or :warn
 (util/set-timbre-level!)
 
-(require '[alda.lisp :as lisp])
+(require '[alda.lisp :as lisp]
+         '[alda.lisp.model.records :refer (->AbsoluteOffset)]
+         '[alda.lisp.score.context :refer (*events*
+                                           *initial-attr-values*
+                                           *instruments*)])
 
 (def set-up! sound/set-up!)
 
 (defn play-new-events!
   [score new-events]
   (let [events        (lisp/event-set {:start
-                                       {:offset (lisp/->AbsoluteOffset 0)
+                                       {:offset (->AbsoluteOffset 0)
                                         :events new-events}})
         earliest      (->> (map :offset events)
                            (apply min Long/MAX_VALUE)
@@ -51,15 +55,15 @@
    When a truthy argument is provided, also resets all the other attributes
    (e.g. volume, track-volume, octave) to their default values."
   [& [all?]]
-  (alter-var-root #'alda.lisp/*instruments*
+  (alter-var-root #'*instruments*
     #(into {}
        (map (fn [[instrument attrs]]
               [instrument
                (merge attrs
                       (if all?
-                        lisp/*initial-attr-values*
-                        (select-keys lisp/*initial-attr-values*
+                        *initial-attr-values*
+                        (select-keys *initial-attr-values*
                                      [:current-offset :last-offset])))])
             %)))
-  (alter-var-root #'alda.lisp/*events*
-    (constantly {:start {:offset (lisp/->AbsoluteOffset 0), :events []}})))
+  (alter-var-root #'*events*
+    (constantly {:start {:offset (->AbsoluteOffset 0), :events []}})))

@@ -1,7 +1,16 @@
-(ns alda.lisp.events.note)
-(in-ns 'alda.lisp)
-
-(defrecord Note [offset instrument volume track-volume panning midi-note pitch duration])
+(ns alda.lisp.events.note
+  (:require [alda.lisp.attributes     :refer :all]
+            [alda.lisp.model.duration :refer (duration)]
+            [alda.lisp.model.event    :refer (add-event
+                                              set-current-offset
+                                              set-last-offset)]
+            [alda.lisp.model.marker   :refer ($current-marker)]
+            [alda.lisp.model.offset   :refer ($current-offset
+                                              offset+)]
+            [alda.lisp.model.records  :refer (map->Note)]
+            [alda.lisp.score.context  :refer (*beats-tally*
+                                              *current-instruments*)]
+            [taoensso.timbre          :as    log]))
 
 (defn note*
   ([instrument pitch-fn]

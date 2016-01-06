@@ -1,10 +1,13 @@
-(ns alda.lisp.events.voice)
-(in-ns 'alda.lisp)
+(ns alda.lisp.events.voice
+  (:require [alda.lisp.model.attribute :refer (snapshot load-snapshot)]
+            [alda.lisp.score.context   :refer (*current-instruments*)]))
 
 (defn voice
   "Returns a list of the events, executing them in the process."
   [& events]
-  (remove #(not (contains? #{alda.lisp.Note alda.lisp.Chord} (type %)))
+  (remove #(not (contains? #{alda.lisp.model.records.Note
+                             alda.lisp.model.records.Chord}
+                           (type %)))
           (flatten events)))
 
 (defmacro voices*

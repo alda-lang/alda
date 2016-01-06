@@ -208,12 +208,12 @@
             start-cmd (proxy [ScheduledCommand] []
                         (run []
                           (when @playing?
-                            (if (= (type event) alda.lisp.Function)
+                            (if (= (type event) alda.lisp.model.records.Function)
                               ((:function event))
                               (start-event! event inst)))))
             stop-cmd  (proxy [ScheduledCommand] []
                         (run []
-                          (when-not (= (type event) alda.lisp.Function)
+                          (when-not (= (type event) alda.lisp.model.records.Function)
                             (stop-event! event inst))))]
         (.scheduleCommand *synthesis-engine* start-ts start-cmd)
         (.scheduleCommand *synthesis-engine* stop-ts stop-cmd)))

@@ -1,6 +1,15 @@
-(ns alda.lisp.model.global-attribute)
-(in-ns 'alda.lisp)
+(ns alda.lisp.model.global-attribute
+  (:require [alda.lisp.model.attribute :refer (set-attribute)]
+            [alda.lisp.model.offset    :refer (absolute-offset
+                                               instruments-all-at-same-offset
+                                               $last-offset)]
+            [alda.lisp.model.records   :refer (->GlobalAttribute)]
+            [alda.lisp.score.context   :refer (*current-instruments*
+                                               *global-attributes*)]
+            [taoensso.timbre           :as    log]))
 
+; currently shuffling vars around...
+; TODO: find a better place for this documentation
 (comment
   "*global-attributes* is a map of offsets to the global attribute changes that
    occur (for all instruments) at each offset.
@@ -16,10 +25,6 @@
    attribute change will only affect the current part and any others that
    follow it in the score.")
 
-(declare ^:dynamic *global-attributes*)
-
-(defrecord GlobalAttribute [offset attr val])
-
 (defn global-attribute
   [attr val]
   (set-attribute attr val)
@@ -29,7 +34,7 @@
                                             (fnil conj []) [attr val])
       (log/debug "Set global attribute" attr val "at offset"
                  (str (int (absolute-offset offset)) \.))
-      (GlobalAttribute. offset attr val))
+      (->GlobalAttribute offset attr val))
     (throw (Exception. (str "Can't set global attribute " attr " to " val
                             " - offset unclear. There are multiple instruments "
                             "active with different time offsets.")))))

@@ -1,10 +1,11 @@
 (ns alda.lisp.score
-  (:require [alda.lisp.score.part]))
-(in-ns 'alda.lisp)
+  (:require [alda.lisp.model.offset  :refer (absolute-offset)]
+            [alda.lisp.model.records :refer (->AbsoluteOffset)]
+            [alda.lisp.score.context :refer :all]
+            [alda.lisp.score.part]
+            [taoensso.timbre         :as    log]))
 
 ;; for alda.repl use ;;
-
-(declare ^:dynamic *score-text*)
 
 (defn score-text<< [s]
   (if (empty? *score-text*)
@@ -17,7 +18,7 @@
   []
   (letfn [(init [var val] (alter-var-root var (constantly val)))]
     (init #'*score-text* "")
-    (init #'*events* {:start {:offset (AbsoluteOffset. 0), :events []}})
+    (init #'*events* {:start {:offset (->AbsoluteOffset 0), :events []}})
     (init #'*global-attributes* {})
     (init #'*time-scaling* 1)
     (init #'*beats-tally* nil)

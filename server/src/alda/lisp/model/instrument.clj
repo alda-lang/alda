@@ -1,11 +1,8 @@
-(ns alda.lisp.model.instrument)
-(in-ns 'alda.lisp)
-
-(declare ^:dynamic *initial-attr-values*)
-
-(def ^:dynamic *stock-instruments* {})
-(declare ^:dynamic *instruments*)
-(declare ^:dynamic *current-instruments*)
+(ns alda.lisp.model.instrument
+  (:require [alda.lisp.score.context :refer (*current-instruments*
+                                             *initial-attr-values*
+                                             *instruments*
+                                             *stock-instruments*)]))
 
 (defmacro definstrument
   "Defines a stock instrument."

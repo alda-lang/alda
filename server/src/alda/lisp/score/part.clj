@@ -1,13 +1,17 @@
-(ns alda.lisp.score.part)
-(in-ns 'alda.lisp)
-
-(require '[djy.char         :refer (char-range)]
-         '[instaparse.core  :as    insta]
-         '[clojure.java.io  :as    io]
-         '[clojure.string   :as    str]
-         '[alda.parser-util :refer (parse-with-context)])
-
-(declare ^:dynamic *nicknames*)
+(ns alda.lisp.score.part
+  (:require [djy.char                         :refer (char-range)]
+            [instaparse.core                  :as    insta]
+            [clojure.java.io                  :as    io]
+            [clojure.string                   :as    str]
+            [alda.lisp.model.global-attribute :refer (apply-global-attributes)]
+            [alda.lisp.model.records          :refer (->AbsoluteOffset)]
+            [alda.lisp.score.context          :refer (*current-instruments*
+                                                      *initial-attr-values*
+                                                      *instruments*
+                                                      *nicknames*
+                                                      *stock-instruments*)]
+            [alda.parser-util                 :refer (parse-with-context)]
+            [taoensso.timbre                  :as    log]))
 
 (defn generate-id
   [name]
@@ -74,7 +78,7 @@
   (alter-var-root (var *current-instruments*)
                   (constantly (determine-instances instrument-call)))
   (doseq [instrument *current-instruments*]
-    (apply-global-attributes instrument (AbsoluteOffset. 0))))
+    (apply-global-attributes instrument (->AbsoluteOffset 0))))
 
 (defmethod part* String
   [instrument-call]

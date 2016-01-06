@@ -1,9 +1,10 @@
 (ns alda.lisp.parts-test
-  (:require [clojure.test :refer :all]
-            [clojure.pprint :refer :all]
-            [alda.test-helpers :refer (get-instrument)]
-            [alda.lisp :refer :all]
-            [alda.parser :refer :all]))
+  (:require [clojure.test            :refer :all]
+            [clojure.pprint          :refer :all]
+            [alda.test-helpers       :refer (get-instrument)]
+            [alda.lisp               :refer :all]
+            [alda.lisp.score.context :refer :all]
+            [alda.parser             :refer :all]))
 
 (deftest part-tests
   (score*)

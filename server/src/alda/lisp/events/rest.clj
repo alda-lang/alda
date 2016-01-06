@@ -1,7 +1,16 @@
-(ns alda.lisp.events.rest)
-(in-ns 'alda.lisp)
-
-(defrecord Rest [offset instrument duration])
+(ns alda.lisp.events.rest
+  (:require [alda.lisp.attributes     :refer :all]
+            [alda.lisp.model.duration :refer (duration)]
+            [alda.lisp.model.event    :refer (set-current-offset
+                                              set-last-offset)]
+            [alda.lisp.model.marker   :refer ($current-marker)]
+            [alda.lisp.model.offset   :refer ($current-offset
+                                              $last-offset
+                                              offset+)]
+            [alda.lisp.model.records  :refer (->Rest)]
+            [alda.lisp.score.context  :refer (*beats-tally*
+                                               *current-instruments*)]
+            [taoensso.timbre          :as    log]))
 
 (defn pause*
   ([instrument]
@@ -14,7 +23,7 @@
         (set-last-offset instrument ($current-offset instrument))
         (set-current-offset instrument (offset+ ($current-offset instrument)
                                                 rest-duration))
-        (let [rest (Rest. ($last-offset instrument) instrument rest-duration)]
+        (let [rest (->Rest ($last-offset instrument) instrument rest-duration)]
           (log/debug (format "%s rests at %s + %s for %s ms."
                              instrument
                              ($current-marker instrument)

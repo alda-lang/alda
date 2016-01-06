@@ -1,7 +1,8 @@
 (ns alda.lisp.cram-test
-  (:require [clojure.test :refer :all]
-            [alda.lisp :refer :all]
-            [alda.util :refer (=%)]))
+  (:require [clojure.test            :refer :all]
+            [alda.lisp               :refer :all]
+            [alda.lisp.score.context :refer :all]
+            [alda.util               :refer (=%)]))
 
 (use-fixtures :each
   (fn [run-tests]

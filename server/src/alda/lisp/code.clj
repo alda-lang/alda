@@ -1,7 +1,6 @@
-(ns alda.lisp.code)
-(in-ns 'alda.lisp)
-
-(require '[alda.parser-util :refer (parse-with-context)])
+(ns alda.lisp.code
+  (:require [alda.parser-util :refer (parse-with-context)]
+            [taoensso.timbre  :as    log]))
 
 (defn alda-code
   "Attempts to parse a string of text within the context of the current score,

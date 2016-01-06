@@ -1,5 +1,4 @@
 (ns alda.lisp.model.key)
-(in-ns 'alda.lisp)
 
 (defn- remove-first [x coll]
   (concat (take-while (partial not= x) coll)

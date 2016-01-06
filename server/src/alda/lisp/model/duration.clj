@@ -1,13 +1,6 @@
-(ns alda.lisp.model.duration)
-(in-ns 'alda.lisp)
-
-(declare set-duration)
-
-; used by CRAM to proportionately expand or shrink the duration of a group of
-; events; initial value: 1
-(declare ^:dynamic *time-scaling*)
-; used by CRAM to calculate *time-scaling*; initial value: nil
-(declare ^:dynamic *beats-tally*)
+(ns alda.lisp.model.duration
+  (:require [alda.lisp.attributes    :refer (set-duration)]
+            [alda.lisp.score.context :refer (*beats-tally* *time-scaling*)]))
 
 (defn ms
   "Represents a duration value specified in milliseconds.

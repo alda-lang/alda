@@ -1,12 +1,13 @@
-(ns alda.lisp.events.cram)
-(in-ns 'alda.lisp)
-
-(require '[alda.util :refer (resetting)])
+(ns alda.lisp.events.cram
+  (:require [alda.lisp.attributes    :refer ($duration set-duration)]
+            [alda.lisp.score.context :refer (*beats-tally*
+                                             *current-instruments*
+                                             *instruments*
+                                             *time-scaling*)]
+            [alda.util               :refer (resetting)]))
 
 (defmacro tally-beats [& body]
-  `(resetting [~'alda.lisp/*beats-tally*
-               ~'alda.lisp/*time-scaling*
-               ~'alda.lisp/*instruments*]
+  `(resetting [*beats-tally* *time-scaling* *instruments*]
      (alter-var-root (var *beats-tally*) (constantly 0))
      (set-duration 1)
      ~@body
@@ -29,8 +30,8 @@
        (alter-var-root #'*beats-tally* + (or ~dur ($duration)))
        (let [dur#   (:beats ~dur)
              tally# (tally-beats ~@body)
-             is#    alda.lisp/*current-instruments*
-             ts#    alda.lisp/*time-scaling*
+             is#    *current-instruments*
+             ts#    *time-scaling*
              beats# (zipmap is# (for [i# is#]
                                   (or dur# ($duration i#))))
              events#
@@ -47,3 +48,4 @@
                      is#)]
          (alter-var-root #'*time-scaling* (constantly ts#))
          events#))))
+
