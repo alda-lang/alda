@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1.0.0-rc3 (1/13/16)
+
+* Support added for running Alda on systems with Java 7, whereas before it was Java 8 only.
+
 ## 1.0.0-rc2 (1/2/16)
 
 * Alda now uses [JSyn](http://www.softsynth.com/jsyn) for higher precision of note-scheduling by doing it in realtime. This solves a handful of issues, such as [#134][issue133], [#144][issue144], and [#160][issue160]. Performance is probably noticeably better now.

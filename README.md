@@ -87,9 +87,9 @@ For more examples, see these [example scores](https://github.com/alda-lang/alda/
 
 ## Installation
 
-> You must have [Java](https://www.java.com/en/download) installed on your system in order to run Alda.
+> You must have [Java](https://www.java.com/en/download) 7+ installed on your system in order to run Alda.
 >
-> (Chances are, you already have Java installed.)
+> (Chances are, you already have a recent enough version of Java installed.)
 
 ### Mac OS X / Linux
 
