@@ -54,6 +54,10 @@
       version)))
 
 (task-options!
+  javac   {:options ["-source" "1.7"
+                     "-target" "1.7"
+                     "-bootclasspath" (System/getenv "JDK7_BOOTCLASSPATH")]}
+
   pom     {:project 'alda
            :version alda.version/-version-
            :description "A music programming language for musicians"
@@ -103,6 +107,21 @@
                           alda.parser.examples-test
                           }})
 
+(deftask assert-jdk7-bootclasspath
+  "Ensures that the JDK7_BOOTCLASSPATH environment variable is set, as required
+   to build the uberjar with JDK7 support."
+  []
+  (with-pre-wrap fileset
+    (assert (not (empty? (System/getenv "JDK7_BOOTCLASSPATH")))
+            (str "Alda requires JDK7 in order to build its uberjar, in order "
+                 "to provide out-of-the-box support for users who may have "
+                 "older versions of Java. Please install JDK7 and set the "
+                 "environment variable JDK7_BOOTCLASSPATH to the path to your "
+                 "JDK7 classpath jar, e.g. (OS X example) "
+                 "/Library/Java/JavaVirtualMachines/jdk1.7.0_71.jdk/Contents/"
+                 "Home/jre/lib/rt.jar"))
+    fileset))
+
 (deftask dev
   "Runs the Alda server for development.
 
@@ -133,7 +152,11 @@
 (deftask package
   "Builds an uberjar."
   []
-  (comp (javac) (pom) (uber) (jar)))
+  (comp (assert-jdk7-bootclasspath)
+        (javac)
+        (pom)
+        (uber)
+        (jar)))
 
 (deftask build
   "Builds an uberjar and executable binaries for Unix/Linux and Windows."
