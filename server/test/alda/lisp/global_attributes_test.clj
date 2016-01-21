@@ -1,5 +1,6 @@
 (ns alda.lisp.global-attributes-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.string :as str]
+            [clojure.test :refer :all]
             [clojure.pprint :refer :all]
             [alda.lisp :refer :all]))
 
@@ -11,7 +12,7 @@
 
 (deftest global-attribute-tests
   (let [piano (first (for [[id instrument] *instruments*
-                           :when (.startsWith id "piano-")]
+                           :when (str/starts-with? id "piano-")]
                        id))]
     (testing "a global tempo change:"
       (set-current-offset piano (alda.lisp.AbsoluteOffset. 0))

@@ -55,7 +55,7 @@
       (score*)
       (println "New score initialized."))
 
-    (.startsWith rest-of-line "part ")
+    (str/starts-with? rest-of-line "part ")
     :TODO
 
     :else

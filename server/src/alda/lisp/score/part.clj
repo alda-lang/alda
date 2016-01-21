@@ -53,7 +53,7 @@
                   (if-let [existing-inst
                            (first
                              (for [[id attrs] *instruments*
-                                   :when (.startsWith id (str name \-))]
+                                   :when (str/starts-with? id (str name \-))]
                                (:id attrs)))]
                     existing-inst
                     (:id (init-instrument name))))))))]

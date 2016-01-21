@@ -74,7 +74,7 @@
   (when position-str
     (if (re-find duration-regex position-str)
       (parse-time position-str)
-      (if (.startsWith position-str ":")
+      (if (str/starts-with? position-str ":")
         (keyword (subs position-str 1))
         (keyword position-str)))))
 

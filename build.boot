@@ -5,11 +5,11 @@
   :dependencies '[
                   ; dev
                   [adzerk/bootlaces      "0.1.12" :scope "test"]
-                  [adzerk/boot-jar2bin   "1.0.0"  :scope "test"]
+                  [adzerk/boot-jar2bin   "1.1.0"  :scope "test"]
                   [adzerk/boot-test      "1.0.4"  :scope "test"]
 
                   ; server
-                  [org.clojure/clojure    "1.7.0"]
+                  [org.clojure/clojure    "1.8.0"]
                   [instaparse             "1.4.1"]
                   [io.aviso/pretty        "0.1.20"]
                   [com.taoensso/timbre    "4.1.1"]
@@ -53,6 +53,8 @@
       (format "%s.999" n)
       version)))
 
+(def jvm-opts #{"-Dclojure.compiler.direct-linking=true"})
+
 (task-options!
   javac   {:options ["-source" "1.7"
                      "-target" "1.7"
@@ -71,11 +73,14 @@
   jar     {:file "alda.jar"
            :main 'alda.Client}
 
+  bin     {:jvm-opt jvm-opts}
+
   exe     {:name      'alda
            :main      'alda.Client
            :version   (exe-version alda.version/-version-)
            :desc      "A music programming language for musicians"
-           :copyright "2016 Dave Yarwood et al"}
+           :copyright "2016 Dave Yarwood et al"
+           :jvm-opt   jvm-opts}
 
   target  {:dir #{"target"}}
 
@@ -142,6 +147,14 @@
    F alda-fingerprint      bool "Allow the Alda client to identify this as an Alda server."]
   (comp
     (with-pre-wrap fs
+      (let [direct-linking
+            (System/getProperty "clojure.compiler.direct-linking")]
+        (if-not (= direct-linking "true")
+          (println "WARNING: You should include the JVM option"
+                   "-Dclojure.compiler.direct-linking=true, as this option is"
+                   "included in the binary. This will help catch potential"
+                   "bugs caused by defining dynamic things without declaring"
+                   "them ^:dynamic or ^:redef.")))
       (require 'alda.server)
       (require 'alda.util)
       ((resolve 'alda.util/set-timbre-level!) :debug)
