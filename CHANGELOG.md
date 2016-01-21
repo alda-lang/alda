@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1.0.0-rc4 (1/21/16)
+
+* Upgraded to the newly released Clojure 1.8.0 and adjusted the way we compile Alda so that we can utilize the new Clojure 1.8.0 feature [direct linking](https://github.com/clojure/clojure/blob/master/changes.md#11-direct-linking). This improves both performance and startup speed significantly.
+
 ## 1.0.0-rc3 (1/13/16)
 
 * Support added for running Alda on systems with Java 7, whereas before it was Java 8 only.
