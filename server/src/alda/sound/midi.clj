@@ -1,44 +1,39 @@
 (ns alda.sound.midi
   (:require [taoensso.timbre :as log])
-  (:import  (javax.sound.midi MidiSystem Synthesizer)))
+  (:import  (javax.sound.midi MidiSystem)))
 
-; TODO: work around the limitation of 16 MIDI channels?
-; TODO: enable percussion
-
-; note: there are 16 channels (1-16), channel 10 is reserved for percussion,
-;       channel 11 can be used for percussion too (or non-percussion)
+; note: there are 16 channels (1-16), and channel 10 is reserved for percussion
 
 (declare ^:dynamic *midi-synth*)
 (declare ^:dynamic *midi-channels*)
 
 (defn- next-available
   "Given a set of available MIDI channels, returns the next available one,
-   bearing in mind that channel 10 can only be used for percussion, and
-   channel 11 can be used for either percussion or non-percussion.
+   bearing in mind that channel 10 can only be used for percussion.
 
    Returns nil if no channels available."
   [channels & {:keys [percussion?]}]
-  (if percussion?
-    (first (filter #((set 10 11) %) channels))
-    (first (filter (partial not= 10) channels))))
+  (first (filter (partial (if percussion? = not=) 9) channels)))
 
 (defn ids->channels
   "Inspects a score and generates a map of instrument IDs to MIDI channels.
    The channel values are maps with keys :channel (the channel number) and
    :patch (the General MIDI patch number)."
   [{:keys [instruments] :as score}]
-  (let [channels (atom (apply sorted-set (concat (range 0 9) (range 10 16))))]
+  (let [channels (atom (apply sorted-set (range 16)))]
     (reduce (fn [result id]
-              (let [patch   (-> id instruments :config :patch)
-                    ; TODO: pass ":percussion? true" if percussion
-                    channel (if-let [channel (next-available @channels)]
+              (let [{:keys [patch percussion?]} (-> id instruments :config)
+                    channel (if-let [channel
+                                     (next-available @channels
+                                                     :percussion? percussion?)]
                               (do
                                 (swap! channels disj channel)
                                 channel)
                               (throw
                                 (Exception. "Ran out of MIDI channels! :(")))]
                 (assoc result id {:channel channel
-                                  :patch patch})))
+                                  :patch patch
+                                  :percussion? percussion?})))
             {}
             (for [[id {:keys [config]}] instruments
                   :when (= :midi (:type config))]
@@ -49,7 +44,8 @@
 
 (defn load-instruments! [score]
   (alter-var-root #'*midi-channels* (constantly (ids->channels score)))
-  (doseq [{:keys [channel patch]} (set (vals *midi-channels*))]
+  (doseq [{:keys [channel patch]} (set (vals *midi-channels*))
+          :when patch]
     (load-instrument! patch (aget (.getChannels *midi-synth*) channel))))
 
 (defn open-midi-synth!
