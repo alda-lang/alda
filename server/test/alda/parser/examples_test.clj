@@ -26,6 +26,7 @@
    multi-poly
    nesting
    panning
+   percussion
    phase
    poly
    printing
