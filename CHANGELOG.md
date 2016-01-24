@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1.0.0-rc5 (1/24/16)
+
+* Added `midi-percussion` instrument. See [the docs](doc/list-of-instruments.md#percussion) for more info.
+
 ## 1.0.0-rc4 (1/21/16)
 
 * Upgraded to the newly released Clojure 1.8.0 and adjusted the way we compile Alda so that we can utilize the new Clojure 1.8.0 feature [direct linking](https://github.com/clojure/clojure/blob/master/changes.md#11-direct-linking). This improves both performance and startup speed significantly.

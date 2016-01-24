@@ -190,3 +190,22 @@ Aliases are in parentheses after the instrument's name.
 * midi-helicopter
 * midi-applause
 * midi-gunshot (midi-gun-shot)
+
+### Percussion
+
+There is a special `midi-percussion` instrument (alias: `percussion`) which provides a variety of percussion sounds, each mapped to a different note. Each note corresponds to a unique percussive instrument, but the sound's pitch is not relative to the pitch of the note. (See [here](https://en.wikipedia.org/wiki/General_MIDI#Percussion) for more information about MIDI percussion.)
+
+Drum set example:
+
+```
+(tempo! 150)
+
+midi-percussion:
+  V1: # bass and snare
+    o2 c4 e8 c r c e c
+  V2: # cymbals (hi-hat, crash, ride bell, another crash)
+    o2 f+8 f+ r o3 c+8~8 f16 f r8 a
+```
+
+In the future, hopefully there will be a [plug-in](https://github.com/alda-lang/alda/issues/37) to provide a nicer syntax for writing percussion parts. Perhaps we could map ASCII characters to the different percussion sounds, and percussion parts could be written with some sort of drum tab-like syntax.
+
