@@ -2,7 +2,6 @@
   (:require [alda.lisp.model.offset  :refer (absolute-offset)]
             [alda.lisp.model.records :refer (->AbsoluteOffset)]
             [alda.lisp.score.context :refer :all]
-            [alda.lisp.score.part]
             [taoensso.timbre         :as    log]))
 
 ;; for alda.repl use ;;
@@ -16,15 +15,7 @@
 
 (defn score*
   []
-  (letfn [(init [var val] (alter-var-root var (constantly val)))]
-    (init #'*score-text* "")
-    (init #'*events* {:start {:offset (->AbsoluteOffset 0), :events []}})
-    (init #'*global-attributes* {})
-    (init #'*time-scaling* 1)
-    (init #'*beats-tally* nil)
-    (init #'*instruments* {})
-    (init #'*current-instruments* #{})
-    (init #'*nicknames* {})))
+  (load-score-context new-score-context))
 
 (defn event-set
   "Takes *events* in its typical form (organized by markers with relative
@@ -54,9 +45,15 @@
 (defmacro score
   "Initializes a new score, evaluates body, and returns the map containing the
    set of events resulting from evaluating the score, and information about the
-   instrument instances, including their states at the end of the score."
+   instrument instances, including their states at the end of the score.
+
+   Restores the score evaluation context back to the way it was afterwards, so
+   that score evaluation is a self-contained, pseudo-immutable process."
   [& body]
-  `(do
-     (score*)
-     ~@body
-     (score-map)))
+  `(let [previous-ctx# (score-context)
+         score-map# (do
+                      (score*)
+                      ~@body
+                      (score-map))]
+     (load-score-context previous-ctx#)
+     score-map))

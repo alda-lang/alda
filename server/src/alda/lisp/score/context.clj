@@ -6,17 +6,34 @@
 (def ^:dynamic *score-text* "")
 (def ^:dynamic *time-scaling* 1)
 (def ^:dynamic *beats-tally* nil)
+(def ^:dynamic *global-attributes* {})
 
 ; instruments
 (def ^:dynamic *current-instruments* #{})
 (def ^:dynamic *instruments* {})
 (def ^:dynamic *nicknames* {})
-(def ^:dynamic *stock-instruments* {})
 
-; attributes
-(def ^:dynamic *global-attributes* {})
+(declare new-score-context load-score-context)
 
-(def ^:dynamic *initial-attr-values* {:current-offset (->AbsoluteOffset 0)
-                                      :last-offset (->AbsoluteOffset 0)
-                                      :current-marker :start})
+(defn score-context
+  "Captures the current state of all the vars above, which represent the score
+   evaluation context."
+  []
+  (into {}
+    (for [[sym var] (ns-publics *ns*)
+          :when (not (contains? #{'score-context
+                                  'new-score-context
+                                  'load-score-context}
+                                sym))]
+      [sym (var-get var)])))
 
+; initial values for a new score
+(def new-score-context
+  (score-context))
+
+(defn load-score-context
+  "Set the values of all the score evaluation context vars to those stored in
+   `ctx`."
+  [ctx]
+  (doseq [[sym val] ctx]
+    (alter-var-root (ns-resolve 'alda.lisp.score.context sym) (constantly val))))

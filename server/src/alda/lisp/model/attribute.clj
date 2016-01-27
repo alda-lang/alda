@@ -1,9 +1,7 @@
 (ns alda.lisp.model.attribute
   (:require [taoensso.timbre         :as    log]
             [alda.lisp.model.records :refer (->AttributeChange)]
-            [alda.lisp.score.context :refer (*current-instruments*
-                                             *initial-attr-values*
-                                             *instruments*)]))
+            [alda.lisp.score.context :refer (*current-instruments* *instruments*)]))
 
 (defmulti set-attribute
   "Top level fn for setting attributes."

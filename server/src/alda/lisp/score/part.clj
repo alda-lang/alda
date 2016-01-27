@@ -3,13 +3,13 @@
             [instaparse.core                  :as    insta]
             [clojure.java.io                  :as    io]
             [clojure.string                   :as    str]
+            [alda.lisp.attributes             :refer (*initial-attr-values*)]
             [alda.lisp.model.global-attribute :refer (apply-global-attributes)]
+            [alda.lisp.model.instrument       :refer (*stock-instruments*)]
             [alda.lisp.model.records          :refer (->AbsoluteOffset)]
             [alda.lisp.score.context          :refer (*current-instruments*
-                                                      *initial-attr-values*
                                                       *instruments*
-                                                      *nicknames*
-                                                      *stock-instruments*)]
+                                                      *nicknames*)]
             [alda.parser-util                 :refer (parse-with-context)]
             [taoensso.timbre                  :as    log]))
 

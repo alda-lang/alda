@@ -5,9 +5,12 @@
             [alda.lisp.model.records          :refer (->AbsoluteOffset
                                                       ->AttributeChange)]
             [alda.lisp.score.context          :refer (*current-instruments*
-                                                      *initial-attr-values*
                                                       *instruments*)]
             [taoensso.timbre                  :as    log]))
+
+(def ^:dynamic *initial-attr-values* {:current-offset (->AbsoluteOffset 0)
+                                      :last-offset (->AbsoluteOffset 0)
+                                      :current-marker :start})
 
 (defmacro defattribute
   "Convenience macro for setting up attributes."

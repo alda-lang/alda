@@ -8,10 +8,9 @@
 (util/set-timbre-level!)
 
 (require '[alda.lisp :as lisp]
+         '[alda.lisp.attributes    :refer (*initial-attr-values*)]
          '[alda.lisp.model.records :refer (->AbsoluteOffset)]
-         '[alda.lisp.score.context :refer (*events*
-                                           *initial-attr-values*
-                                           *instruments*)])
+         '[alda.lisp.score.context :refer (*events* *instruments*)])
 
 (def set-up! sound/set-up!)
 
