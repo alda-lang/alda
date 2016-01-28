@@ -1,5 +1,5 @@
 voices       = voice+ (<voice-zero> | <#"\z">)
-voice        = voice-number <ows> events
+voice        = voice-number <ows> events-inside-voice
 voice-number = <"V"> #"[1-9]\d*" <":"> <ows>
 <voice-zero> = <"V0:"> <ows>
 
