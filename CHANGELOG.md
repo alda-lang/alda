@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1.0.0-rc6 (1/27/16)
+
+* Fixed a bug where voices were not being parsed correctly in some cases ([#177](https://github.com/alda-lang/alda/pull/177)).
+
 ## 1.0.0-rc5 (1/24/16)
 
 * Added `midi-percussion` instrument. See [the docs](doc/list-of-instruments.md#percussion) for more info.
