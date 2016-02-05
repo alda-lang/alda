@@ -1,6 +1,5 @@
 (ns alda.lisp.model.duration
-  (:require [alda.lisp.attributes    :refer (set-duration)]
-            [alda.lisp.score.context :refer (*beats-tally* *time-scaling*)]))
+  (:require [alda.lisp.model.event :refer (add-events)]))
 
 (defn ms
   "Represents a duration value specified in milliseconds.
@@ -25,6 +24,29 @@
      :value (* (/ 4 number)
                (- 2 (Math/pow 2 (- dots))))}))
 
+(defn max-beats
+  "Returns the duration in beats of the longest event in `events`.
+
+   Ignores events which have no duration in beats.
+
+   Returns 0 if none of the events have a duration in beats."
+  [events]
+  (apply max (for [{:keys [beats]} (cons {:beats 0} events)
+                   :when beats]
+               beats)))
+
+(defn calculate-duration
+  "Given a number of beats, a tempo, and a time-scaling factor, calculates the
+   duration in milliseconds.
+
+   Takes as an optional final argument a number of milliseconds to add to the
+   total."
+  [beats tempo time-scaling & [ms]]
+  (+ (float (* beats
+               (/ 60000 tempo)
+               time-scaling))
+     (or ms 0)))
+
 (defn duration
   "Combines a variable number of tied note-lengths into one.
 
@@ -46,8 +68,14 @@
    A slur may appear as the final argument of a duration, making the current
    note legato (effectively slurring it into the next).
 
-   Returns a map containing a duration-fn, which gives the duration in ms when
-   provide with a tempo, and whether or not the note is slurred."
+   Returns a map containing the total number of beats (counting only those
+   note-lengths that are expressed in standard musical notation), the total
+   number of milliseconds (counting only those note-lengths expressed in
+   milliseconds), and whether or not the note is slurred.
+
+   This information is used by events (like notes and rests) to calculate the
+   total duration in milliseconds (as this depends on the score's time-scaling
+   factor and the tempo of the instrument the event belongs to)."
   [& components]
   (let [components (remove nil? components)
         [note-lengths slurred] (if (= (last components) :slur)
@@ -64,12 +92,8 @@
         ms    (apply + (for [{:keys [type value]} note-lengths
                              :when (= type :milliseconds)]
                          value))]
-    (when-not (empty? beats-components)
-      (set-duration beats))
-    {:duration-fn (fn [tempo]
-                    (+ (float (* beats
-                                 (/ 60000 tempo)
-                                 *time-scaling*))
-                       ms))
-     :slurred slurred
-     :beats beats}))
+    {:beats     beats
+     :ms        ms
+     :slurred   slurred
+     :duration? true} ; identify this as a duration map
+    ))

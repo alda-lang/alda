@@ -8,7 +8,7 @@
 (util/set-timbre-level!)
 
 (require '[alda.lisp :as lisp]
-         '[alda.lisp.attributes    :refer (*initial-attr-values*)]
+         '[alda.lisp.attributes    :refer (*initial-attr-vals*)]
          '[alda.lisp.model.records :refer (->AbsoluteOffset)]
          '[alda.lisp.score.context :refer (*events* *instruments*)])
 
@@ -60,8 +60,8 @@
               [instrument
                (merge attrs
                       (if all?
-                        *initial-attr-values*
-                        (select-keys *initial-attr-values*
+                        *initial-attr-vals*
+                        (select-keys *initial-attr-vals*
                                      [:current-offset :last-offset])))])
             %)))
   (alter-var-root #'*events*

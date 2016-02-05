@@ -143,7 +143,7 @@
                 {:events          #(list* %&)
                  :repeat          (fn [event n]
                                     (list 'alda.lisp/times n event))
-                 :event-sequence  #(list* 'do %&)
+                 :event-sequence  #(vec (list* %&))
                  :cram            #(list* 'alda.lisp/cram %&)
                  :voices          #(list* 'alda.lisp/voices %&)
                  :voice           (fn [voice-number & events]

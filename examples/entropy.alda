@@ -4,10 +4,10 @@
 (def MAX-OCTAVE 8)
 
 (defn random-note
-  "Plays a random note in a random octave, for a random number of
+  "Returns a random note in a random octave with a random duration in
   milliseconds.
 
-  May randomly decide to rest, instead, for a random number of milliseconds."
+  May randomly return a rest with a random duration in milliseconds, instead."
   []
   (let [ms (ms (rand-nth (range MS-LOWER MS-UPPER)))]
     (if (< (rand) REST-RATE)
@@ -15,17 +15,17 @@
       (let [o (rand-int (inc MAX-OCTAVE))
             n [(keyword (str (rand-nth "abcdefg")))
                (rand-nth [:sharp :flat :natural])]]
-       (octave o)
-       (note (apply pitch n) (duration ms))))))
+        [(octave o)
+         (note (apply pitch n) (duration ms))]))))
 
 midi-electric-piano-1:
   (panning 25)
-  (random-note) * 50
+  (repeatedly 50 random-note)
 
 midi-timpani:
   (panning 50)
-  (random-note) * 50
+  (repeatedly 50 random-note)
 
 midi-celesta:
   (panning 75)
-  (random-note) * 50
+  (repeatedly 50 random-note)

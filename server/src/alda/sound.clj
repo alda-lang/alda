@@ -1,10 +1,13 @@
 (ns alda.sound
   (:require [alda.sound.midi :as    midi]
             [taoensso.timbre :as    log]
-            [alda.lisp]
-            [alda.util       :refer (check-for parse-time pdoseq-block parse-position)])
+            [alda.util       :refer (check-for
+                                     parse-time
+                                     pdoseq-block
+                                     parse-position)])
   (:import [com.softsynth.shared.time TimeStamp ScheduledCommand]
-           [com.jsyn.engine SynthesisEngine]))
+           [com.jsyn.engine SynthesisEngine]
+           [alda.lisp.model.records Function]))
 
 (def ^:dynamic *active-audio-types* #{})
 (def ^:dynamic *synthesis-engine* (doto (SynthesisEngine.) .start))
@@ -145,8 +148,8 @@
 
 (defn- score-length
   "Calculates the length of a score in ms."
-  [{:keys [events] :as score}]
-  (let [events   (filter :duration events)
+  [score]
+  (let [events   (->> score event-set (filter :duration))
         note-end (fn [{:keys [offset duration] :as note}]
                    (+ offset duration))]
     (if (and events (not (empty? events)))
@@ -188,8 +191,10 @@
 
    Returns a function that, when called mid-playback, will stop any further
    events from playing."
-  [{:keys [events markers instruments] :as score}]
-  (let [{:keys [pre-buffer post-buffer one-off? async?]} *play-opts*
+  [{:keys [instruments] :as score}]
+  (let [events      (event-set score)
+        markers     (markers score)
+        {:keys [pre-buffer post-buffer one-off? async?]} *play-opts*
         audio-types (determine-audio-types score)
         _           (set-up! audio-types score)
         _           (refresh! audio-types score)
@@ -208,12 +213,12 @@
             start-cmd (proxy [ScheduledCommand] []
                         (run []
                           (when @playing?
-                            (if (= (type event) alda.lisp.model.records.Function)
+                            (if (= (type event) Function)
                               ((:function event))
                               (start-event! event inst)))))
             stop-cmd  (proxy [ScheduledCommand] []
                         (run []
-                          (when-not (= (type event) alda.lisp.model.records.Function)
+                          (when-not (= (type event) Function)
                             (stop-event! event inst))))]
         (.scheduleCommand *synthesis-engine* start-ts start-cmd)
         (.scheduleCommand *synthesis-engine* stop-ts stop-cmd)))

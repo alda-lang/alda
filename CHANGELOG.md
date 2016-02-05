@@ -1,5 +1,72 @@
 # CHANGELOG
 
+## ??? (???)
+
+* TODO: explain
+
+* Fixed issue #199. Local (per-instrument) attributes occurring at the same time as global attributes will now override the global attribute for the instrument(s) to which they apply.
+
+### Breaking Changes
+
+* Creating scores in a Clojure REPL now involves working with immutable data structures instead of mutating top-level dynamic vars. Whereas before, Alda event functions like `score`, `part` and `note` relied on side effects to modify the state of your score environment, now you create a new score via `score` (or the slightly lower-level `new-score`) and update it using the `continue` function. To better illustrate this, this is how you used to do it **before**:
+
+  ```
+  (score*)
+  (part* "piano")
+  (note (pitch :c))
+  (chord (note (pitch :e)) (note (pitch :g)))
+  ```
+
+  Evaluating each S-expression would modify the top-level score environment. Evaluating `(score*)` again (or a full score wrapped in `(score ...)`) would blow away whatever score-in-progress you may have been working on.
+
+  Here are a few different ways you can do it **now**:
+
+  ```clojure
+  ; a complete score, as a single S-expression
+  (def my-score
+    (score
+      (part "piano"
+        (note (pitch :c))
+        (chord
+          (note (pitch :e))
+          (note (pitch :g))))))
+
+  ; start a new score and continue it
+  ; note that the original (empty) score is not modified
+  (def my-score (new-score))
+
+  (def my-score-cont
+    (continue my-score
+      (part "piano"
+        (note (pitch :c)))))
+
+  (def my-score-cont-cont
+    (continue my-score-cont
+      (chord
+        (note (pitch :e))
+        (note (pitch :g)))))
+
+  ; store your score in an atom and update it atomically
+  (def my-score (atom (score)))
+
+  (continue! my-score
+    (part "piano"
+      (note (pitch :c))))
+
+  (continue! my-score
+    (chord
+      (note (pitch :e))
+      (note (pitch :g))))
+  ```
+
+  Because no state is being stored in top-level vars, multiple scores can now exist side-by-side in a single Alda process or Clojure REPL.
+
+* Top-level score evaluation context vars like `*instruments*` and `*events*` no longer exist. If you were previously relying on inspecting that data, everything has now moved into keys like `:instruments` and `:events` on each separate score map.
+
+* `(duration <number>)` no longer works as a way of manually setting the duration. To do this, use `(set-duration <number>)`, where `<number>` is a number of beats.
+
+* Because Alda event functions no longer work via side effects, inline Clojure code works a bit differently. Basically, you'll just write code that returns one or more Alda events, instead of code that produces side effects (modifying the score) and returns nil.
+
 ## 1.0.0-rc14 (4/1/16)
 
 * Command-specific help text is now available when using the Alda command-line client. ([jgerman])

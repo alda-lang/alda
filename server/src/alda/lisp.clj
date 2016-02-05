@@ -17,6 +17,7 @@
     alda.lisp.events.fn
     alda.lisp.events.note
     alda.lisp.events.rest
+    alda.lisp.events.sequence
     alda.lisp.events.voice
     alda.lisp.instruments.midi
     alda.lisp.model.attribute
@@ -33,5 +34,4 @@
   (require ns)
   (import-all-vars ns))
 
-; bookmark: adding ns's to the doseq expression above
-; alda.lisp.events.fn is next
+

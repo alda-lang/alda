@@ -1,58 +1,127 @@
 (ns alda.lisp.attributes-test
-  (:require [clojure.test :refer :all]
-            [alda.lisp :refer :all]))
-
-(use-fixtures :each
-  (fn [run-tests]
-    (score*)
-    (part* "piano")
-    (run-tests)))
+  (:require [clojure.test      :refer :all]
+            [alda.test-helpers :refer (get-instrument)]
+            [alda.lisp         :refer :all]))
 
 (deftest octave-tests
   (testing "octaves"
-    (octave 4)
-    (is (= ($octave) 4))
-    (octave 2)
-    (is (= ($octave) 2))
-    (octave :down)
-    (is (= ($octave) 1))
-    (octave :up)
-    (is (= ($octave) 2))
-    (set-attribute :octave 5)
-    (is (= ($octave) 5))))
+    (let [s     (score (part "piano"))
+          piano (get-instrument s "piano")]
+      (is (= (:octave piano) 4))
+
+      (let [s     (continue s (octave 2))
+            piano (get-instrument s "piano")]
+        (is (= (:octave piano) 2))
+        (is (= (get-in s [:instruments (:id piano) :attributes 0 :octave]) 2)))
+
+      (let [s     (continue s (octave :down))
+            piano (get-instrument s "piano")]
+        (is (= (:octave piano) 3))
+        (is (= (get-in s [:instruments (:id piano) :attributes 0 :octave])
+               :down)))
+
+      (let [s     (continue s (octave :up))
+            piano (get-instrument s "piano")]
+        (is (= (:octave piano) 5))
+        (is (= (get-in s [:instruments (:id piano) :attributes 0 :octave])
+               :up)))
+
+      (let [s     (continue s
+                    (octave :up)
+                    (octave :up)
+                    (octave :up)
+                    (octave :down))
+            piano (get-instrument s "piano")]
+        (is (= (:octave piano) 6))
+        (is (= (get-in s [:instruments (:id piano) :attributes 0 :octave])
+               :down)))
+
+      (let [s     (continue s (set-attribute :octave 1))
+            piano (get-instrument s "piano")]
+        (is (= (:octave piano) 1))
+        (is (= (get-in s [:instruments (:id piano) :attributes 0 :octave]) 1))))))
 
 (deftest volume-tests
   (testing "volume"
-    (volume 50)
-    (is (== ($volume) 0.5))
-    (volume 75)
-    (is (== ($volume) 0.75))
-    (set-attribute :volume 100)
-    (is (== ($volume) 1.0))))
+    (let [s     (score (part "piano"))
+          piano (get-instrument s "piano")]
+      (is (== (:volume piano) 1.0))
+
+      (let [s     (continue s (volume 50))
+            piano (get-instrument s "piano")]
+        (is (== (:volume piano) 0.5)))
+
+      (let [s     (continue s (volume 75))
+            piano (get-instrument s "piano")]
+        (is (== (:volume piano) 0.75)))
+
+      (let [s     (continue s (set-attribute :volume 81))
+            piano (get-instrument s "piano")]
+        (is (== (:volume piano) 0.81))))))
 
 (deftest panning-tests
   (testing "panning"
-    (panning 25)
-    (is (== ($panning) 0.25))
-    (panning 75)
-    (is (== ($panning) 0.75))
-    (set-attribute :panning 50)
-    (is (== ($panning) 0.5))))
+    (let [s     (score (part "piano"))
+          piano (get-instrument s "piano")]
+      (is (== (:panning piano) 0.5))
+
+      (let [s     (continue s (panning 25))
+            piano (get-instrument s "piano")]
+        (is (== (:panning piano) 0.25)))
+
+      (let [s     (continue s (panning 75))
+            piano (get-instrument s "piano")]
+        (is (== (:panning piano) 0.75)))
+
+      (let [s     (continue s (set-attribute :panning 81))
+            piano (get-instrument s "piano")]
+        (is (== (:panning piano) 0.81))))))
 
 (deftest quantization-tests
   (testing "quantization"
-    (quant 50)
-    (is (== ($quantization) 0.5))
-    (quant 100)
-    (is (== ($quantization) 1.0))
-    (quant 9001)
-    (is (== ($quantization) 90.01))
-    (set-attribute :quant 90)
-    (is (== ($quantization) 0.9))))
+    (let [s     (score (part "piano"))
+          piano (get-instrument s "piano")]
+      (is (== (:quantization piano) 0.9))
+
+      (let [s     (continue s (quant 50))
+            piano (get-instrument s "piano")]
+        (is (== (:quantization piano) 0.50)))
+
+      (let [s     (continue s (quantize 75))
+            piano (get-instrument s "piano")]
+        (is (== (:quantization piano) 0.75)))
+
+      (let [s     (continue s (quantization 9001))
+            piano (get-instrument s "piano")]
+        (is (== (:quantization piano) 90.01)))
+
+      (let [s     (continue s (set-attribute :quant 81))
+            piano (get-instrument s "piano")]
+        (is (== (:quantization piano) 0.81)))
+
+      (let [s     (continue s (set-attribute :quantize 82))
+            piano (get-instrument s "piano")]
+        (is (== (:quantization piano) 0.82)))
+
+      (let [s     (continue s (set-attribute :quantization 83))
+            piano (get-instrument s "piano")]
+        (is (== (:quantization piano) 0.83))))))
 
 (deftest note-length-tests
   (testing "note-length"
-    (set-duration (note-length 2 {:dots 2}))
-    (is (== ($duration) 3.5))
-    (duration (note-length 1) (note-length 1))
-    (is (== ($duration) 8))))
+    (let [s     (score (part "piano"))
+          piano (get-instrument s "piano")]
+      ; default note length is a quarter note (1 beat)
+      (is (== (:duration piano) 1))
+
+      (let [s     (continue s
+                    (set-duration (note-length 2 {:dots 2})))
+            piano (get-instrument s "piano")]
+        (is (== (:duration piano) 3.5)))
+
+      (let [s     (continue s
+                    (note (pitch :c)
+                          (duration (note-length 1) (note-length 1))))
+            piano (get-instrument s "piano")]
+        (is (== (:duration piano) 8))))))
+

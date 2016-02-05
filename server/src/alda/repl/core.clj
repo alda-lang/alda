@@ -9,6 +9,12 @@
 
 (declare ^:dynamic *parsing-context*)
 (declare ^:dynamic *repl-reader*)
+(declare ^:dynamic *score-text*)
+
+(defn score-text<< [s]
+  (if (empty? *score-text*)
+    (alter-var-root #'*score-text* str s)
+    (alter-var-root #'*score-text* str \newline s)))
 
 (defn parse-with-context
   "Determine the appropriate context to parse a line of code from the Alda

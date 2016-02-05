@@ -1,61 +1,50 @@
 (ns alda.lisp.events.chord
-  (:require [alda.lisp.model.event   :refer (set-current-offset
-                                             set-last-offset)]
-            [alda.lisp.model.marker  :refer ($current-marker)]
-            [alda.lisp.model.offset  :refer ($current-offset offset=)]
-            [alda.lisp.model.records :refer (->Chord)]
-            [alda.lisp.score.context :refer (*beats-tally*
-                                             *current-instruments*
-                                             *events*)]))
+  (:require [alda.lisp.model.duration :refer (max-beats)]
+            [alda.lisp.model.event    :refer (update-score add-events)]
+            [alda.lisp.model.offset   :refer (offset+ offset=)]
+            [alda.lisp.score.util     :refer (update-instruments)]))
 
-(defmacro tally-chord-duration
-  "Determines the duration of all events in the chord and adds the longest one
-   to *beats-tally*."
+(comment
+  "To add the note events for chords, we turn on the :chord-mode flag, which
+   makes the notes all get added at the same offset.
+
+   Then we call `initialize-min-durations`, which sets the :min-duration of
+   every instrument to nil.
+
+   As each note is evaluated, each instrument's :min-duration is updated
+   accordingly with the shortest duration evaluated so far.
+
+   Finally, we call `bump-by-min-durations`, which bumps each instrument's
+   :current-offset forward by its :min-duration.")
+
+(defn- initialize-min-durations
+  [score]
+  (update-instruments score #(assoc % :min-duration Integer/MAX_VALUE)))
+
+(defn- bump-by-min-durations
+  [{:keys [instruments] :as score}]
+  (update-instruments score
+    (fn [{:keys [min-duration current-offset] :as inst}]
+      (assoc inst
+             :last-offset    current-offset
+             :current-offset (offset+ current-offset min-duration)
+             :min-duration   nil))))
+
+(defmethod update-score :chord
+  [{:keys [beats-tally current-instruments] :as score}
+   {:keys [events] :as chord}]
+  (if (and beats-tally (not (empty? current-instruments)))
+    (update score :beats-tally + (max-beats events))
+    (-> score
+        (assoc :chord-mode true)
+        initialize-min-durations
+        (#(reduce update-score % events))
+        bump-by-min-durations
+        (assoc :chord-mode false))))
+
+(defn chord
+  "Causes every instrument in :current-instruments to play each note in the
+   chord simultaneously at the instrument's :current-offset."
   [& events]
-  (let [start   (gensym "start")
-        tallies (gensym "tallies")]
-    (list* 'let [start `*beats-tally*
-                 tallies (list 'atom [])]
-           (concat
-             (interleave
-               (repeat `(alter-var-root (var *beats-tally*)
-                                        (constantly ~start)))
-               events
-               (repeat `(swap! ~tallies conj *beats-tally*)))
-             [`(alter-var-root (var *beats-tally*)
-                               (constantly (apply max (deref ~tallies))))]))))
-
-(defmacro chord*
-  "Chords contain notes/rests that all start at the same time/offset.
-   The resulting *current-offset* is at the end of the shortest note/rest in
-   the chord."
-  [instrument & events]
-  (let [num-of-events  (count (filter #(= (first %) 'note) events))
-        start          (gensym "start")
-        offsets        (gensym "offsets")]
-    (list* 'let [start   (list `$current-offset instrument)
-                 offsets (list 'atom [])]
-           (concat
-             (interleave
-               (repeat `(set-current-offset ~instrument ~start))
-               events
-               (repeat `(swap! ~offsets conj ($current-offset ~instrument))))
-             [`(set-last-offset ~instrument ~start)
-              `(set-current-offset ~instrument (apply (partial min-key :offset)
-                                                      (remove #(offset= % ~start)
-                                                              (deref ~offsets))))
-              `(let [chord#
-                     (->Chord (take-last ~num-of-events
-                                        (get-in *events*
-                                                [($current-marker ~instrument)
-                                                 :events])))]
-                 chord#)]))))
-
-(defmacro chord
-  [& args]
-  `(if (and *beats-tally* (not (empty? *current-instruments*)))
-     (tally-chord-duration ~@args)
-     (doall
-       (for [instrument# *current-instruments*]
-         (binding [*current-instruments* #{instrument#}]
-           (chord* instrument# ~@args))))))
+  {:event-type :chord
+   :events     events})

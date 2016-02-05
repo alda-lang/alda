@@ -1,62 +1,35 @@
 (ns alda.lisp.model.global-attribute
-  (:require [alda.lisp.model.attribute :refer (set-attribute)]
+  (:require [alda.lisp.model.attribute :refer (get-attr)]
+            [alda.lisp.model.event     :refer (update-score)]
             [alda.lisp.model.offset    :refer (absolute-offset
-                                               instruments-all-at-same-offset
-                                               $last-offset)]
-            [alda.lisp.model.records   :refer (->GlobalAttribute)]
-            [alda.lisp.score.context   :refer (*current-instruments*
-                                               *global-attributes*)]
+                                               instruments-all-at-same-offset)]
             [taoensso.timbre           :as    log]))
 
-; currently shuffling vars around...
-; TODO: find a better place for this documentation
-(comment
-  "*global-attributes* is a map of offsets to the global attribute changes that
-   occur (for all instruments) at each offset.
-
-   apply-global-attributes is a fn that looks at the window between an
-   instrument's :last-offset and :current-offset and sees if any global attribute
-   changes have occurred in that window, and if so, applies them for the
-   instrument. This fn is called by set-current-offset each time an instrument's
-   :current-offset is changed, so that global attributes can be applied at the
-   new offset.
-
-   Note: global attributes only work moving forward. That is to say, a global
-   attribute change will only affect the current part and any others that
-   follow it in the score.")
+(defmethod update-score :global-attribute-change
+  [score {:keys [attr val] :as event}]
+  (if-let [offset (instruments-all-at-same-offset score)]
+    (let [abs-offset (absolute-offset offset score)]
+      (log/debugf "Set global attribute %s %s at offset %d."
+                  attr val (int abs-offset))
+      (update-in score [:global-attributes abs-offset]
+                 (fnil assoc {}) attr val))
+    (throw (Exception.
+             (str "Can't set global attribute " attr " to " val " - offset "
+                  "unclear. There are multiple instruments active with "
+                  "different time offsets.")))))
 
 (defn global-attribute
+  "Public fn for setting global attributes in a score.
+   e.g. (global-attribute :tempo 100)"
   [attr val]
-  (set-attribute attr val)
-  (if-let [offset (instruments-all-at-same-offset)]
-    (do
-      (alter-var-root #'*global-attributes* update-in [(absolute-offset offset)]
-                                            (fnil conj []) [attr val])
-      (log/debug "Set global attribute" attr val "at offset"
-                 (str (int (absolute-offset offset)) \.))
-      (->GlobalAttribute offset attr val))
-    (throw (Exception. (str "Can't set global attribute " attr " to " val
-                            " - offset unclear. There are multiple instruments "
-                            "active with different time offsets.")))))
+  {:event-type :global-attribute-change
+   :attr       (:kw-name (get-attr attr))
+   :val        val})
 
 (defn global-attributes
-  "Convenience fn for setting multiple global attributes at once."
+  "Convenience fn for setting multiple global attributes at once.
+   e.g. (global-attributes :tempo 100 :volume 50)"
   [& attrs]
-  (doall
-    (for [[attr val] (partition 2 attrs)]
-      (global-attribute attr val))))
+  (for [[attr val] (partition 2 attrs)]
+    (global-attribute attr val)))
 
-(defn apply-global-attributes
-  [instrument now]
-  (let [now            (absolute-offset now)
-        last-offset    (absolute-offset ($last-offset instrument))
-        new-global-attrs (->> *global-attributes*
-                              (filter (fn [[offset attrs]]
-                                        (<= last-offset
-                                            offset
-                                            now)))
-                              (mapcat (fn [[offset attrs]] attrs)))]
-    (binding [*current-instruments* #{instrument}]
-      (doall
-        (for [[attr val] new-global-attrs]
-          (set-attribute attr val))))))

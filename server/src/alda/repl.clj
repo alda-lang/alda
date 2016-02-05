@@ -2,7 +2,9 @@
   (:require [alda.version       :refer (-version-)]
             [alda.lisp          :refer :all]
             [alda.sound         :refer (set-up! tear-down! *play-opts*)]
-            [alda.repl.core     :as    repl :refer (*repl-reader* *parsing-context*)]
+            [alda.repl.core     :as    repl :refer (*repl-reader*
+                                                    *parsing-context*
+                                                    score-text<<)]
             [alda.repl.commands :refer (repl-command)]
             [alda.util          :refer (while-let)]
             [io.aviso.ansi      :refer :all]

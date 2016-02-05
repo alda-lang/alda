@@ -1,7 +1,6 @@
 (ns alda.server
   (:require [alda.now                         :as    now]
             [alda.lisp                        :refer :all]
-            [alda.lisp.score.context          :refer (*score-text*)]
             [alda.parser                      :refer (parse-input)]
             [alda.parser-util                 :refer (parse-with-context)]
             [alda.sound                       :refer (*play-opts*)]
@@ -26,6 +25,13 @@
   (now/set-up! :midi)
   ; initialize a new score
   (score*))
+
+(def ^:dynamic *score-text* "")
+
+(defn score-text<< [s]
+  (if (empty? *score-text*)
+    (alter-var-root #'*score-text* str s)
+    (alter-var-root #'*score-text* str \newline s)))
 
 ; TODO:
 ;
