@@ -135,6 +135,7 @@ For the best experience when editing Alda score files, install the Alda file-typ
 - [Sublime Text](https://github.com/archimedespi/sublime-alda)
 - [Atom](https://github.com/MadcapJake/language-alda)
 - [Vim](https://github.com/daveyarwood/vim-alda)
+- [Emacs](https://github.com/jgkamat/alda-mode)
 
 ### Updating Alda
 
