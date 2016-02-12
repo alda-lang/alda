@@ -32,14 +32,18 @@
              is#    alda.lisp/*current-instruments*
              ts#    alda.lisp/*time-scaling*
              beats# (zipmap is# (for [i# is#]
-                                  (or dur# ($duration i#))))]
-         (doseq [i# is#]
-           (binding [~'alda.lisp/*current-instruments* #{i#}
-                     ~'alda.lisp/*time-scaling* (calculate-time-scaling
-                                                  ts#
-                                                  (or dur# ($duration i#))
-                                                  tally#)]
-             (set-duration 1)
-             ~@body
-             (set-duration (beats# i#))))
-         (alter-var-root #'*time-scaling* (constantly ts#))))))
+                                  (or dur# ($duration i#))))
+             events#
+             (mapcat (fn [i#]
+                       (binding [~'alda.lisp/*current-instruments* #{i#}
+                                 ~'alda.lisp/*time-scaling*
+                                 (calculate-time-scaling ts#
+                                                         (or dur# ($duration i#))
+                                                         tally#)]
+                         (set-duration 1)
+                         (let [es# [~@body]]
+                           (set-duration (beats# i#))
+                           es#)))
+                     is#)]
+         (alter-var-root #'*time-scaling* (constantly ts#))
+         events#))))

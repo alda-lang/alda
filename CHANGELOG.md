@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1.0.0-rc7 (2/12/16)
+
+* Fixed a bug that was happening when using a cram expression inside of a voice. (#184 -- thanks to [jgkamat] for reporting!)
+
 ## 1.0.0-rc6 (1/27/16)
 
 * Fixed a bug where voices were not being parsed correctly in some cases ([#177](https://github.com/alda-lang/alda/pull/177)).
@@ -172,7 +176,7 @@
 
 ### New features
 
-* Alda now supports inline Clojure code! Anything between parentheses is interpreted as a Clojure expression and evaluated within the context of the `alda.lisp` namespace. 
+* Alda now supports inline Clojure code! Anything between parentheses is interpreted as a Clojure expression and evaluated within the context of the `alda.lisp` namespace.
 To preserve backwards compatibility, attributes still work the same way -- they just happen to be function calls now -- and there is a special reader behavior that will split an S-expression into multiple S-expressions if there is a comma or semicolon, so that there is even backwards compatibility with things like this: `(volume 50, tempo! 90)` (under the hood, this is read by the Clojure compiler as `(do (volume 50) (tempo! 90))`).
 
 ### Breaking changes
@@ -288,9 +292,10 @@ Exit with error code 1 when parsing fails for `alda play` and `alda parse` tasks
 
 ## 0.1.0 (8/27/15)
 
-* "Official" first release of Alda. Finally deployed to clojars, after ~3 years of tinkering. 
+* "Official" first release of Alda. Finally deployed to clojars, after ~3 years of tinkering.
 
 [daveyarwood]: https://github.com/daveyarwood
 [crisptrutski]: https://github.com/crisptrutski
 [MadCapJake]: https://github.com/MadcapJake
 [FragLegs]: https://github.com/FragLegs
+[jgkamat]: https://github.com/jgkamat

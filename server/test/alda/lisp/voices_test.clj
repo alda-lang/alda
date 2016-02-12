@@ -27,6 +27,16 @@
       (is (has-note? the-voice b-note))
       (is (has-note? the-voice c-note))
       (is (= 3 (count the-voice)))))
+  (testing "a voice containing a cram expression"
+    (testing "should not throw an exception"
+      (is (voices
+            (voice 1
+              (cram
+                (note (pitch :c))
+                (octave :down)
+                (note (pitch :b))
+                (note (pitch :a))
+                (note (pitch :g))))))))
   (testing "a voice group:"
     (let [start ($current-offset)
           {:keys [v1 v2 v3]} (voices
