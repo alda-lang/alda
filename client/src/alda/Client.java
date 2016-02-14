@@ -60,6 +60,9 @@ public class Client {
   @Parameters(commandDescription = "Display this help text")
   private static class CommandHelp {}
 
+  @Parameters(commandDescription = "Attempt to autoupdate alda")
+  private static class CommandUpdate {}
+
   @Parameters(commandDescription = "Start the Alda server")
   private static class CommandStart {}
 
@@ -229,6 +232,7 @@ public class Client {
     GlobalOptions globalOpts = new GlobalOptions();
 
     CommandHelp    help      = new CommandHelp();
+    CommandUpdate  update    = new CommandUpdate();
     CommandServer  serverCmd = new CommandServer();
     CommandRepl    repl      = new CommandRepl();
     CommandStart   start     = new CommandStart();
@@ -251,6 +255,8 @@ public class Client {
     jc.setProgramName("alda");
 
     jc.addCommand("help", help);
+
+    jc.addCommand("update", update);
 
     jc.addCommand("server", serverCmd);
     jc.addCommand("repl", repl);
@@ -304,6 +310,10 @@ public class Client {
       switch (command) {
         case "help":
           jc.usage();
+          break;
+
+        case "update":
+          Util.updateAlda();
           break;
 
         case "server":
@@ -497,4 +507,3 @@ public class Client {
   }
 
 }
-

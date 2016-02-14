@@ -6,6 +6,8 @@ import java.io.File;
 import java.io.InputStreamReader;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.HttpURLConnection;
 import java.util.Arrays;
 import java.util.Scanner;
 import java.util.regex.Matcher;
@@ -16,6 +18,13 @@ import clojure.lang.IFn;
 import clojure.lang.ISeq;
 import clojure.lang.Symbol;
 import clojure.lang.ArraySeq;
+import com.google.gson.*;
+
+
+import java.net.MalformedURLException;
+import java.io.BufferedInputStream;
+import java.io.BufferedInputStream;
+import java.io.FileOutputStream;
 
 import org.apache.commons.lang3.SystemUtils;
 
@@ -135,6 +144,114 @@ public final class Util {
   public static String getProgramPath() throws URISyntaxException {
     return Client.class.getProtectionDomain().getCodeSource().getLocation()
                  .toURI().getPath();
+  }
+
+  public static String makeApiCall(String apiRequest) throws IOException {
+      URL url = new URL(apiRequest);
+      HttpURLConnection conn =
+        (HttpURLConnection) url.openConnection();
+
+      if (conn.getResponseCode() != 200) {
+        throw new IOException(conn.getResponseMessage());
+      }
+
+      // Buffer the result into a string
+      BufferedReader rd = new BufferedReader(
+        new InputStreamReader(conn.getInputStream()));
+      StringBuilder sb = new StringBuilder();
+      String line;
+      line = rd.readLine();
+      while (line != null) {
+        sb.append(line);
+        line = rd.readLine();
+      }
+      rd.close();
+      conn.disconnect();
+      return sb.toString();
+  }
+
+  public static void downloadFile(String url, String path) {
+    BufferedInputStream in = null;
+    FileOutputStream fout = null;
+    try {
+      in = new BufferedInputStream(new URL(url).openStream());
+      fout = new FileOutputStream(path);
+
+      final byte data[] = new byte[1024];
+      int count;
+      while ((count = in.read(data, 0, 1024)) != -1) {
+        fout.write(data, 0, count);
+      }
+    } catch (MalformedURLException e) {
+      System.err.println("An error occured while downloading a file (1).");
+      e.printStackTrace();
+    } catch (IOException e) {
+      System.err.println("An error occured while downloading a file (2).");
+      e.printStackTrace();
+    }finally {
+      // Close file IO's
+      try {
+        if (in != null) {
+          in.close();
+        }
+        if (fout != null) {
+          fout.close();
+        }
+      } catch (IOException e) {
+        // We can't do anything.
+        System.err.println("A critical error occured while downoading a file (3).");
+        e.printStackTrace();
+        return;
+      }
+    }
+  }
+
+  public static void updateAlda() throws URISyntaxException {
+    // Get the path to the current alda executable
+    String programPath = getProgramPath();
+    String latestApiStr = "https://api.github.com/repos/alda-lang/alda/releases/latest";
+    String apiResult;
+
+    // Make a call to the Github API to get the latest version number/download URL
+    try {
+      apiResult = makeApiCall(latestApiStr);
+    } catch (IOException e) {
+      System.err.println("There was an error connecting to the Github API.");
+      e.printStackTrace();
+      return;
+    }
+
+    // Turn api result into version numbers and links
+
+    Gson gson = new Gson();
+    JsonObject job = gson.fromJson(apiResult, JsonObject.class);
+
+    // Gets the download URL. This may have ...alda or ...alda.exe
+    String downloadURL = job.getAsJsonArray("assets").get(1).getAsJsonObject().get("browser_download_url").toString();
+    String latestTag = job.getAsJsonObject().get("tag_name").toString();
+
+    // Sanitize inputs
+    downloadURL = downloadURL.replaceAll("\"", "").replaceFirst("\\.exe$", "");
+    latestTag = latestTag.replaceAll("\"", "");
+
+    if (SystemUtils.IS_OS_WINDOWS) {
+      // Downlaod windows executable if on windows
+      downloadURL = downloadURL + ".exe";
+    }
+
+    // Request confirmation from user:
+    System.out.print("Install alda '" + latestTag + "' [Yn]: ");
+    System.out.flush();
+    String name = (new Scanner(System.in)).nextLine();
+    if (!(name.equalsIgnoreCase("Y") || name.equalsIgnoreCase("yes"))) {
+      System.out.println("Quitting...");
+      return;
+    }
+
+    System.out.println("Attempting download from '" + downloadURL + "'...");
+
+    // Download file from downloadURL to programPath
+    downloadFile(downloadURL, programPath);
   }
 
   public static void forkProgram(Object... args)

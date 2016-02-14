@@ -25,6 +25,7 @@
                   ; client
                   [org.apache.commons/commons-lang3     "3.4"]
                   [org.apache.httpcomponents/httpclient "4.5.1"]
+                  [com.google.code.gson/gson            "2.6.1"]
                   [com.beust/jcommander                 "1.48"]
                   [org.fusesource.jansi/jansi           "1.11"]
                   [net.jodah/recurrent                  "0.4.0"]
@@ -184,4 +185,3 @@
   "Builds uberjar, installs it to local Maven repo, and deploys it to Clojars."
   []
   (comp (build-jar) (push-release)))
-
