@@ -4,6 +4,10 @@
 
 The Alda client and server are packaged together in the same uberjar. You can build the project by running a single command (requires [Boot](http://boot-clj.com)), `boot build`, while in the root directory of this repo. Note that this command requires an `-o/--output-dir` argument, which is the directory where the executable files `alda` and `alda.exe` will be written. I like to use `/tmp` (`boot build -o /tmp`). I can then try out changes by running `/tmp/alda <cli args here>`.
 
+> The `build` task requires [Launch4j](http://launch4j.sourceforge.net) in order to build the Windows executable.
+>
+> (If you're on a Mac with [Homebrew](http://brew.sh) installed, you can install Launch4j by running `brew install launch4j`.)
+
 Note that the client forks server processes into the background, which continue to run even after the client has exited. If you're testing out changes you've made to the server code, you will need to restart the server by running `alda restart`, which will stop the server and start a new process using your new build.
 
 ## Testing changes
