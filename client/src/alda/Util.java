@@ -232,12 +232,16 @@ public final class Util {
     return out.toString();
   }
 
+  public static String version() {
+    return readFile("version.txt").trim();
+  }
+
   public static void updateAlda() throws URISyntaxException {
     // Get the path to the current alda executable
     String programPath = getProgramPath();
     String latestApiStr = "https://api.github.com/repos/alda-lang/alda/releases/latest";
     String apiResult;
-    String clientVersion = readFile("version.txt").trim();
+    String clientVersion = version();
 
     // Make a call to the Github API to get the latest version number/download URL
     try {
@@ -249,28 +253,38 @@ public final class Util {
     }
 
     // Turn api result into version numbers and links
-
     Gson gson = new Gson();
     JsonObject job = gson.fromJson(apiResult, JsonObject.class);
 
     // Gets the download URL. This may have ...alda or ...alda.exe
-    String downloadURL = job.getAsJsonArray("assets").get(1).getAsJsonObject().get("browser_download_url").toString();
-    String latestTag = job.getAsJsonObject().get("tag_name").toString();
+    String downloadURL = null;
+    String dlRegex = SystemUtils.IS_OS_WINDOWS ? ".*alda\\.exe$" : ".*.alda$";
+    String latestTag = job.getAsJsonObject().get("tag_name").toString().replaceAll("\"", "");
 
-    // Sanitize inputs
-    downloadURL = downloadURL.replaceAll("\"", "").replaceFirst("\\.exe$", "");
-    latestTag = latestTag.replaceAll("\"", "");
+    // Check to see if we currently have the version determined by latestTag
+    if (latestTag.indexOf(clientVersion) != -1 || clientVersion.indexOf(latestTag) != -1) {
+      System.out.println("Your version of alda (" + clientVersion +") is up to date!");
+      return;
+    }
 
-    if (SystemUtils.IS_OS_WINDOWS) {
-      // Downlaod windows executable if on windows
-      downloadURL = downloadURL + ".exe";
+    for (JsonElement i : job.getAsJsonArray("assets")) {
+      String candidate = i.getAsJsonObject().get("browser_download_url").toString().replaceAll("\"", "");
+      if (candidate.matches(dlRegex)) {
+        downloadURL = candidate;
+        break;
+      }
+    }
+
+    if (downloadURL == null) {
+      System.err.println("Alda download link not found for your platform.");
+      return;
     }
 
     // Request confirmation from user:
-    System.out.print("Install alda '" + latestTag + "' [Yn]: ");
+    System.out.print("Install alda '" + latestTag + "' over '" + clientVersion + "' ? [Yn]: ");
     System.out.flush();
     String name = (new Scanner(System.in)).nextLine();
-    if (!(name.equalsIgnoreCase("Y") || name.equalsIgnoreCase("yes"))) {
+    if (!(name.equalsIgnoreCase("y") || name.equalsIgnoreCase("yes"))) {
       System.out.println("Quitting...");
       return;
     }
@@ -279,6 +293,12 @@ public final class Util {
 
     // Download file from downloadURL to programPath
     downloadFile(downloadURL, programPath);
+    // set as executable if on UNIX
+    if (SystemUtils.IS_OS_UNIX) {
+      new File(programPath).setExecutable(true);
+    }
+    System.out.println("Update to alda '" + latestTag + "' was successful!");
+    System.out.println("If you have any currently running servers, you may want to restart them so that they are running the latest version.");
   }
 
   public static void forkProgram(Object... args)

@@ -450,7 +450,10 @@ public class AldaServer {
 
   public void version() throws Exception {
     assertServerUp();
+    System.out.println("Server version:");
     msg(getRequest("/version"));
+    System.out.println("Client version:");
+    System.out.println(Util.version());
   }
 
   public AldaServerInfo getInfo() throws Exception {
