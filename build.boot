@@ -1,7 +1,7 @@
 (set-env!
   :source-paths #{"client/src"}
   :resource-paths #{"server/src" "server/test"
-                    "server/grammar" "examples"}
+                    "server/grammar" "examples" "resources"}
   :dependencies '[
                   ; dev
                   [adzerk/bootlaces      "0.1.12" :scope "test"]

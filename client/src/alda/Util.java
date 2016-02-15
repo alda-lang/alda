@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.Console;
 import java.io.File;
 import java.io.InputStreamReader;
+import java.io.InputStream;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -19,7 +20,6 @@ import clojure.lang.ISeq;
 import clojure.lang.Symbol;
 import clojure.lang.ArraySeq;
 import com.google.gson.*;
-
 
 import java.net.MalformedURLException;
 import java.io.BufferedInputStream;
@@ -206,11 +206,38 @@ public final class Util {
     }
   }
 
+  public static String readFile(String path) {
+    StringBuilder out = new StringBuilder();
+    BufferedReader reader = null;
+    try {
+      InputStream in = Util.class.getClassLoader().getResourceAsStream(path);
+      reader = new BufferedReader(new InputStreamReader(in));
+      String line;
+      while ((line = reader.readLine()) != null) {
+        out.append(line);
+      }
+    } catch(IOException e) {
+      System.err.println("There was an error reading a file!");
+      e.printStackTrace();
+    } finally {
+      try {
+        reader.close();
+      } catch (Exception e) {
+        // Theres nothing we can do...
+        System.err.println("There was a critical error!");
+        e.printStackTrace();
+        return null;
+      }
+    }
+    return out.toString();
+  }
+
   public static void updateAlda() throws URISyntaxException {
     // Get the path to the current alda executable
     String programPath = getProgramPath();
     String latestApiStr = "https://api.github.com/repos/alda-lang/alda/releases/latest";
     String apiResult;
+    String clientVersion = readFile("version.txt").trim();
 
     // Make a call to the Github API to get the latest version number/download URL
     try {
