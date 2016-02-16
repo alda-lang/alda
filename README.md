@@ -103,8 +103,8 @@ For more examples, see these [example scores](https://github.com/alda-lang/alda/
 
   > Using `/usr/local/bin` here as an example;
   > you can use any directory on your `$PATH`.
-
-        mv alda /usr/local/bin
+  
+      mv alda /usr/local/bin
 
 ### Windows
 
