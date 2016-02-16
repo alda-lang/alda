@@ -297,7 +297,7 @@ public final class Util {
     if (SystemUtils.IS_OS_UNIX) {
       new File(programPath).setExecutable(true);
     }
-    System.out.println("Update to alda '" + latestTag + "' was successful!");
+    System.out.println("Updated alda " + clientVersion + "=> " + latestTag);
     System.out.println("If you have any currently running servers, you may want to restart them so that they are running the latest version.");
   }
 
@@ -360,5 +360,4 @@ public final class Util {
     ISeq argsSeq = ArraySeq.create(args);
     Clojure.var(var.getNamespace(), var.getName()).applyTo(argsSeq);
   }
-
 }

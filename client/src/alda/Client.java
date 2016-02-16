@@ -345,6 +345,9 @@ public class Client {
           server.status();
           break;
         case "version":
+          System.out.println("Client version: " + Util.version());
+          System.out.println();
+          System.out.println("Server version:");
           server.version();
           break;
         case "info":

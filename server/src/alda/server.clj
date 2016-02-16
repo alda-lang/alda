@@ -285,7 +285,7 @@
       (stop-server!)))
 
   (GET "/version" []
-    (success (str "alda v" -version-)))
+    (success -version-))
 
   (not-found (user-error "Invalid route.")))
 
