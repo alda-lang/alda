@@ -114,6 +114,14 @@ For more examples, see these [example scores](https://github.com/alda-lang/alda/
 
         C:\> move alda.exe %SystemRoot%
 
+### Updating Alda
+
+Once you have Alda installed, you can update to the latest version at any time by running:
+
+```
+alda update
+```
+
 ### MIDI soundfonts
 
 Default JVM soundfonts usually are of low quality. We recommend installing a good freeware soundfont like FluidR3 to make your MIDI instruments sound a lot nicer. For your convenience, there is a script in this repo that will install the FluidR3 soundfont for Mac and Linux users.
@@ -136,12 +144,6 @@ For the best experience when editing Alda score files, install the Alda file-typ
 - [Atom](https://github.com/MadcapJake/language-alda)
 - [Vim](https://github.com/daveyarwood/vim-alda)
 - [Emacs](https://github.com/jgkamat/alda-mode)
-
-### Updating Alda
-
-We're still working on [improving the Alda update process](https://github.com/alda-lang/alda/issues/82). Ideally you'll be able to just type `alda update` to get the latest version.
-
-For now, you can update Alda by downloading the [latest release](https://github.com/alda-lang/alda/releases/latest) and repeating the install process.
 
 ## Demo
 

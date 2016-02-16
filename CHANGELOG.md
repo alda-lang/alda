@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 1.0.0-rc8 (2/16/16)
+
+* You can now update to the latest version of Alda from the command line by running `alda update`. ([jgkamat])
+
+* This will be the last update you have to install manually :)
+
 ## 1.0.0-rc7 (2/12/16)
 
 * Fixed a bug that was happening when using a cram expression inside of a voice. (#184 -- thanks to [jgkamat] for reporting!)
