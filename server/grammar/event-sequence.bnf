@@ -1,3 +1,2 @@
-event-sequence          = <"["> <ows> inside-event-sequence* <ows> <"]"> <ows>
-<inside-event-sequence> = !("[" | "]") events
+event-sequence          = <"["> <ows> events <ows> <"]"> <ows>
 

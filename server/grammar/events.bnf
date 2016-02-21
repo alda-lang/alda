@@ -7,8 +7,8 @@
 <event>               = single-event | repeat | voices
 <event-inside-voice>  = single-event | repeat
 <single-event>        = chord | note | rest | octave-change |
-                  clj-expr-cached | marker | at-marker | barline |
-                  event-sequence | cram
+                        clj-expr-cached | marker | at-marker | barline |
+                        event-sequence | cram
 
 repeat                = single-event <ows> <"*"> <ows> positive-number <ows>
 
