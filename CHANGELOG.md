@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 1.0.0-rc9 (2/21/16)
+
+* Fix parsing bug re: starting an event sequence with an event sequence. (#187 - Thanks to [heikkil] for reporting!)
+* Fix similar parsing bug re: starting a cram expression with a cram expression.
+
 ## 1.0.0-rc8 (2/16/16)
 
 * You can now update to the latest version of Alda from the command line by running `alda update`. ([jgkamat])
@@ -305,3 +310,4 @@ Exit with error code 1 when parsing fails for `alda play` and `alda parse` tasks
 [MadCapJake]: https://github.com/MadcapJake
 [FragLegs]: https://github.com/FragLegs
 [jgkamat]: https://github.com/jgkamat
+[heikkil]: https://github.com/heikkil
