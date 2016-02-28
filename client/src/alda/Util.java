@@ -281,7 +281,7 @@ public final class Util {
     }
 
     // Request confirmation from user:
-    System.out.print("Install alda '" + latestTag + "' over '" + clientVersion + "' ? [Yn]: ");
+    System.out.print("Install alda '" + latestTag + "' over '" + clientVersion + "' ? [yN]: ");
     System.out.flush();
     String name = (new Scanner(System.in)).nextLine();
     if (!(name.equalsIgnoreCase("y") || name.equalsIgnoreCase("yes"))) {
