@@ -35,7 +35,14 @@
                                (alda.lisp/duration (alda.lisp/note-length 2)))
                (alda.lisp/note (alda.lisp/pitch :g)
                                (alda.lisp/duration (alda.lisp/note-length 4)))
-               (alda.lisp/pause (alda.lisp/duration (alda.lisp/note-length 8)))))))))
+               (alda.lisp/pause (alda.lisp/duration (alda.lisp/note-length 8)))))))
+    (is (= (parse-with-context :music-data "b>/d/f2.")
+           '((alda.lisp/chord
+               (alda.lisp/note (alda.lisp/pitch :b))
+               (alda.lisp/octave :up)
+               (alda.lisp/note (alda.lisp/pitch :d))
+               (alda.lisp/note (alda.lisp/pitch :f)
+                               (alda.lisp/duration (alda.lisp/note-length 2 {:dots 1})))))))))
 
 (deftest voice-tests
   (testing "voices"

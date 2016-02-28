@@ -15,8 +15,11 @@ repeat                = single-event <ows> <"*"> <ows> positive-number <ows>
     (* chords, notes, rests *)
 
 chord                 = (note | rest) subchord+
-<subchord>            = <"/"> <ows> (octave-change | clj-expr-cached)*
+<subchord>            = <ows> inside-chord*
+                        <ows> <"/">
+                        <ows> inside-chord*
                         <ows> (note | rest) <ows>
+<inside-chord>        = octave-change | clj-expr-cached
 note                  = pitch duration? <ows> slur?
 rest                  = <"r"> duration? <ows>
 

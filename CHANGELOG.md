@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1.0.0-rc10 (2/28/16)
+
+* Fix parsing bug re: placing an octave change before the slash in a chord instead of after it, e.g. `b>/d/f` (#192 - thanks to [elyisgreat] for reporting!)
+
 ## 1.0.0-rc9 (2/21/16)
 
 * Fix parsing bug re: starting an event sequence with an event sequence. (#187 - Thanks to [heikkil] for reporting!)
