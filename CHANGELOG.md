@@ -315,3 +315,4 @@ Exit with error code 1 when parsing fails for `alda play` and `alda parse` tasks
 [FragLegs]: https://github.com/FragLegs
 [jgkamat]: https://github.com/jgkamat
 [heikkil]: https://github.com/heikkil
+[elyisgreat]: https://github.com/elyisgreat
