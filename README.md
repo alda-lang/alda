@@ -171,7 +171,9 @@ PRs welcome! See: [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## Support, Discussion, Comaraderie
 
-Sign up to the universe of Clojure chat @ http://clojurians.net/, then join us on #alda
+**Slack**: Sign up to the universe of Clojure chat @ http://clojurians.net/, then join us on #alda
+
+**Reddit**: Come join us in [/r/alda](https://www.reddit.com/r/alda/), where you can discuss all things Alda and share your Alda scores!
 
 ## License
 
