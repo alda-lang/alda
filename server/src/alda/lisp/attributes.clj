@@ -15,15 +15,15 @@
   (constantly (/ x 100.0)))
 
 ;; Validation that the input is an integer value
-(defn- pos-integer[x]
-  {:pre [(and (integer? x)
+(defn- pos-num [x]
+  {:pre [(and (number? x)
               (pos? x))]}
   (constantly x))
 
 (defattribute tempo
   "Current tempo. Used to calculate the duration of notes."
   :initial-val 120
-  :transform pos-integer)
+  :transform pos-num)
 
 (defattribute duration
   "Default note duration in beats."
@@ -31,10 +31,9 @@
   :fn-name set-duration
   ;; :aliases [:duration]
   :transform (fn [val]
-               { :pre [(or
-                        (map? val)
-                        (and (number? val)
-                             (pos? val)))]}
+               {:pre [(or
+                       (map? val)
+                       (and (number? val) (not (neg? val))))]}
 
                (constantly (if (map? val)
                              (:value val)
@@ -92,11 +91,8 @@
   [key-sig]
   ;; Get a version of key-sig with only characters
   (let [clean-str (apply str (filter #(Character/isLetter %) key-sig))]
-    (and
-     ;; Check to see if any chars are not a-g
-     (empty? (re-find #"[^a-gA-G]" clean-str))
-     ;; No duplicates
-     (= (count (distinct clean-str)) (count clean-str)))))
+    (and (not (re-find #"[^a-g]" clean-str))
+         (= (count (distinct clean-str)) (count clean-str)))))
 
 (defn- parse-key-signature
   "Transforms a key signature into a letter->accidentals map.

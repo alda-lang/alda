@@ -70,7 +70,7 @@
         ms    (apply + (for [{:keys [type value]} note-lengths
                              :when (= type :milliseconds)]
                          value))]
-    (when (pos? beats) (set-duration beats))
+    (set-duration beats)
     {:duration-fn (fn [tempo]
                     (+ (float (* beats
                                  (/ 60000 tempo)
