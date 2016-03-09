@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1.0.0-rc11 (3/8/16)
+
+* Fix parsing bugs related to ending a voice in a voice group with a certain type of event (e.g. Clojure expressions, barlines) followed by whitespace. (#196, #197 - thanks to [elyisgreat] for reporting!)
+
 ## 1.0.0-rc10 (2/28/16)
 
 * Fix parsing bug re: placing an octave change before the slash in a chord instead of after it, e.g. `b>/d/f` (#192 - thanks to [elyisgreat] for reporting!)
