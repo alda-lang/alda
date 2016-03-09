@@ -14,15 +14,28 @@
   {:pre [(<= 0 x)]}
   (constantly (/ x 100.0)))
 
+;; Validation that the input is an integer value
+(defn- pos-integer[x]
+  {:pre [(and (integer? x)
+              (pos? x))]}
+  (constantly x))
+
 (defattribute tempo
   "Current tempo. Used to calculate the duration of notes."
-  :initial-val 120)
+  :initial-val 120
+  :transform pos-integer)
 
 (defattribute duration
   "Default note duration in beats."
   :initial-val 1
   :fn-name set-duration
+  ;; :aliases [:duration]
   :transform (fn [val]
+               { :pre [(or
+                        (map? val)
+                        (and (number? val)
+                             (pos? val)))]}
+
                (constantly (if (map? val)
                              (:value val)
                              val))))
@@ -31,7 +44,7 @@
   "Current octave. Used to calculate the pitch of notes."
   :initial-val 4
   :transform (fn [val]
-               {:pre [(or (number? val)
+               {:pre [(or (integer? val)
                           (contains? #{:down :up} val))]}
                (case val
                 :down dec
@@ -69,6 +82,22 @@
   :initial-val 0.5
   :transform percentage)
 
+(defn- validate-str-key-sig
+  "Validates the current key-sig. Checks for:
+
+  1. No duplicate letters, ie: a- a+
+  2. No letters out of range a-g
+
+  If all tests pass, return true"
+  [key-sig]
+  ;; Get a version of key-sig with only characters
+  (let [clean-str (apply str (filter #(Character/isLetter %) key-sig))]
+    (and
+     ;; Check to see if any chars are not a-g
+     (empty? (re-find #"[^a-gA-G]" clean-str))
+     ;; No duplicates
+     (= (count (distinct clean-str)) (count clean-str)))))
+
 (defn- parse-key-signature
   "Transforms a key signature into a letter->accidentals map.
 
@@ -79,6 +108,9 @@
    If the key signature is provided as a string, e.g. 'f+ c+ g+', then it is
    converted to a letter->accidentals map."
   [key-sig]
+  {:pre [(or (not (string? key-sig))
+             (validate-str-key-sig key-sig))]}
+
   (constantly
     (cond
       (map? key-sig)
@@ -87,7 +119,7 @@
       (string? key-sig)
       (into {}
         (map (fn [[_ _ letter accidentals]]
-               [(keyword letter) 
+               [(keyword letter)
                 (map {\- :flat \+ :sharp \= :natural} accidentals)])
              (re-seq #"(([a-g])([+-=]*))" key-sig)))
 
