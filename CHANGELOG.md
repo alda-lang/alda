@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1.0.0-rc12 (3/10/16)
+
+* Improve validation of attribute values to avoid buggy behavior when using invalid values like negative tempos, non-integer octaves, etc. (#195, thanks to [elyisgreat] for reporting and [jgkamat] for fixing)
+
 ## 1.0.0-rc11 (3/8/16)
 
 * Fix parsing bugs related to ending a voice in a voice group with a certain type of event (e.g. Clojure expressions, barlines) followed by whitespace. (#196, #197 - thanks to [elyisgreat] for reporting!)
