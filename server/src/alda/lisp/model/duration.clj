@@ -64,13 +64,15 @@
                                     x
                                     {:type :beats, :value x}))
                           note-lengths)
-        beats (apply + (for [{:keys [type value]} note-lengths
-                             :when (= type :beats)]
-                         value))
+        beats-components (for [{:keys [type value]} note-lengths
+                               :when (= type :beats)]
+                           value)
+        beats (apply + beats-components)
         ms    (apply + (for [{:keys [type value]} note-lengths
                              :when (= type :milliseconds)]
                          value))]
-    (when beats (set-duration beats))
+    (when-not (empty? beats-components)
+      (set-duration beats))
     {:duration-fn (fn [tempo]
                     (+ (float (* beats
                                  (/ 60000 tempo)
