@@ -60,7 +60,7 @@
             (re-find #"^\s*$" alda-code)
             :do-nothing
 
-            (re-find #"^:?(quit|exit|bye)" alda-code)
+            (re-find #"^:?(quit|exit|bye)\s*$" alda-code)
             (do
               (tear-down! :midi)
               (reset! done? true))
