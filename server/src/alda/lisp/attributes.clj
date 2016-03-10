@@ -33,7 +33,7 @@
   :transform (fn [val]
                {:pre [(or
                        (map? val)
-                       (and (number? val) (not (neg? val))))]}
+                       (and (number? val) (pos? val)))]}
 
                (constantly (if (map? val)
                              (:value val)
