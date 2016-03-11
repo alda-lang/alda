@@ -23,6 +23,7 @@
   ([instrument pitch-fn {:keys [duration-fn beats slurred]} slur?]
     (let [quant          (if (or slur? slurred) 1.0 ($quantization instrument))
           note-duration  (duration-fn ($tempo instrument))
+          quant-duration (* note-duration quant)
           event          (when-not *beats-tally*
                            (map->Note
                              {:offset       ($current-offset instrument)
@@ -35,10 +36,10 @@
                                                       :midi true)
                               :pitch        (pitch-fn ($octave instrument)
                                                       ($key-signature instrument))
-                              :duration     (* note-duration quant)}))]
+                              :duration     quant-duration}))]
       (if event
         (do
-          (add-event instrument event)
+          (when (pos? quant-duration) (add-event instrument event))
           (set-last-offset instrument ($current-offset instrument))
           (set-current-offset instrument (offset+ ($current-offset instrument)
                                                   note-duration))
