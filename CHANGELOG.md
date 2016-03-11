@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1.0.0-rc13 (3/10/16)
+
+* Setting quantization to 0 now makes notes silent as expected. (#205, thanks to [elyisgreat] for reporting)
+
 ## 1.0.0-rc12 (3/10/16)
 
 * Improve validation of attribute values to avoid buggy behavior when using invalid values like negative tempos, non-integer octaves, etc. (#195, thanks to [elyisgreat] for reporting and [jgkamat] for fixing)
