@@ -7,7 +7,7 @@ _-Example-_
   > piano:
 ```` 
 
-Once you press Enter'the ">" sign will turn into "p>" meaning you have successfully selected the piano as your instrument.
+Once you press Enter, the ">" sign will turn into "p>" meaning you have successfully selected the piano as your instrument.
 
 ###How to choose multiple instruments -
 Simply type in the instruments you want seperated with a forward slash "/"  but, don't forget the colon ":" at the end of your list!
@@ -18,7 +18,7 @@ _-Example-_
   > piano/violin/flute:
 ````
 
-Again, once you press Enter the ">" sign, it will change into "p/v/f>" designating your chosen instruments.
+Again, once you press Enter, the ">" sign, it will change into "p/v/f>" designating your chosen instruments.
 
 ###Alda Instruments -
 
