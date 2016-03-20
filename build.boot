@@ -15,7 +15,6 @@
                   [io.aviso/pretty        "0.1.20"]
                   [com.taoensso/timbre    "4.1.1"]
                   [clj-http               "2.0.0"]
-                  [com.taoensso/timbre    "4.1.1"]
                   [compojure              "1.4.0"]
                   [djy                    "0.1.4"]
                   [instaparse             "1.4.1"]
@@ -41,11 +40,7 @@
 (require '[adzerk.bootlaces    :refer :all]
          '[adzerk.boot-jar2bin :refer :all]
          '[adzerk.boot-test    :refer :all]
-         '[alda.util]
          '[alda.version])
-
-; sets log level to TIMBRE_LEVEL (if set) or :warn
-(alda.util/set-timbre-level!)
 
 ; version number is stored in alda.version
 (bootlaces! alda.version/-version-)

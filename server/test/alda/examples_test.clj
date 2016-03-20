@@ -55,11 +55,6 @@
 
 (deftest examples-test
   (require '[alda.lisp :refer :all])
-
-  ; sets log level to TIMBRE_LEVEL (if set) or :warn
-  ; comment this line out for debug-level logs when evaluating example scores
-  (alda.util/set-timbre-level!)
-
   (testing "example scores:"
     (doseq [score example-scores]
       (let [parse-result (atom nil)]

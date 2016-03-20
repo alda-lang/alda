@@ -1,6 +1,6 @@
 (ns alda.server
-  (:require [alda.now                         :as    now]
-            [alda.lisp                        :refer :all]
+  (:require [alda.lisp                        :refer :all]
+            [alda.now                         :as    now]
             [alda.parser                      :refer (parse-input)]
             [alda.parser-util                 :refer (parse-with-context)]
             [alda.sound                       :refer (*play-opts*)]
@@ -15,9 +15,6 @@
             [clojure.java.io                  :as    io]
             [clojure.pprint                   :refer (pprint)]
             [clojure.string                   :as    str]))
-
-; sets log level to TIMBRE_LEVEL (if set) or :warn
-(alda.util/set-timbre-level!)
 
 (defn start-alda-environment!
   []

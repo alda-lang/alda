@@ -14,9 +14,6 @@
   (:import  [jline.console ConsoleReader]
             [jline.console.completer Completer]))
 
-; sets log level to TIMBRE_LEVEL (if set) or :warn
-(alda.util/set-timbre-level!)
-
 (def ascii-art
   (str " █████╗ ██╗     ██████╗  █████╗ " \newline
        "██╔══██╗██║     ██╔══██╗██╔══██╗" \newline

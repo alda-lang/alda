@@ -1,7 +1,11 @@
 (ns alda.lisp
   "alda.parser transforms Alda code into Clojure code, which can then be
    evaluated with the help of this namespace."
-  (:require [potemkin.namespaces :refer (import-vars)]))
+  (:require [potemkin.namespaces :refer (import-vars)]
+            [alda.util           :as    util]))
+
+; sets log level to TIMBRE_LEVEL (if set) or :warn
+(util/set-timbre-level!)
 
 (defn import-all-vars
   "Imports all public vars from a namespace into the alda.lisp namespace."
