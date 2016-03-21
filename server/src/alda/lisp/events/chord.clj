@@ -19,7 +19,7 @@
 
 (defn- initialize-min-durations
   [score]
-  (update-instruments score #(assoc % :min-duration Integer/MAX_VALUE)))
+  (update-instruments score #(assoc % :min-duration Long/MAX_VALUE)))
 
 (defn- bump-by-min-durations
   [{:keys [instruments] :as score}]
