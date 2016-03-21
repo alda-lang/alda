@@ -1,4 +1,7 @@
-(ns alda.lisp.model.event)
+(ns alda.lisp.model.event
+  (:require [alda.lisp.model.offset :refer (absolute-offset)]
+            [alda.lisp.model.records])
+  (:import  [alda.lisp.model.records RelativeOffset]))
 
 (defmulti update-score
   "Events in Alda are represented as maps containing, at the minimum, a value
@@ -30,9 +33,9 @@
 ; utility fns
 
 (defn add-event
-  [{:keys [instruments events] :as score} {:keys [instrument] :as event}]
-  (let [marker (-> instruments (get instrument) :current-marker)]
-    (update-in score [:events marker :events] (fnil conj []) event)))
+  [{:keys [instruments events markers] :as score}
+   {:keys [instrument offset] :as event}]
+  (update score :events conj (update event :offset #(absolute-offset % score))))
 
 (defn add-events
   [score events]

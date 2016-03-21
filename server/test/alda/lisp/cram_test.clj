@@ -17,13 +17,13 @@
                          (duration (note-length 2))))
           piano  (get-instrument s "piano")
           end    (:current-offset piano)
-          events (get-in s [:events (:current-marker piano) :events])]
+          events (:events s)]
       (testing "the first note should be placed at the current offset"
-        (let [earliest-note (apply min-key #(-> % :offset :offset) events)
+        (let [earliest-note (apply min-key :offset events)
               offset        (:offset earliest-note)]
-          (is (offset= start offset))))
+          (is (offset= s start offset))))
       (testing "should bump :current-offset forward by its duration"
-        (is (offset= (offset+ start 1000) end)))
+        (is (offset= s (offset+ start 1000) end)))
       (testing "the notes in a cram should be divided evenly across its duration"
         (is (every? (fn [{:keys [duration]}] (=% duration 333.3333)) events))))))
 
@@ -38,9 +38,9 @@
                          (note (pitch :g) :slur)))
           piano  (get-instrument s "piano")
           end    (:current-offset piano)
-          events (get-in s [:events (:current-marker piano) :events])]
+          events (:events s)]
       (testing "should use the instrument's duration attribute value"
-        (is (offset= (offset+ start 2000) end))
+        (is (offset= s (offset+ start 2000) end))
         (is (every? (fn [{:keys [duration]}] (=% duration 1000.0)) events))))))
 
 (deftest cram-tests-3
@@ -57,8 +57,10 @@
                           (duration (note-length 2)))) ; total duration = 1000 ms
           piano   (get-instrument s "piano")
           end     (:current-offset piano)
-          events  (get-in s [:events (:current-marker piano) :events])
-          offsets (map :duration events)]
+          events  (:events s)
+          offsets (->> events
+                       (sort-by :offset)
+                       (map :duration))]
       (testing "notes in a cram scale in proportion to one another"
         (is (= [250.0 500.0 250.0] offsets))))))
 
@@ -74,10 +76,12 @@
                           (duration (note-length 2)))) ; total duration = 1000 ms
           piano   (get-instrument s "piano")
           end     (:current-offset piano)
-          events  (get-in s [:events (:current-marker piano) :events])
-          offsets (map :duration events)]
+          events  (:events s)
+          offsets (->> events
+                       (sort-by :offset)
+                       (map :duration))]
       (testing "offset is bumped forward by the duration of the outermost cram"
-        (is (offset= (offset+ start 1000) end)))
+        (is (offset= s (offset+ start 1000) end)))
       (testing "note durations are divided up correctly"
         (is (= [500.0 250.0 250.0] offsets)))))
   (testing "repeated nested cram events:"
@@ -92,11 +96,13 @@
                             (duration (note-length 2))))) ; total dur = 1000 ms
           piano   (get-instrument s "piano")
           end     (:current-offset piano)
-          events  (get-in s [:events (:current-marker piano) :events])
-          offsets (map :duration events)]
+          events  (:events s)
+          offsets (->> events
+                      (sort-by :offset)
+                      (map :duration))]
       (testing "offset is bumped forward by the duration of the outermost cram,
                 twice"
-        (is (offset= (offset+ start 2000) end)))
+        (is (offset= s (offset+ start 2000) end)))
       (testing "note durations are divided up correctly"
         (is (= [500.0 250.0 250.0 500.0 250.0 250.0] offsets))))))
 

@@ -12,14 +12,13 @@
           s     (continue s
                   (note (pitch :c) (duration (note-length 4) :slur)))
           piano (get-instrument s "piano")
-          {:keys [duration offset pitch] :as note}
-          (get-in s [:events (:current-marker piano) :events 0])]
+          {:keys [duration offset pitch] :as note} (first (:events s))]
       (testing "should be placed at the current offset"
-        (is (offset= start offset)))
+        (is (offset= s start offset)))
       (testing "should bump :current-offset forward by its duration"
-        (is (offset= (offset+ start duration) (:current-offset piano))))
+        (is (offset= s (offset+ start duration) (:current-offset piano))))
       (testing "should update :last-offset"
-        (is (offset= start (:last-offset piano))))
+        (is (offset= s start (:last-offset piano))))
       (testing "should have the pitch it was given"
         (is (== pitch c)))))
   (testing "a note event with no duration provided:"
@@ -29,10 +28,7 @@
           s                  (continue s
                                (note (pitch :c) :slur))
           piano              (get-instrument s "piano")
-          {:keys [duration]} (get-in s [:events
-                                        (:current-marker piano)
-                                        :events
-                                        0])]
+          {:keys [duration]} (first (:events s))]
       (testing "the default :duration of the instrument should be used"
         (is (== duration default-duration))))))
 

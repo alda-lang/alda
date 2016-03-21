@@ -1,7 +1,8 @@
 (ns alda.lisp.model.offset
   (:require [alda.lisp.model.records]
-            [alda.util       :refer (=%)]
-            [taoensso.timbre :as    log])
+            [alda.lisp.score.util :refer (get-current-instruments)]
+            [alda.util            :refer (=%)]
+            [taoensso.timbre      :as    log])
   (:import [alda.lisp.model.records AbsoluteOffset RelativeOffset]))
 
 (defprotocol Offset
@@ -20,11 +21,11 @@
     (AbsoluteOffset. (+ (:offset this) bump)))
 
   RelativeOffset
-  (absolute-offset [this {:keys [events] :as score}]
-    (if-let [marker-offset (-> (events (:marker this)) :offset)]
-      (+ (absolute-offset marker-offset score) (:offset this))
-      (log/warn "Can't calculate offset - marker" (str \" (:marker this) \")
-                "does not have a defined offset.")))
+  (absolute-offset [this {:keys [events markers] :as score}]
+    (if-let [marker-offset (get markers (:marker this))]
+      (+ marker-offset (:offset this))
+      (log/error "Can't calculate offset - marker" (str \" (:marker this) \")
+                 "does not have a defined offset.")))
   (offset+ [this bump]
     (RelativeOffset. (:marker this) (+ (:offset this) bump))))
 
@@ -50,15 +51,10 @@
 
    (Returns 0 if there are no instruments defined yet, e.g. when placing a
     marker or a global attribute at the beginning of a score.)"
-  [{:keys [current-instruments instruments voice-instruments current-voice]
-    :as score}]
+  [{:keys [current-instruments instruments] :as score}]
   (if (empty? current-instruments)
     (AbsoluteOffset. 0)
-    (let [instruments (if current-voice
-                        (voice-instruments current-voice)
-                        instruments)
-          offsets     (for [[id {:keys [current-offset]}] instruments
-                            :when (contains? current-instruments id)]
-                        (absolute-offset current-offset score))]
+    (let [offsets (for [{:keys [current-offset]} (get-current-instruments score)]
+                    (absolute-offset current-offset score))]
       (when (apply == offsets)
         (AbsoluteOffset. (first offsets))))))

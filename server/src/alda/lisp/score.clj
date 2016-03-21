@@ -9,7 +9,10 @@
   []
   (log/debug "Starting new score.")
   {
-   :events              {:start {:offset (->AbsoluteOffset 0), :events []}}
+   :events              #{}
+
+   ; a mapping of markers to the offset where each was placed
+   :markers             {:start 0}
 
    ; a map of offsets to the global attribute changes that occur (for all
    ; instruments) at each offset
@@ -70,25 +73,4 @@
    means that an evaluated score can be used as an input to `continue-score`"
   [& body]
   (apply continue (new-score) body))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defn event-set
-  "Given a score, takes its :events map in its typical form (organized by
-   markers with relative offsets) and transforms it into a single set of
-   events with absolute offsets."
-  [{:keys [events] :as score}]
-  (into #{}
-    (mapcat (fn [[_ {:keys [offset events]}]]
-              (for [event events]
-                (update-in event [:offset] #(absolute-offset % score))))
-            events)))
-
-(defn markers
-  "Returns a map of each marker in a score to its absolute offset."
-  [{:keys [events] :as score}]
-  (into {}
-    (map (fn [[marker-name {marker-offset :offset}]]
-           [marker-name (absolute-offset marker-offset score)])
-         events)))
 

@@ -24,5 +24,5 @@
         note/rest duration"
         (is (= end (offset+ start 250.0))))
       (testing ":last-offset should be updated correctly"
-        (is (offset= prev start))))))
+        (is (offset= s prev start))))))
 

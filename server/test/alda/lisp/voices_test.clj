@@ -47,11 +47,13 @@
                           (:tempo piano))]
         (testing "the voice lasting the longest should bump :current-offset
                   forward by however long it takes to finish"
-          (is (offset= (:current-offset piano)
+          (is (offset= s
+                       (:current-offset piano)
                        (offset+ (->AbsoluteOffset 0) bump))))
         (testing ":last-offset should be updated to the :last-offset as of the
                   point where the longest voice finishes"
-          (is (offset= (:last-offset)
+          (is (offset= s
+                       (:last-offset)
                        (offset+ (->AbsoluteOffset 0) bump)))))))
   (testing "a voice containing a cram expression"
     (testing "should not throw an exception"

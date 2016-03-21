@@ -147,13 +147,13 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn- score-length
-  "Calculates the length of a score in ms."
-  [score]
-  (let [events   (->> score event-set (filter :duration))
+  "Given an event set from a score, calculates the length of the score in ms."
+  [event-set]
+  (let [events   (filter :duration event-set)
         note-end (fn [{:keys [offset duration] :as note}]
                    (+ offset duration))]
     (if (and events (not (empty? events)))
-      (apply max (map note-end (filter :duration events)))
+      (apply max (map note-end events))
       0)))
 
 (defn determine-audio-types
@@ -181,51 +181,66 @@
           pos
 
           :else
-          (throw (Exception. (str "Do not support " (type pos) " as a play time."))))))
+          (throw (Exception.
+                   (str "Do not support " (type pos) " as a play time."))))))
 
 (defn start-finish-times [{:keys [from to]} markers]
   (map (partial lookup-time markers) [from to]))
 
+(defn schedule-event!
+  [^SynthesisEngine engine offset f]
+  (let [ts  (TimeStamp. offset)
+        cmd (proxy [ScheduledCommand] [] (run [] (f)))]
+    (.scheduleCommand engine ts cmd)))
+
 (defn play!
-  "Plays an Alda score, optionally from given start/end marks.
+  "Plays an Alda score, optionally from given start/end marks determined by
+   *play-opts*.
+
+   Optionally takes as a second argument a set of events to play (which could
+   be pre-filtered, e.g. for playing only a portion of the score).
+
+   In either case, the offsets of the events to be played are shifted back such
+   that the earliest event's offset is 0 -- this is so that playback will start
+   immediately.
 
    Returns a function that, when called mid-playback, will stop any further
    events from playing."
-  [{:keys [instruments] :as score}]
-  (let [events      (event-set score)
-        markers     (markers score)
-        {:keys [pre-buffer post-buffer one-off? async?]} *play-opts*
+  [{:keys [instruments] :as score} & [event-set]]
+  (let [{:keys [pre-buffer post-buffer one-off? async?]} *play-opts*
         audio-types (determine-audio-types score)
         _           (set-up! audio-types score)
         _           (refresh! audio-types score)
         playing?    (atom true)
-        begin       (+ (.getCurrentTime *synthesis-engine*)
-                       (or pre-buffer 0))
-        [start end] (start-finish-times *play-opts* markers)
-        events      (shift-events events start end)
-        duration    (- (or end (score-length score))
-                       (or start 0))]
-    (pdoseq-block [{:keys [offset instrument duration] :as event} events
-                   :let [inst (-> instrument instruments)]]
-      (let [start-ts (TimeStamp. (+ begin (/ offset 1000.0)))
-            stop-ts  (TimeStamp. (+ begin (/ offset 1000.0)
-                                          (/ duration 1000.0)))
-            start-cmd (proxy [ScheduledCommand] []
-                        (run []
-                          (when @playing?
-                            (if (= (type event) Function)
-                              ((:function event))
-                              (start-event! event inst)))))
-            stop-cmd  (proxy [ScheduledCommand] []
-                        (run []
-                          (when-not (= (type event) Function)
-                            (stop-event! event inst))))]
-        (.scheduleCommand *synthesis-engine* start-ts start-cmd)
-        (.scheduleCommand *synthesis-engine* stop-ts stop-cmd)))
+        events      (if event-set
+                      (let [earliest (->> (map :offset event-set)
+                                          (apply min Long/MAX_VALUE)
+                                          (max 0))]
+                        (shift-events event-set earliest nil))
+                      (let [event-set   (:events score)
+                            markers     (:markers score)
+                            [start end] (start-finish-times *play-opts*
+                                                            markers)]
+                        (shift-events event-set start end)))
+        begin       (+ (.getCurrentTime ^SynthesisEngine *synthesis-engine*)
+                       (or pre-buffer 0))]
+    (pdoseq-block [{:keys [offset instrument duration] :as event} events]
+      (let [inst   (-> instrument instruments)
+            start! #(when @playing?
+                      (if (instance? Function event)
+                        ((:function event))
+                        (start-event! event inst)))
+            stop!  #(when-not (instance? Function event)
+                      (stop-event! event inst))]
+        (schedule-event! *synthesis-engine* (+ begin
+                                               (/ offset 1000.0)) start!)
+        (schedule-event! *synthesis-engine* (+ begin
+                                               (/ offset 1000.0)
+                                               (/ duration 1000.0)) stop!)))
     (when-not async?
       ; block until the score is done playing
       ; TODO: find a way to handle this that doesn't involve Thread/sleep
-      (Thread/sleep (+ duration
+      (Thread/sleep (+ (score-length events)
                        (or pre-buffer 0)
                        (or post-buffer 0))))
     (when one-off? (tear-down! audio-types score))

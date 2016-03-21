@@ -4,7 +4,8 @@
             [alda.lisp.model.offset   :refer (offset+)]
             [alda.lisp.model.records  :refer (map->Note)]
             [alda.lisp.score.util     :refer (merge-instruments
-                                              merge-voice-instruments)]
+                                              merge-voice-instruments
+                                              get-current-instruments)]
             [taoensso.timbre          :as    log]))
 
 (defn- event-updates
@@ -17,17 +18,13 @@
 
    :state -- any number of keys with updated values. This will be merged into
    the existing state of the instrument."
-  [{:keys [instruments voice-instruments current-instruments chord-mode
-           cram-level current-voice] :as score}
+  [{:keys [instruments chord-mode cram-level current-voice] :as score}
    {:keys [event-type pitch-fn beats ms slur?] :as event}]
   (for [{:keys [id duration duration-inside-cram time-scaling tempo
                 current-offset last-offset current-marker quantization volume
                 track-volume panning octave key-signature min-duration]
          :as inst}
-        (map (if voice-instruments
-               (voice-instruments current-voice)
-               instruments)
-             current-instruments)]
+        (get-current-instruments score)]
     (let [[beats ms]      (if (or beats ms)
                             [beats ms]
                             [(or duration-inside-cram duration) nil])

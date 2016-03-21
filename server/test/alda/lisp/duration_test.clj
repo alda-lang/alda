@@ -42,31 +42,31 @@
                    (part "piano" (tempo 120) (quant 100)
                      (note (pitch :c) (duration (note-length 4)))))
           piano  (get-instrument s "piano")
-          events (get-in s [:events (:current-marker piano) :events])]
+          events (:events s)]
       (is (== 500 (:duration (first events)))))
     (let [s      (score
                    (part "piano" (tempo 120) (quant 0)
                      (note (pitch :c) (duration (note-length 4)))))
           piano  (get-instrument s "piano")
-          events (get-in s [:events (:current-marker piano) :events])]
+          events (:events s)]
       (is (empty? events)))
     (let [s      (score
                    (part "piano" (tempo 120) (quant 90)
                      (note (pitch :c) (duration (note-length 4)))))
           piano  (get-instrument s "piano")
-          events (get-in s [:events (:current-marker piano) :events])]
+          events (:events s)]
       (is (== 450 (:duration (first events))))))
   (testing "slurred notes ignore quantization"
     (let [s      (score
                    (part "piano" (tempo 120) (quant 90)
                      (note (pitch :c) (duration (note-length 4) :slur))))
           piano  (get-instrument s "piano")
-          events (get-in s [:events (:current-marker piano) :events])]
+          events (:events s)]
       (is (== 500 (:duration (first events)))))
     (let [s      (score
                    (part "piano" (tempo 120) (quant 90)
                      (note (pitch :c) (duration (note-length 2)) :slur)))
           piano  (get-instrument s "piano")
-          events (get-in s [:events (:current-marker piano) :events])]
+          events (:events s)]
       (is (== 1000 (:duration (first events)))))))
 

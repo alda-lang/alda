@@ -50,7 +50,7 @@
                             (pause))
                   tempo-3 (:tempo (get-instrument s "viola"))]
               (is (= marker "test-marker-3"))
-              (is (offset= offset (->RelativeOffset "test-marker-3" 0)))
+              (is (offset= s offset (->RelativeOffset "test-marker-3" 0)))
               (is (= tempo-1 120))
               (is (= tempo-2 120))
               ; tempo should still be 120, despite having passed 2000 ms

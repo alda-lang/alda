@@ -19,4 +19,4 @@
       (testing "it has the right number of instruments"
         (is (= 3 (count (:instruments s)))))
       (testing "it has the right number of events"
-        (is (= (* 3 8) (count (event-set s))))))))
+        (is (= (* 3 8) (count (:events s))))))))
