@@ -5,7 +5,19 @@
             [alda.util   :as util]))
 
 (comment
-  "TODO: move this explanation to docs
+  "TODO: move these explanations to docs
+
+   - set-up! requires one argument, a score atom, and sets it up ahead of time
+     (like before, this will happen automatically once play! is called, but
+     set-up! can be used to do this in advance if desired)
+
+     There is also an optional second argument, which can be either a keyword
+     representing an audio type (e.g. :midi) to set up or a collection of such
+     keywords.
+
+     (set-up! my-score)
+     (set-up! my-score :midi)
+     (set-up! my-score [:midi])
 
    - By default, play! is just a shortcut for creating a one-off score and
      playing it via alda.sound/play!
@@ -40,7 +52,29 @@
 
    - Both with-score and with-new-score will return the score atom when done.")
 
-(def set-up! sound/set-up!)
+(defn- prepare-audio-context!
+  [score]
+  (let [audio-ctx (or (:audio-context @score) (sound/new-audio-context))]
+    (swap! score assoc :audio-context audio-ctx)))
+
+(defn new-score
+  []
+  (doto (atom (lisp/score)) (prepare-audio-context!)))
+
+(defn set-up!
+  "Prepares the audio context of a score (creating the audio context if one
+   does not already exist) to play one or more audio types.
+
+   `score` is an atom referencing an Alda score map.
+
+   `audio-type` (optional) is either a keyword representing an audio type, such
+   as :midi, or a collection of such keywords. If this option is omitted, the
+   audio types to set up will be determined based on the instruments in the
+   score."
+  [score & [audio-type]]
+  (let [audio-types (or audio-type (sound/determine-audio-types @score))]
+    (prepare-audio-context! score)
+    (sound/set-up! (:audio-context @score) audio-types @score)))
 
 (def ^:dynamic *current-score* nil)
 
@@ -60,7 +94,7 @@
 
    Returns the score."
   [& body]
-  `(let [score# (atom (lisp/score))]
+  `(let [score# (new-score)]
      (binding [*current-score* score#]
        ~@body
        score#)))
@@ -81,7 +115,7 @@
   (sound/with-play-opts {:async? true}
     (let [score-before (if *current-score*
                          @*current-score*
-                         (lisp/score))
+                         @(new-score))
           score-after  (apply lisp/continue score-before body)
           new-events   (set/difference (:events score-after)
                                        (:events score-before))]
