@@ -1,5 +1,33 @@
 # CHANGELOG
 
+## 1.0.0-rc14 (4/1/16)
+
+* Command-specific help text is now available when using the Alda command-line client. ([jgerman])
+
+  To see a description of a command and its options, run the command with the `-h` or `--help` option.
+
+  Example:
+
+      $ alda play --help
+
+      Evaluate and play Alda code
+      Usage: play [options]
+        Options:
+          -c, --code
+             Supply Alda code as a string
+          -f, --file
+             Read Alda code from a file
+          -F, --from
+             A time marking or marker from which to start playback
+          -r, --replace
+             Replace the existing score with new code
+             Default: false
+          -T, --to
+             A time marking or marker at which to end playback
+          -y, --yes
+             Auto-respond 'y' to confirm e.g. score replacement
+             Default: false
+
 ## 1.0.0-rc13 (3/10/16)
 
 * Setting quantization to 0 now makes notes silent as expected. (#205, thanks to [elyisgreat] for reporting)
@@ -328,3 +356,5 @@ Exit with error code 1 when parsing fails for `alda play` and `alda parse` tasks
 [jgkamat]: https://github.com/jgkamat
 [heikkil]: https://github.com/heikkil
 [elyisgreat]: https://github.com/elyisgreat
+[jgerman]: https://github.com/jgerman
+
