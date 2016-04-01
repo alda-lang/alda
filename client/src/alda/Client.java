@@ -1,5 +1,7 @@
 package alda;
 
+import java.util.Map;
+import java.util.HashMap;
 import java.io.File;
 
 import com.beust.jcommander.IStringConverter;
@@ -50,24 +52,33 @@ public class Client {
     public int postBuffer = 1000;
   }
 
+  private static class AldaCommand {
+      @Parameter(names = {"--help", "-h"},
+                 help = true,
+                 hidden = true,
+                 description = "Print this help text")
+      public boolean help = false;
+
+  }
+
   @Parameters(commandDescription = "Start the Alda server in the foreground.",
               hidden = true)
-  private static class CommandServer {}
+  private static class CommandServer extends AldaCommand {}
 
   @Parameters(commandDescription = "Start an interactive Alda REPL session.")
-  private static class CommandRepl {}
+  private static class CommandRepl extends AldaCommand {}
 
   @Parameters(commandDescription = "Display this help text")
-  private static class CommandHelp {}
+  private static class CommandHelp extends AldaCommand {}
 
   @Parameters(commandDescription = "Attempt to autoupdate alda")
-  private static class CommandUpdate {}
+  private static class CommandUpdate extends AldaCommand {}
 
   @Parameters(commandDescription = "Start the Alda server")
-  private static class CommandStart {}
+  private static class CommandStart extends AldaCommand {}
 
   @Parameters(commandDescription = "Stop the Alda server")
-  private static class CommandStop {
+  private static class CommandStop extends AldaCommand {
     @Parameter (names = {"-y", "--yes"},
                 description = "Auto-respond 'y' to confirm discarding " +
                               "unsaved changes")
@@ -75,7 +86,7 @@ public class Client {
   }
 
   @Parameters(commandDescription = "Restart the Alda server")
-  private static class CommandRestart {
+  private static class CommandRestart extends AldaCommand {
     @Parameter (names = {"-y", "--yes"},
                 description = "Auto-respond 'y' to confirm discarding " +
                               "unsaved changes")
@@ -83,19 +94,19 @@ public class Client {
   }
 
   @Parameters(commandDescription = "List running Alda servers.")
-  private static class CommandList {}
+  private static class CommandList extends AldaCommand {}
 
   @Parameters(commandDescription = "Display whether the server is up")
-  private static class CommandStatus {}
+  private static class CommandStatus extends AldaCommand {}
 
   @Parameters(commandDescription = "Display the version of the Alda server")
-  private static class CommandVersion {}
+  private static class CommandVersion extends AldaCommand {}
 
   @Parameters(commandDescription = "Display information about the Alda server")
-  private static class CommandInfo {}
+  private static class CommandInfo extends AldaCommand {}
 
   @Parameters(commandDescription = "Evaluate and play Alda code")
-  private static class CommandPlay {
+  private static class CommandPlay extends AldaCommand {
     @Parameter(names = {"-f", "--file"},
                description = "Read Alda code from a file",
                converter = FileConverter.class)
@@ -124,7 +135,7 @@ public class Client {
   }
 
   @Parameters(commandDescription = "Display the result of parsing Alda code")
-  private static class CommandParse {
+  private static class CommandParse extends AldaCommand {
     @Parameter(names = {"-f", "--file"},
                description = "Read Alda code from a file",
                converter = FileConverter.class)
@@ -150,7 +161,7 @@ public class Client {
 
   @Parameters(commandDescription = "Evaluate Alda code and append it to the " +
                                    "score without playing it")
-  private static class CommandAppend {
+  private static class CommandAppend extends AldaCommand {
     @Parameter(names = {"-f", "--file"},
                description = "Read Alda code from a file",
                converter = FileConverter.class)
@@ -162,7 +173,7 @@ public class Client {
   }
 
   @Parameters(commandDescription = "Display the score in progress")
-  private static class CommandScore {
+  private static class CommandScore extends AldaCommand {
     @Parameter(names = {"-t", "--text"},
                description = "Display the score text")
     public boolean showScoreText = false;
@@ -178,7 +189,7 @@ public class Client {
   }
 
   @Parameters(commandDescription = "Delete the score and start a new one")
-  private static class CommandNew {
+  private static class CommandNew extends AldaCommand {
     @Parameter (names = {"-f", "--file"},
                 description = "A filename for the new score",
                 converter = FileConverter.class)
@@ -191,7 +202,7 @@ public class Client {
   }
 
   @Parameters(commandDescription = "Load a score from a file or string")
-  private static class CommandLoad {
+  private static class CommandLoad extends AldaCommand {
     @Parameter(names = {"-f", "--file"},
                description = "A file containing an Alda score",
                converter = FileConverter.class)
@@ -208,7 +219,7 @@ public class Client {
   }
 
   @Parameters(commandDescription = "Save the score to a file")
-  private static class CommandSave {
+  private static class CommandSave extends AldaCommand {
     @Parameter(names = {"-f", "--file"},
                description = "The path to a file to which to save the score",
                converter = FileConverter.class)
@@ -221,11 +232,18 @@ public class Client {
   }
 
   @Parameters(commandDescription = "Edit the score")
-  private static class CommandEdit {
+  private static class CommandEdit extends AldaCommand {
     @Parameter(names = {"-e", "--editor"},
                description = "pass the file to a custom command instead of " +
                              "$EDITOR")
     public String editor;
+  }
+
+  public static void handleCommandSpecificHelp(JCommander jc, String name, AldaCommand c) {
+      if(c.help) {
+          jc.usage(name);
+          System.exit(0);
+      }
   }
 
   public static void main(String[] argv) {
@@ -313,48 +331,57 @@ public class Client {
           break;
 
         case "update":
+          handleCommandSpecificHelp(jc, "update", update);
           Util.updateAlda();
           break;
 
         case "server":
+          handleCommandSpecificHelp(jc, "server", serverCmd);
           server.startFg();
           break;
 
         case "repl":
+          handleCommandSpecificHelp(jc, "repl", repl);
           server.startRepl();
           break;
 
         case "start":
         case "up":
         case "init":
+          handleCommandSpecificHelp(jc, "start", start);
           server.startBg();
           break;
         case "stop":
         case "down":
+          handleCommandSpecificHelp(jc, "stop", stop);
           server.stop(stop.autoConfirm);
           break;
         case "restart":
         case "downup":
+          handleCommandSpecificHelp(jc, "restart", restart);
           server.restart(restart.autoConfirm);
           break;
-
         case "list":
+          handleCommandSpecificHelp(jc, "list", list);
           Util.listServers();
           break;
         case "status":
+          handleCommandSpecificHelp(jc, "status", status);
           server.status();
           break;
         case "version":
+          handleCommandSpecificHelp(jc, "version", version);
           System.out.println("Client version: " + Util.version());
           System.out.println();
           System.out.println("Server version:");
           server.version();
           break;
         case "info":
+          handleCommandSpecificHelp(jc, "info", info);
           server.info();
           break;
-
         case "play":
+          handleCommandSpecificHelp(jc, "play", play);
           inputType = Util.inputType(play.file, play.code);
 
           switch (inputType) {
@@ -374,6 +401,7 @@ public class Client {
           break;
 
         case "parse":
+          handleCommandSpecificHelp(jc, "parse", parse);
           mode = Util.scoreMode(parse.showLispCode, parse.showScoreMap);
           inputType = Util.inputType(parse.file, parse.code);
 
@@ -395,6 +423,7 @@ public class Client {
 
         case "append":
         case "add":
+          handleCommandSpecificHelp(jc, "append", append);
           inputType = Util.inputType(append.file, append.code);
 
           switch (inputType) {
@@ -414,6 +443,10 @@ public class Client {
           break;
 
         case "score":
+          if(score.help) {
+              jc.usage("score");
+              System.exit(0);
+          }
           mode = Util.scoreMode(score.showScoreText,
                                 score.showLispCode,
                                 score.showScoreMap);
@@ -422,6 +455,7 @@ public class Client {
 
         case "new":
         case "delete":
+          handleCommandSpecificHelp(jc, "new", newScore);
           server.delete(newScore.autoConfirm);
           if (newScore.file != null) {
             server.save(newScore.file, newScore.autoConfirm);
@@ -430,6 +464,7 @@ public class Client {
 
         case "load":
         case "open":
+          handleCommandSpecificHelp(jc, "load", load);
           inputType = Util.inputType(load.file, load.code);
 
           switch (inputType) {
@@ -449,6 +484,7 @@ public class Client {
           break;
 
         case "save":
+          handleCommandSpecificHelp(jc, "save", save);
           inputType = Util.inputType(save.file, null);
 
           switch (inputType) {
@@ -467,6 +503,7 @@ public class Client {
           break;
 
         case "edit":
+          handleCommandSpecificHelp(jc, "edit", edit);
           String editor = System.getenv("EDITOR");
           if (edit.editor != null) {
             editor = edit.editor;
