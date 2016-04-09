@@ -112,7 +112,8 @@
    Both `with-score` and `with-new-score` return the score that is being
    appended."
   [& body]
-  (sound/with-play-opts {:async? true}
+  (sound/with-play-opts {:async?   true
+                         :one-off? (not *current-score*)}
     (let [score-before (if *current-score*
                          @*current-score*
                          @(new-score))

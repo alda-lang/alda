@@ -30,7 +30,7 @@
 
 (defmethod set-up-audio-type! :midi
   [audio-ctx _ & [score]]
-  (midi/open-midi-synth! audio-ctx))
+  (midi/get-midi-synth! audio-ctx))
 
 (defn set-up!
   "Does any necessary setup for one or more audio types.
@@ -241,13 +241,16 @@
         (schedule-event! engine (+ begin
                                    (/ offset 1000.0)
                                    (/ duration 1000.0)) stop!)))
-    (when-not async?
-      ; block until the score is done playing
-      ; TODO: find a way to handle this that doesn't involve Thread/sleep
-      (Thread/sleep (+ (score-length events)
-                       (or pre-buffer 0)
-                       (or post-buffer 0))))
-    (when one-off? (tear-down! audio-ctx audio-types score))
+    (letfn [(clean-up-when-done []
+              ; TODO: find a way to handle this that doesn't involve Thread/sleep
+              (Thread/sleep (+ (score-length events)
+                               (or pre-buffer 0)
+                               (or post-buffer 1000)))
+              (when one-off?
+                (tear-down! audio-ctx audio-types score)))]
+      (if async?
+        (future (clean-up-when-done))
+        (clean-up-when-done)))
     #(reset! playing? false)))
 
 (defn make-wav!
