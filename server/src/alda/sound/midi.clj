@@ -32,6 +32,10 @@
   (dotimes [_ (- (count *midi-synth-pool*) MIDI-SYNTH-POOL-SIZE)]
     (future (.close (.take *midi-synth-pool*)))))
 
+(defn midi-synth-available?
+  []
+  (pos? (count *midi-synth-pool*)))
+
 (defn get-midi-synth
   []
   (fill-midi-synth-pool!)

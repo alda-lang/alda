@@ -2,7 +2,8 @@
   (:require [alda.lisp       :refer :all]
             [alda.now        :as    now]
             [alda.parser     :refer (parse-input)]
-            [alda.repl.core  :as    repl :refer (*repl-reader* *parsing-context*)]
+            [alda.repl.core  :as    repl :refer (*repl-reader*
+                                                 *current-score*)]
             [alda.sound      :as    sound]
             [alda.util       :as    util]
             [io.aviso.ansi   :refer (bold)]
@@ -14,15 +15,15 @@
   (println "Sorry, what? I don't understand that command."))
 
 (defn dirty?
-  "Returns whether the current score has any unsaved changes.
+  "Returns whether `score` has any unsaved changes.
 
    Note: right now this is just checking to see if the score has ANY changes.
 
    TODO:
    - implement :save command
    - check whether there is any difference between the score and the last-saved version of the score."
-  []
-  (not (empty? *score-text*)))
+  [{:keys [score-text] :as score}]
+  (not (empty? score-text)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -45,6 +46,7 @@
          ~@body)
        (swap! repl-commands assoc ~(str cmd-name) ~doc))))
 
+; FIXME
 (defcommand new
   ; TODO: implement ":new part" and then update the docstring
   "Creates a new score."
@@ -52,7 +54,7 @@
   (cond
     (contains? #{"" "score"} rest-of-line)
     (do
-      (score*)
+      ; (score*)
       (println "New score initialized."))
 
     (str/starts-with? rest-of-line "part ")
@@ -64,12 +66,12 @@
 (defcommand score
   "Prints the score (as Alda code)."
   [_]
-  (println *score-text*))
+  (println (:score-text @*current-score*)))
 
 (defcommand map
   "Prints the data representation of the score in progress."
   [_]
-  (pprint (score-map)))
+  (pprint @*current-score*))
 
 (defcommand play
   "Plays the current score.
@@ -88,13 +90,13 @@
      :play to verse
      :play from verse to bridge"
   [rest-of-line]
-  (if (empty? *score-text*)
+  (if (empty? (:score-text @*current-score*))
     (println "You must first create or :load a score.")
     (let [{:keys [from to]} (util/parse-str-opts rest-of-line)]
-      (now/refresh! :all)
       (sound/with-play-opts (util/strip-nil-values {:from from, :to to})
-        (repl/interpret! *score-text*)))))
+        (repl/interpret! (:score-text @*current-score*))))))
 
+; FIXME
 (defcommand load
   "Loads an Alda score into the current REPL session.
 
@@ -114,9 +116,9 @@
           (load-score [score-text]
             (try
               (let [code (parse-input score-text)]
-                (score*)
-                (eval code)
-                (alter-var-root #'*score-text* (constantly score-text))
+                ; (score*)
+                ; (eval code)
+                ; (alter-var-root #'*score-text* (constantly score-text))
                 (println "Score loaded."))
               (catch Exception e
                 (println)
@@ -131,7 +133,7 @@
       (if-let [score-text (try
                             (slurp filename)
                             (catch java.io.FileNotFoundException e nil))]
-        (if (dirty?)
+        (if (dirty? @*current-score*)
           (do
             (println "You have made changes to the current score that will be"
                      "lost if you load" (str filename "."))
@@ -147,7 +149,7 @@
   (let [[description & details] (str/split docstring #"\n")]
     [description (when details (str/join \newline details))]))
 
-(defn generate-help-text
+(defn- generate-help-text
   ([]
     (str "For commands marked with (*), more detailed information about the "
          "command is available via the :help command.\n\ne.g. :help play\n\n"
