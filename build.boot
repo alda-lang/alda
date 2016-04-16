@@ -129,11 +129,13 @@
     fileset))
 
 (deftask dev
-  "Runs the Alda server for development.
+  "Runs the Alda server (default) or REPL for development.
 
-   There is a middleware that reloads all the server namespaces before each
-   request, so that the server does not need to be restarted after making
-   changes.
+   *** REPL ***
+
+   Simply run `boot dev -a repl` and you're in!
+
+   *** SERVER ***
 
    The -F/--alda-fingerprint option technically does nothing, but including it
    as a long-style option when running this task from the command line* allows
@@ -143,23 +145,38 @@
    * e.g.: boot dev --port 27713 --alda-fingerprint
 
    Take care to include the --port long option as well, so the client knows
-   the port on which the dev server is running."
-  [p port             PORT int  "The port on which to start the server."
+   the port on which the dev server is running.
+
+   There is a middleware that reloads all the server namespaces before each
+   request, so that the server does not need to be restarted after making
+   changes."
+  [a app              APP  str  "The Alda application to run (server or repl)"
+   p port             PORT int  "The port on which to start the server."
    F alda-fingerprint      bool "Allow the Alda client to identify this as an Alda server."]
   (comp
     (with-pre-wrap fs
-      (let [direct-linking
-            (System/getProperty "clojure.compiler.direct-linking")]
-        (if-not (= direct-linking "true")
+      (let [direct-linking (System/getProperty "clojure.compiler.direct-linking")
+            start-server!  (fn []
+                             (require 'alda.server)
+                             (require 'alda.util)
+                             ((resolve 'alda.util/set-timbre-level!) :debug)
+                             ((resolve 'alda.server/start-server!) (or port 27713)))
+            start-repl!    (fn []
+                             (require 'alda.repl)
+                             ((resolve 'alda.repl/start-repl!)))]
+        (when-not (= direct-linking "true")
           (println "WARNING: You should include the JVM option"
                    "-Dclojure.compiler.direct-linking=true, as this option is"
-                   "included in the binary. This will help catch potential"
-                   "bugs caused by defining dynamic things without declaring"
-                   "them ^:dynamic or ^:redef.")))
-      (require 'alda.server)
-      (require 'alda.util)
-      ((resolve 'alda.util/set-timbre-level!) :debug)
-      ((resolve 'alda.server/start-server!) (or port 27713))
+                   "included in the binary. This will help catch potential bugs"
+                   "caused by defining dynamic things without declaring them"
+                   "^:dynamic or ^:redef."))
+        (case app
+          nil      (start-server!)
+          "server" (start-server!)
+          "repl"   (start-repl!)
+          (do
+            (println "ERROR: -a/--app must be server or repl")
+            (System/exit 1))))
       fs)
     (wait)))
 
