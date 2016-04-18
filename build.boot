@@ -7,6 +7,7 @@
                   [adzerk/bootlaces      "0.1.12" :scope "test"]
                   [adzerk/boot-jar2bin   "1.1.0"  :scope "test"]
                   [adzerk/boot-test      "1.0.4"  :scope "test"]
+                  [str-to-argv           "0.1.0"  :score "test"]
 
                   ; server
                   [org.clojure/clojure    "1.8.0"]
@@ -129,11 +130,30 @@
     fileset))
 
 (deftask dev
-  "Runs the Alda server (default) or REPL for development.
+  "Runs the Alda server (default), REPL, or client for development.
 
    *** REPL ***
 
    Simply run `boot dev -a repl` and you're in!
+
+   *** CLIENT ***
+
+   To test changes to the Alda client, run `boot dev -a client -x \"args here\"`.
+
+   For example:
+
+      boot dev -a client -x \"play --file /path/to/file.alda\"
+
+   The arguments must be a single command-line string to be passed to the
+   command-line client as if entering them on the command line. The example
+   above is equivalent to running `alda play --file /path/to/file.alda` on the
+   command line.
+
+   One caveat to running the client this way (as opposed to building it and
+   running the resulting executable) is that the client does not have the
+   necessary permissions to start a new process, e.g. to start an Alda server
+   via the client. If you'd like to test local changes to the server code,
+   you'll need to run the server instead (see SERVER below).
 
    *** SERVER ***
 
@@ -142,7 +162,9 @@
    the Alda client to identify the dev server process as an Alda server and
    include it in the list of running servers.
 
-   * e.g.: boot dev --port 27713 --alda-fingerprint
+   For example:
+
+      boot dev -a server --port 27713 --alda-fingerprint
 
    Take care to include the --port long option as well, so the client knows
    the port on which the dev server is running.
@@ -150,10 +172,12 @@
    There is a middleware that reloads all the server namespaces before each
    request, so that the server does not need to be restarted after making
    changes."
-  [a app              APP  str  "The Alda application to run (server or repl)"
+  [a app              APP  str  "The Alda application to run (server, repl or client)."
+   x args             ARGS str  "The string of CLI args to pass to the client."
    p port             PORT int  "The port on which to start the server."
    F alda-fingerprint      bool "Allow the Alda client to identify this as an Alda server."]
   (comp
+    (if (= app "client") (javac) identity)
     (with-pre-wrap fs
       (let [direct-linking (System/getProperty "clojure.compiler.direct-linking")
             start-server!  (fn []
@@ -163,7 +187,13 @@
                              ((resolve 'alda.server/start-server!) (or port 27713)))
             start-repl!    (fn []
                              (require 'alda.repl)
-                             ((resolve 'alda.repl/start-repl!)))]
+                             ((resolve 'alda.repl/start-repl!)))
+            run-client!    (fn []
+                             (require '[str-to-argv])
+                             (import 'alda.Client)
+                             (eval `(alda.Client/main
+                                      (into-array String
+                                        (str-to-argv/split-args (or ~args ""))))))]
         (when-not (= direct-linking "true")
           (println "WARNING: You should include the JVM option"
                    "-Dclojure.compiler.direct-linking=true, as this option is"
@@ -174,8 +204,9 @@
           nil      (start-server!)
           "server" (start-server!)
           "repl"   (start-repl!)
+          "client" (run-client!)
           (do
-            (println "ERROR: -a/--app must be server or repl")
+            (println "ERROR: -a/--app must be server, repl or client")
             (System/exit 1))))
       fs)
     (wait)))
