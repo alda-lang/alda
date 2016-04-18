@@ -15,5 +15,5 @@ If you're confused about how some aspect of the code works (Clojure questions, "
 
 ## Development Guide
 
-For a high-level overview of how Alda works, see our [development guide](./doc/development-guide.md).
+For details about testing and building Alda, and a high-level overview of how Alda works, see our [development guide](./doc/development-guide.md).
 

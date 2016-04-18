@@ -127,8 +127,8 @@ public class Client {
                description = "Replace the existing score with new code")
     public boolean replaceScore = false;
 
-    @Parameter (names = {"-y", "--yes"},
-                description = "Auto-respond 'y' to confirm e.g. score replacement")
+    @Parameter(names = {"-y", "--yes"},
+               description = "Auto-respond 'y' to confirm e.g. score replacement")
     public boolean autoConfirm = false;
   }
 
@@ -152,8 +152,8 @@ public class Client {
                description = "Display the map of score data")
     public boolean showScoreMap = false;
 
-    @Parameter (names = {"-y", "--yes"},
-                description = "Auto-respond 'y' to confirm e.g. score replacement")
+    @Parameter(names = {"-y", "--yes"},
+               description = "Auto-respond 'y' to confirm e.g. score replacement")
     public boolean autoConfirm = false;
   }
 
@@ -188,14 +188,14 @@ public class Client {
 
   @Parameters(commandDescription = "Delete the score and start a new one")
   private static class CommandNew extends AldaCommand {
-    @Parameter (names = {"-f", "--file"},
-                description = "A filename for the new score",
-                converter = FileConverter.class)
+    @Parameter(names = {"-f", "--file"},
+               description = "A filename for the new score",
+               converter = FileConverter.class)
     public File file;
 
-    @Parameter (names = {"-y", "--yes"},
-                description = "Auto-respond 'y' to confirm discarding " +
-                              "unsaved changes")
+    @Parameter(names = {"-y", "--yes"},
+               description = "Auto-respond 'y' to confirm discarding " +
+                             "unsaved changes")
     public boolean autoConfirm = false;
   }
 
@@ -210,9 +210,9 @@ public class Client {
                description = "A string of Alda code")
     public String code;
 
-    @Parameter (names = {"-y", "--yes"},
-                description = "Auto-respond 'y' to confirm discarding " +
-                              "unsaved changes")
+    @Parameter(names = {"-y", "--yes"},
+               description = "Auto-respond 'y' to confirm discarding " +
+                             "unsaved changes")
     public boolean autoConfirm = false;
   }
 
@@ -223,9 +223,9 @@ public class Client {
                converter = FileConverter.class)
     public File file;
 
-    @Parameter (names = {"-y", "--yes"},
-                description = "Auto-respond 'y' to confirm overwriting an " +
-                              "existing file")
+    @Parameter(names = {"-y", "--yes"},
+               description = "Auto-respond 'y' to confirm overwriting an " +
+                             "existing file")
     public boolean autoConfirm = false;
   }
 
@@ -326,12 +326,12 @@ public class Client {
       switch (command) {
         case "help":
           jc.usage();
-          break;
+          System.exit(0);
 
         case "update":
           handleCommandSpecificHelp(jc, "update", update);
           Util.updateAlda();
-          break;
+          System.exit(0);
 
         case "server":
           handleCommandSpecificHelp(jc, "server", serverCmd);
@@ -348,36 +348,43 @@ public class Client {
         case "init":
           handleCommandSpecificHelp(jc, "start", start);
           server.startBg();
-          break;
+          System.exit(0);
+
         case "stop":
         case "down":
           handleCommandSpecificHelp(jc, "stop", stop);
           server.stop(stop.autoConfirm);
-          break;
+          System.exit(0);
+
         case "restart":
         case "downup":
           handleCommandSpecificHelp(jc, "restart", restart);
           server.restart(restart.autoConfirm);
-          break;
+          System.exit(0);
+
         case "list":
           handleCommandSpecificHelp(jc, "list", list);
           Util.listServers();
-          break;
+          System.exit(0);
+
         case "status":
           handleCommandSpecificHelp(jc, "status", status);
           server.status();
-          break;
+          System.exit(0);
+
         case "version":
           handleCommandSpecificHelp(jc, "version", version);
           System.out.println("Client version: " + Util.version());
           System.out.println();
           System.out.println("Server version:");
           server.version();
-          break;
+          System.exit(0);
+
         case "info":
           handleCommandSpecificHelp(jc, "info", info);
           server.info();
-          break;
+          System.exit(0);
+
         case "play":
           handleCommandSpecificHelp(jc, "play", play);
           inputType = Util.inputType(play.file, play.code);
@@ -396,7 +403,7 @@ public class Client {
               server.play(Util.getStdIn(), play.replaceScore, play.autoConfirm);
               break;
           }
-          break;
+          System.exit(0);
 
         case "parse":
           handleCommandSpecificHelp(jc, "parse", parse);
@@ -417,7 +424,7 @@ public class Client {
               throw new Exception("Please provide some Alda code in the form " +
                                   "of a string, file, or STDIN.");
           }
-          break;
+          System.exit(0);
 
         case "append":
         case "add":
@@ -438,7 +445,7 @@ public class Client {
               throw new Exception("Please provide some Alda code in the form " +
                                   "of a string, file, or STDIN.");
           }
-          break;
+          System.exit(0);
 
         case "score":
           if(score.help) {
@@ -449,7 +456,7 @@ public class Client {
                                 score.showLispCode,
                                 score.showScoreMap);
           server.score(mode);
-          break;
+          System.exit(0);
 
         case "new":
         case "delete":
@@ -458,7 +465,7 @@ public class Client {
           if (newScore.file != null) {
             server.save(newScore.file, newScore.autoConfirm);
           }
-          break;
+          System.exit(0);
 
         case "load":
         case "open":
@@ -479,7 +486,7 @@ public class Client {
               throw new Exception("Please provide some Alda code in the form " +
                                   "of a string, file, or STDIN.");
           }
-          break;
+          System.exit(0);
 
         case "save":
           handleCommandSpecificHelp(jc, "save", save);
@@ -498,7 +505,7 @@ public class Client {
               server.save(file, save.autoConfirm);
               break;
           }
-          break;
+          System.exit(0);
 
         case "edit":
           handleCommandSpecificHelp(jc, "edit", edit);
@@ -532,7 +539,7 @@ public class Client {
 
           Util.runProgramInFg(editor, scoreInfo.filename);
           server.loadWithoutAsking(file);
-          break;
+          System.exit(0);
       }
     } catch (Exception e) {
       server.error(e.getMessage());
