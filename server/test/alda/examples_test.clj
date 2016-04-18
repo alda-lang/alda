@@ -1,4 +1,4 @@
-(ns alda.parser.examples-test
+(ns alda.examples-test
   (:require [clojure.test    :refer :all]
             [clojure.java.io :as    io]
             [alda.parser     :refer (parse-input)]

@@ -110,7 +110,7 @@
                           alda.util-test
 
                           ; benchmarks / smoke tests
-                          alda.parser.examples-test
+                          alda.examples-test
                           }})
 
 (deftask assert-jdk7-bootclasspath
