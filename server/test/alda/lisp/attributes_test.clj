@@ -12,19 +12,20 @@
       (let [s     (continue s (octave 2))
             piano (get-instrument s "piano")]
         (is (= (:octave piano) 2))
-        (is (= (get-in s [:instruments (:id piano) :attributes 0 :octave]) 2)))
+        (is (= (get-in s [:instruments (:id piano) :attributes 0 :octave])
+               [2])))
 
       (let [s     (continue s (octave :down))
             piano (get-instrument s "piano")]
         (is (= (:octave piano) 3))
         (is (= (get-in s [:instruments (:id piano) :attributes 0 :octave])
-               :down)))
+               [:down])))
 
       (let [s     (continue s (octave :up))
             piano (get-instrument s "piano")]
         (is (= (:octave piano) 5))
         (is (= (get-in s [:instruments (:id piano) :attributes 0 :octave])
-               :up)))
+               [:up])))
 
       (let [s     (continue s
                     (octave :up)
@@ -34,12 +35,13 @@
             piano (get-instrument s "piano")]
         (is (= (:octave piano) 6))
         (is (= (get-in s [:instruments (:id piano) :attributes 0 :octave])
-               :down)))
+               [:up :up :up :down])))
 
       (let [s     (continue s (set-attribute :octave 1))
             piano (get-instrument s "piano")]
         (is (= (:octave piano) 1))
-        (is (= (get-in s [:instruments (:id piano) :attributes 0 :octave]) 1))))))
+        (is (= (get-in s [:instruments (:id piano) :attributes 0 :octave])
+               [1]))))))
 
 (deftest volume-tests
   (testing "volume"

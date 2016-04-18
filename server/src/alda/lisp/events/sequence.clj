@@ -1,6 +1,5 @@
 (ns alda.lisp.events.sequence
-  (:require [alda.lisp.model.event     :refer (update-score)]
-            [alda.lisp.model.attribute :refer (apply-attributes)]))
+  (:require [alda.lisp.model.event :refer (update-score)]))
 
 (comment
   "Rather than have an `event-sequence` function that generates an event
@@ -13,7 +12,5 @@
 
 (defmethod update-score :event-sequence
   [score events]
-  (let [events (concat (interpose (apply-attributes) events)
-                       [(apply-attributes)])]
-    (reduce update-score score events)))
+  (reduce update-score score events))
 

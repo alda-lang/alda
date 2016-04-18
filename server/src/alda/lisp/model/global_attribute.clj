@@ -11,8 +11,9 @@
     (let [abs-offset (absolute-offset offset score)]
       (log/debugf "Set global attribute %s %s at offset %d."
                   attr val (int abs-offset))
-      (update-in score [:global-attributes abs-offset]
-                 (fnil assoc {}) attr val))
+      (update-in score
+                 [:global-attributes abs-offset attr]
+                 (fnil conj []) val))
     (throw (Exception.
              (str "Can't set global attribute " attr " to " val " - offset "
                   "unclear. There are multiple instruments active with "

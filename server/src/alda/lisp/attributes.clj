@@ -13,7 +13,7 @@
    represented as a map of attribute keywords to values.")
 
 (def ^:dynamic *initial-attr-vals* {:current-offset (->AbsoluteOffset 0)
-                                    :last-offset    (->AbsoluteOffset 0)
+                                    :last-offset    (->AbsoluteOffset -1)
                                     :current-marker :start
                                     :time-scaling   1
                                     :attributes     (sorted-map)})

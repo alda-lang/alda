@@ -64,9 +64,10 @@
    applied."
   [score {:keys [current-offset] :as inst} attr val]
   (let [kw-name (get-kw-name attr)]
-    (assoc-in inst
-              [:attributes (absolute-offset current-offset score) kw-name]
-              val)))
+    (update-in inst
+               [:attributes (absolute-offset current-offset score) kw-name]
+               (fnil conj [])
+               val)))
 
 (defn apply-attribute
   "Given an instrument map, a keyword representing an attribute, and a value,
@@ -108,14 +109,21 @@
    attribute changes established in the score (global attributes) and the
    instrument, as well as the instrument's :last- and :current-offset.
 
-   Returns a map of updated attributes to their new values."
+   Returns a map of updated attributes to their new values.
+
+   Each 'value' is actually a vector of values, the length of which depends on
+   the number of times this attribute was changed at that point in time. For
+   example, if the octave is incremented a bunch of times, then the 'value'
+   here will be something like [:up :up :up], whereas a single octave change
+   will just be [:up]. `update-score` below will apply the updates
+   sequentially."
   [{:keys [global-attributes] :as score}
    {:keys [attributes current-offset last-offset] :as inst}]
   (let [[last current] (map #(absolute-offset % score)
                             [last-offset current-offset])
         [start end]    (if (<= last current) [last current] [0 current])]
-    (->> (merge-with merge global-attributes attributes)
-         (drop-while #(< (key %) start))
+    (->> (merge-with (partial merge-with concat) global-attributes attributes)
+         (drop-while #(<= (key %) start))
          (take-while #(<= (key %) end))
          (map val)
          (apply merge))))
@@ -127,8 +135,10 @@
     (fn [{:keys [id current-offset last-offset] :as inst}]
       (if (contains? current-instruments id)
         (let [attr-changes (attribute-changes score inst)]
-          (reduce (fn [inst [attr val]]
-                    (apply-attribute score inst attr val))
+          (reduce (fn [inst [attr vals]]
+                    (reduce #(apply-attribute score %1 attr %2)
+                            inst
+                            vals))
                   inst
                   attr-changes))
         inst))))

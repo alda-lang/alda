@@ -1,6 +1,6 @@
 (ns alda.lisp.score
-  (:require [alda.lisp.model.event     :refer (update-score)]
-            [alda.lisp.model.attribute :refer (apply-attributes)]
+  (:require [alda.lisp.model.attribute :refer (apply-attributes)]
+            [alda.lisp.model.event     :refer (update-score)]
             [alda.lisp.model.offset    :refer (absolute-offset)]
             [alda.lisp.model.records   :refer (->AbsoluteOffset)]
             [taoensso.timbre           :as    log]))
@@ -46,8 +46,7 @@
   "Continues the score represented by the score map `score`, evaluating the
    events in `body` and returning the completed score."
   [score & body]
-  (let [events (concat (interpose (apply-attributes) body)
-                       [(apply-attributes)])]
+  (let [events (concat body [(apply-attributes)])]
     (reduce update-score score events)))
 
 (defn continue!

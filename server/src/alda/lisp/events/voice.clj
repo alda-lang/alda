@@ -1,7 +1,6 @@
 (ns alda.lisp.events.voice
-  (:require [alda.lisp.model.event     :refer (update-score)]
-            [alda.lisp.model.attribute :refer (apply-attributes)]
-            [alda.lisp.score.util      :as    score]))
+  (:require [alda.lisp.model.event :refer (update-score)]
+            [alda.lisp.score.util  :as    score]))
 
 (defn- update-instruments
   "As the events for each voice are added to the score, the state of each
@@ -27,18 +26,15 @@
 (defmethod update-score :voice
   [{:keys [instruments] :as score}
    {:keys [number events] :as voice}]
-  (let [score  (-> score
-                   (assoc :current-voice number)
-                   (assoc-in [:voice-instruments number] instruments))
-        events (concat (interpose (apply-attributes) events)
-                       [(apply-attributes)])]
+  (let [score (-> score
+                  (assoc :current-voice number)
+                  (assoc-in [:voice-instruments number] instruments))]
     (reduce update-score score events)))
 
 (defmethod update-score :voice-group
   [score {:keys [voices] :as voice-group}]
-  (let [score  (assoc score :voice-instruments {})
-        events (cons (apply-attributes) voices)]
-    (reduce update-score score events)))
+  (let [score  (assoc score :voice-instruments {})]
+    (reduce update-score score voices)))
 
 (defn voice
   "One voice in a voice group."

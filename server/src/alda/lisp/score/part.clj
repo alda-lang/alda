@@ -4,7 +4,6 @@
             [alda.lisp.attributes       :refer (*initial-attr-vals*)]
             [alda.lisp.events.voice     :refer (end-voice-group)]
             [alda.lisp.model.event      :refer (update-score)]
-            [alda.lisp.model.attribute  :refer (apply-attributes)]
             [alda.lisp.model.instrument :refer (*stock-instruments*)]
             [alda.parser-util           :refer (parse-with-context)]))
 
@@ -100,12 +99,9 @@
 
 (defmethod update-score :part
   [score {:keys [instrument-call events] :as part}]
-  (let [score  (-> score
-                   end-voice-group
-                   (determine-current-instruments instrument-call))
-        events (concat [(apply-attributes)]
-                       (interpose (apply-attributes) events)
-                       [(apply-attributes)])]
+  (let [score (-> score
+                  end-voice-group
+                  (determine-current-instruments instrument-call))]
     (reduce update-score score events)))
 
 (defn part

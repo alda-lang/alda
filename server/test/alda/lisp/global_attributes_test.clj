@@ -12,7 +12,7 @@
                     (global-attribute :tempo 60)))
           piano (get-instrument s "piano")]
       (testing "it should exist at the right point in the score"
-        (is (= (get (:global-attributes s) 2000.0) {:tempo 60})))
+        (is (= (get (:global-attributes s) 2000.0) {:tempo [60]})))
       (testing "it should change the tempo"
         (is (= (:tempo piano) 60)))
       (testing "when another part starts,"
