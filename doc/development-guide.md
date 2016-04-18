@@ -101,7 +101,7 @@ To run an Alda REPL with any local changes you've made:
 
     boot dev -a repl
 
-### Namespaces
+### Components
 
 * [alda.parser](#aldaparser)
 * [alda.lisp](#aldalisp)
