@@ -3,6 +3,7 @@
             [taoensso.timbre :as    log]
             [clojure.java.io :as    io]
             [clojure.string  :as    str]
+            [alda.parser     :refer (parse-input)]
             [alda.parser-util]
             [alda.lisp       :refer :all]
             [alda.now        :as    now])
@@ -13,8 +14,10 @@
                                (.setPrompt "> ")))
 
 (defn new-repl-score
-  []
-  (doto (now/new-score)
+  [& [score]]
+  (doto (if score
+          (now/new-score score)
+          (now/new-score))
     (swap! assoc :parsing-context :part
                  :score-text      "")))
 
@@ -25,6 +28,20 @@
   (swap! *current-score*
          update :score-text
          #(str % (when-not (empty? %) \newline) txt)))
+
+(defn close-score!
+  []
+  (now/tear-down! *current-score*))
+
+(defn new-score!
+  []
+  (alter-var-root #'*current-score* (constantly (new-repl-score))))
+
+(defn load-score!
+  [score-text]
+  (let [loaded-score (-> score-text parse-input eval new-repl-score)]
+    (alter-var-root #'*current-score* (constantly loaded-score))
+    (swap! *current-score* assoc :score-text score-text)))
 
 (defn parse-with-context!
   "Determine the appropriate context to parse a line of code from the Alda
@@ -73,3 +90,8 @@
                          :score      (vec (rest parsed))
                          parsed))))
     (boolean parsed)))
+
+(defn play-score!
+  "Plays back the current score."
+  []
+  (now/play-score! *current-score*))

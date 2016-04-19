@@ -58,8 +58,10 @@
     (swap! score assoc :audio-context audio-ctx)))
 
 (defn new-score
-  []
-  (doto (atom (lisp/score)) (prepare-audio-context!)))
+  ([]
+   (new-score (lisp/score)))
+  ([score]
+   (doto (atom score) (prepare-audio-context!))))
 
 (defn set-up!
   "Prepares the audio context of a score (creating the audio context if one
@@ -75,6 +77,13 @@
   (let [audio-types (or audio-type (sound/determine-audio-types @score))]
     (prepare-audio-context! score)
     (sound/set-up! (:audio-context @score) audio-types @score)))
+
+(defn tear-down!
+  "Cleans up after a score after you're done using it.
+
+   Closes the MIDI synth, etc."
+  [score]
+  (sound/tear-down! @score))
 
 (def ^:dynamic *current-score* nil)
 

@@ -3,7 +3,11 @@
             [alda.now        :as    now]
             [alda.parser     :refer (parse-input)]
             [alda.repl.core  :as    repl :refer (*repl-reader*
-                                                 *current-score*)]
+                                                 *current-score*
+                                                 close-score!
+                                                 new-score!
+                                                 load-score!
+                                                 play-score!)]
             [alda.sound      :as    sound]
             [alda.util       :as    util]
             [io.aviso.ansi   :refer (bold)]
@@ -46,7 +50,6 @@
          ~@body)
        (swap! repl-commands assoc ~(str cmd-name) ~doc))))
 
-; FIXME
 (defcommand new
   ; TODO: implement ":new part" and then update the docstring
   "Creates a new score."
@@ -54,7 +57,8 @@
   (cond
     (contains? #{"" "score"} rest-of-line)
     (do
-      ; (score*)
+      (close-score!)
+      (new-score!)
       (println "New score initialized."))
 
     (str/starts-with? rest-of-line "part ")
@@ -94,9 +98,8 @@
     (println "You must first create or :load a score.")
     (let [{:keys [from to]} (util/parse-str-opts rest-of-line)]
       (sound/with-play-opts (util/strip-nil-values {:from from, :to to})
-        (repl/interpret! (:score-text @*current-score*))))))
+        (repl/play-score!)))))
 
-; FIXME
 (defcommand load
   "Loads an Alda score into the current REPL session.
 
@@ -105,7 +108,16 @@
      :load test/examples/bach_cello_suite_no_1.alda
      :load /Users/rick/Scores/love_is_alright_tonite.alda"
   [filename]
-  (letfn [(confirm-load []
+  (letfn [(load-score [score-text]
+            (try
+              (close-score!)
+              (load-score! score-text)
+              (println "Score loaded.")
+              (catch Exception e
+                (println)
+                (println (.getMessage e))
+                (println "File load aborted."))))
+          (confirm-load []
             (println "Are you sure you want to load" (str filename \?))
             (let [yes-no-prompt (str "(" (bold "y") "es/" (bold "n") "o) > ")
                   response (str/trim (.readLine *repl-reader* yes-no-prompt))]
@@ -113,17 +125,6 @@
                 (contains? #{"y" "yes"} response) true
                 (contains? #{"n" "no"} response) false
                 :else (confirm-load))))
-          (load-score [score-text]
-            (try
-              (let [code (parse-input score-text)]
-                ; (score*)
-                ; (eval code)
-                ; (alter-var-root #'*score-text* (constantly score-text))
-                (println "Score loaded."))
-              (catch Exception e
-                (println)
-                (println (.getMessage e))
-                (println "File load aborted."))))
           (confirm-and-load-score [score-text]
             (if (confirm-load)
               (load-score score-text)
@@ -138,7 +139,9 @@
             (println "You have made changes to the current score that will be"
                      "lost if you load" (str filename "."))
             (confirm-and-load-score score-text))
-          (load-score score-text))
+          (do
+            (close-score!)
+            (load-score score-text)))
         (println "File not found:" filename)))))
 
 (defn- parse-docstring

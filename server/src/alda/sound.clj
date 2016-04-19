@@ -32,16 +32,21 @@
   [audio-ctx _ & [score]]
   (midi/get-midi-synth! audio-ctx))
 
+(declare determine-audio-types)
+
 (defn set-up!
   "Does any necessary setup for one or more audio types.
    e.g. for MIDI, create and open a MIDI synth."
-  [audio-ctx audio-type & [score]]
-  (if (coll? audio-type)
-    (pdoseq-block [a-t audio-type]
-      (set-up! audio-ctx a-t score))
-    (when-not (set-up? audio-ctx audio-type)
-      (set-up-audio-type! audio-ctx audio-type score)
-      (swap! audio-ctx update :audio-types conj audio-type))))
+  ([{:keys [audio-context] :as score}]
+   (let [audio-types (determine-audio-types score)]
+     (set-up! audio-context audio-types score)))
+  ([audio-ctx audio-type & [score]]
+   (if (coll? audio-type)
+     (pdoseq-block [a-t audio-type]
+                   (set-up! audio-ctx a-t score))
+     (when-not (set-up? audio-ctx audio-type)
+       (set-up-audio-type! audio-ctx audio-type score)
+       (swap! audio-ctx update :audio-types conj audio-type)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -85,13 +90,16 @@
 (defn tear-down!
   "Does any necessary clean-up at the end.
    e.g. for MIDI, close the MIDI synth."
-  [audio-ctx audio-type & [score]]
-  (if (coll? audio-type)
-    (pdoseq-block [a-t audio-type]
-      (tear-down! audio-ctx a-t score))
-    (when (set-up? audio-ctx audio-type)
-      (tear-down-audio-type! audio-ctx audio-type score)
-      (swap! audio-ctx update :audio-types disj audio-type))))
+  ([{:keys [audio-context] :as score}]
+   (let [audio-types (determine-audio-types score)]
+     (tear-down! audio-context audio-types score)))
+  ([audio-ctx audio-type & [score]]
+   (if (coll? audio-type)
+     (pdoseq-block [a-t audio-type]
+                   (tear-down! audio-ctx a-t score))
+     (when (set-up? audio-ctx audio-type)
+       (tear-down-audio-type! audio-ctx audio-type score)
+       (swap! audio-ctx update :audio-types disj audio-type)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

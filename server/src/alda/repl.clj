@@ -67,9 +67,8 @@
             :do-nothing
 
             (re-find #"^:?(quit|exit|bye)\s*$" alda-code)
-            (let [{:keys [audio-context] :as score} @*current-score*
-                  audio-types (sound/determine-audio-types score)]
-              (sound/tear-down! audio-context audio-types score)
+            (do
+              (sound/tear-down! @*current-score*)
               (reset! done? true))
 
             (re-find #"^:" alda-code)
