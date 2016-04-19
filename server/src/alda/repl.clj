@@ -37,7 +37,7 @@
 (defn print-banner!
   []
   (println)
-  (println banner \newline))
+  (println banner))
 
 (defn prepare-midi-system!
   []
@@ -45,11 +45,12 @@
   (midi/fill-midi-synth-pool!)
   (while (not (midi/midi-synth-available?))
     (Thread/sleep 250))
-  (println "done."))
+  (println "done.")
+  (Thread/sleep 400))
 
 (defn start-repl! [& {:keys [pre-buffer post-buffer]}]
-  (print-banner!)
   (prepare-midi-system!)
+  (print-banner!)
   (let [done? (atom false)]
     (binding [*out*             (.getOutput ^ConsoleReader *repl-reader*)
               sound/*play-opts* {:pre-buffer  pre-buffer
