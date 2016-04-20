@@ -4,6 +4,7 @@
             [alda.parser                      :refer (parse-input)]
             [alda.parser-util                 :refer (parse-with-context)]
             [alda.sound                       :refer (*play-opts*)]
+            [alda.sound.midi                  :as    midi]
             [alda.util]
             [alda.version                     :refer (-version-)]
             [ring.middleware.defaults         :refer (wrap-defaults api-defaults)]
@@ -16,46 +17,55 @@
             [clojure.pprint                   :refer (pprint)]
             [clojure.string                   :as    str]))
 
+(defn new-server-score
+  [& [score]]
+  (doto (if score
+          (now/new-score score)
+          (now/new-score))
+    (swap! assoc :score-text ""
+                 :filename   nil)))
+
+(def ^:dynamic *current-score* (new-server-score))
+
+(defn score-text<<
+  [txt]
+  (swap! *current-score*
+         update :score-text
+         #(str % (when-not (empty? %) \newline) txt)))
+
+(defn close-score!
+  []
+  (now/tear-down! *current-score*))
+
+(defn new-score!
+  []
+  (alter-var-root #'*current-score* (constantly (new-server-score))))
+
+(defn load-score!
+  [score-text]
+  (let [loaded-score (-> score-text parse-input eval new-server-score)]
+    (alter-var-root #'*current-score* (constantly loaded-score))
+    (swap! *current-score* assoc :score-text score-text)))
+
 (defn start-alda-environment!
   []
-  ; set up audio generators
-  (now/set-up! :midi)
-  ; initialize a new score
-  (score*))
-
-(def ^:dynamic *score-text* "")
-
-(defn score-text<< [s]
-  (if (empty? *score-text*)
-    (alter-var-root #'*score-text* str s)
-    (alter-var-root #'*score-text* str \newline s)))
-
-; TODO:
-;
-; - represent scores as self-contained maps, instead of a combination of things
-;   defined at the top-level
-;
-; - do one of two things:
-;
-;   a) include the filename as a key in the map;
-;      manage the whole thing as an atom
-;
-;   b) manage the filename and the current score as refs
-
-(def score-filename (atom nil))
+  (midi/fill-midi-synth-pool!)
+  (while (not (midi/midi-synth-available?))
+    (Thread/sleep 250)))
 
 (defn modified?
   []
-  (if @score-filename
-    (try
-      (let [file-contents (slurp (io/file @score-filename))]
-        (not= *score-text* file-contents))
-      (catch java.io.FileNotFoundException e
-        ; if the file no longer exists (e.g. has been deleted since opening),
-        ; consider the score to have been modified -- this should prompt the
-        ; user to save changes, which will re-create the file
-        true))
-    (not (empty? *score-text*))))
+  (let [{:keys [filename score-text]} @*current-score*]
+    (if filename
+      (try
+        (let [file-contents (slurp (io/file filename))]
+          (not= score-text file-contents))
+        (catch java.io.FileNotFoundException e
+          ; if the file no longer exists (e.g. has been deleted since opening),
+          ; consider the score to have been modified -- this should prompt the
+          ; user to save changes, which will re-create the file
+          true))
+      (not (empty? score-text)))))
 
 (defn confirming?
   [{:keys [headers] :as request}]
@@ -64,15 +74,15 @@
 
 (defn score-info
   []
-  {:status      "up"
-   :version     -version-
-   :filename    @score-filename
-   :modified?   (modified?)
-   :line-count  (count (str/split *score-text* #"[\n\r]+"))
-   :char-count  (count *score-text*)
-   :instruments (for [[k v] (:instruments (score-map))]
-                  {:name  k
-                   :stock (:stock v)})})
+  (let [{:keys [filename score-text instruments]} @*current-score*]
+    {:status      "up"
+     :version     -version-
+     :filename    (or filename "(unsaved)")
+     :modified?   (modified?)
+     :line-count  (count (str/split score-text #"\n\r|\r\n|\n|\r"))
+     :char-count  (count score-text)
+     :instruments (for [[k v] instruments] {:name  k
+                                            :stock (:stock v)})}))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -127,15 +137,20 @@
 
         :else
         (do
-          (if replace-score? (score*))
+          (when replace-score?
+            (close-score!)
+            (new-score!))
           (score-text<< code)
-          (let [clj-code (case context
-                           :music-data (cons 'do parse-result)
-                           :score (cons 'do (rest parse-result))
-                           parse-result)]
+          (let [events (-> (case context
+                             :music-data (vec parse-result)
+                             :part       parse-result
+                             :score      (vec (rest parse-result))
+                             parse-result)
+                           eval)]
             (if silent?
-              (eval clj-code)
-              (now/play! (eval clj-code))))
+              (swap! *current-score* continue events)
+              (now/with-score *current-score*
+                (now/play! events))))
           (success "OK"))))
     (catch Throwable e
       (server-error (.getMessage e)))))
@@ -174,9 +189,13 @@
   (GET "/" []
     (edn-response (score-info)))
 
-  ; stop the server and exits
-  (DELETE "/" []
-    (stop-server!))
+  ; stop the server and exits (alias: GET "/stop")
+  (DELETE "/" {:as request}
+    (if (and (modified?) (not (confirming? request)))
+      unsaved-changes-response
+      (do
+        (close-score!)
+        (stop-server!))))
 
   ; add to the current score without playing anything
   (POST "/add" {:keys [params body] :as request}
@@ -187,7 +206,7 @@
   ; sets the filename of the score
   (PUT "/filename" {:keys [params body] :as request}
     (let [filename (get-input params body)]
-      (reset! score-filename filename)
+      (swap! *current-score* assoc :filename filename)
       (success "OK")))
 
   ; replace the current score with code from a file or string
@@ -196,7 +215,7 @@
       (if (and (modified?) (not (confirming? request)))
         unsaved-changes-response
         (do
-          (reset! score-filename nil)
+          (swap! *current-score* assoc :filename nil)
           (handle-code code :silent? true
                             :replace-score? true)))))
 
@@ -207,9 +226,6 @@
   (POST "/parse/lisp" {:keys [params body] :as request}
     (let [code (get-input params body)]
       (handle-code-parse code :mode :lisp)))
-
-  ; TODO: make the /parse/map endpoint not overwrite the current score
-  ; (will require refactoring alda.lisp to not use top-level vars)
 
   ; parse + evaluate code and return the resulting score map
   (POST "/parse/map" {:keys [params body] :as request}
@@ -222,9 +238,8 @@
   (GET "/play" {:keys [play-opts params] :as request}
     (let [{:keys [from to]} params]
       (binding [*play-opts* (assoc play-opts :from from :to to)]
-        (let [score-text *score-text*]
-          (score*)
-          (handle-code score-text)))))
+        (now/play-score! *current-score*)
+        (success "OK"))))
 
   ; evaluate/play code within the context of the current score
   (POST "/play" {:keys [play-opts params body]:as request}
@@ -237,56 +252,60 @@
     (if (and (modified?) (not (confirming? request)))
       unsaved-changes-response
       (let [code (get-input params body)]
-        (reset! score-filename nil)
+        (swap! *current-score* assoc :filename nil)
         (binding [*play-opts* play-opts]
           (handle-code code :replace-score? true)))))
 
   ; save changes to a score's file
   (GET "/save" []
-    (if @score-filename
-      (do
-        (spit @score-filename *score-text*)
-        (success (str "File saved: " @score-filename)))
-      (user-error "You must supply a filename.")))
+    (let [{:keys [filename score-text]} @*current-score*]
+      (if filename
+        (do
+          (spit filename score-text)
+          (success (str "File saved: " filename)))
+        (user-error "You must supply a filename."))))
 
   ; save changes to a file
   (PUT "/save" {:keys [params body] :as request}
-    (let [filename (str/trim (get-input params body))]
+    (let [{:keys [score-text]} @*current-score*
+          filename             (str/trim (get-input params body))]
       (if (and (.exists (io/as-file filename)) (not (confirming? request)))
         existing-file-response
         (do
-          (spit filename *score-text*)
-          (reset! score-filename filename)
-          (success (str "File saved: " @score-filename))))))
+          (spit filename score-text)
+          (swap! *current-score* assoc :filename filename)
+          (success (str "File saved: " filename))))))
 
   ; get the current score text
   (GET "/score" []
-    (success *score-text*))
+    (success (:score-text @*current-score*)))
   (GET "/score/text" []
-    (success *score-text*))
+    (success (:score-text @*current-score*)))
 
   ; get the current score, as alda.lisp code
   (GET "/score/lisp" []
-    (handle-code-parse *score-text* :mode :lisp))
+    (handle-code-parse (:score-text @*current-score*) :mode :lisp))
 
   ; get the current score-map
   (GET "/score/map" []
-    (edn-response (score-map)))
+    (edn-response @*current-score*))
 
   ; delete the current score and start a new one
   (DELETE "/score" {:as request}
     (if (and (modified?) (not (confirming? request)))
       unsaved-changes-response
       (do
-        (score*)
-        (reset! score-filename nil)
+        (close-score!)
+        (new-score!)
         (success "New score initialized."))))
 
   ; stop the server (alias for DELETE "/")
   (GET "/stop" {:as request}
     (if (and (modified?) (not (confirming? request)))
       unsaved-changes-response
-      (stop-server!)))
+      (do
+        (close-score!)
+        (stop-server!))))
 
   (GET "/version" []
     (success -version-))
