@@ -12,6 +12,8 @@
 
 ### Breaking Changes
 
+* The default behavior of `alda play -f score.alda` / `alda play -c 'piano: c d e'` is no longer to append to the current score in memory. Now, running these commands will play the Alda score file or string of code as a one-off score, not considering or affecting the current score in memory in any way. The previous behavior of appending to the current score is still possible via a new `alda play` option, `-a/--append`.
+
 * Creating scores in a Clojure REPL now involves working with immutable data structures instead of mutating top-level dynamic vars. Whereas before, Alda event functions like `score`, `part` and `note` relied on side effects to modify the state of your score environment, now you create a new score via `score` (or the slightly lower-level `new-score`) and update it using the `continue` function. To better illustrate this, this is how you used to do it **before**:
 
   ```

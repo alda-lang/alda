@@ -120,16 +120,22 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn handle-code
-  [code & {:keys [replace-score? ; replace the existing score
-                  silent?        ; add to/replace the score only, don't play
+  [code & {:keys [; replace the current score
+                  replace-score?
+                  ; add to/replace the current score only, don't play
+                  silent?
+                  ; don't replace or add to the current score, just play the code
+                  one-off?
                   ]}]
   (try
     (require '[alda.lisp :refer :all])
     (let [[context parse-result] (parse-with-context code)]
       (cond
-        (and replace-score? (not
-                              (or (= context :score)
-                                  (= context :part))))
+        (and (or replace-score?
+                 one-off?
+                 (empty? (:score-text @*current-score*)))
+             (not (or (= context :score)
+                      (= context :part))))
         (user-error "Invalid Alda syntax.")
 
         (= context :parse-failure)
@@ -140,17 +146,20 @@
           (when replace-score?
             (close-score!)
             (new-score!))
-          (score-text<< code)
+          (when-not one-off?
+            (score-text<< code))
           (let [events (-> (case context
                              :music-data (vec parse-result)
                              :part       parse-result
                              :score      (vec (rest parse-result))
                              parse-result)
                            eval)]
-            (if silent?
-              (swap! *current-score* continue events)
-              (now/with-score *current-score*
-                (now/play! events))))
+            (cond
+              one-off? (now/with-new-score
+                         (now/play! events))
+              silent?  (swap! *current-score* continue events)
+              :else    (now/with-score *current-score*
+                         (now/play! events))))
           (success "OK"))))
     (catch Throwable e
       (server-error (.getMessage e)))))
@@ -241,8 +250,14 @@
         (now/play-score! *current-score*)
         (success "OK"))))
 
+  ; evaluate/play code as a one-off score without affecting the current score
+  (POST "/play" {:keys [play-opts params body] :as request}
+    (let [code (get-input params body)]
+      (binding [*play-opts* play-opts]
+        (handle-code code :one-off? true))))
+
   ; evaluate/play code within the context of the current score
-  (POST "/play" {:keys [play-opts params body]:as request}
+  (POST "/play/append" {:keys [play-opts params body]:as request}
     (let [code (get-input params body)]
       (binding [*play-opts* play-opts]
         (handle-code code))))

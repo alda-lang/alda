@@ -123,9 +123,9 @@ public class Client {
                description = "A time marking or marker at which to end playback")
     public String to;
 
-    @Parameter(names = {"-r", "--replace"},
-               description = "Replace the existing score with new code")
-    public boolean replaceScore = false;
+    @Parameter(names = {"-a", "--append"},
+               description = "Append to the existing score")
+    public boolean appendToScore = false;
 
     @Parameter(names = {"-y", "--yes"},
                description = "Auto-respond 'y' to confirm e.g. score replacement")
@@ -394,13 +394,13 @@ public class Client {
               server.play();
               break;
             case "file":
-              server.play(play.file, play.replaceScore, play.autoConfirm);
+              server.play(play.file, play.appendToScore, play.autoConfirm);
               break;
             case "code":
-              server.play(play.code, play.replaceScore, play.autoConfirm);
+              server.play(play.code, play.appendToScore, play.autoConfirm);
               break;
             case "stdin":
-              server.play(Util.getStdIn(), play.replaceScore, play.autoConfirm);
+              server.play(Util.getStdIn(), play.appendToScore, play.autoConfirm);
               break;
           }
           System.exit(0);
