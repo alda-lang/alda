@@ -18,17 +18,23 @@
    :current-offset forward by its :min-duration.")
 
 (defn- initialize-min-durations
-  [score]
-  (update-instruments score #(assoc % :min-duration Long/MAX_VALUE)))
+  [{:keys [current-instruments] :as score}]
+  (update-instruments score
+    (fn [{:keys [id] :as inst}]
+      (if (contains? current-instruments id)
+        (assoc inst :min-duration Long/MAX_VALUE)
+        inst))))
 
 (defn- bump-by-min-durations
-  [{:keys [instruments] :as score}]
+  [{:keys [current-instruments] :as score}]
   (update-instruments score
-    (fn [{:keys [min-duration current-offset] :as inst}]
-      (assoc inst
-             :last-offset    current-offset
-             :current-offset (offset+ current-offset min-duration)
-             :min-duration   nil))))
+    (fn [{:keys [id min-duration current-offset] :as inst}]
+      (if (contains? current-instruments id)
+        (assoc inst
+               :last-offset    current-offset
+               :current-offset (offset+ current-offset min-duration)
+               :min-duration   nil)
+        inst))))
 
 (defmethod update-score :chord
   [{:keys [beats-tally current-instruments] :as score}
