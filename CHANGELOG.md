@@ -4,6 +4,8 @@
 
 * TODO: explain
 
+* Fixed issue #170. There was a 5-second socket timeout, causing the client to return "ERROR Read timed out" if the server took longer than 5 seconds to parse/evaluate the score. In this release, we've removed the timeout, so the client will wait until the server has parsed/evaluated the score and started playing it.
+
 * Fixed issue #199. Local (per-instrument) attributes occurring at the same time as global attributes will now override the global attribute for the instrument(s) to which they apply.
 
 * Using `@markerName` before `%markerName` is placed in a score now results in a explicit error, instead of throwing a different error that was difficult to understand. It turns out that this never worked to begin with. I do think it would be nice if it were possible to "forward declare" markers like this, but for the time being, I will leave this as something that (still) doesn't work, but that we could make possible in the future.

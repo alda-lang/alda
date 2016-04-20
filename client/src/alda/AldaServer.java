@@ -63,7 +63,7 @@ public class AldaServer {
     RequestConfig config = RequestConfig.custom()
                                         .setConnectTimeout(5000)
                                         .setConnectionRequestTimeout(5000)
-                                        .setSocketTimeout(5000)
+                                        .setSocketTimeout(0)
                                         .build();
 
     this.httpclient = HttpClientBuilder.create()
