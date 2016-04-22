@@ -5,7 +5,7 @@
             [alda.lisp.model.records   :refer (->AbsoluteOffset)]
             [taoensso.timbre           :as    log]))
 
-(defn new-score
+(defn- new-score
   []
   (log/debug "Starting new score.")
   {

@@ -4,54 +4,6 @@
             [alda.sound  :as sound]
             [alda.util   :as util]))
 
-(comment
-  "TODO: move these explanations to docs
-
-   - set-up! requires one argument, a score atom, and sets it up ahead of time
-     (like before, this will happen automatically once play! is called, but
-     set-up! can be used to do this in advance if desired)
-
-     There is also an optional second argument, which can be either a keyword
-     representing an audio type (e.g. :midi) to set up or a collection of such
-     keywords.
-
-     (set-up! my-score)
-     (set-up! my-score :midi)
-     (set-up! my-score [:midi])
-
-   - By default, play! is just a shortcut for creating a one-off score and
-     playing it via alda.sound/play!
-     - Each time you use it, you're creating a new score from scratch.
-
-   - You can also use with-score, which will append to an existing score and
-     play any new notes. The existing score is a score map wrapped in an atom.
-
-     This might look something like:
-
-       (def my-score (atom (score)))
-
-       (with-score my-score
-         (play!
-           (note (pitch :c))
-           (note (pitch :d))
-           (note (pitch :e))))
-
-       (with-score my-score
-         (play!
-           (note (pitch :f))
-           (note (pitch :g))
-           (note (pitch :a))))
-
-   - You can also use with-new-score, which is equivalent to defining a new
-     score atom and using it with with-score:
-
-     (with-new-score
-       (play!
-         (note (pitch :c))
-         (note (pitch :e))))
-
-   - Both with-score and with-new-score will return the score atom when done.")
-
 (defn- prepare-audio-context!
   [score]
   (let [audio-ctx (or (:audio-context @score) (sound/new-audio-context))]
