@@ -14,7 +14,9 @@
       (testing "it should exist at the right point in the score"
         (is (= (get (:global-attributes s) 2000.0) {:tempo [60]})))
       (testing "it should change the tempo"
-        (is (= (:tempo piano) 60)))
+        (let [s     (continue s (apply-attributes))
+              piano (get-instrument s "piano")]
+          (is (= (:tempo piano) 60))))
       (testing "when another part starts,"
         (let [s       (continue s
                         (pause (duration (note-length 1)
@@ -27,13 +29,13 @@
                         (pause (duration (note-length 2 {:dots 1}))))
               tempo-2 (:tempo (get-instrument s "viola"))
               s       (continue s
-                        (pause))
+                        (pause)
+                        (apply-attributes))
               tempo-3 (:tempo (get-instrument s "viola"))]
           (testing "the tempo should change once it encounters the global attribute"
             (is (= tempo-1 120)) ; not yet...
             (is (= tempo-2 120)) ; not yet...
-            (is (= tempo-3 60))  ; now!
-            )
+            (is (= tempo-3 60))) ; now!
           (testing "it should use absolute offset, not relative to marker"
             (let [s       (continue s
                             (at-marker "test-marker-3"))
@@ -41,13 +43,16 @@
                   marker  (:current-marker viola)
                   offset  (:current-offset viola)
                   s       (continue s
-                            (tempo 120))
+                            (tempo 120)
+                            (apply-attributes))
                   tempo-1 (:tempo (get-instrument s "viola"))
                   s       (continue s
-                            (pause (duration (note-length 2 {:dots 1}))))
+                            (pause (duration (note-length 2 {:dots 1})))
+                            (apply-attributes))
                   tempo-2 (:tempo (get-instrument s "viola"))
                   s       (continue s
-                            (pause))
+                            (pause)
+                            (apply-attributes))
                   tempo-3 (:tempo (get-instrument s "viola"))]
               (is (= marker "test-marker-3"))
               (is (offset= s offset (->RelativeOffset "test-marker-3" 0)))

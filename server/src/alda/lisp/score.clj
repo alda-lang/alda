@@ -46,8 +46,7 @@
   "Continues the score represented by the score map `score`, evaluating the
    events in `body` and returning the completed score."
   [score & body]
-  (let [events (concat body [(apply-attributes)])]
-    (reduce update-score score events)))
+  (reduce update-score score body))
 
 (defn continue!
   "Convenience function for dealing with Alda scores stored in atoms.
