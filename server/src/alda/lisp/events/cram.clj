@@ -1,7 +1,6 @@
 (ns alda.lisp.events.cram
-  (:require [alda.lisp.model.attribute :refer (apply-attributes)]
-            [alda.lisp.model.event     :refer (update-score add-events)]
-            [alda.lisp.score.util      :refer (update-instruments)]))
+  (:require [alda.lisp.model.event :refer (update-score add-events)]
+            [alda.lisp.score.util  :refer (update-instruments)]))
 
 (defn tally-beats
   [score events]
@@ -74,11 +73,9 @@
   (if beats-tally
     (let [beats (or (:beats duration) beats-tally-default)]
       (-> score
-          (update-score (apply-attributes))
           (update :beats-tally + beats)
           (assoc :beats-tally-default beats)))
     (-> score
-        (update-score (apply-attributes))
         (update :cram-level inc)
         (set-time-scaling cram)
         set-initial-duration-inside-cram

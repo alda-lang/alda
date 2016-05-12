@@ -15,8 +15,7 @@
 (def ^:dynamic *initial-attr-vals* {:current-offset (->AbsoluteOffset 0)
                                     :last-offset    (->AbsoluteOffset -1)
                                     :current-marker :start
-                                    :time-scaling   1
-                                    :attributes     (sorted-map)})
+                                    :time-scaling   1})
 
 (defmacro defattribute
   "Convenience macro for setting up attributes."

@@ -1,13 +1,13 @@
 (ns alda.lisp.events.note
-  (:require [alda.lisp.model.attribute :refer (apply-attributes)]
-            [alda.lisp.model.duration  :refer (calculate-duration)]
-            [alda.lisp.model.event     :refer (update-score add-events)]
-            [alda.lisp.model.offset    :refer (offset+)]
-            [alda.lisp.model.records   :refer (map->Note)]
-            [alda.lisp.score.util      :refer (merge-instruments
-                                               merge-voice-instruments
-                                               get-current-instruments)]
-            [taoensso.timbre           :as    log]))
+  (:require [alda.lisp.model.global-attribute :refer (apply-global-attributes)]
+            [alda.lisp.model.duration         :refer (calculate-duration)]
+            [alda.lisp.model.event            :refer (update-score add-events)]
+            [alda.lisp.model.offset           :refer (offset+)]
+            [alda.lisp.model.records          :refer (map->Note)]
+            [alda.lisp.score.util             :refer (merge-instruments
+                                                      merge-voice-instruments
+                                                      get-current-instruments)]
+            [taoensso.timbre                  :as    log]))
 
 (defn- event-updates
   "Given a score and a (note/rest) event, returns a list of updates for each
@@ -112,8 +112,8 @@
 (defmethod update-score :note
   [score note]
   (-> score
-      (update-score (apply-attributes))
-      (add-note-or-rest note)))
+      (add-note-or-rest note)
+      (update-score (apply-global-attributes))))
 
 (defn note
   "Causes every instrument in :current-instruments to play a note at its

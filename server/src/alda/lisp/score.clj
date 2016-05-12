@@ -1,6 +1,5 @@
 (ns alda.lisp.score
-  (:require [alda.lisp.model.attribute :refer (apply-attributes)]
-            [alda.lisp.model.event     :refer (update-score)]
+  (:require [alda.lisp.model.event     :refer (update-score)]
             [alda.lisp.model.offset    :refer (absolute-offset)]
             [alda.lisp.model.records   :refer (->AbsoluteOffset)]
             [taoensso.timbre           :as    log]))

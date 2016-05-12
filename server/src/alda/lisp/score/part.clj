@@ -1,11 +1,12 @@
 (ns alda.lisp.score.part
-  (:require [djy.char                   :refer (char-range)]
-            [clojure.string             :as    str]
-            [alda.lisp.attributes       :refer (*initial-attr-vals*)]
-            [alda.lisp.events.voice     :refer (end-voice-group)]
-            [alda.lisp.model.event      :refer (update-score)]
-            [alda.lisp.model.instrument :refer (*stock-instruments*)]
-            [alda.parser-util           :refer (parse-with-context)]))
+  (:require [djy.char                         :refer (char-range)]
+            [clojure.string                   :as    str]
+            [alda.lisp.attributes             :refer (*initial-attr-vals*)]
+            [alda.lisp.events.voice           :refer (end-voice-group)]
+            [alda.lisp.model.event            :refer (update-score)]
+            [alda.lisp.model.global-attribute :refer (apply-global-attributes)]
+            [alda.lisp.model.instrument       :refer (*stock-instruments*)]
+            [alda.parser-util                 :refer (parse-with-context)]))
 
 (defn- generate-id
   [name]
@@ -102,7 +103,9 @@
   (let [score (-> score
                   end-voice-group
                   (determine-current-instruments instrument-call))]
-    (reduce update-score score events)))
+    (reduce update-score
+            score
+            (cons (apply-global-attributes) events))))
 
 (defn part
   "Determines the current instrument instance(s) based on the `instrument-call`

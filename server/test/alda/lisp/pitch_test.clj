@@ -30,29 +30,25 @@
   (testing "you can set and get a key signature"
     (let [s     (score
                   (part "piano"
-                    (key-signature {:b [:flat] :e [:flat]})
-                    (apply-attributes)))
+                    (key-signature {:b [:flat] :e [:flat]})))
           piano (get-instrument s "piano")]
       (is (= {:b [:flat] :e [:flat]}
              (:key-signature piano))))
     (let [s     (score
                   (part "piano"
-                    (key-sig "f+ c+ g+")
-                    (apply-attributes)))
+                    (key-sig "f+ c+ g+")))
           piano (get-instrument s "piano")]
       (is (= {:f [:sharp] :c [:sharp] :g [:sharp]}
              (:key-signature piano))))
     (let [s     (score
                   (part "piano"
-                    (key-sig [:a :flat :major])
-                    (apply-attributes)))
+                    (key-sig [:a :flat :major])))
           piano (get-instrument s "piano")]
       (is (= {:b [:flat] :e [:flat] :a [:flat] :d [:flat]}
              (:key-signature piano))))
     (let [s     (score
                   (part "piano"
-                    (key-sig [:e :minor])
-                    (apply-attributes)))
+                    (key-sig [:e :minor])))
           piano (get-instrument s "piano")]
       (is (= {:f [:sharp]}
              (:key-signature piano)))))
@@ -63,8 +59,7 @@
            ((pitch :b) 4 {})))
     (let [s         (score
                       (part "piano"
-                        (key-signature "f+")
-                        (apply-attributes)))
+                        (key-signature "f+")))
           piano     (get-instrument s "piano")
           f-sharp-4 ((pitch :f) 4 (:key-signature piano))]
       (is (= f-sharp-4 ((pitch :f :sharp) 4 {}))))))
