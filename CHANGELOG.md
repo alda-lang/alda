@@ -75,6 +75,8 @@
 
 * `(duration <number>)` no longer works as a way of manually setting the duration. To do this, use `(set-duration <number>)`, where `<number>` is a number of beats.
 
+* The `$` syntax in alda.lisp (e.g. `($volume)`) for getting the current value of an attribute for the current instrument is no longer supported due to the way the code has been rewritten. We could probably find a way to add this feature back if there is a demand for it, but its use case is probably pretty obscure.
+
 * Because Alda event functions no longer work via side effects, inline Clojure code works a bit differently. Basically, you'll just write code that returns one or more Alda events, instead of code that produces side effects (modifying the score) and returns nil. See [entropy.alda](../examples/entropy.alda) for an example of the way inline Clojure code works starting with this release.
 
 ## 1.0.0-rc14 (4/1/16)

@@ -6,7 +6,7 @@ Under the hood, attributes are implemented as [inline clojure code](inline-cloju
 
 ## Setting the Value of an Attribute
 
-Just like setting [octaves](notes.md#octave), setting an attribute will take effect for all of an instrument's upcoming notes, until that attribute is changed again. (In fact, `octave` is also a settable attribute.) 
+Just like setting [octaves](notes.md#octave), setting an attribute will take effect for all of an instrument's upcoming notes, until that attribute is changed again. (In fact, `octave` is also a settable attribute.)
 
 Different attributes take different kinds of values. A lot of the time, the value is a number between 0 and 100, but this is not always the case.
 
@@ -34,53 +34,37 @@ Different attributes take different kinds of values. A lot of the time, the valu
 
 See [below](#list-of-attributes) for more information about the different kinds of attributes that are available to you when writing a score.
 
-## Getting the Current Value of an Attribute
-
-To obtain the current value of an attribute for the current instrument(s), prefix the name of the attribute with a dollar sign (`$`). 
-
-You typically will not need to do this when writing a score, but it may be helpful when writing an Alda score via [alda.lisp](alda-lisp.md), or when doing complicated things with inline Clojure code.
-
-As a simple example, this will print the current value of the volume of the piano instance:
-
-```
-piano:
-  (println ($volume))
-  c d e f g
-```
-
-> **Caveat:** When using this syntax in a part with multiple instruments (e.g. `piano/trumpet: (prn ($volume))`), only one of the instruments' values will be returned. Tread with caution!
-
 ## Per-Instrument vs. Global
 
 By default, an attribute change event is only applied to the instrument(s) that you're currently working with. For instance, in a score with four instruments:
 
 ```
-violin "violin-1": 
+violin "violin-1":
   o4 f2   g4 a   b-2   a
 
-violin "violin-2": 
+violin "violin-2":
   o4 c2   e4 f   f2    f
 
-viola: 
+viola:
   o3 a2 > c4 c   d2    c
 
-cello: 
+cello:
   o3 f2   c4 f < b-2 > f
 ```
 
 Changing an attribute will only affect the instrument(s) whose part you are currently editing:
 
 ```
-violin "violin-1": 
+violin "violin-1":
   o4 f2   g4 a   b-2   a
 
-violin "violin-2": 
+violin "violin-2":
   o4 c2   e4 f   f2    f
 
-viola: 
+viola:
   o3 a2 > c4 c   d2    c
 
-cello: 
+cello:
   (volume 75)
   o3 f2   c4 f < b-2 > f
 ```
@@ -88,35 +72,35 @@ cello:
 To change an attribute **globally** (i.e. for every instrument in the score), add an exclamation mark (`!`) after the name of the attribute:
 
 ```
-violin "violin-1": 
+violin "violin-1":
   (tempo! 80)
   o4 f2   g4 a   b-2   a
 
-violin "violin-2": 
+violin "violin-2":
   o4 c2   e4 f   f2    f
 
-viola: 
+viola:
   o3 a2 > c4 c   d2    c
 
-cello: 
+cello:
   o3 f2   c4 f < b-2 > f
 ```
 
-Attributes can also be set globally at the beginning of a score, before you start writing out any instrument parts. The attributes will still be set for every instrument.
+Attributes can also be set globally at the beginning of a score, before you start writing out any instrument parts. The attributes will still be set for every instrument at the beginning of the score.
 
 ```
 (tempo! 80)
 
-violin "violin-1": 
+violin "violin-1":
   o4 f2   g4 a   b-2   a
 
-violin "violin-2": 
+violin "violin-2":
   o4 c2   e4 f   f2    f
 
-viola: 
+viola:
   o3 a2 > c4 c   d2    c
 
-cello: 
+cello:
   o3 f2   c4 f < b-2 > f
 ```
 
@@ -126,7 +110,7 @@ cello:
 
 * **Abbreviations:** (none)
 
-* **Description:** The length that a note will have, if not specified. For example, `c4` is explicitly a quarter note; `c` will have a note-length equal to the value of the instrument's `duration` attribute. (Note that this attribute is more of an implementation detail, as it is called implicitly whenever you specify a note-length for a note. You will probably never need to use this attribute directly.)
+* **Description:** The length that a note will have, if not specified. For example, `c4` is explicitly a quarter note; `c` will have a note-length equal to the value of the instrument's `duration` attribute. (Note that this attribute is more of an implementation detail, as an instrument's default note length is set implicitly whenever you specify a note-length on a note. You will probably never need to use this attribute directly.)
 
 * **Value:** a number of beats (e.g. 2.5, which represents a dotted half note).
 
@@ -193,7 +177,7 @@ cello:
 
 * **Value:** a number between 0 and 100
 
-* **Initial Value:** 78.7 (this number comes from 100/127, which is the default track volume for MIDI, at least on the JVM)
+* **Initial Value:** 78.7 (this number comes from 100/127, which is the default track volume for MIDI, at least in the Java VM)
 
 ### `volume`
 
