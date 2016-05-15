@@ -25,6 +25,7 @@
    key_signature
    multi-poly
    nesting
+   overriding-a-global-attribute
    panning
    percussion
    phase
