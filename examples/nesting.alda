@@ -3,7 +3,7 @@ piano:
     c8 d e f g2~
 
   V2:
-    [ [c8 d]*2 e [ f g*3 (println "lol")*5
+    [ [c8 d]*2 e [ f g*3 (do (+ 1 1) nil)*5
                    { {c c} [ g/e/c [ d ]*2 ]*1
                      { c d }*5 }*5
                      [ a/b/c ] b ]

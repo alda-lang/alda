@@ -1,5 +1,5 @@
-piano: (duration 4)
-harp:  (duration 2) (octave 3)
+piano: (set-duration 4)
+harp:  (set-duration 2) (octave 3)
 
 piano/harp:
   {e f g} {a b > c}

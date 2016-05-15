@@ -1,11 +1,48 @@
 (ns alda.sound.midi
   (:require [taoensso.timbre :as log])
-  (:import  (javax.sound.midi MidiSystem)))
+  (:import (java.util.concurrent LinkedBlockingQueue)
+           (javax.sound.midi MidiSystem Synthesizer MidiChannel)))
 
-; note: there are 16 channels (1-16), and channel 10 is reserved for percussion
+(comment
+  "There are 16 channels per MIDI synth (1-16);
+   channel 10 is reserved for percussion.")
 
-(declare ^:dynamic *midi-synth*)
-(declare ^:dynamic *midi-channels*)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(comment
+  "It takes a second to initialize a MIDI synth. To avoid hiccups and make
+   playback more immediate, we maintain a handful of pre-initialized MIDI
+   synths, ready for immediate use.")
+
+(defn new-midi-synth
+  []
+  (doto ^Synthesizer (MidiSystem/getSynthesizer) .open))
+
+(def ^:dynamic *midi-synth-pool* (LinkedBlockingQueue.))
+
+(def ^:const MIDI-SYNTH-POOL-SIZE 4)
+
+(defn fill-midi-synth-pool!
+  []
+  (dotimes [_ (- MIDI-SYNTH-POOL-SIZE (count *midi-synth-pool*))]
+    (future (.add *midi-synth-pool* (new-midi-synth)))))
+
+(defn drain-excess-midi-synths!
+  []
+  (dotimes [_ (- (count *midi-synth-pool*) MIDI-SYNTH-POOL-SIZE)]
+    (future (.close (.take *midi-synth-pool*)))))
+
+(defn midi-synth-available?
+  []
+  (pos? (count *midi-synth-pool*)))
+
+(defn get-midi-synth
+  []
+  (fill-midi-synth-pool!)
+  (drain-excess-midi-synths!)
+  (.take *midi-synth-pool*))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn- next-available
   "Given a set of available MIDI channels, returns the next available one,
@@ -39,40 +76,47 @@
                   :when (= :midi (:type config))]
               id))))
 
-(defn- load-instrument! [patch-number channel]
+(defn- load-instrument! [patch-number ^MidiChannel channel]
   (.programChange channel (dec patch-number)))
 
-(defn load-instruments! [score]
-  (alter-var-root #'*midi-channels* (constantly (ids->channels score)))
-  (doseq [{:keys [channel patch]} (set (vals *midi-channels*))
-          :when patch]
-    (load-instrument! patch (aget (.getChannels *midi-synth*) channel))))
+(defn load-instruments!
+  [audio-ctx score]
+  (let [midi-channels (ids->channels score)]
+    (swap! audio-ctx assoc :midi-channels midi-channels)
+    (doseq [{:keys [channel patch]} (set (vals midi-channels))
+            :when patch
+            :let [synth    (:midi-synth @audio-ctx)
+                  channels (.getChannels ^Synthesizer synth)]]
+      (load-instrument! patch (aget channels channel)))))
 
-(defn open-midi-synth!
-  "Loads a new MIDI synth into *midi-synth*, and opens it."
-  []
-  (log/debug "Loading MIDI synth...")
-  (alter-var-root #'*midi-synth*
-                  (constantly (doto (MidiSystem/getSynthesizer) .open)))
-  (log/debug "Done loading MIDI synth."))
+(defn get-midi-synth!
+  "If there isn't already a :midi-synth in the audio context, grabs one from
+   the pool."
+  [audio-ctx]
+  (when-not (:midi-synth @audio-ctx)
+    (swap! audio-ctx assoc :midi-synth (get-midi-synth))))
 
 (defn close-midi-synth!
-  "Closes the MIDI synth referred to by *midi-synth*."
-  []
-  (.close *midi-synth*))
+  "Closes the MIDI synth in the audio context."
+  [audio-ctx]
+  (.close ^Synthesizer (:midi-synth @audio-ctx)))
 
 (defn play-note!
-  [{:keys [midi-note instrument volume track-volume panning]}]
-  (let [channel-number (-> instrument *midi-channels* :channel)
-        channel (aget (.getChannels *midi-synth*) channel-number)]
-    (.controlChange channel 7 (* 127 track-volume))
-    (.controlChange channel 10 (* 127 panning))
+  [audio-ctx {:keys [midi-note instrument volume track-volume panning]}]
+  (let [{:keys [midi-synth midi-channels]} @audio-ctx
+        channels       (.getChannels ^Synthesizer midi-synth)
+        channel-number (-> instrument midi-channels :channel)
+        channel        (aget channels channel-number)]
+    (.controlChange ^MidiChannel channel 7 (* 127 track-volume))
+    (.controlChange ^MidiChannel channel 10 (* 127 panning))
     (log/debugf "Playing note %s on channel %s." midi-note channel-number)
-    (.noteOn channel midi-note (* 127 volume))))
+    (.noteOn ^MidiChannel channel midi-note (* 127 volume))))
 
 (defn stop-note!
-  [{:keys [midi-note instrument]}]
-  (let [channel-number (-> instrument *midi-channels* :channel)
-        channel (aget (.getChannels *midi-synth*) channel-number)]
+  [audio-ctx {:keys [midi-note instrument]}]
+  (let [{:keys [midi-synth midi-channels]} @audio-ctx
+        channels       (.getChannels ^Synthesizer midi-synth)
+        channel-number (-> instrument midi-channels :channel)
+        channel        (aget channels channel-number)]
     (log/debug "MIDI note off:" midi-note)
-    (.noteOff channel midi-note)))
+    (.noteOff ^MidiChannel channel midi-note)))

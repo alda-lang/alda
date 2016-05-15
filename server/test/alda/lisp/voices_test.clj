@@ -1,76 +1,70 @@
 (ns alda.lisp.voices-test
-  (:require [clojure.test :refer :all]
-            [clojure.pprint :refer :all]
-            [alda.lisp :refer :all]))
-
-(use-fixtures :each
-  (fn [run-tests]
-    (score*)
-    (part* "piano")
-    (run-tests)))
+  (:require [clojure.test            :refer :all]
+            [alda.test-helpers       :refer (get-instrument dur->ms)]
+            [alda.lisp               :refer :all]
+            [alda.lisp.model.records :refer (->AbsoluteOffset)]))
 
 (deftest voice-tests
-  (testing "a voice returns as many notes as it has"
-    (is (= 5 (count (voice 42
-                      (note (pitch :c)) (note (pitch :d)) (note (pitch :e))
-                      (note (pitch :f)) (note (pitch :g)))))))
-  (testing "a voice has the notes that it has"
-    (let [a-note (note (pitch :a))
-          b-note (note (pitch :b))
-          c-note (note (pitch :c))
-          the-voice (voice 1 a-note b-note c-note)
-          has-note? (fn [voice note]
-                      ; (a note is technically a list of Note records,
-                      ; one for each instrument in *current-instruments*)
-                      (every? #(contains? (set voice) %) note))]
-      (is (has-note? the-voice a-note))
-      (is (has-note? the-voice b-note))
-      (is (has-note? the-voice c-note))
-      (is (= 3 (count the-voice)))))
+  #_(testing "a voice group:"
+    (testing "the first note of each voice should all start at the same time"
+      (let [s      (score
+                     (part "piano"
+                       (voices
+                         (voice 1
+                           (note (pitch :g) (duration (note-length 1))))
+                         (voice 2
+                           (note (pitch :b) (duration (note-length 1))))
+                         (voice 3
+                           (note (pitch :d) (duration (note-length 1)))))))
+            events (-> score :events :start :events)]
+        (is (= 1 (count (distinct (map :offset events)))))))
+    (let [s            (score
+                         (part "piano"
+                           (voices
+                             (voice 1
+                               (note (pitch :g) (duration (note-length 1)))
+                               (note (pitch :b) (duration (note-length 2))))
+                             (voice 2
+                               (note (pitch :b) (duration (note-length 1)))
+                               (note (pitch :d) (duration (note-length 1))))
+                             (voice 3
+                               (note (pitch :d) (duration (note-length 1)))
+                               (note (pitch :f) (duration (note-length 4))))
+                             (voice 2
+                               (octave :up)
+                               (octave :down)
+                               (note (pitch :g))
+                               (note (pitch :g))))))
+          piano        (get-instrument s "piano")
+          events       (-> score :events :start :events)
+          voice-events (group-by :voice events)]
+      (testing "repeated calls to the same voice should append events"
+        (is (= 6 (count (get voice-events 2)))))
+      (let [bump (dur->ms (duration (note-length 1)
+                                    (note-length 1)
+                                    (note-length 1)
+                                    (note-length 1))
+                          (:tempo piano))]
+        (testing "the voice lasting the longest should bump :current-offset
+                  forward by however long it takes to finish"
+          (is (offset= s
+                       (:current-offset piano)
+                       (offset+ (->AbsoluteOffset 0) bump))))
+        (testing ":last-offset should be updated to the :last-offset as of the
+                  point where the longest voice finishes"
+          (is (offset= s
+                       (:last-offset)
+                       (offset+ (->AbsoluteOffset 0) bump)))))))
   (testing "a voice containing a cram expression"
     (testing "should not throw an exception"
-      (is (voices
-            (voice 1
-              (cram
-                (note (pitch :c))
-                (octave :down)
-                (note (pitch :b))
-                (note (pitch :a))
-                (note (pitch :g))))))))
-  (testing "a voice group:"
-    (let [start ($current-offset)
-          {:keys [v1 v2 v3]} (voices
-                               (voice 1
-                                 (note (pitch :g) (duration (note-length 1)))
-                                 (note (pitch :b) (duration (note-length 2))))
-                               (voice 2
-                                 (note (pitch :b) (duration (note-length 1)))
-                                 (note (pitch :d) (duration (note-length 1))))
-                               (voice 3
-                                 (note (pitch :d) (duration (note-length 1)))
-                                 (note (pitch :f) (duration (note-length 4))))
-                               (voice 2
-                                 (octave :up)
-                                 (octave :down)
-                                 (note (pitch :g))
-                                 (note (pitch :g))))]
-      (testing "the first note of each voice should all start at the same time"
-        (is (every? #(= start (:offset %)) (map first [v1 v2 v3]))))
-      (testing "repeated calls to the same voice should append events"
-        (is (= 6 (count v2))))
-      (testing "the voice lasting the longest should bump :current-offset
-        forward by however long it takes to finish"
-        (let [dur-fn (:duration-fn (duration (note-length 1)
-                                             (note-length 1)
-                                             (note-length 1)
-                                             (note-length 1)))
-              bump (dur-fn ($tempo))]
-          (is (offset= ($current-offset) (offset+ start bump)))))
-      (testing ":last-offset should be updated to the :last-offset as of the
-        point where the longest voice finishes"
-        (let [dur-fn (:duration-fn (duration (note-length 1)
-                                             (note-length 1)
-                                             (note-length 1)))
-              bump (dur-fn ($tempo))]
-          (is (offset= ($last-offset) (offset+ start bump))))))))
+      (is (score
+            (part "piano"
+              (voices
+                (voice 1
+                  (cram
+                    (note (pitch :c))
+                    (octave :down)
+                    (note (pitch :b))
+                    (note (pitch :a))
+                    (note (pitch :g)))))))))))
 

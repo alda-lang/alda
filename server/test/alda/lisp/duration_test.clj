@@ -1,12 +1,7 @@
 (ns alda.lisp.duration-test
-  (:require [clojure.test :refer :all]
-            [alda.lisp :refer :all]))
-
-(use-fixtures :each
-  (fn [run-tests]
-    (score*)
-    (part* "piano")
-    (run-tests)))
+  (:require [clojure.test      :refer :all]
+            [alda.test-helpers :refer (get-instrument dur->ms)]
+            [alda.lisp         :refer :all]))
 
 (deftest duration-tests
   (testing "note-length converts note length to number of beats"
@@ -16,58 +11,62 @@
     (is (== 6 (:value (note-length 1 {:dots 1}))))
     (is (== 7 (:value (note-length 1 {:dots 2})))))
   (testing "duration converts beats to ms"
-    (let [{:keys [duration-fn]} (duration (note-length 4) :slur)]
-      (is (== 1000 (duration-fn 60))))
-    (let [{:keys [duration-fn]} (duration (note-length 2)
-                                          (note-length 2)
-                                          (note-length 2 {:dots 2}) :slur)]
-      (is (== 7500 (duration-fn 60))))
-    (let [{:keys [duration-fn]} (duration (note-length 4))]
-      (is (== 500 (duration-fn 120))))
-    (let [{:keys [duration-fn]} (duration (note-length 4 {:dots 1}))]
-      (is (== 750 (duration-fn 120)))))
+    (is (== 1000 (dur->ms (duration (note-length 4)) 60)))
+    (is (== 7500 (dur->ms (duration (note-length 2)
+                                    (note-length 2)
+                                    (note-length 2 {:dots 2}))
+                          60)))
+    (is (== 500 (dur->ms (duration (note-length 4)) 120)))
+    (is (== 750 (dur->ms (duration (note-length 4 {:dots 1})) 120))))
   (testing "duration can be described in milliseconds"
-    (let [{:keys [duration-fn]} (duration (ms 1000) :slur)]
-      (is (== 1000 (duration-fn 42))))
-    (let [{:keys [duration-fn]} (duration (ms 2000)
-                                          (ms 2000)
-                                          (ms 3500) :slur)]
-      (is (== 7500 (duration-fn 123)))))
+    (is (== 1000 (dur->ms (duration (ms 1000)) 42)))
+    (is (== 7500 (dur->ms (duration (ms 2000)
+                                    (ms 2000)
+                                    (ms 3500))
+                          123))))
   (testing "note-lengths and millisecond values can be combined"
-    (let [{:keys [duration-fn]} (duration (ms 2000)
-                                          (note-length 2)
-                                          (ms 45) :slur)]
-      (is (== 4045 (duration-fn 60))))
-    (let [{:keys [duration-fn]} (duration (note-length 1 {:dots 1})
-                                          (ms 333) :slur)]
-      (is (== 3333 (duration-fn 120)))))
+    (is (== 4045 (dur->ms (duration (ms 2000)
+                                    (note-length 2)
+                                    (ms 45))
+                          60)))
+    (is (== 3333 (dur->ms (duration (note-length 1 {:dots 1})
+                                    (ms 333))
+                          120))))
   (testing "barlines don't break duration"
-    (let [{:keys [duration-fn]} (duration (note-length 4)
-                                          (barline)
-                                          (note-length 4) :slur)]
-      (is (== 2000 (duration-fn 60)))))
+    (is (== 2000 (dur->ms (duration (note-length 4)
+                                    (barline)
+                                    (note-length 4))
+                          60))))
   (testing "quantization quantizes note durations"
-    (set-attributes :tempo 120 :quant 100)
-    (is (== 500
-            (:duration (first
-                        (note (pitch :c) (duration (note-length 4)))))))
-    (quant 0)
-    (is (== 0
-            (:duration (first
-                        (note (pitch :c) (duration (note-length 4)))))))
-    (quant 90)
-    (is (== 450
-            (:duration (first
-                        (note (pitch :c) (duration (note-length 4)))))))
-    (testing "slurred notes ignore quantization"
-      (quant 90)
-      (is (== 500
-              (:duration (first
-                          (note (pitch :c)
-                                (duration (note-length 4) :slur))))))
-      (is (== 1000
-              (:duration (first
-                          (note (pitch :c)
-                                (duration (note-length 2))
-                                :slur))))))))
+    (let [s      (score
+                   (part "piano" (tempo 120) (quant 100)
+                     (note (pitch :c) (duration (note-length 4)))))
+          piano  (get-instrument s "piano")
+          events (:events s)]
+      (is (== 500 (:duration (first events)))))
+    (let [s      (score
+                   (part "piano" (tempo 120) (quant 0)
+                     (note (pitch :c) (duration (note-length 4)))))
+          piano  (get-instrument s "piano")
+          events (:events s)]
+      (is (empty? events)))
+    (let [s      (score
+                   (part "piano" (tempo 120) (quant 90)
+                     (note (pitch :c) (duration (note-length 4)))))
+          piano  (get-instrument s "piano")
+          events (:events s)]
+      (is (== 450 (:duration (first events))))))
+  (testing "slurred notes ignore quantization"
+    (let [s      (score
+                   (part "piano" (tempo 120) (quant 90)
+                     (note (pitch :c) (duration (note-length 4) :slur))))
+          piano  (get-instrument s "piano")
+          events (:events s)]
+      (is (== 500 (:duration (first events)))))
+    (let [s      (score
+                   (part "piano" (tempo 120) (quant 90)
+                     (note (pitch :c) (duration (note-length 2)) :slur)))
+          piano  (get-instrument s "piano")
+          events (:events s)]
+      (is (== 1000 (:duration (first events)))))))
 

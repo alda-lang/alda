@@ -15,32 +15,32 @@
                   [io.aviso/pretty        "0.1.20"]
                   [com.taoensso/timbre    "4.1.1"]
                   [clj-http               "2.0.0"]
-                  [ring                   "1.4.0"]
-                  [ring/ring-defaults     "0.1.5"]
                   [compojure              "1.4.0"]
                   [djy                    "0.1.4"]
-                  [str-to-argv            "0.1.0"]
+                  [instaparse             "1.4.1"]
+                  [io.aviso/pretty        "0.1.20"]
                   [jline                  "2.12.1"]
                   [org.clojars.sidec/jsyn "16.7.3"]
+                  [org.clojure/clojure    "1.7.0"]
+                  [potemkin               "0.4.1"]
+                  [ring                   "1.4.0"]
+                  [ring/ring-defaults     "0.1.5"]
+                  [str-to-argv            "0.1.0"]
 
                   ; client
+                  [com.beust/jcommander                 "1.48"]
+                  [net.jodah/recurrent                  "0.4.0"]
                   [org.apache.commons/commons-lang3     "3.4"]
                   [org.apache.httpcomponents/httpclient "4.5.1"]
                   [com.google.code.gson/gson            "2.6.1"]
-                  [com.beust/jcommander                 "1.48"]
                   [org.fusesource.jansi/jansi           "1.11"]
-                  [net.jodah/recurrent                  "0.4.0"]
                   [us.bpsm/edn-java                     "0.4.6"]
                   ])
 
 (require '[adzerk.bootlaces    :refer :all]
          '[adzerk.boot-jar2bin :refer :all]
          '[adzerk.boot-test    :refer :all]
-         '[alda.util]
          '[alda.version])
-
-; sets log level to TIMBRE_LEVEL (if set) or :warn
-(alda.util/set-timbre-level!)
 
 ; version number is stored in alda.version
 (bootlaces! alda.version/-version-)
@@ -233,3 +233,37 @@
   "Builds uberjar, installs it to local Maven repo, and deploys it to Clojars."
   []
   (comp (build-jar) (push-release)))
+
+;; misc tasks ;;
+
+(deftask generate-completions
+  "Generates the `completions.cson` file used for autocompletions in the Atom
+   Alda language plugin. This file contains instrument and attribute names.
+
+   https://github.com/MadcapJake/language-alda/blob/master/completions.cson"
+  []
+  (require '[alda.lisp.model.instrument :as instrument]
+           '[alda.lisp.model.attribute  :as attribute]
+           '[alda.lisp.instruments.midi]
+           '[alda.lisp.attributes]
+           '[clojure.string             :as str])
+  (let [cson-format (fn [xs]
+                      (->> (sort xs)
+                           (map #(str "  '" % \'))
+                           ((resolve 'str/join) \newline)))
+        instruments (->> (resolve 'instrument/*stock-instruments*)
+                         var-get
+                         keys
+                         cson-format)
+        attributes  (->> (resolve 'attribute/*attribute-table*)
+                         var-get
+                         keys
+                         (map name)
+                         cson-format)]
+    (println "'instruments': [")
+    (println instruments)
+    (println \])
+    (println "'attributes': [")
+    (println attributes)
+    (println \])))
+

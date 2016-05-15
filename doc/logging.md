@@ -10,5 +10,5 @@ To see debug logs, for example, you can do this:
 
     export TIMBRE_LEVEL=debug
 
-When running tests via `boot test`, the log level will default to `debug` unless `TIMBRE_LEVEL` is set to something else.
+When running tests via `boot test` and troubleshooting a failing test, it may be helpful to use debug-level logging by running `TIMBRE_LEVEL=debug boot test`.
 
