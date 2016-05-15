@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## ??? (???)
+## 1.0.0-rc15 (5/15/16)
 
 * This release includes numerous improvements to the Alda codebase. The primary goal was to make the code easier to understand and more predictable, which will make it possible to improve Alda and add new features at a much faster pace.
 
