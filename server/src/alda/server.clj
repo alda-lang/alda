@@ -162,6 +162,7 @@
                          (now/play! events))))
           (success "OK"))))
     (catch Throwable e
+      (log/error e e)
       (server-error (.getMessage e)))))
 
 (defn handle-code-parse
@@ -173,6 +174,7 @@
                       :lisp parse-result
                       :map (eval parse-result))))
     (catch Throwable e
+      (log/error e e)
       (server-error (.getMessage e)))))
 
 (defn stop-server!
@@ -183,6 +185,7 @@
       (Thread/sleep 300)
       (System/exit 0))
     (catch Throwable e
+      (log/error e e)
       (server-error (.getMessage e))))
   (success "Shutting down."))
 
