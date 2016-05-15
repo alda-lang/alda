@@ -24,7 +24,7 @@
 
 ### Manual testing
 
-The Alda client, server, and REPL can each be run in development (including any changes you've made to your copy of the code) via the convenient `boot dev` task. See the sections below on the client, server, and REPL for details.
+The Alda client, server, and REPL can each be run in development (including any changes you've made to your copy of the code) without having to re-build the executables every time you make a change. This is possible thanks to the convenient `boot dev` task. See the sections below on the client, server, and REPL for details.
 
 ### Unit tests
 
@@ -34,7 +34,7 @@ You should run `boot test` prior to submitting any Pull Request involving change
 
 It is generally good to add to the existing tests wherever it makes sense, i.e. whenever there is a new test case that Alda needs to consider. [Test-driven development](https://en.wikipedia.org/wiki/Test-driven_development) is a good idea.
 
-If you find yourself adding a new file to the tests, be sure to add its namespace to the `test` task option in `build.boot` so that it will be included when you run the tests via `boot test`.
+If you find yourself adding a new file to the tests, be sure to add its namespace to the `test` task option in `build.boot` so that it will be included when you run the entire test suite via `boot test`.
 
 The automated test battery includes parsing and evaluating all of the example Alda scores in the `examples/` directory. If you add an additional example score, be sure to add it to the list of score files in `server/test/alda/examples_test.clj`.
 
@@ -54,9 +54,9 @@ The Alda client is a fairly straightforward Java CLI app that uses [JCommander](
 
 Interaction with servers is done via simple HTTP requests. Unless specified via the `-H/--host` option, the Alda client assumes the servers are run locally and sends requests to localhost. The default port is 27713.
 
-Running `alda start` forks a new Alda process in the background, passing it the (hidden) `server` command to start the server. Server output is hidden from the user (though the client will report errors).
+Running `alda start` forks a new Alda process in the background, passing it the (hidden) `server` command to start the server. Server output is hidden from the user (though the client will report if there is an error).
 
-To see server output for development purposes, you can start a server in the foreground by running `alda server`. You may specify a port via the `-p/--port` option (e.g. `alda -p 2000 server`) -- just make sure you're sending requests from the client to the right port (e.g. `alda -p 2000 play -f my-score.alda`).
+To see server output (including error stacktraces) for development purposes, you can start a server in the foreground by running `alda server`. You may specify a port via the `-p/--port` option (e.g. `alda -p 2000 server`) -- just make sure you're sending requests from the client to the right port (e.g. `alda -p 2000 play -f my-score.alda`).
 
 To stop a running server, run `alda stop`.
 
@@ -70,7 +70,7 @@ For example, to test changes to the way the `alda play` command plays a file, yo
 
     boot dev -a client -x "play --file /path/to/file.alda"
 
-If you'd prefer, you can do a development build, outputting the executables to a directory of your choice (I like to use `/tmp`), and use the outputted executable:
+Or, if you'd prefer, you can do a development build, outputting the executables to a directory of your choice (I like to use `/tmp`), and then use the outputted executable:
 
     boot build -o /tmp
     /tmp/alda play --file /path/to/file.alda
@@ -167,77 +167,103 @@ alda.parser=> (parse-input "piano: c8 e g c1/f/a")
 
 #### alda.lisp
 
-When you evaluate a score [S-expression](https://en.wikipedia.org/wiki/S-expression) like the one above, the result is a map of score information, which provides all of the data that Alda's audio component needs to make an audible version of your score.
+When you evaluate a score [S-expression](https://en.wikipedia.org/wiki/S-expression) like the one above, the result is a map of score information, which provides all of the data that Alda's audio component needs in order to play your score.
 
 ```clojure
-{:events
+{:chord-mode false,
+ :current-instruments #{"piano-zerpD"},
+ :events
  #{{:offset 750.0,
-    :instrument "piano-foyYJ",
+    :instrument "piano-zerpD",
     :volume 1.0,
     :track-volume 0.7874015748031497,
+    :panning 0.5,
+    :midi-note 60,
+    :pitch 261.6255653005986,
+    :duration 1800.0,
+    :voice nil}
+   {:offset 750.0,
+    :instrument "piano-zerpD",
+    :volume 1.0,
+    :track-volume 0.7874015748031497,
+    :panning 0.5,
     :midi-note 69,
     :pitch 440.0,
-    :duration 1800.0}
+    :duration 1800.0,
+    :voice nil}
    {:offset 500.0,
-    :instrument "piano-foyYJ",
+    :instrument "piano-zerpD",
     :volume 1.0,
     :track-volume 0.7874015748031497,
+    :panning 0.5,
     :midi-note 67,
     :pitch 391.99543598174927,
-    :duration 225.0}
+    :duration 225.0,
+    :voice nil}
    {:offset 750.0,
-    :instrument "piano-foyYJ",
+    :instrument "piano-zerpD",
     :volume 1.0,
     :track-volume 0.7874015748031497,
+    :panning 0.5,
     :midi-note 65,
     :pitch 349.2282314330039,
-    :duration 1800.0}
-   {:offset 0,
-    :instrument "piano-foyYJ",
-    :volume 1.0,
-    :track-volume 0.7874015748031497,
-    :midi-note 60,
-    :pitch 261.6255653005986,
-    :duration 225.0}
-   {:offset 750.0,
-    :instrument "piano-foyYJ",
-    :volume 1.0,
-    :track-volume 0.7874015748031497,
-    :midi-note 60,
-    :pitch 261.6255653005986,
-    :duration 1800.0}
+    :duration 1800.0,
+    :voice nil}
    {:offset 250.0,
-    :instrument "piano-foyYJ",
+    :instrument "piano-zerpD",
     :volume 1.0,
     :track-volume 0.7874015748031497,
+    :panning 0.5,
     :midi-note 64,
     :pitch 329.6275569128699,
-    :duration 225.0}},
- :markers {:start 0},
+    :duration 225.0,
+    :voice nil}
+   {:offset 0,
+    :instrument "piano-zerpD",
+    :volume 1.0,
+    :track-volume 0.7874015748031497,
+    :panning 0.5,
+    :midi-note 60,
+    :pitch 261.6255653005986,
+    :duration 225.0,
+    :voice nil}},
+ :beats-tally nil,
  :instruments
- {"piano-foyYJ"
+ {"piano-zerpD"
   {:octave 4,
    :current-offset {:offset 2750.0},
+   :key-signature {},
    :config {:type :midi, :patch 1},
-   :duration 4,
+   :duration 4.0,
+   :min-duration nil,
    :volume 1.0,
    :last-offset {:offset 750.0},
-   :id "piano-foyYJ",
+   :id "piano-zerpD",
    :quantization 0.9,
+   :duration-inside-cram nil,
    :tempo 120,
    :panning 0.5,
    :current-marker :start,
+   :time-scaling 1,
    :stock "midi-acoustic-grand-piano",
-   :track-volume 0.7874015748031497}}}
+   :track-volume 0.7874015748031497}},
+ :markers {:start 0},
+ :cram-level 0,
+ :global-attributes {},
+ :nicknames {},
+ :beats-tally-default nil}
 ```
 
-There are 3 keys in this map:
+There are a lot of different values in this map, most of which the sound engine doesn't care about. The sound engine is mainly concerned with these 2 keys:
 
 * **:events** -- a set of note events
-* **:markers** -- a map of marker names to offsets, expressed as milliseconds from the beginning of the score (`:start` is a special marker that is always placed at offset 0)
 * **:instruments** -- a map of randomly-generated ids to all of the information that Alda has about an instrument, *at the point where the score ends*.
 
 A note event contains information such as the pitch, MIDI note and duration of a note, which instrument instance is playing the note, and what its offset is relative to the beginning of the score (i.e., where the note is in the score)
+
+The sound engine decides how to play a note by looking at its instrument ID (which is defined on each event map) and looking it up in the overall map of instruments. Each instrument has a `:config`, which tells the sound engine things like whether or not it's a MIDI instrument, and if it is a MIDI instrument, which General MIDI patch to use.
+
+The remaining keys in the map are used by the score evaluation process to keep track of the state of the score. This includes information like which instruments' parts the composer is currently writing, how far into the score each instrument is, and the current values of attributes like volume, octave, and panning for each instrument used in the score.
 
 Because `alda.lisp` is a Clojure DSL, it's possible to use it to build scores within a Clojure program, as an alternative to using Alda syntax:
 
@@ -279,6 +305,8 @@ Although technically a part of `alda.lisp`, stock instrument configurations are 
 There are built-in commands defined in `alda.repl.commands` that are defined using the `defcommand` macro. Defining a command here makes it available from the Alda REPL prompt by typing a colon before the name of the command, i.e. `:score`.
 
 The core logic for what goes on behind the curtain when you use the REPL lives in `alda.repl.core`. A good practice for implementing a REPL command in `alda.repl.commands` is to move implementation details into `alda.repl.core` (or perhaps into a new sub-namespace of `alda.repl`, if appropriate) if the body of the command definition starts to get too long.
+
+> NOTE: We eventually want to [rewrite the Alda REPL as part of the Java client](https://github.com/alda-lang/alda/issues/154).
 
 #### alda.server
 
