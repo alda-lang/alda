@@ -4,11 +4,9 @@
             [alda.util       :refer (check-for
                                      parse-time
                                      pdoseq-block
-                                     parse-position)]
-            [alda.lisp.model.records])
+                                     parse-position)])
   (:import [com.softsynth.shared.time TimeStamp ScheduledCommand]
-           [com.jsyn.engine SynthesisEngine]
-           [alda.lisp.model.records Function]))
+           [com.jsyn.engine SynthesisEngine]))
 
 (defn new-audio-context
   []
@@ -239,16 +237,17 @@
     (pdoseq-block [{:keys [offset instrument duration] :as event} events]
       (let [inst   (-> instrument instruments)
             start! #(when @playing?
-                      (if (instance? Function event)
-                        ((:function event))
+                      (if-let [f (:function event)]
+                        (future (f))
                         (start-event! audio-ctx event inst)))
-            stop!  #(when-not (instance? Function event)
+            stop!  #(when-not (:function event)
                       (stop-event! audio-ctx event inst))]
         (schedule-event! engine (+ begin
                                    (/ offset 1000.0)) start!)
-        (schedule-event! engine (+ begin
-                                   (/ offset 1000.0)
-                                   (/ duration 1000.0)) stop!)))
+        (when-not (:function event)
+          (schedule-event! engine (+ begin
+                                     (/ offset 1000.0)
+                                     (/ duration 1000.0)) stop!))))
     (letfn [(clean-up-when-done []
               ; TODO: find a way to handle this that doesn't involve Thread/sleep
               (Thread/sleep (+ (score-length events)
