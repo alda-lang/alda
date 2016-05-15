@@ -151,6 +151,8 @@
                                       'alda.lisp/voice
                                       voice-number
                                       events))
+                 :voice-zero      #(list 'alda.lisp/voice 0
+                                         (list 'alda.lisp/end-voices))
                  :tie             (constantly :tie)
                  :slur            (constantly :slur)
                  :flat            (constantly :flat)

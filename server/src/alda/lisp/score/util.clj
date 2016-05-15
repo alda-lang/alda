@@ -10,7 +10,7 @@
 
 (defn- instruments-key
   [{:keys [current-voice] :as score}]
-  (if current-voice
+  (if (and current-voice (not= 0 current-voice))
     [:voice-instruments current-voice]
     [:instruments]))
 
