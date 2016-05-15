@@ -2,13 +2,17 @@
 
 ## ??? (???)
 
-* TODO: explain
+* This release includes numerous improvements to the Alda codebase. The primary goal was to make the code easier to understand and more predictable, which will make it possible to improve Alda and add new features at a much faster pace.
+
+  To summarize the changes in programmer-speak: before this release, Alda evaluated a score by storing state in top-level, mutable vars, updating their values as it worked its way through the score. This code has been rewritten from the ground up to adhere much more to the functional programming philosophy. For a better explanation, read below about the breaking changes to the way scores are managed in a Clojure REPL.
+
+* Alda score evaluation is now a self-contained process, and an Alda server (or a Clojure program using Alda as a library) can now handle multiple scores at a time without them affecting each other.
 
 * Fixed issue #170. There was a 5-second socket timeout, causing the client to return "ERROR Read timed out" if the server took longer than 5 seconds to parse/evaluate the score. In this release, we've removed the timeout, so the client will wait until the server has parsed/evaluated the score and started playing it.
 
 * Fixed issue #199. Local (per-instrument) attributes occurring at the same time as global attributes will now override the global attribute for the instrument(s) to which they apply.
 
-* Using `@markerName` before `%markerName` is placed in a score now results in a explicit error, instead of throwing a different error that was difficult to understand. It turns out that this never worked to begin with. I do think it would be nice if it were possible to "forward declare" markers like this, but for the time being, I will leave this as something that (still) doesn't work, but that we could make possible in the future.
+* Using `@markerName` before `%markerName` is placed in a score now results in a explicit error, instead of throwing a different error that was difficult to understand. It turns out that this never worked to begin with. I do think it would be nice if it were possible to "forward declare" markers like this, but for the time being, I will leave this as something that (still) doesn't work, but that we could make possible in the future if there is demand for it.
 
 ### Breaking Changes
 
@@ -25,7 +29,7 @@
 
   Evaluating each S-expression would modify the top-level score environment. Evaluating `(score*)` again (or a full score wrapped in `(score ...)`) would blow away whatever score-in-progress you may have been working on.
 
-  Here are a few different ways you can do it **now**:
+  Here are a few different ways you can do this **now**:
 
   ```clojure
   ; a complete score, as a single S-expression
@@ -65,13 +69,13 @@
       (note (pitch :g))))
   ```
 
-  Because no state is being stored in top-level vars, multiple scores can now exist side-by-side in a single Alda process or Clojure REPL.
+  Because no shared state is being stored in top-level vars, multiple scores can now exist side-by-side in a single Alda process or Clojure REPL.
 
 * Top-level score evaluation context vars like `*instruments*` and `*events*` no longer exist. If you were previously relying on inspecting that data, everything has now moved into keys like `:instruments` and `:events` on each separate score map.
 
 * `(duration <number>)` no longer works as a way of manually setting the duration. To do this, use `(set-duration <number>)`, where `<number>` is a number of beats.
 
-* Because Alda event functions no longer work via side effects, inline Clojure code works a bit differently. Basically, you'll just write code that returns one or more Alda events, instead of code that produces side effects (modifying the score) and returns nil.
+* Because Alda event functions no longer work via side effects, inline Clojure code works a bit differently. Basically, you'll just write code that returns one or more Alda events, instead of code that produces side effects (modifying the score) and returns nil. See [entropy.alda](../examples/entropy.alda) for an example of the way inline Clojure code works starting with this release.
 
 ## 1.0.0-rc14 (4/1/16)
 
