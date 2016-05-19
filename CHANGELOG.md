@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1.0.0-rc16 (5/18/16)
+
+* Fixed issue #228. There was a bug where repeated calls to the same voice were being treated as if they were separate voices. Hat tip to [elyisgreat] for catching this!
+
 ## 1.0.0-rc15 (5/15/16)
 
 * This release includes numerous improvements to the Alda codebase. The primary goal was to make the code easier to understand and more predictable, which will make it possible to improve Alda and add new features at a much faster pace.

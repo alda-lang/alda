@@ -20,8 +20,8 @@
 (defn end-voice-group
   [score]
   (-> score
-      update-instruments
       (dissoc :current-voice)
+      update-instruments
       (dissoc :voice-instruments)))
 
 (defmethod update-score :voice
@@ -29,7 +29,8 @@
    {:keys [number events] :as voice}]
   (let [score (-> score
                   (assoc :current-voice number)
-                  (assoc-in [:voice-instruments number] instruments))]
+                  (update-in [:voice-instruments number]
+                     #(if % % instruments)))]
     (reduce update-score score events)))
 
 (defmethod update-score :voice-group

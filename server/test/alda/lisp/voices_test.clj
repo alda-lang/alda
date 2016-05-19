@@ -5,7 +5,7 @@
             [alda.lisp.model.records :refer (->AbsoluteOffset)]))
 
 (deftest voice-tests
-  #_(testing "a voice group:"
+  (testing "a voice group:"
     (testing "the first note of each voice should all start at the same time"
       (let [s      (score
                      (part "piano"
@@ -16,7 +16,7 @@
                            (note (pitch :b) (duration (note-length 1))))
                          (voice 3
                            (note (pitch :d) (duration (note-length 1)))))))
-            events (-> score :events :start :events)]
+            events (-> s :events)]
         (is (= 1 (count (distinct (map :offset events)))))))
     (let [s            (score
                          (part "piano"
@@ -34,17 +34,22 @@
                                (octave :up)
                                (octave :down)
                                (note (pitch :g))
-                               (note (pitch :g))))))
+                               (note (pitch :g))))
+                           (end-voices)))
           piano        (get-instrument s "piano")
-          events       (-> score :events :start :events)
+          events       (-> s :events)
           voice-events (group-by :voice events)]
       (testing "repeated calls to the same voice should append events"
-        (is (= 6 (count (get voice-events 2)))))
-      (let [bump (dur->ms (duration (note-length 1)
-                                    (note-length 1)
-                                    (note-length 1)
-                                    (note-length 1))
-                          (:tempo piano))]
+        (is (= 4 (count (get voice-events 2)))))
+      (let [bump  (dur->ms (duration (note-length 1)
+                                     (note-length 1)
+                                     (note-length 1)
+                                     (note-length 1))
+                           (:tempo piano))
+            bump2 (dur->ms (duration (note-length 1)
+                                     (note-length 1)
+                                     (note-length 1))
+                           (:tempo piano))]
         (testing "the voice lasting the longest should bump :current-offset
                   forward by however long it takes to finish"
           (is (offset= s
@@ -53,8 +58,8 @@
         (testing ":last-offset should be updated to the :last-offset as of the
                   point where the longest voice finishes"
           (is (offset= s
-                       (:last-offset)
-                       (offset+ (->AbsoluteOffset 0) bump)))))))
+                       (:last-offset piano)
+                       (offset+ (->AbsoluteOffset 0) bump2)))))))
   (testing "a voice containing a cram expression"
     (testing "should not throw an exception"
       (is (score
