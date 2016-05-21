@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 1.0.0-rc17 (5/21/16)
+
+* Fixed issue #27. Setting note quantization to 100 or higher no longer causes issues with notes stopping other notes that have the same MIDI note number.
+
+  Better-sounding slurs can now be achieved by setting quant to 100:
+
+    bassoon: o2 (quant 100) a8 b > c+2.
+
 ## 1.0.0-rc16 (5/18/16)
 
 * Fixed issue #228. There was a bug where repeated calls to the same voice were being treated as if they were separate voices. Hat tip to [elyisgreat] for catching this!

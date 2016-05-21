@@ -101,8 +101,42 @@
   [audio-ctx]
   (.close ^Synthesizer (:midi-synth @audio-ctx)))
 
+(defn protection-key-for
+  [{:keys [offset duration midi-note]}]
+  [midi-note (+ offset duration)])
+
+(defn protect-note!
+  "Makes a note in the audio context that this note is playing.
+
+   This prevents other notes that have the same MIDI note number from stopping
+   this note."
+  [audio-ctx note]
+  (let [[midi-note offset] (protection-key-for note)]
+    (swap! audio-ctx
+           update-in [:protected-notes midi-note]
+           (fnil conj #{}) offset)))
+
+(defn unprotect-note!
+  "Removes protection from this note so that it can be stopped."
+  [audio-ctx note]
+  (let [[midi-note offset] (protection-key-for note)]
+    (swap! audio-ctx
+           update-in [:protected-notes midi-note]
+           disj offset)))
+
+(defn note-reserved?
+  "Returns true if there is ANOTHER note with the same MIDI note number that is
+   currently playing. If this is the case, then we will NOT stop the note, and
+   instead wait for the other note to stop it."
+  [audio-ctx note]
+  (let [{:keys [protected-notes]} @audio-ctx
+        [midi-note offset]        (protection-key-for note)]
+    (boolean (some (partial not= offset) (get protected-notes midi-note)))))
+
 (defn play-note!
-  [audio-ctx {:keys [midi-note instrument volume track-volume panning]}]
+  [audio-ctx {:keys [midi-note instrument volume track-volume panning]
+              :as note}]
+  (protect-note! audio-ctx note)
   (let [{:keys [midi-synth midi-channels]} @audio-ctx
         channels       (.getChannels ^Synthesizer midi-synth)
         channel-number (-> instrument midi-channels :channel)
@@ -113,10 +147,12 @@
     (.noteOn ^MidiChannel channel midi-note (* 127 volume))))
 
 (defn stop-note!
-  [audio-ctx {:keys [midi-note instrument]}]
-  (let [{:keys [midi-synth midi-channels]} @audio-ctx
-        channels       (.getChannels ^Synthesizer midi-synth)
-        channel-number (-> instrument midi-channels :channel)
-        channel        (aget channels channel-number)]
-    (log/debug "MIDI note off:" midi-note)
-    (.noteOff ^MidiChannel channel midi-note)))
+  [audio-ctx {:keys [midi-note instrument] :as note}]
+  (unprotect-note! audio-ctx note)
+  (when-not (note-reserved? audio-ctx note)
+    (let [{:keys [midi-synth midi-channels]} @audio-ctx
+          channels       (.getChannels ^Synthesizer midi-synth)
+          channel-number (-> instrument midi-channels :channel)
+          channel        (aget channels channel-number)]
+      (log/debug "MIDI note off:" midi-note)
+      (.noteOff ^MidiChannel channel midi-note))))
