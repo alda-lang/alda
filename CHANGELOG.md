@@ -6,7 +6,7 @@
 
   Better-sounding slurs can now be achieved by setting quant to 100:
 
-    bassoon: o2 (quant 100) a8 b > c+2.
+      bassoon: o2 (quant 100) a8 b > c+2.
 
 ## 1.0.0-rc16 (5/18/16)
 
