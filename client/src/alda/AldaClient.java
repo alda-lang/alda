@@ -2,6 +2,8 @@ package alda;
 
 import com.google.gson.*;
 
+import com.jcabi.manifests.Manifests;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
@@ -16,7 +18,7 @@ import org.apache.commons.lang3.SystemUtils;
 
 public class AldaClient {
   public static String version() {
-    return Util.readResourceFile("version.txt").trim();
+    return Manifests.read("alda-version");
   }
 
   public static void updateAlda() throws URISyntaxException {

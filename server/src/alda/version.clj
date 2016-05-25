@@ -1,6 +1,7 @@
 (ns alda.version
   (:require [clojure.java.io :as io]
-            [clojure.string  :as str]))
+            [clojure.string  :as str]
+            [manifest.core   :refer (manifest)]))
 
 (def ^:const -version-
-  (str/trim (slurp (io/resource "version.txt"))))
+  (:alda-version (manifest "alda.Main")))

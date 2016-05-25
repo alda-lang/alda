@@ -1,13 +1,16 @@
 (set-env!
   :source-paths #{"client/src"}
   :resource-paths #{"server/src" "server/test"
-                    "server/grammar" "examples" "resources"}
+                    "server/grammar" "examples"}
   :dependencies '[
                   ; dev
-                  [adzerk/bootlaces    "0.1.12" :scope "test"]
-                  [adzerk/boot-jar2bin "1.1.0"  :scope "test"]
-                  [adzerk/boot-test    "1.0.4"  :scope "test"]
-                  [str-to-argv         "0.1.0"  :score "test"]
+                  ; [adzerk/bootlaces      "0.1.12" :scope "test"]
+                  [adzerk/boot-jar2bin    "1.1.0"  :scope "test"]
+                  ; [adzerk/boot-test      "1.0.4"  :scope "test"]
+                  ; [str-to-argv           "0.1.0"  :score "test"]
+
+                  ; silence slf4j logging dammit
+                  [org.slf4j/slf4j-nop        "1.7.21"]
 
                   ; shared
                   [org.zeromq/jeromq "0.3.5"]
@@ -25,6 +28,7 @@
                   [org.zeromq/cljzmq      "0.1.4" :exclusions (org.zeromq/jzmq)]
                   [me.raynes/conch        "0.8.0"]
                   [str-to-argv            "0.1.0"]
+                  [clj_manifest           "0.2.0"]
 
                   ; client
                   [com.beust/jcommander                 "1.48"]
@@ -33,15 +37,18 @@
                   [org.apache.httpcomponents/httpclient "4.5.1"]
                   [com.google.code.gson/gson            "2.6.1"]
                   [org.fusesource.jansi/jansi           "1.11"]
-                  [us.bpsm/edn-java                     "0.4.6"]])
+                  [us.bpsm/edn-java                     "0.4.6"]
+                  [com.jcabi/jcabi-manifests            "1.1"]])
 
-(require '[adzerk.bootlaces    :refer :all]
-         '[adzerk.boot-jar2bin :refer :all]
-         '[adzerk.boot-test]
-         '[alda.version])
+(require
+  ; '[adzerk.bootlaces    :refer :all]
+  '[adzerk.boot-jar2bin :refer :all]
+  ; '[adzerk.boot-test    :refer :all]
+         )
 
-; version number is stored in alda.version
-(bootlaces! alda.version/-version-)
+(def ^:const +version+ "1.0.0-rc99")
+
+; (bootlaces! +version+)
 
 (defn- exe-version
   "Convert non-exe-friendly version numbers like 1.0.0-rc1 to four-number
@@ -68,7 +75,7 @@
                            "-bootclasspath" jdk7-bootclasspath])))}
 
   pom     {:project 'alda
-           :version alda.version/-version-
+           :version +version+
            :description "A music programming language for musicians"
            :url "https://github.com/alda-lang/alda"
            :scm {:url "https://github.com/alda-lang/alda"}
@@ -77,14 +84,15 @@
 
   install {:pom "alda/alda"}
 
-  jar     {:file "alda.jar"
-           :main 'alda.Main}
+  jar     {:file     "alda.jar"
+           :manifest {"alda-version" +version+}
+           :main     'alda.Main}
 
   bin     {:jvm-opt jvm-opts}
 
   exe     {:name      'alda
            :main      'alda.Main
-           :version   (exe-version alda.version/-version-)
+           :version   (exe-version +version+)
            :desc      "A music programming language for musicians"
            :copyright "2016 Dave Yarwood et al"
            :jvm-opt   jvm-opts}
@@ -97,147 +105,147 @@
     (println)
     (println "---" text "---")))
 
-(deftask unit-tests
-  []
-  (comp (heading :text "UNIT TESTS")
-        (adzerk.boot-test/test
-          :namespaces '#{; general tests
-                         alda.parser.barlines-test
-                         alda.parser.clj-exprs-test
-                         alda.parser.event-sequences-test
-                         alda.parser.comments-test
-                         alda.parser.duration-test
-                         alda.parser.events-test
-                         alda.parser.octaves-test
-                         alda.parser.repeats-test
-                         alda.parser.score-test
-                         alda.parser.variables-test
-                         alda.lisp.attributes-test
-                         alda.lisp.cram-test
-                         alda.lisp.chords-test
-                         alda.lisp.code-test
-                         alda.lisp.duration-test
-                         alda.lisp.global-attributes-test
-                         alda.lisp.markers-test
-                         alda.lisp.notes-test
-                         alda.lisp.parts-test
-                         alda.lisp.pitch-test
-                         alda.lisp.score-test
-                         alda.lisp.variables-test
-                         alda.lisp.voices-test
-                         alda.util-test
+; (deftask unit-tests
+;   []
+;   (comp (heading :text "UNIT TESTS")
+;         (adzerk.boot-test/test
+;           :namespaces '#{; general tests
+;                          alda.parser.barlines-test
+;                          alda.parser.clj-exprs-test
+;                          alda.parser.event-sequences-test
+;                          alda.parser.comments-test
+;                          alda.parser.duration-test
+;                          alda.parser.events-test
+;                          alda.parser.octaves-test
+;                          alda.parser.repeats-test
+;                          alda.parser.score-test
+;                          alda.parser.variables-test
+;                          alda.lisp.attributes-test
+;                          alda.lisp.cram-test
+;                          alda.lisp.chords-test
+;                          alda.lisp.code-test
+;                          alda.lisp.duration-test
+;                          alda.lisp.global-attributes-test
+;                          alda.lisp.markers-test
+;                          alda.lisp.notes-test
+;                          alda.lisp.parts-test
+;                          alda.lisp.pitch-test
+;                          alda.lisp.score-test
+;                          alda.lisp.variables-test
+;                          alda.lisp.voices-test
+;                          alda.util-test
 
-                         ; benchmarks / smoke tests
-                         alda.examples-test})))
+;                          ; benchmarks / smoke tests
+;                          alda.examples-test})))
 
-(deftask integration-tests
-  []
-  (comp (heading :text "INTEGRATION TESTS")
-        (adzerk.boot-test/test
-          :namespaces '#{alda.server-test
-                         alda.worker-test})))
+; (deftask integration-tests
+;   []
+;   (comp (heading :text "INTEGRATION TESTS")
+;         (adzerk.boot-test/test
+;           :namespaces '#{alda.server-test
+;                          alda.worker-test})))
 
-(deftask test
-  [i integration bool "Run only integration tests."
-   a all         bool "Run all tests."]
-  (cond
-    all         (comp (unit-tests)
-                      (integration-tests))
-    integration (integration-tests)
-    :default    (unit-tests)))
+; (deftask test
+;   [i integration bool "Run only integration tests."
+;    a all         bool "Run all tests."]
+;   (cond
+;     all         (comp (unit-tests)
+;                       (integration-tests))
+;     integration (integration-tests)
+;     :default    (unit-tests)))
 
-(deftask dev
-  "Runs the Alda server (default), REPL, or client for development.
+; (deftask dev
+;   "Runs the Alda server (default), REPL, or client for development.
 
-   *** REPL ***
+;    *** REPL ***
 
-   Simply run `boot dev -a repl` and you're in!
+;    Simply run `boot dev -a repl` and you're in!
 
-   *** CLIENT ***
+;    *** CLIENT ***
 
-   To test changes to the Alda client, run `boot dev -a client -x \"args here\"`.
+;    To test changes to the Alda client, run `boot dev -a client -x \"args here\"`.
 
-   For example:
+;    For example:
 
-      boot dev -a client -x \"play --file /path/to/file.alda\"
+;       boot dev -a client -x \"play --file /path/to/file.alda\"
 
-   The arguments must be a single command-line string to be passed to the
-   command-line client as if entering them on the command line. The example
-   above is equivalent to running `alda play --file /path/to/file.alda` on the
-   command line.
+;    The arguments must be a single command-line string to be passed to the
+;    command-line client as if entering them on the command line. The example
+;    above is equivalent to running `alda play --file /path/to/file.alda` on the
+;    command line.
 
-   One caveat to running the client this way (as opposed to building it and
-   running the resulting executable) is that the client does not have the
-   necessary permissions to start a new process, e.g. to start an Alda server
-   via the client. If you'd like to test local changes to the server code,
-   you'll need to run the server instead (see SERVER below).
+;    One caveat to running the client this way (as opposed to building it and
+;    running the resulting executable) is that the client does not have the
+;    necessary permissions to start a new process, e.g. to start an Alda server
+;    via the client. If you'd like to test local changes to the server code,
+;    you'll need to run the server instead (see SERVER below).
 
-   *** SERVER ***
+;    *** SERVER ***
 
-   The -F/--alda-fingerprint option technically does nothing, but including it
-   as a long-style option when running this task from the command line* allows
-   the Alda client to identify the dev server process as an Alda server and
-   include it in the list of running servers.
+;    The -F/--alda-fingerprint option technically does nothing, but including it
+;    as a long-style option when running this task from the command line* allows
+;    the Alda client to identify the dev server process as an Alda server and
+;    include it in the list of running servers.
 
-   For example:
+;    For example:
 
-      boot dev -a server --port 27713 --alda-fingerprint
+;       boot dev -a server --port 27713 --alda-fingerprint
 
-   Take care to include the --port long option as well, so the client knows
-   the port on which the dev server is running.
+;    Take care to include the --port long option as well, so the client knows
+;    the port on which the dev server is running.
 
-   *** WORKER ***
+;    *** WORKER ***
 
-   Starts a worker process that will receive requests from the socket on the
-   port specified by the -p/--port option. This option is required."
-  [a app              APP     str  "The Alda application to run (server, repl or client)."
-   x args             ARGS    str  "The string of CLI args to pass to the client."
-   p port             PORT    int  "The port on which to start the server/worker."
-   w workers          WORKERS int  "The number of workers for the server to start."
-   F alda-fingerprint         bool "Allow the Alda client to identify this as an Alda process."]
-  (comp
-    (javac)
-    (with-pre-wrap fs
-      (let [direct-linking (System/getProperty "clojure.compiler.direct-linking")
-            start-server!  (fn []
-                             (require 'alda.server)
-                             (require 'alda.util)
-                             ((resolve 'alda.server/start-server!)
-                                (or workers 2)
-                                (or port 27713)
-                                true))
-            start-worker!  (fn []
-                             (assert port
-                               "The --port option is mandatory for workers.")
-                             (require 'alda.worker)
-                             (require 'alda.util)
-                             ((resolve 'alda.worker/start-worker!) port true))
-            start-repl!    (fn []
-                             (require 'alda.repl)
-                             ((resolve 'alda.repl/start-repl!)))
-            run-client!    (fn []
-                             (require '[str-to-argv])
-                             (import 'alda.Main)
-                             (eval `(alda.Main/main
-                                      (into-array String
-                                        (str-to-argv/split-args (or ~args ""))))))]
-        (when-not (= direct-linking "true")
-          (println "WARNING: You should include the JVM option"
-                   "-Dclojure.compiler.direct-linking=true, as this option is"
-                   "included in the binary. This will help catch potential bugs"
-                   "caused by defining dynamic things without declaring them"
-                   "^:dynamic or ^:redef."))
-        (case app
-          nil      (start-server!)
-          "server" (start-server!)
-          "worker" (start-worker!)
-          "repl"   (start-repl!)
-          "client" (run-client!)
-          (do
-            (println "ERROR: -a/--app must be server, repl or client")
-            (System/exit 1))))
-      fs)
-    (wait)))
+;    Starts a worker process that will receive requests from the socket on the
+;    port specified by the -p/--port option. This option is required."
+;   [a app              APP     str  "The Alda application to run (server, repl or client)."
+;    x args             ARGS    str  "The string of CLI args to pass to the client."
+;    p port             PORT    int  "The port on which to start the server/worker."
+;    w workers          WORKERS int  "The number of workers for the server to start."
+;    F alda-fingerprint         bool "Allow the Alda client to identify this as an Alda process."]
+;   (comp
+;     (javac)
+;     (with-pre-wrap fs
+;       (let [direct-linking (System/getProperty "clojure.compiler.direct-linking")
+;             start-server!  (fn []
+;                              (require 'alda.server)
+;                              (require 'alda.util)
+;                              ((resolve 'alda.server/start-server!)
+;                                 (or workers 2)
+;                                 (or port 27713)
+;                                 true))
+;             start-worker!  (fn []
+;                              (assert port
+;                                "The --port option is mandatory for workers.")
+;                              (require 'alda.worker)
+;                              (require 'alda.util)
+;                              ((resolve 'alda.worker/start-worker!) port true))
+;             start-repl!    (fn []
+;                              (require 'alda.repl)
+;                              ((resolve 'alda.repl/start-repl!)))
+;             run-client!    (fn []
+;                              (require '[str-to-argv])
+;                              (import 'alda.Main)
+;                              (eval `(alda.Main/main
+;                                       (into-array String
+;                                         (str-to-argv/split-args (or ~args ""))))))]
+;         (when-not (= direct-linking "true")
+;           (println "WARNING: You should include the JVM option"
+;                    "-Dclojure.compiler.direct-linking=true, as this option is"
+;                    "included in the binary. This will help catch potential bugs"
+;                    "caused by defining dynamic things without declaring them"
+;                    "^:dynamic or ^:redef."))
+;         (case app
+;           nil      (start-server!)
+;           "server" (start-server!)
+;           "worker" (start-worker!)
+;           "repl"   (start-repl!)
+;           "client" (run-client!)
+;           (do
+;             (println "ERROR: -a/--app must be server, repl or client")
+;             (System/exit 1))))
+;       fs)
+;     (wait)))
 
 (deftask assert-jdk7-bootclasspath
   "Ensures that the JDK7_BOOTCLASSPATH environment variable is set, as required
@@ -272,8 +280,8 @@
     (bin :file file :output-dir output-dir)
     (exe :file file :output-dir output-dir)))
 
-(deftask deploy
-  "Builds uberjar, installs it to local Maven repo, and deploys it to Clojars."
-  []
-  (comp (build-jar) (push-release)))
+; (deftask deploy
+;   "Builds uberjar, installs it to local Maven repo, and deploys it to Clojars."
+;   []
+;   (comp (build-jar) (push-release)))
 
