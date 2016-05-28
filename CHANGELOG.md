@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1.0.0-rc18 (5/28/16)
+
+* Fixes a bug related to the fix introduced in 1.0.0-rc17. For more details, see [issue #231](https://github.com/alda-lang/alda/issues/231).
+
 ## 1.0.0-rc17 (5/21/16)
 
 * Fixed issue #27. Setting note quantization to 100 or higher no longer causes issues with notes stopping other notes that have the same MIDI note number.

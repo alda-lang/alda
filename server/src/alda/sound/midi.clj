@@ -102,8 +102,10 @@
   (.close ^Synthesizer (:midi-synth @audio-ctx)))
 
 (defn protection-key-for
-  [{:keys [offset duration midi-note]}]
-  [midi-note (+ offset duration)])
+  [{:keys [instrument offset duration midi-note] :as note}
+   {:keys [midi-channels] :as audio-ctx}]
+  (let [midi-channel (-> instrument midi-channels :channel)]
+    [midi-channel midi-note (+ offset duration)]))
 
 (defn protect-note!
   "Makes a note in the audio context that this note is playing.
@@ -111,17 +113,17 @@
    This prevents other notes that have the same MIDI note number from stopping
    this note."
   [audio-ctx note]
-  (let [[midi-note offset] (protection-key-for note)]
+  (let [[midi-channel midi-note offset] (protection-key-for note @audio-ctx)]
     (swap! audio-ctx
-           update-in [:protected-notes midi-note]
+           update-in [:protected-notes midi-channel midi-note]
            (fnil conj #{}) offset)))
 
 (defn unprotect-note!
   "Removes protection from this note so that it can be stopped."
   [audio-ctx note]
-  (let [[midi-note offset] (protection-key-for note)]
+  (let [[midi-channel midi-note offset] (protection-key-for note @audio-ctx)]
     (swap! audio-ctx
-           update-in [:protected-notes midi-note]
+           update-in [:protected-notes midi-channel midi-note]
            disj offset)))
 
 (defn note-reserved?
@@ -129,9 +131,10 @@
    currently playing. If this is the case, then we will NOT stop the note, and
    instead wait for the other note to stop it."
   [audio-ctx note]
-  (let [{:keys [protected-notes]} @audio-ctx
-        [midi-note offset]        (protection-key-for note)]
-    (boolean (some (partial not= offset) (get protected-notes midi-note)))))
+  (let [{:keys [protected-notes]}       @audio-ctx
+        [midi-channel midi-note offset] (protection-key-for note @audio-ctx)]
+    (boolean (some (partial not= offset)
+                   (get-in protected-notes [midi-channel midi-note])))))
 
 (defn play-note!
   [audio-ctx {:keys [midi-note instrument volume track-volume panning]
