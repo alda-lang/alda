@@ -14,6 +14,7 @@ curl -O https://repo1.maven.org/maven2/org/bitbucket/daveyarwood/fluid-r3/${FLUI
 mkdir -p ${FLUID_WORK_FOLDER}
 mv ${FLUID_NAME}.jar ${FLUID_WORK_FOLDER}
 cd ${FLUID_WORK_FOLDER} && unzip -qq ${FLUID_NAME}.jar
+mkdir -p ~/.gervill
 cp fluid-r3.sf2 ~/.gervill/soundbank-emg.sf2
 echo "Installed ${FLUID_NAME}"
 cd .. && rm -rf ${FLUID_WORK_FOLDER}
