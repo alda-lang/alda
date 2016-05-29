@@ -36,16 +36,3 @@
             (assoc :current-offset (->RelativeOffset name 0)))
         inst))))
 
-(defn marker
-  "Places a marker at the current absolute offset. Throws an exception if there
-   are multiple instruments active at different offsets."
-  [name]
-  {:event-type :marker
-   :name       name})
-
-(defn at-marker
-  "Set the marker at which events will be added."
-  [name]
-  {:event-type :at-marker
-   :name       name})
-

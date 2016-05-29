@@ -2,7 +2,7 @@
   (:require [alda.lisp.model.event :refer (update-score add-events)]
             [alda.lisp.score.util  :refer (update-instruments)]))
 
-(defn tally-beats
+(defn- tally-beats
   [score events]
   (-> score
       (assoc :beats-tally 0
@@ -10,14 +10,14 @@
       (#(reduce update-score % events))
       :beats-tally))
 
-(defn calculate-time-scaling
+(defn- calculate-time-scaling
   "Given an existing time-scaling value (the default is 1, when not already
    inside of a cram), the 'inner' length of a cram in beats, and the 'outer'
    length of the cram in beats, calculates the effective time-scaling value."
   [time-scaling inner-beats outer-beats]
   (* (/ time-scaling inner-beats) outer-beats))
 
-(defn set-time-scaling
+(defn- set-time-scaling
   "Sets the time-scaling value of each instrument, based on its existing
    time-scaling and duration values and the inner and (optional) outer beats
    tally of the CRAM expression.
@@ -38,7 +38,7 @@
             (update :previous-time-scaling (fnil conj []) time-scaling)
             (assoc :time-scaling new-time-scaling))))))
 
-(defn reset-time-scaling
+(defn- reset-time-scaling
   [score]
   (update-instruments score
     (fn [{:keys [previous-time-scaling] :as inst}]
@@ -46,7 +46,7 @@
           (assoc :time-scaling (peek previous-time-scaling))
           (update :previous-time-scaling pop)))))
 
-(defn set-initial-duration-inside-cram
+(defn- set-initial-duration-inside-cram
   "Sets the initial :duration-inside-cram value for each instrument to 1 beat.
    As events inside the cram are added, :duration-inside-cram is updated instead
    of :duration."
@@ -58,7 +58,7 @@
                   (fnil conj []) duration-inside-cram)
           (assoc  :duration-inside-cram 1)))))
 
-(defn reset-duration-inside-cram
+(defn- reset-duration-inside-cram
   "Removes the :duration-inside-cram value for each instrument."
   [score]
   (update-instruments score
@@ -89,16 +89,4 @@
                                       inst)))
             %))
         (update :cram-level dec))))
-
-(defn cram
-  "A cram expression evaluates the events it contains, time-scaled based on the
-   inner tally of beats in the events and the outer durations of each current
-   instrument."
-  [& events]
-  (let [[duration & events] (if (:duration? (last events))
-                              (cons (last events) (butlast events))
-                              (cons nil events))]
-    {:event-type :cram
-     :duration   duration
-     :events     events}))
 

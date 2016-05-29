@@ -1,12 +1,12 @@
 (ns alda.lisp.score.part
-  (:require [djy.char                         :refer (char-range)]
-            [clojure.string                   :as    str]
-            [alda.lisp.attributes             :refer (*initial-attr-vals*)]
-            [alda.lisp.events.voice           :refer (end-voice-group)]
-            [alda.lisp.model.event            :refer (update-score)]
-            [alda.lisp.model.global-attribute :refer (apply-global-attributes)]
-            [alda.lisp.model.instrument       :refer (*stock-instruments*)]
-            [alda.parser-util                 :refer (parse-with-context)]))
+  (:require [djy.char                   :refer (char-range)]
+            [clojure.string             :as    str]
+            [alda.lisp.attributes       :refer (*initial-attr-vals*)]
+            [alda.lisp.events           :refer (apply-global-attributes)]
+            [alda.lisp.events.voice     :refer (end-voice-group)]
+            [alda.lisp.model.event      :refer (update-score)]
+            [alda.lisp.model.instrument :refer (*stock-instruments*)]
+            [alda.parser-util           :refer (parse-with-context)]))
 
 (defn- generate-id
   [name]
@@ -16,7 +16,7 @@
         id (apply str (take 5 (repeatedly rand-char)))]
     (str name \- id)))
 
-(defn new-part
+(defn- new-part
   "Returns a new instance of a stock instrument identified by `stock-inst`,
    with initial values for tempo, current-offset, volume, octave, etc. as
    specified in *initial-attr-vals*.
@@ -35,7 +35,7 @@
     (throw (Exception.
              (format "Stock instrument \"%s\" not defined." stock-inst)))))
 
-(defn add-part
+(defn- add-part
   "Adds a new instrument instance to `score`.
 
    `stock-inst` must be a valid identifier for a stock Alda instrument.
@@ -55,7 +55,7 @@
                :when (str/starts-with? id (str name \-))]
            (:id inst))))
 
-(defn determine-current-instruments
+(defn- determine-current-instruments
   "Given a score and an instrument call (a map with names and nickname keys),
    determines the instrument instances that will become the :current-instruments
    of the score.
@@ -92,7 +92,7 @@
                  :instruments instruments
                  :current-instruments (set instances))))
 
-(defn parse-instrument-call [s]
+(defn- parse-instrument-call [s]
   (parse-with-context :calls (-> s
                                  (str/replace #":$" "")
                                  (str/replace #"'" "\"")
@@ -100,21 +100,6 @@
 
 (defmethod update-score :part
   [score {:keys [instrument-call events] :as part}]
-  (let [score (-> score
-                  end-voice-group
-                  (determine-current-instruments instrument-call))]
-    (reduce update-score
-            score
-            (cons (apply-global-attributes) events))))
-
-(defn part
-  "Determines the current instrument instance(s) based on the `instrument-call`
-   and evaluates the `events` within that context.
-
-   `instrument-call` can either be a map containing :names and an optional
-   :nickname (e.g. {:names ['piano' 'trumpet'] :nickname ['trumpiano']}) or a
-   valid Alda instrument call string, e.g. 'piano/trumpet 'trumpiano''."
-  [instrument-call & events]
   (let [instrument-call (cond
                           (map? instrument-call)
                           instrument-call
@@ -124,7 +109,11 @@
 
                           :else
                           (throw (Exception. (str "Invalid instrument call:"
-                                                  (pr-str instrument-call)))))]
-    {:event-type      :part
-     :instrument-call instrument-call
-     :events          events}))
+                                                  (pr-str instrument-call)))))
+        score (-> score
+                  end-voice-group
+                  (determine-current-instruments instrument-call))]
+    (reduce update-score
+            score
+            (cons (apply-global-attributes) events))))
+

@@ -1,9 +1,9 @@
 (ns alda.lisp.attributes
-  (:require [alda.lisp.model.attribute        :refer (set-attribute
-                                                      *attribute-table*)]
-            [alda.lisp.model.global-attribute :refer (global-attribute)]
-            [alda.lisp.model.key              :refer (get-key-signature)]
-            [alda.lisp.model.records          :refer (->AbsoluteOffset
+  (:require [alda.lisp.events          :refer (global-attribute)]
+            [alda.lisp.model.attribute :refer (set-attribute
+                                               *attribute-table*)]
+            [alda.lisp.model.key       :refer (get-key-signature)]
+            [alda.lisp.model.records   :refer (->AbsoluteOffset
                                                       ->Attribute)]))
 
 (comment

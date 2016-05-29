@@ -48,9 +48,3 @@
         bump-by-min-durations
         (assoc :chord-mode false))))
 
-(defn chord
-  "Causes every instrument in :current-instruments to play each note in the
-   chord simultaneously at the instrument's :current-offset."
-  [& events]
-  {:event-type :chord
-   :events     events})

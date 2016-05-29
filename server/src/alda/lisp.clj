@@ -7,14 +7,15 @@
 ; sets log level to TIMBRE_LEVEL (if set) or :warn
 (util/set-timbre-level!)
 
-(defn import-all-vars
+(defn- import-all-vars
   "Imports all public vars from a namespace into the alda.lisp namespace."
   [ns]
   (eval (list `import-vars (cons ns (keys (ns-publics ns))))))
 
-(def namespaces
+(def ^:private namespaces
   '[alda.lisp.attributes
     alda.lisp.code
+    alda.lisp.events
     alda.lisp.events.barline
     alda.lisp.events.chord
     alda.lisp.events.cram

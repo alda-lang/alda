@@ -13,7 +13,3 @@
             :parse-failure (throw (Exception. (str "Invalid Alda code: " code)))
             parse-result))))
 
-(defn times
-  "Repeats an Alda event (or sequence of events) `n` times."
-  [n event]
-  (repeat n event))
