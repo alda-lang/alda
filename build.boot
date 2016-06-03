@@ -21,7 +21,6 @@
                   [io.aviso/pretty        "0.1.20"]
                   [jline                  "2.12.1"]
                   [org.clojars.sidec/jsyn "16.7.3"]
-                  [org.clojure/clojure    "1.7.0"]
                   [potemkin               "0.4.1"]
                   [ring                   "1.4.0"]
                   [ring/ring-defaults     "0.1.5"]
