@@ -80,6 +80,11 @@
   [cache id]
   (get @cache (symbol id)))
 
+(defn apply-plugins
+  [[input cache]]
+  (let [code (str/replace input "Em" "o2 e/>b/e/g/b/>e<<")]
+    [code cache]))
+
 (defn remove-comments
   "Strips comments from a string of Alda code.
 
@@ -182,6 +187,7 @@
   [alda-code]
   (let [cache (atom {})]
     (->> [alda-code cache]
+         apply-plugins
          remove-comments
          separate-parts
          (insta/transform
