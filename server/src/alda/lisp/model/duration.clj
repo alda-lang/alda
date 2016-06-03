@@ -65,26 +65,19 @@
    purpose in the parse tree only, and evaluate to `nil` in alda.lisp. This
    function ignores barlines by removing the nils.
 
-   A slur may appear as the final argument of a duration, making the current
-   note legato (effectively slurring it into the next).
-
    Returns a map containing the total number of beats (counting only those
-   note-lengths that are expressed in standard musical notation), the total
+   note-lengths that are expressed in standard musical notation) and the total
    number of milliseconds (counting only those note-lengths expressed in
-   milliseconds), and whether or not the note is slurred.
+   milliseconds).
 
    This information is used by events (like notes and rests) to calculate the
    total duration in milliseconds (as this depends on the score's time-scaling
    factor and the tempo of the instrument the event belongs to)."
   [& components]
-  (let [components (remove nil? components)
-        [note-lengths slurred] (if (= (last components) :slur)
-                                 (conj [(drop-last components)] true)
-                                 (conj [components] false))
-        note-lengths (map (fn [x] (if (map? x)
-                                    x
-                                    {:type :beats, :value x}))
-                          note-lengths)
+  (let [note-lengths     (map (fn [x] (if (map? x)
+                                        x
+                                        {:type :beats, :value x}))
+                              (remove nil? components))
         beats-components (for [{:keys [type value]} note-lengths
                                :when (= type :beats)]
                            value)
@@ -94,6 +87,5 @@
                          value))]
     {:beats     beats
      :ms        ms
-     :slurred   slurred
      :duration? true} ; identify this as a duration map
     ))

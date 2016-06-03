@@ -129,10 +129,10 @@
     (let [duration (when (map? x) x)
           slur?    (= x :slur)]
       (note pitch-fn duration slur?)))
-  ([pitch-fn {:keys [beats ms slurred]} slur?]
+  ([pitch-fn {:keys [beats ms]} slur?]
      {:event-type :note
       :pitch-fn   pitch-fn
       :beats      beats
       :ms         ms
-      :slur?      (or slur? slurred)}))
+      :slur?      slur?}))
 

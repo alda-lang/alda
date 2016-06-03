@@ -1,6 +1,5 @@
 duration                = (note-length | seconds | milliseconds)
                           (<ows> barline? <ows> subduration)*
-                          (barline? <ows> slur)?
 <subduration>           = tie <ows> barline? <ows>
                           (note-length | seconds | milliseconds) <ows>
 
