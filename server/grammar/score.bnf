@@ -5,5 +5,5 @@ calls             = name
                     (<ows> <"/"> <ows> name)*
                     (<ows> nickname)?
                     <ows> <":">
-<music-data>      = !part #".|\n|\r"
+<music-data>      = !calls #"[a-zA-Z]*[^a-zA-Z]*([a-zA-Z][^a-zA-Z]+)*"
 
