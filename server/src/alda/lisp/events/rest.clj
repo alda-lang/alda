@@ -1,33 +1,28 @@
-(ns alda.lisp.events.rest)
-(in-ns 'alda.lisp)
+(ns alda.lisp.events.rest
+  (:require [alda.lisp.model.global-attribute :refer (apply-global-attributes)]
+            [alda.lisp.events.note            :refer (add-note-or-rest)]
+            [alda.lisp.model.event            :refer (update-score)]))
 
-(defrecord Rest [offset instrument duration])
+(comment
+  "Implementation-wise, a rest is just a note without a pitch, so a rest event
+   is just a note event that updates all the instruments to have a later offset,
+   without adding any events to the score.")
 
-(defn pause*
-  ([instrument]
-    (pause* instrument (duration ($duration instrument))))
-  ([instrument {:keys [duration-fn beats] :as dur}]
-    {:pre [(map? dur)]}
-    (if *beats-tally*
-      (alter-var-root #'*beats-tally* + beats)
-      (let [rest-duration (duration-fn ($tempo instrument))]
-        (set-last-offset instrument ($current-offset instrument))
-        (set-current-offset instrument (offset+ ($current-offset instrument)
-                                                rest-duration))
-        (let [rest (Rest. ($last-offset instrument) instrument rest-duration)]
-          (log/debug (format "%s rests at %s + %s for %s ms."
-                             instrument
-                             ($current-marker instrument)
-                             (int (:offset ($last-offset instrument)))
-                             (int rest-duration)))
-          rest)))))
+(defmethod update-score :rest
+  [score rest-event]
+  (-> score
+      (add-note-or-rest rest-event)
+      (update-score (apply-global-attributes))))
 
-(defmacro pause
-  [& args]
-  `(doall
-     (for [instrument# (if (and *beats-tally*
-                                (not (empty? *current-instruments*)))
-                         [(first *current-instruments*)]
-                         *current-instruments*)]
-       (binding [*current-instruments* #{instrument#}]
-         (pause* instrument# ~@args)))))
+(defn pause
+  "Causes every instrument in :current-instruments to rest (not play) for the
+   specified duration.
+
+   If no duration is specified, each instrument will rest for its own internal
+   duration, which will be the duration last specified on a note or rest in
+   that instrument's part."
+  [& [{:keys [beats ms] :as dur}]]
+   {:event-type :rest
+    :beats      beats
+    :ms         ms})
+

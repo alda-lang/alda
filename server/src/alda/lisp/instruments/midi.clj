@@ -1,5 +1,5 @@
-(ns alda.lisp.instruments.midi)
-(in-ns 'alda.lisp)
+(ns alda.lisp.instruments.midi
+  (:require [alda.lisp.model.instrument :refer (definstrument)]))
 
 ; NOTE: For the time being, some of these instruments have non-prefixed names
 ;       like "piano" and "trumpet" as aliases. I eventually want to re-map

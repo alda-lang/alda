@@ -86,16 +86,14 @@
               (alda.lisp/voices
                 (alda.lisp/voice 1
                   (alda.lisp/times 8
-                    (do
-                      (alda.lisp/note (alda.lisp/pitch :a))
-                      (alda.lisp/note (alda.lisp/pitch :b))
-                      (alda.lisp/note (alda.lisp/pitch :c)))))
+                    [(alda.lisp/note (alda.lisp/pitch :a))
+                     (alda.lisp/note (alda.lisp/pitch :b))
+                     (alda.lisp/note (alda.lisp/pitch :c))]))
                 (alda.lisp/voice 2
                   (alda.lisp/times 8
-                    (do
-                      (alda.lisp/note (alda.lisp/pitch :d))
-                      (alda.lisp/note (alda.lisp/pitch :e))
-                      (alda.lisp/note (alda.lisp/pitch :f)))))))))))
+                    [(alda.lisp/note (alda.lisp/pitch :d))
+                     (alda.lisp/note (alda.lisp/pitch :e))
+                     (alda.lisp/note (alda.lisp/pitch :f))]))))))))
 
 (deftest marker-tests
   (testing "markers"

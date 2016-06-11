@@ -63,7 +63,7 @@ public class AldaServer {
     RequestConfig config = RequestConfig.custom()
                                         .setConnectTimeout(5000)
                                         .setConnectionRequestTimeout(5000)
-                                        .setSocketTimeout(5000)
+                                        .setSocketTimeout(0)
                                         .build();
 
     this.httpclient = HttpClientBuilder.create()
@@ -610,55 +610,15 @@ public class AldaServer {
     msg("Playing score...");
   }
 
-  public void play(String code, boolean replaceScore, boolean autoConfirm) throws Exception {
+  public void play(String code, boolean appendToScore, boolean autoConfirm) throws Exception {
     startServerIfNeeded();
-
-    if (replaceScore) {
-      try {
-        putString("/play", code);
-      } catch (UnsavedChangesException e) {
-        System.out.println();
-        boolean confirm =
-          Util.promptForConfirmation("The current score has unsaved changes " +
-                                     "that will be lost.\nAre you sure you " +
-                                     "want to proceed?", autoConfirm);
-        if (confirm) {
-          putString("/play", code, true);
-        } else {
-          return;
-        }
-      }
-    } else {
-      postString("/play", code);
-    }
-
+    postString(appendToScore ? "/play/append" : "/play", code);
     msg("Playing code...");
   }
 
-  public void play(File file, boolean replaceScore, boolean autoConfirm) throws Exception {
+  public void play(File file, boolean appendToScore, boolean autoConfirm) throws Exception {
     startServerIfNeeded();
-
-    if (replaceScore) {
-      try {
-        putFile("/play", file);
-        putString("/filename", file.getAbsolutePath());
-      } catch (UnsavedChangesException e) {
-        System.out.println();
-        boolean confirm =
-          Util.promptForConfirmation("The current score has unsaved changes " +
-                                     "that will be lost.\nAre you sure you " +
-                                     "want to proceed?", autoConfirm);
-        if (confirm) {
-          putFile("/play", file, true);
-          putString("/filename", file.getAbsolutePath());
-        } else {
-          return;
-        }
-      }
-    } else {
-      postFile("/play", file);
-    }
-
+    postFile(appendToScore ? "/play/append" : "/play", file);
     msg("Playing file...");
   }
 

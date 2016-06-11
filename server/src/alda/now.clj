@@ -1,65 +1,99 @@
-(ns alda.now)
+(ns alda.now
+  (:require [clojure.set :as set]
+            [alda.lisp   :as lisp]
+            [alda.sound  :as sound]
+            [alda.util   :as util]))
 
-(require '[alda.sound  :as sound]
-         '[alda.util   :as util]
-         '[clojure.set :as set])
+(defn- prepare-audio-context!
+  [score]
+  (let [audio-ctx (or (:audio-context @score) (sound/new-audio-context))]
+    (swap! score assoc :audio-context audio-ctx)))
 
-; sets log level to TIMBRE_LEVEL (if set) or :warn
-(util/set-timbre-level!)
+(defn new-score
+  ([]
+   (new-score (lisp/score)))
+  ([score]
+   (doto (atom score) (prepare-audio-context!))))
 
-(require '[alda.lisp :as lisp])
+(defn set-up!
+  "Prepares the audio context of a score (creating the audio context if one
+   does not already exist) to play one or more audio types.
 
-(def set-up! sound/set-up!)
+   `score` is an atom referencing an Alda score map.
 
-(defn play-new-events!
-  [score new-events]
-  (let [events        (lisp/event-set {:start
-                                       {:offset (lisp/->AbsoluteOffset 0)
-                                        :events new-events}})
-        earliest      (->> (map :offset events)
-                           (apply min Long/MAX_VALUE)
-                           (max 0))
-        shifted       (alda.sound/shift-events events earliest nil)
-        one-off-score (assoc score
-                             :events shifted
-                             :markers (into {}
-                                            (map (juxt first #(- (last %) earliest)))
-                                            (:markers score)))]
-    (sound/play! one-off-score)))
+   `audio-type` (optional) is either a keyword representing an audio type, such
+   as :midi, or a collection of such keywords. If this option is omitted, the
+   audio types to set up will be determined based on the instruments in the
+   score."
+  [score & [audio-type]]
+  (let [audio-types (or audio-type (sound/determine-audio-types @score))]
+    (prepare-audio-context! score)
+    (sound/set-up! (:audio-context @score) audio-types @score)))
 
-(defmacro play!
-  "Evaluates some alda.lisp code and plays only the new events."
+(defn tear-down!
+  "Cleans up after a score after you're done using it.
+
+   Closes the MIDI synth, etc."
+  [score]
+  (sound/tear-down! @score))
+
+(def ^:dynamic *current-score* nil)
+
+(defmacro with-score
+  "When `play!` is used within this scope, appends to `score` and plays any new
+   notes.
+
+   Returns the score."
+  [score & body]
+  `(binding [*current-score* ~score]
+     ~@body
+     ~score))
+
+(defmacro with-new-score
+  "Starts a new score and appends to it each time `play!` is used within this
+   scope.
+
+   Returns the score."
   [& body]
-  `(let [old-score# (lisp/score-map)
-         new-score# (do ~@body (lisp/score-map))
-         new-events# (set/difference
-                       (:events new-score#)
-                       (:events old-score#))]
-     (play-new-events! new-score# new-events#)))
+  `(let [score# (new-score)]
+     (binding [*current-score* score#]
+       ~@body
+       score#)))
 
-(defn play-whole-score!
-  []
-  (sound/play! (lisp/score-map)))
+(defn play!
+  "Evaluates some alda.lisp code and plays only the new events.
 
-(defn refresh!
-  "Clears all events and resets the current-offset of each instrument to 0.
+   By default, each call to `play!` uses a new score.
 
-   Useful for playing a new set of notes with multiple instrument parts,
-   ensuring that both parts start at the same time, regardless of any prior
-   difference in current-offset between the instrument parts.
+   To append to an existing score (represented as an atom reference to a score
+   map), wrap multiple calls to `play!` in `(with-score <atom>)`.
 
-   When a truthy argument is provided, also resets all the other attributes
-   (e.g. volume, track-volume, octave) to their default values."
-  [& [all?]]
-  (alter-var-root #'alda.lisp/*instruments*
-    #(into {}
-       (map (fn [[instrument attrs]]
-              [instrument
-               (merge attrs
-                      (if all?
-                        lisp/*initial-attr-values*
-                        (select-keys lisp/*initial-attr-values*
-                                     [:current-offset :last-offset])))])
-            %)))
-  (alter-var-root #'alda.lisp/*events*
-    (constantly {:start {:offset (lisp/->AbsoluteOffset 0), :events []}})))
+   To start a new score and append to it, use `with-new-score`.
+
+   Both `with-score` and `with-new-score` return the score that is being
+   appended."
+  [& body]
+  (sound/with-play-opts {:async?   true
+                         :one-off? (not *current-score*)}
+    (let [score-before (if *current-score*
+                         @*current-score*
+                         @(new-score))
+          score-after  (apply lisp/continue score-before body)
+          new-events   (set/difference (:events score-after)
+                                       (:events score-before))]
+      (sound/play! score-after new-events)
+      (when *current-score*
+        (reset! *current-score* score-after)))))
+
+(defn play-score!
+  "Plays an entire Alda score.
+
+   The score may be represented as a map of the form that results from
+   evaluating alda.lisp code, e.g. (score (part 'piano' (note (pitch :c)))),
+   or an atom referencing such a map."
+  [score]
+  (sound/with-play-opts {:async? true}
+    (sound/play! (if (instance? clojure.lang.Atom score)
+                   @score
+                   score))))
+

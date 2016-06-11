@@ -1,61 +1,73 @@
 (ns alda.lisp.score
-  (:require [alda.lisp.score.part]))
-(in-ns 'alda.lisp)
+  (:require [alda.lisp.model.event     :refer (update-score)]
+            [alda.lisp.model.offset    :refer (absolute-offset)]
+            [alda.lisp.model.records   :refer (->AbsoluteOffset)]
+            [taoensso.timbre           :as    log]))
 
-;; for alda.repl use ;;
-
-(declare ^:dynamic *score-text*)
-
-(defn score-text<< [s]
-  (if (empty? *score-text*)
-    (alter-var-root #'*score-text* str s)
-    (alter-var-root #'*score-text* str \newline s)))
-
-;;;;;;;;;;;;;;;;;;;;;;;
-
-(defn score*
+(defn- new-score
   []
-  (letfn [(init [var val] (alter-var-root var (constantly val)))]
-    (init #'*score-text* "")
-    (init #'*events* {:start {:offset (AbsoluteOffset. 0), :events []}})
-    (init #'*global-attributes* {})
-    (init #'*time-scaling* 1)
-    (init #'*beats-tally* nil)
-    (init #'*instruments* {})
-    (init #'*current-instruments* #{})
-    (init #'*nicknames* {})))
+  (log/debug "Starting new score.")
+  {
+   :events              #{}
 
-(defn event-set
-  "Takes *events* in its typical form (organized by markers with relative
-   offsets) and transforms it into a single set of events with absolute
-   offsets."
-  [events-map]
-  (into #{}
-        (mapcat (fn [[_ {:keys [offset events]}]]
-                  (for [event events]
-                    (update-in event [:offset] absolute-offset))))
-        events-map))
+   ; a mapping of markers to the offset where each was placed
+   :markers             {:start 0}
 
-(defn markers [events-map]
-  (into {}
-        (map (fn [[marker-name {marker-offset :offset}]]
-               [marker-name (absolute-offset marker-offset)]))
-        events-map))
+   ; a map of offsets to the global attribute changes that occur (for all
+   ; instruments) at each offset
+   :global-attributes   (sorted-map)
 
-(defn score-map
-  []
-  (if (bound? #'*events*)
-    {:events (event-set *events*)
-     :markers (markers *events*)
-     :instruments *instruments*}
-    (log/error "A score must be initialized with (score*) before you can use (score-map).")))
+   :current-instruments #{}
+   :instruments         {}
+   :nicknames           {}
 
-(defmacro score
-  "Initializes a new score, evaluates body, and returns the map containing the
-   set of events resulting from evaluating the score, and information about the
-   instrument instances, including their states at the end of the score."
+   ; used when tallying beats in a CRAM expression
+   :beats-tally         nil
+   ; used when tallying beats in a CRAM expression
+   :beats-tally-default nil
+
+   ; used when adding events in a chord
+   :chord-mode          false
+   ; used when adding events in a voice
+   :current-voice       nil
+   ; this number gets incremented each time a cram event starts, and
+   ; decremented when the cram event ends
+   :cram-level          0
+
+   ; used when inside of a voice group; this is a mapping of voice numbers to
+   ; the current state of :instruments within that voice
+   ; e.g. {1 {"guitar-abc123" {:current-offset (->AbsoluteOffset 1000.0) ...}}
+   ;       2 {"guitar-abc123" {:current-offset (->AbsoluteOffset 2000.0) ...}}}
+   :voice-instruments   nil
+   })
+
+(defn continue
+  "Continues the score represented by the score map `score`, evaluating the
+   events in `body` and returning the completed score."
+  [score & body]
+  (reduce update-score score body))
+
+(defn continue!
+  "Convenience function for dealing with Alda scores stored in atoms.
+
+   (continue! my-score
+     (part 'bassoon'
+       (note (pitch :c))))
+
+   is short for:
+
+   (apply swap! my-score continue
+     (part 'bassoon'
+       (note (pitch :c))))"
+  [score-atom & body]
+  (apply swap! score-atom continue body))
+
+(defn score
+  "Initializes a new score, evaluates the events contained in `body` (updating
+   the score accordingly) and returns the completed score.
+
+   A score and its evaluation context are effectively the same thing. This
+   means that an evaluated score can be used as an input to `continue-score`"
   [& body]
-  `(do
-     (score*)
-     ~@body
-     (score-map)))
+  (apply continue (new-score) body))
+

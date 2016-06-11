@@ -1,0 +1,5 @@
+(tempo! 60)
+
+harpsichord: c8 d e f g a b > c
+
+banjo: (tempo 180) c8 d e f g a b > c d c < b a g f e d c < b a g f e4.

@@ -1,10 +1,46 @@
 (ns alda.lisp.attributes
-  (:require [alda.lisp.model.key]))
-(in-ns 'alda.lisp)
+  (:require [alda.lisp.model.attribute        :refer (set-attribute
+                                                      *attribute-table*)]
+            [alda.lisp.model.global-attribute :refer (global-attribute)]
+            [alda.lisp.model.key              :refer (get-key-signature)]
+            [alda.lisp.model.records          :refer (->AbsoluteOffset
+                                                      ->Attribute)]))
 
-(def ^:dynamic *initial-attr-values* {:current-offset (AbsoluteOffset. 0)
-                                      :last-offset (AbsoluteOffset. 0)
-                                      :current-marker :start})
+(comment
+  "The :attributes key in an instrument functions like the :global-attributes
+   key on the score. It is a map of offsets to the attributes updated for that
+   instrument at that offset. The attribute changes for each offset are
+   represented as a map of attribute keywords to values.")
+
+(def ^:dynamic *initial-attr-vals* {:current-offset (->AbsoluteOffset 0)
+                                    :last-offset    (->AbsoluteOffset -1)
+                                    :current-marker :start
+                                    :time-scaling   1})
+
+(defmacro defattribute
+  "Convenience macro for setting up attributes."
+  [attr-name & things]
+  (let [{:keys [aliases kw initial-val fn-name transform] :as opts}
+        (if (string? (first things)) (rest things) things)
+        aliases      (or aliases [])
+        kw-name      (or kw (keyword attr-name))
+        attr-aliases (vec (cons kw-name aliases))
+        transform-fn (or transform #(constantly %))
+        fn-name      (or fn-name attr-name)
+        fn-names     (vec (cons fn-name (map (comp symbol name) aliases)))
+        global-fns   (vec (map (comp symbol #(str % \!)) fn-names))
+        attr         (gensym "attr")]
+    (list* 'let [attr `(->Attribute ~kw-name ~transform-fn)]
+      `(alter-var-root (var *initial-attr-vals*) assoc ~kw-name ~initial-val)
+      `(doseq [alias# ~attr-aliases]
+         (alter-var-root (var *attribute-table*) assoc alias# ~attr))
+       (concat
+         (for [fn-name fn-names]
+           `(defn ~fn-name [x#]
+              (set-attribute ~kw-name x#)))
+         (for [global-fn-name global-fns]
+           `(defn ~global-fn-name [x#]
+              (global-attribute ~kw-name x#)))))))
 
 (defn- percentage [x]
   {:pre [(<= 0 x 100)]}

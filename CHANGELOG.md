@@ -1,5 +1,100 @@
 # CHANGELOG
 
+## 1.0.0-rc18 (5/28/16)
+
+* Fixes a bug related to the fix introduced in 1.0.0-rc17. For more details, see [issue #231](https://github.com/alda-lang/alda/issues/231).
+
+## 1.0.0-rc17 (5/21/16)
+
+* Fixed issue #27. Setting note quantization to 100 or higher no longer causes issues with notes stopping other notes that have the same MIDI note number.
+
+  Better-sounding slurs can now be achieved by setting quant to 100:
+
+      bassoon: o2 (quant 100) a8 b > c+2.
+
+## 1.0.0-rc16 (5/18/16)
+
+* Fixed issue #228. There was a bug where repeated calls to the same voice were being treated as if they were separate voices. Hat tip to [elyisgreat] for catching this!
+
+## 1.0.0-rc15 (5/15/16)
+
+* This release includes numerous improvements to the Alda codebase. The primary goal was to make the code easier to understand and more predictable, which will make it possible to improve Alda and add new features at a much faster pace.
+
+  To summarize the changes in programmer-speak: before this release, Alda evaluated a score by storing state in top-level, mutable vars, updating their values as it worked its way through the score. This code has been rewritten from the ground up to adhere much more to the functional programming philosophy. For a better explanation, read below about the breaking changes to the way scores are managed in a Clojure REPL.
+
+* Alda score evaluation is now a self-contained process, and an Alda server (or a Clojure program using Alda as a library) can now handle multiple scores at a time without them affecting each other.
+
+* Fixed issue #170. There was a 5-second socket timeout, causing the client to return "ERROR Read timed out" if the server took longer than 5 seconds to parse/evaluate the score. In this release, we've removed the timeout, so the client will wait until the server has parsed/evaluated the score and started playing it.
+
+* Fixed issue #199. Local (per-instrument) attributes occurring at the same time as global attributes will now override the global attribute for the instrument(s) to which they apply.
+
+* Using `@markerName` before `%markerName` is placed in a score now results in a explicit error, instead of throwing a different error that was difficult to understand. It turns out that this never worked to begin with. I do think it would be nice if it were possible to "forward declare" markers like this, but for the time being, I will leave this as something that (still) doesn't work, but that we could make possible in the future if there is demand for it.
+
+### Breaking Changes
+
+* The default behavior of `alda play -f score.alda` / `alda play -c 'piano: c d e'` is no longer to append to the current score in memory. Now, running these commands will play the Alda score file or string of code as a one-off score, not considering or affecting the current score in memory in any way. The previous behavior of appending to the current score is still possible via a new `alda play` option, `-a/--append`.
+
+* Creating scores in a Clojure REPL now involves working with immutable data structures instead of mutating top-level dynamic vars. Whereas before, Alda event functions like `score`, `part` and `note` relied on side effects to modify the state of your score environment, now you create a new score via `score` (or the slightly lower-level `new-score`) and update it using the `continue` function. To better illustrate this, this is how you used to do it **before**:
+
+  ```
+  (score*)
+  (part* "piano")
+  (note (pitch :c))
+  (chord (note (pitch :e)) (note (pitch :g)))
+  ```
+
+  Evaluating each S-expression would modify the top-level score environment. Evaluating `(score*)` again (or a full score wrapped in `(score ...)`) would blow away whatever score-in-progress you may have been working on.
+
+  Here are a few different ways you can do this **now**:
+
+  ```clojure
+  ; a complete score, as a single S-expression
+  (def my-score
+    (score
+      (part "piano"
+        (note (pitch :c))
+        (chord
+          (note (pitch :e))
+          (note (pitch :g))))))
+
+  ; start a new score and continue it
+  ; note that the original (empty) score is not modified
+  (def my-score (new-score))
+
+  (def my-score-cont
+    (continue my-score
+      (part "piano"
+        (note (pitch :c)))))
+
+  (def my-score-cont-cont
+    (continue my-score-cont
+      (chord
+        (note (pitch :e))
+        (note (pitch :g)))))
+
+  ; store your score in an atom and update it atomically
+  (def my-score (atom (score)))
+
+  (continue! my-score
+    (part "piano"
+      (note (pitch :c))))
+
+  (continue! my-score
+    (chord
+      (note (pitch :e))
+      (note (pitch :g))))
+  ```
+
+  Because no shared state is being stored in top-level vars, multiple scores can now exist side-by-side in a single Alda process or Clojure REPL.
+
+* Top-level score evaluation context vars like `*instruments*` and `*events*` no longer exist. If you were previously relying on inspecting that data, everything has now moved into keys like `:instruments` and `:events` on each separate score map.
+
+* `(duration <number>)` no longer works as a way of manually setting the duration. To do this, use `(set-duration <number>)`, where `<number>` is a number of beats.
+
+* The `$` syntax in alda.lisp (e.g. `($volume)`) for getting the current value of an attribute for the current instrument is no longer supported due to the way the code has been rewritten. We could probably find a way to add this feature back if there is a demand for it, but its use case is probably pretty obscure.
+
+* Because Alda event functions no longer work via side effects, inline Clojure code works a bit differently. Basically, you'll just write code that returns one or more Alda events, instead of code that produces side effects (modifying the score) and returns nil. See [entropy.alda](examples/entropy.alda) for an example of the way inline Clojure code works starting with this release.
+
 ## 1.0.0-rc14 (4/1/16)
 
 * Command-specific help text is now available when using the Alda command-line client. ([jgerman])

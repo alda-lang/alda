@@ -1,4 +1,4 @@
-(ns alda.parser.examples-test
+(ns alda.examples-test
   (:require [clojure.test    :refer :all]
             [clojure.java.io :as    io]
             [alda.parser     :refer (parse-input)]
@@ -25,6 +25,7 @@
    key_signature
    multi-poly
    nesting
+   overriding-a-global-attribute
    panning
    percussion
    phase
@@ -54,16 +55,35 @@
      [ret# time#]))
 
 (deftest examples-test
+  (require '[alda.lisp :refer :all])
   (testing "example scores:"
     (doseq [score example-scores]
-      (testing (str score)
-        (printf "Parsing %s.alda... %s" score (spacing score)) (flush)
-        (is
-          (try
-            (let [score-text (-> (str score ".alda") io/resource io/file slurp)
-                  [result time-ms] (time+ (parse-input score-text))]
-              (println (green "OK") (format "(%s ms)" time-ms))
-              true)
-            (catch Exception e
-              (println (red "FAIL"))
-              false)))))))
+      (let [parse-result (atom nil)]
+        (testing (str "parsing " score ".alda")
+          (printf "Parsing    %s.alda... %s" score (spacing score)) (flush)
+          (is
+            (try
+              (let [score-text (-> (str score ".alda")
+                                   io/resource
+                                   io/file
+                                   slurp)
+                    [result time-ms] (time+ (parse-input score-text))]
+                (println (green "OK") (format "(%s ms)" time-ms))
+                (reset! parse-result result)
+                true)
+              (catch Exception e
+                (println (red "FAIL"))
+                (throw e)))))
+        (when @parse-result
+          (testing (str "evaluating " score ".alda")
+            (printf "Evaluating %s.alda... %s" score (spacing score)) (flush)
+            (is
+              (try
+                (let [[result time-ms] (time+ (eval @parse-result))]
+                  (println (green "OK") (format "(%s ms)" time-ms))
+                  true)
+                (catch Exception e
+                  (println (red "FAIL"))
+                  (throw e))
+                (finally
+                  (reset! parse-result nil))))))))))

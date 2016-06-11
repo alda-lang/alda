@@ -1,156 +1,156 @@
 (ns alda.sound
   (:require [alda.sound.midi :as    midi]
             [taoensso.timbre :as    log]
-            [alda.lisp]
-            [alda.util       :refer (check-for parse-time pdoseq-block parse-position)])
+            [alda.util       :refer (check-for
+                                     parse-time
+                                     pdoseq-block
+                                     parse-position)])
   (:import [com.softsynth.shared.time TimeStamp ScheduledCommand]
            [com.jsyn.engine SynthesisEngine]))
 
-(def ^:dynamic *active-audio-types* #{})
-(def ^:dynamic *synthesis-engine* (doto (SynthesisEngine.) .start))
+(defn new-audio-context
+  []
+  (atom
+    {:audio-types      #{}
+     :synthesis-engine (doto (SynthesisEngine.) .start)}))
 
 (defn set-up?
-  [x]
-  (contains? *active-audio-types* x))
+  [audio-ctx audio-type]
+  (contains? (:audio-types @audio-ctx) audio-type))
 
 (defmulti set-up-audio-type!
-  (fn [audio-type & [score]] audio-type))
+  (fn [audio-ctx audio-type & [score]] audio-type))
 
 (defmethod set-up-audio-type! :default
-  [audio-type & [score]]
+  [_ audio-type & [score]]
   (log/errorf "No implementation of set-up-audio-type! defined for type %s"
               audio-type))
 
 (defmethod set-up-audio-type! :midi
-  [_ & [score]]
-  (midi/open-midi-synth!))
+  [audio-ctx _ & [score]]
+  (midi/get-midi-synth! audio-ctx))
+
+(declare determine-audio-types)
 
 (defn set-up!
   "Does any necessary setup for one or more audio types.
    e.g. for MIDI, create and open a MIDI synth."
-  [audio-type & [score]]
-  (if (coll? audio-type)
-    (pdoseq-block [a-t audio-type]
-      (set-up! a-t score))
-    (when-not (set-up? audio-type)
-      (set-up-audio-type! audio-type score)
-      (alter-var-root #'*active-audio-types* conj audio-type))))
+  ([{:keys [audio-context] :as score}]
+   (let [audio-types (determine-audio-types score)]
+     (set-up! audio-context audio-types score)))
+  ([audio-ctx audio-type & [score]]
+   (if (coll? audio-type)
+     (pdoseq-block [a-t audio-type]
+                   (set-up! audio-ctx a-t score))
+     (when-not (set-up? audio-ctx audio-type)
+       (set-up-audio-type! audio-ctx audio-type score)
+       (swap! audio-ctx update :audio-types conj audio-type)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defmulti refresh-audio-type!
-  (fn [audio-type & [score]] audio-type))
+  (fn [audio-ctx audio-type & [score]] audio-type))
 
 (defmethod refresh-audio-type! :default
-  [audio-type & [score]]
+  [_ audio-type & [score]]
   (log/errorf "No implementation of refresh-audio-type! defined for type %s"
               audio-type))
 
 (defmethod refresh-audio-type! :midi
-  [_ & [score]]
-  (midi/load-instruments! score))
+  [audio-ctx _ & [score]]
+  (midi/load-instruments! audio-ctx score))
 
 (defn refresh!
   "Performs any actions that may be needed each time the `play!` function is
    called. e.g. for MIDI, load instruments into channels (this needs to be
    done every time `play!` is called because new instruments may have been
    added to the score between calls to `play!`, when using Alda live.)"
-  [audio-type & [score]]
+  [audio-ctx audio-type & [score]]
   (if (coll? audio-type)
     (pdoseq-block [a-t audio-type]
-      (refresh! a-t score))
-    (when (set-up? audio-type)
-      (refresh-audio-type! audio-type score))))
+      (refresh! audio-ctx a-t score))
+    (when (set-up? audio-ctx audio-type)
+      (refresh-audio-type! audio-ctx audio-type score))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defmulti tear-down-audio-type!
-  (fn [audio-type & [score]] audio-type))
+  (fn [audio-ctx audio-type & [score]] audio-type))
 
 (defmethod tear-down-audio-type! :default
-  [audio-type & [score]]
+  [_ audio-type & [score]]
   (log/errorf "No implementation of tear-down! defined for type %s" audio-type))
 
 (defmethod tear-down-audio-type! :midi
-  [_ & [score]]
-  (midi/close-midi-synth!))
+  [audio-ctx _ & [score]]
+  (midi/close-midi-synth! audio-ctx))
 
 (defn tear-down!
   "Does any necessary clean-up at the end.
    e.g. for MIDI, close the MIDI synth."
-  [audio-type & [score]]
-  (if (coll? audio-type)
-    (pdoseq-block [a-t audio-type]
-      (tear-down! a-t score))
-    (when (set-up? audio-type)
-      (tear-down-audio-type! audio-type score)
-      (alter-var-root #'*active-audio-types* disj audio-type))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defn shift-events
-  [events offset cut-off]
-  (let [offset  (or offset 0)
-        cut-off (when cut-off (- cut-off offset))
-        keep?   (if cut-off
-                  #(and (<= 0 %) (> cut-off %))
-                  #(<= 0 %))]
-    (sequence (comp (map #(update-in % [:offset] - offset))
-                    (filter (comp keep? :offset)))
-              events)))
+  ([{:keys [audio-context] :as score}]
+   (let [audio-types (determine-audio-types score)]
+     (tear-down! audio-context audio-types score)))
+  ([audio-ctx audio-type & [score]]
+   (if (coll? audio-type)
+     (pdoseq-block [a-t audio-type]
+                   (tear-down! audio-ctx a-t score))
+     (when (set-up? audio-ctx audio-type)
+       (tear-down-audio-type! audio-ctx audio-type score)
+       (swap! audio-ctx update :audio-types disj audio-type)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defmulti start-event!
   "Kicks off a note/event, using the appropriate method based on the type of the
    instrument."
-  (fn [event instrument]
+  (fn [audio-ctx event instrument]
     (-> instrument :config :type)))
 
 (defmethod start-event! :default
-  [_ instrument]
+  [_ _ instrument]
   (log/errorf "No implementation of start-event! defined for type %s"
               (-> instrument :config :type)))
 
 (defmethod start-event! nil
-  [event instrument]
+  [_ _ _]
   :do-nothing)
 
 (defmethod start-event! :midi
-  [note instrument]
-  (midi/play-note! note))
+  [audio-ctx note _]
+  (midi/play-note! audio-ctx note))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defmulti stop-event!
   "Ends a note/event, using the appropriate method based on the type of the
    instrument."
-  (fn [event instrument]
+  (fn [audio-ctx event instrument]
     (-> instrument :config :type)))
 
 (defmethod stop-event! :default
-  [_ instrument]
+  [_ _ instrument]
   (log/errorf "No implementation of start-event! defined for type %s"
               (-> instrument :config :type)))
 
 (defmethod stop-event! nil
-  [event instrument]
+  [_ _ _]
   :do-nothing)
 
 (defmethod stop-event! :midi
-  [note instrument]
-  (midi/stop-note! note))
+  [audio-ctx note _]
+  (midi/stop-note! audio-ctx note))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn- score-length
-  "Calculates the length of a score in ms."
-  [{:keys [events] :as score}]
-  (let [events   (filter :duration events)
+  "Given an event set from a score, calculates the length of the score in ms."
+  [event-set]
+  (let [events   (filter :duration event-set)
         note-end (fn [{:keys [offset duration] :as note}]
                    (+ offset duration))]
     (if (and events (not (empty? events)))
-      (apply max (map note-end (filter :duration events)))
+      (apply max (map note-end events))
       0)))
 
 (defn determine-audio-types
@@ -178,52 +178,86 @@
           pos
 
           :else
-          (throw (Exception. (str "Do not support " (type pos) " as a play time."))))))
+          (throw (Exception.
+                   (str "Do not support " (type pos) " as a play time."))))))
 
 (defn start-finish-times [{:keys [from to]} markers]
   (map (partial lookup-time markers) [from to]))
 
+(defn shift-events
+  [events offset cut-off]
+  (let [offset  (or offset 0)
+        cut-off (when cut-off (- cut-off offset))
+        keep?   (if cut-off
+                  #(and (<= 0 %) (> cut-off %))
+                  #(<= 0 %))]
+    (sequence (comp (map #(update-in % [:offset] - offset))
+                    (filter (comp keep? :offset)))
+              events)))
+
+(defn schedule-event!
+  [^SynthesisEngine engine offset f]
+  (let [ts  (TimeStamp. offset)
+        cmd (proxy [ScheduledCommand] [] (run [] (f)))]
+    (.scheduleCommand engine ts cmd)))
+
 (defn play!
-  "Plays an Alda score, optionally from given start/end marks.
+  "Plays an Alda score, optionally from given start/end marks determined by
+   *play-opts*.
+
+   Optionally takes as a second argument a set of events to play (which could
+   be pre-filtered, e.g. for playing only a portion of the score).
+
+   In either case, the offsets of the events to be played are shifted back such
+   that the earliest event's offset is 0 -- this is so that playback will start
+   immediately.
 
    Returns a function that, when called mid-playback, will stop any further
    events from playing."
-  [{:keys [events markers instruments] :as score}]
+  [{:keys [instruments audio-context] :as score} & [event-set]]
   (let [{:keys [pre-buffer post-buffer one-off? async?]} *play-opts*
         audio-types (determine-audio-types score)
-        _           (set-up! audio-types score)
-        _           (refresh! audio-types score)
+        audio-ctx   (or audio-context (new-audio-context))
+        _           (set-up! audio-ctx audio-types score)
+        _           (refresh! audio-ctx audio-types score)
+        engine      (:synthesis-engine @audio-ctx)
         playing?    (atom true)
-        begin       (+ (.getCurrentTime *synthesis-engine*)
-                       (or pre-buffer 0))
-        [start end] (start-finish-times *play-opts* markers)
-        events      (shift-events events start end)
-        duration    (- (or end (score-length score))
-                       (or start 0))]
-    (pdoseq-block [{:keys [offset instrument duration] :as event} events
-                   :let [inst (-> instrument instruments)]]
-      (let [start-ts (TimeStamp. (+ begin (/ offset 1000.0)))
-            stop-ts  (TimeStamp. (+ begin (/ offset 1000.0)
-                                          (/ duration 1000.0)))
-            start-cmd (proxy [ScheduledCommand] []
-                        (run []
-                          (when @playing?
-                            (if (= (type event) alda.lisp.Function)
-                              ((:function event))
-                              (start-event! event inst)))))
-            stop-cmd  (proxy [ScheduledCommand] []
-                        (run []
-                          (when-not (= (type event) alda.lisp.Function)
-                            (stop-event! event inst))))]
-        (.scheduleCommand *synthesis-engine* start-ts start-cmd)
-        (.scheduleCommand *synthesis-engine* stop-ts stop-cmd)))
-    (when-not async?
-      ; block until the score is done playing
-      ; TODO: find a way to handle this that doesn't involve Thread/sleep
-      (Thread/sleep (+ duration
-                       (or pre-buffer 0)
-                       (or post-buffer 0))))
-    (when one-off? (tear-down! audio-types score))
+        events      (if event-set
+                      (let [earliest (->> (map :offset event-set)
+                                          (apply min Long/MAX_VALUE)
+                                          (max 0))]
+                        (shift-events event-set earliest nil))
+                      (let [event-set   (:events score)
+                            markers     (:markers score)
+                            [start end] (start-finish-times *play-opts*
+                                                            markers)]
+                        (shift-events event-set start end)))
+        begin       (+ (.getCurrentTime ^SynthesisEngine engine)
+                       (or pre-buffer 0))]
+    (pdoseq-block [{:keys [offset instrument duration] :as event} events]
+      (let [inst   (-> instrument instruments)
+            start! #(when @playing?
+                      (if-let [f (:function event)]
+                        (future (f))
+                        (start-event! audio-ctx event inst)))
+            stop!  #(when-not (:function event)
+                      (stop-event! audio-ctx event inst))]
+        (schedule-event! engine (+ begin
+                                   (/ offset 1000.0)) start!)
+        (when-not (:function event)
+          (schedule-event! engine (+ begin
+                                     (/ offset 1000.0)
+                                     (/ duration 1000.0)) stop!))))
+    (letfn [(clean-up-when-done []
+              ; TODO: find a way to handle this that doesn't involve Thread/sleep
+              (Thread/sleep (+ (score-length events)
+                               (or pre-buffer 0)
+                               (or post-buffer 1000)))
+              (when one-off?
+                (tear-down! audio-ctx audio-types score)))]
+      (if async?
+        (future (clean-up-when-done))
+        (clean-up-when-done)))
     #(reset! playing? false)))
 
 (defn make-wav!

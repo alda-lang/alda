@@ -6,20 +6,17 @@
   (testing "repeated events"
     (is (= (parse-with-context :music-data "[c d e] *4")
            '((alda.lisp/times 4
-               (do
-                 (alda.lisp/note (alda.lisp/pitch :c))
-                 (alda.lisp/note (alda.lisp/pitch :d))
-                 (alda.lisp/note (alda.lisp/pitch :e)))))))
+               [(alda.lisp/note (alda.lisp/pitch :c))
+                (alda.lisp/note (alda.lisp/pitch :d))
+                (alda.lisp/note (alda.lisp/pitch :e))]))))
     (is (= (parse-with-context :music-data "[ c > ]*5")
            '((alda.lisp/times 5
-               (do
-                 (alda.lisp/note (alda.lisp/pitch :c))
-                 (alda.lisp/octave :up))))))
+               [(alda.lisp/note (alda.lisp/pitch :c))
+                (alda.lisp/octave :up)]))))
     (is (= (parse-with-context :music-data "[ c > ] * 5")
            '((alda.lisp/times 5
-               (do
-                 (alda.lisp/note (alda.lisp/pitch :c))
-                 (alda.lisp/octave :up))))))
+               [(alda.lisp/note (alda.lisp/pitch :c))
+                (alda.lisp/octave :up)]))))
     (is (= (parse-with-context :music-data "c8*7")
            '((alda.lisp/times 7
                (alda.lisp/note
