@@ -95,6 +95,7 @@
                           alda.parser.duration-test
                           alda.parser.events-test
                           alda.parser.octaves-test
+                          alda.parser.plugins-test
                           alda.parser.repeats-test
                           alda.parser.score-test
                           alda.lisp.attributes-test
