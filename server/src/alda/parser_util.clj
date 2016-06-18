@@ -9,7 +9,7 @@
     (->> [alda-code cache]
          remove-comments
          ((fn [[alda-code cache]]
-            (parse-part cache alda-code))))))
+            (parse-part :lisp cache alda-code))))))
 
 (defn- test-parse-part
   [alda-code]
@@ -21,11 +21,11 @@
            {:score  #(if (> (count %&) 1)
                        (throw (Exception. "This is more than one part."))
                        (first %&))
-            :header #(parse-header cache (apply str %&))
+            :header #(parse-header :lisp cache (apply str %&))
             :part   (fn [names & music-data]
                       (list* 'alda.lisp/part
                              names
-                             (parse-part cache (apply str music-data))))}))))
+                             (parse-part :lisp cache (apply str music-data))))}))))
 
 (defn- test-parse-calls
   [alda-code]

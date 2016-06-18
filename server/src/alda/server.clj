@@ -169,11 +169,8 @@
   [code & {:keys [mode] :or {mode :lisp}}]
   (try
     (require '[alda.lisp :refer :all])
-    (let [parse-result (parse-input code)]
-      (edn-response (case mode
-                      :lisp   "TODO"
-                      :events parse-result
-                      :map    (apply score parse-result))))
+    (let [parse-result (parse-input code mode)]
+      (edn-response parse-result))
     (catch Throwable e
       (log/error e e)
       (server-error (.getMessage e)))))
