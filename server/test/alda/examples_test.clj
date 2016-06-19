@@ -57,33 +57,20 @@
 (deftest examples-test
   (require '[alda.lisp :refer :all])
   (testing "example scores:"
-    (doseq [score example-scores]
-      (let [parse-result (atom nil)]
-        (testing (str "parsing " score ".alda")
-          (printf "Parsing    %s.alda... %s" score (spacing score)) (flush)
+    (doseq [score example-scores
+            [mode desc] [[:lisp "code"] [:map "data"]]]
+      (let [score-text (-> (str score ".alda")
+                           io/resource
+                           io/file
+                           slurp)]
+        (testing (format "parsing (as %s) %s.alda" desc score)
+          (printf "Parsing (as %s) %s.alda... %s" desc score (spacing score))
+          (flush)
           (is
             (try
-              (let [score-text (-> (str score ".alda")
-                                   io/resource
-                                   io/file
-                                   slurp)
-                    [result time-ms] (time+ (parse-input score-text))]
+              (let [[result time-ms] (time+ (parse-input score-text mode))]
                 (println (green "OK") (format "(%s ms)" time-ms))
-                (reset! parse-result result)
                 true)
               (catch Exception e
                 (println (red "FAIL"))
-                (throw e)))))
-        (when @parse-result
-          (testing (str "evaluating " score ".alda")
-            (printf "Evaluating %s.alda... %s" score (spacing score)) (flush)
-            (is
-              (try
-                (let [[result time-ms] (time+ (eval @parse-result))]
-                  (println (green "OK") (format "(%s ms)" time-ms))
-                  true)
-                (catch Exception e
-                  (println (red "FAIL"))
-                  (throw e))
-                (finally
-                  (reset! parse-result nil))))))))))
+                (throw e)))))))))
