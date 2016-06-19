@@ -6,7 +6,7 @@
             [alda.lisp.events.voice     :refer (end-voice-group)]
             [alda.lisp.model.event      :refer (update-score)]
             [alda.lisp.model.instrument :refer (*stock-instruments*)]
-            [alda.parser-util           :refer (parse-with-context)]))
+            [alda.parser-util           :refer (parse-to-lisp-with-context)]))
 
 (defn- generate-id
   [name]
@@ -93,10 +93,10 @@
                  :current-instruments (set instances))))
 
 (defn- parse-instrument-call [s]
-  (parse-with-context :calls (-> s
-                                 (str/replace #":$" "")
-                                 (str/replace #"'" "\"")
-                                 (str \:))))
+  (parse-to-lisp-with-context :calls (-> s
+                                         (str/replace #":$" "")
+                                         (str/replace #"'" "\"")
+                                         (str \:))))
 
 (defmethod update-score :part
   [score {:keys [instrument-call events] :as part}]

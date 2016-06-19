@@ -2,7 +2,7 @@
   (:require [alda.lisp                        :refer :all]
             [alda.now                         :as    now]
             [alda.parser                      :refer (parse-input)]
-            [alda.parser-util                 :refer (parse-with-context)]
+            [alda.parser-util                 :refer (parse-to-map-with-context)]
             [alda.sound                       :refer (*play-opts*)]
             [alda.sound.midi                  :as    midi]
             [alda.util]
@@ -129,7 +129,7 @@
                   ]}]
   (try
     (require '[alda.lisp :refer :all])
-    (let [[context parse-result] (parse-with-context code)]
+    (let [[context parse-result] (parse-to-map-with-context code)]
       (cond
         (and (or replace-score?
                  one-off?

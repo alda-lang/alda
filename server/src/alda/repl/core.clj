@@ -1,12 +1,12 @@
 (ns alda.repl.core
-  (:require [instaparse.core :as    insta]
-            [taoensso.timbre :as    log]
-            [clojure.java.io :as    io]
-            [clojure.string  :as    str]
-            [alda.parser     :refer (parse-input)]
-            [alda.parser-util]
-            [alda.lisp       :refer :all]
-            [alda.now        :as    now])
+  (:require [instaparse.core  :as    insta]
+            [taoensso.timbre  :as    log]
+            [clojure.java.io  :as    io]
+            [clojure.string   :as    str]
+            [alda.parser      :refer (parse-input)]
+            [alda.parser-util :as    p-util]
+            [alda.lisp        :refer :all]
+            [alda.now         :as    now])
   (:import [jline.console ConsoleReader]))
 
 (def ^:dynamic *repl-reader* (doto (ConsoleReader.)
@@ -39,7 +39,7 @@
 
 (defn load-score!
   [score-text]
-  (let [loaded-score (-> score-text parse-input eval new-repl-score)]
+  (let [loaded-score (-> score-text (parse-input :map) new-repl-score)]
     (alter-var-root #'*current-score* (constantly loaded-score))
     (swap! *current-score* assoc :score-text score-text)))
 
@@ -50,7 +50,7 @@
    Sets the :parsing-context of the score or logs an error, depending on the
    outcome of the parse attempt."
   [alda-code]
-  (let [[context parse-result] (alda.parser-util/parse-with-context alda-code)]
+  (let [[context parse-result] (p-util/parse-to-lisp-with-context alda-code)]
     (if (= context :parse-failure)
       (log/error "Invalid Alda syntax.")
       (do

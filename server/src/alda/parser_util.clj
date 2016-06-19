@@ -4,15 +4,15 @@
             [clojure.java.io :as    io]))
 
 (defn- test-parse-music-data
-  [alda-code]
+  [mode alda-code]
   (let [cache (atom {})]
     (->> [alda-code cache]
          remove-comments
          ((fn [[alda-code cache]]
-            (parse-part :lisp cache alda-code))))))
+            (parse-part mode cache alda-code))))))
 
 (defn- test-parse-part
-  [alda-code]
+  [mode alda-code]
   (let [cache (atom {})]
     (->> [alda-code cache]
          remove-comments
@@ -21,14 +21,14 @@
            {:score  #(if (> (count %&) 1)
                        (throw (Exception. "This is more than one part."))
                        (first %&))
-            :header #(parse-header :lisp cache (apply str %&))
+            :header #(parse-header mode cache (apply str %&))
             :part   (fn [names & music-data]
                       (list* 'alda.lisp/part
                              names
-                             (parse-part :lisp cache (apply str music-data))))}))))
+                             (parse-part mode cache (apply str music-data))))}))))
 
 (defn- test-parse-calls
-  [alda-code]
+  [mode alda-code]
   (->> alda-code
        score-parser
        check-for-failure
@@ -49,7 +49,7 @@
                                {:names names, :nickname nickname}
                                {:names names})))}))))
 
-(defn parse-with-context
+(defn- parse-with-context
   "Parse a string of Alda code within a particular context, e.g. to parse
    additional music data for an already existing part, or to parse a single
    instrument part in an already existing score.
@@ -62,20 +62,27 @@
    returns a vector containing the context and the parse result. If parsing
    fails in all contexts, returns a vector containing `:parse-failure` and
    the error that was thrown at the broadest context level."
-  ([code]
+  ([mode code]
    (letfn [(try-ctxs [[ctx & ctxs]]
             (try
-              (let [parsed (parse-with-context ctx code)]
+              (let [parsed (parse-with-context mode ctx code)]
                 [ctx parsed])
               (catch Exception e
                 (if ctxs
                   (try-ctxs ctxs)
                   [:parse-failure e]))))]
     (try-ctxs [:music-data :part :score])))
-  ([ctx code]
+  ([mode ctx code]
     (case ctx
-      :music-data (test-parse-music-data code)
-      :part       (test-parse-part code)
-      :calls      (test-parse-calls code)
-      :score      (parse-input code))))
+      :music-data (test-parse-music-data mode code)
+      :part       (test-parse-part mode code)
+      :calls      (test-parse-calls mode code)
+      :score      (parse-input code mode))))
 
+(defn parse-to-lisp-with-context
+  [& args]
+  (apply parse-with-context :lisp args))
+
+(defn parse-to-map-with-context
+  [& args]
+  (apply parse-with-context :map args))
