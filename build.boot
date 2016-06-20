@@ -99,6 +99,7 @@
                           alda.lisp.attributes-test
                           alda.lisp.cram-test
                           alda.lisp.chords-test
+                          alda.lisp.code-test
                           alda.lisp.duration-test
                           alda.lisp.global-attributes-test
                           alda.lisp.markers-test
