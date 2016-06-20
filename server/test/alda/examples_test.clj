@@ -57,20 +57,45 @@
 (deftest examples-test
   (require '[alda.lisp :refer :all])
   (testing "example scores:"
-    (doseq [score example-scores
-            [mode desc] [[:lisp "code"] [:map "data"]]]
+    (doseq [score example-scores]
       (let [score-text (-> (str score ".alda")
                            io/resource
                            io/file
                            slurp)]
-        (testing (format "parsing (as %s) %s.alda" desc score)
-          (printf "Parsing (as %s) %s.alda... %s" desc score (spacing score))
+        (testing (format "parsing (as code) %s.alda" score)
+          (println \newline (str score ".alda"))
+          (printf "   Parsing as code...        ")
           (flush)
           (is
             (try
-              (let [[result time-ms] (time+ (parse-input score-text mode))]
+              (let [[result time-ms] (time+ (parse-input score-text :lisp))]
                 (println (green "OK") (format "(%s ms)" time-ms))
                 true)
               (catch Exception e
                 (println (red "FAIL"))
-                (throw e)))))))))
+                (throw e)))))
+        (let [parsed-score (atom nil)]
+          (testing (format "parsing (as score) %s.alda" score)
+            (printf "   Parsing as score...       ")
+            (flush)
+            (is
+              (try
+                (let [[result time-ms] (time+ (parse-input score-text :events))]
+                  (println (green "OK") (format "(%s ms)" time-ms))
+                  (reset! parsed-score result)
+                  true)
+                (catch Exception e
+                  (println (red "FAIL"))
+                  (throw e)))))
+          (testing (format "realizing parsed score %s.alda" score)
+            (printf "   Realizing parsed score... ")
+            (flush)
+            (is
+              (try
+                (let [[result time-ms]
+                      (time+ (apply (resolve 'alda.lisp/score) @parsed-score))]
+                  (println (green "OK") (format "(%s ms)" time-ms))
+                  true)
+                (catch Exception e
+                  (println (red "FAIL"))
+                  (throw e))))))))))

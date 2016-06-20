@@ -86,3 +86,7 @@
 (defn parse-to-map-with-context
   [& args]
   (apply parse-with-context :map args))
+
+(defn parse-to-events-with-context
+  [& args]
+  (apply parse-with-context :events args))

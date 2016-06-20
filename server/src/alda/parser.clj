@@ -133,14 +133,17 @@
        header-parser
        check-for-failure
        (insta/transform
-         (case mode
-           :lisp
-           {:header          #(list* %&)
-            :clj-expr-cached #(get-from-cache cache %)}
+         (let [lisp-xforms
+               {:header          #(list* %&)
+                :clj-expr-cached #(get-from-cache cache %)}
 
-           :map
-           {:header          vector
-            :clj-expr-cached #(eval (get-from-cache cache %))}))))
+               map-xforms
+               {:header          vector
+                :clj-expr-cached #(eval (get-from-cache cache %))}]
+           (case mode
+             :lisp   lisp-xforms
+             :map    map-xforms
+             :events map-xforms)))))
 
 (defn parse-part
   "Parses the events of a single call to an instrument part."
@@ -149,94 +152,100 @@
        part-parser
        check-for-failure
        (insta/transform
-         (merge name-transforms
-                number-transforms
-                (case mode
-                  :lisp
-                  {:events          #(list* %&)
-                   :repeat          (fn [event n]
-                                      (list 'alda.lisp/times n event))
-                   :event-sequence  #(vec (list* %&))
-                   :cram            #(list* 'alda.lisp/cram %&)
-                   :voices          #(list* 'alda.lisp/voices %&)
-                   :voice           (fn [voice-number & events]
-                                      (list*
-                                        'alda.lisp/voice
-                                        voice-number
-                                        events))
-                   :voice-zero      #(list 'alda.lisp/voice 0
-                                           (list 'alda.lisp/end-voices))
-                   :tie             (constantly :tie)
-                   :slur            (constantly :slur)
-                   :flat            (constantly :flat)
-                   :sharp           (constantly :sharp)
-                   :natural         (constantly :natural)
-                   :dots            #(hash-map :dots (count %))
-                   :note-length     #(list* 'alda.lisp/note-length %&)
-                   :milliseconds    #(list 'alda.lisp/ms %)
-                   :seconds         #(list 'alda.lisp/ms (* % 1000))
-                   :duration        #(list* 'alda.lisp/duration %&)
-                   :pitch           (fn [letter & accidentals]
-                                      (list*
-                                        'alda.lisp/pitch
-                                        (keyword letter)
-                                        accidentals))
-                   :note            #(list* 'alda.lisp/note %&)
-                   :rest            #(list* 'alda.lisp/pause %&)
-                   :chord           #(list* 'alda.lisp/chord %&)
-                   :octave-set      #(list 'alda.lisp/octave %)
-                   :octave-up       #(list 'alda.lisp/octave :up)
-                   :octave-down     #(list 'alda.lisp/octave :down)
-                   :marker          #(list 'alda.lisp/marker (:name %))
-                   :at-marker       #(list 'alda.lisp/at-marker (:name %))
-                   :barline         #(list 'alda.lisp/barline)
-                   :clj-expr-cached #(get-from-cache cache %)}
+         (let [lisp-xforms
+               {:events          #(list* %&)
+                :repeat          (fn [event n]
+                                   (list 'alda.lisp/times n event))
+                :event-sequence  #(vec (list* %&))
+                :cram            #(list* 'alda.lisp/cram %&)
+                :voices          #(list* 'alda.lisp/voices %&)
+                :voice           (fn [voice-number & events]
+                                   (list*
+                                     'alda.lisp/voice
+                                     voice-number
+                                     events))
+                :voice-zero      #(list 'alda.lisp/voice 0
+                                        (list 'alda.lisp/end-voices))
+                :tie             (constantly :tie)
+                :slur            (constantly :slur)
+                :flat            (constantly :flat)
+                :sharp           (constantly :sharp)
+                :natural         (constantly :natural)
+                :dots            #(hash-map :dots (count %))
+                :note-length     #(list* 'alda.lisp/note-length %&)
+                :milliseconds    #(list 'alda.lisp/ms %)
+                :seconds         #(list 'alda.lisp/ms (* % 1000))
+                :duration        #(list* 'alda.lisp/duration %&)
+                :pitch           (fn [letter & accidentals]
+                                   (list*
+                                     'alda.lisp/pitch
+                                     (keyword letter)
+                                     accidentals))
+                :note            #(list* 'alda.lisp/note %&)
+                :rest            #(list* 'alda.lisp/pause %&)
+                :chord           #(list* 'alda.lisp/chord %&)
+                :octave-set      #(list 'alda.lisp/octave %)
+                :octave-up       #(list 'alda.lisp/octave :up)
+                :octave-down     #(list 'alda.lisp/octave :down)
+                :marker          #(list 'alda.lisp/marker (:name %))
+                :at-marker       #(list 'alda.lisp/at-marker (:name %))
+                :barline         #(list 'alda.lisp/barline)
+                :clj-expr-cached #(get-from-cache cache %)}
 
-                  :map
-                  {:events          vector
-                   :repeat          (fn [event n]
-                                      (evts/times n event))
-                   :event-sequence  vector
-                   :cram            #(apply evts/cram %&)
-                   :voices          #(apply evts/voices %&)
-                   :voice           (fn [voice-number & events]
-                                      (apply evts/voice
-                                             voice-number
-                                             events))
-                   :voice-zero      #(evts/voice 0 (evts/end-voices))
-                   :tie             (constantly :tie)
-                   :slur            (constantly :slur)
-                   :flat            (constantly :flat)
-                   :sharp           (constantly :sharp)
-                   :natural         (constantly :natural)
-                   :dots            #(hash-map :dots (count %))
-                   :note-length     #(apply dur/note-length %&)
-                   :milliseconds    #(dur/ms %)
-                   :seconds         #(dur/ms (* % 1000))
-                   :duration        #(apply dur/duration %&)
-                   :pitch           (fn [letter & accidentals]
-                                      (apply pitch/pitch
-                                             (keyword letter)
-                                             accidentals))
-                   :note            #(apply evts/note %&)
-                   :rest            #(apply evts/pause %&)
-                   :chord           #(apply evts/chord %&)
-                   :octave-set      #(attrs/octave %)
-                   :octave-up       #(attrs/octave :up)
-                   :octave-down     #(attrs/octave :down)
-                   :marker          #(evts/marker (:name %))
-                   :at-marker       #(evts/at-marker (:name %))
-                   :barline         #(evts/barline)
-                   :clj-expr-cached #(eval (get-from-cache cache %))})))))
+               map-xforms
+               {:events          vector
+                :repeat          (fn [event n]
+                                   (evts/times n event))
+                :event-sequence  vector
+                :cram            #(apply evts/cram %&)
+                :voices          #(apply evts/voices %&)
+                :voice           (fn [voice-number & events]
+                                   (apply evts/voice
+                                          voice-number
+                                          events))
+                :voice-zero      #(evts/voice 0 (evts/end-voices))
+                :tie             (constantly :tie)
+                :slur            (constantly :slur)
+                :flat            (constantly :flat)
+                :sharp           (constantly :sharp)
+                :natural         (constantly :natural)
+                :dots            #(hash-map :dots (count %))
+                :note-length     #(apply dur/note-length %&)
+                :milliseconds    #(dur/ms %)
+                :seconds         #(dur/ms (* % 1000))
+                :duration        #(apply dur/duration %&)
+                :pitch           (fn [letter & accidentals]
+                                   (apply pitch/pitch
+                                          (keyword letter)
+                                          accidentals))
+                :note            #(apply evts/note %&)
+                :rest            #(apply evts/pause %&)
+                :chord           #(apply evts/chord %&)
+                :octave-set      #(attrs/octave %)
+                :octave-up       #(attrs/octave :up)
+                :octave-down     #(attrs/octave :down)
+                :marker          #(evts/marker (:name %))
+                :at-marker       #(evts/at-marker (:name %))
+                :barline         #(evts/barline)
+                :clj-expr-cached #(eval (get-from-cache cache %))}]
+           (merge name-transforms
+                  number-transforms
+                  (case mode
+                    :lisp   lisp-xforms
+                    :map    map-xforms
+                    :events map-xforms))))))
 
 (defn parse-input
   "Parses a string of Alda code.
 
-   Is `mode` is:
+   If `mode` is:
 
-     :lisp -- the output is Clojure code using the alda.lisp DSL
-     :map  -- the output is the map of score data that would result from
-              evaluating the code (default)"
+     :lisp   -- the output is Clojure code using the alda.lisp DSL (default)
+     :map    -- the output is the map of score data that would result from
+     evaluating the code
+     :events -- the output is a vector of events, which, when supplied as the
+     arguments to alda.lisp/score, will result in the aforementioned
+     map of score data"
   [alda-code & [mode]]
   (let [mode  (or mode :lisp)
         cache (atom {})]
@@ -244,25 +253,28 @@
          remove-comments
          separate-parts
          (insta/transform
-           (case mode
-             :lisp
-             {:score  #(apply concat '(alda.lisp/score) %&)
-              :header #(parse-header mode cache (apply str %&))
-              :part   (fn [names & music-data]
-                        (list
-                          (list* 'alda.lisp/part
-                                 names
-                                 (parse-part mode
-                                             cache
-                                             (apply str music-data)))))}
+           (let [lisp-xforms
+                 {:score  #(apply concat '(alda.lisp/score) %&)
+                  :header #(parse-header mode cache (apply str %&))
+                  :part   (fn [names & music-data]
+                            (list
+                              (list* 'alda.lisp/part
+                                     names
+                                     (parse-part mode
+                                                 cache
+                                                 (apply str music-data)))))}
 
-             :map
-             {:score  #(apply score/score %&)
-              :header #(parse-header mode cache (apply str %&))
-              :part   (fn [names & music-data]
-                        (apply evts/part
-                               names
-                               (parse-part mode
-                                           cache
-                                           (apply str music-data))))})))))
+                 map-xforms
+                 {:score  #(apply score/score %&)
+                  :header #(parse-header mode cache (apply str %&))
+                  :part   (fn [names & music-data]
+                            (apply evts/part
+                                   names
+                                   (parse-part mode
+                                               cache
+                                               (apply str music-data))))}]
+             (case mode
+               :lisp   lisp-xforms
+               :map    map-xforms
+               :events (assoc map-xforms :score vector)))))))
 
