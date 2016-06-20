@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1.0.0-rc20 (6/20/16)
+
+* Fixed a regression caused by 1.0.0-rc19, which was causing scores not to parse correctly.
+
 ## 1.0.0-rc19 (6/19/16)
 
 * Parsing/playing Alda scores is now significantly faster, thanks to some optimizations to the parser. (Many thanks to [aengelberg] for your help with this!)

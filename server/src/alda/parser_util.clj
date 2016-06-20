@@ -1,7 +1,8 @@
 (ns alda.parser-util
-  (:require [alda.parser     :refer :all]
-            [instaparse.core :as    insta]
-            [clojure.java.io :as    io]))
+  (:require [alda.parser      :refer :all]
+            [alda.lisp.events :as    evts]
+            [instaparse.core  :as    insta]
+            [clojure.java.io  :as    io]))
 
 (defn- test-parse-music-data
   [mode alda-code]
@@ -22,10 +23,21 @@
                        (throw (Exception. "This is more than one part."))
                        (first %&))
             :header #(parse-header mode cache (apply str %&))
-            :part   (fn [names & music-data]
-                      (list* 'alda.lisp/part
-                             names
-                             (parse-part mode cache (apply str music-data))))}))))
+            :part   (let [lisp-xform
+                          (fn [names & music-data]
+                            (list* 'alda.lisp/part
+                                   names
+                                   (parse-part mode cache (apply str music-data))))
+
+                          map-xform
+                          (fn [names & music-data]
+                            (apply evts/part
+                                   names
+                                   (parse-part mode cache (apply str music-data))))]
+                      (case mode
+                        :lisp   lisp-xform
+                        :map    map-xform
+                        :events map-xform))}))))
 
 (defn- test-parse-calls
   [mode alda-code]
