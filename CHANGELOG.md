@@ -1,5 +1,45 @@
 # CHANGELOG
 
+## 1.0.0-rc19 (6/19/16)
+
+* Parsing/playing Alda scores is now significantly faster, thanks to some optimizations to the parser. (Many thanks to [aengelberg] for your help with this!)
+
+* Fixed [#235](https://github.com/alda-lang/alda/issues/235) -- when trying to parse (as a `--map`) or play a very large score, a "Method code too large!" error was occurring because of the way that scores were parsed into Clojure code as an intermediate form and then `eval`'d. Now, the parser transforms an Alda score into the score map (i.e. the output of `alda parse --map`) directly.
+
+  Even though parsing and playing scores no longer does so by generating Clojure code, it is still possible to generate the Clojure code, if desired, by using `alda parse --lisp`.
+
+  This should be a transparent change; both ways of parsing should still work the same as before.
+
+### Breaking Changes
+
+* Part of the process of optimizing the Alda parser was removing cases of ambiguity. A consequence of doing this is that the `duration` grammar rule no longer includes a `barline` or `slur` at the end. Instead, a `barline` must stand on its own (after the `note` containing the `duration`), and a `slur` must be part of a `note` instead of its `duration`.
+
+  In other words, when writing alda.lisp code, whereas it used to be possible to do things like this:
+
+  ```
+  (note (pitch :c)
+        (duration (note-length 4)
+                  (barline)))
+
+  (note (pitch :c)
+        (duration (note-length 4)
+                  :slur))
+  ```
+
+  Now you can only do it like this:
+
+  ```
+  (note (pitch :c)
+        (duration (note-length 4)))
+  (barline)
+
+  (note (pitch :c)
+        (duration (note-length 4))
+        :slur)
+  ```
+
+  This is a trivial change, but I thought I'd mention it just in case anyone runs into it.
+
 ## 1.0.0-rc18 (5/28/16)
 
 * Fixes a bug related to the fix introduced in 1.0.0-rc17. For more details, see [issue #231](https://github.com/alda-lang/alda/issues/231).
@@ -452,4 +492,4 @@ Exit with error code 1 when parsing fails for `alda play` and `alda parse` tasks
 [heikkil]: https://github.com/heikkil
 [elyisgreat]: https://github.com/elyisgreat
 [jgerman]: https://github.com/jgerman
-
+[aengelberg]: https://github.com/aengelberg
