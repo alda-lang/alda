@@ -69,7 +69,7 @@ public class Client {
   @Parameters(commandDescription = "Display this help text")
   private static class CommandHelp extends AldaCommand {}
 
-  @Parameters(commandDescription = "Attempt to autoupdate alda")
+  @Parameters(commandDescription = "Download and install the latest release of Alda")
   private static class CommandUpdate extends AldaCommand {}
 
   @Parameters(commandDescription = "Start the Alda server")

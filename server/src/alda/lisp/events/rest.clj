@@ -1,7 +1,7 @@
 (ns alda.lisp.events.rest
-  (:require [alda.lisp.model.global-attribute :refer (apply-global-attributes)]
-            [alda.lisp.events.note            :refer (add-note-or-rest)]
-            [alda.lisp.model.event            :refer (update-score)]))
+  (:require [alda.lisp.events      :refer (apply-global-attributes)]
+            [alda.lisp.events.note :refer (add-note-or-rest)]
+            [alda.lisp.model.event :refer (update-score)]))
 
 (comment
   "Implementation-wise, a rest is just a note without a pitch, so a rest event
@@ -13,16 +13,4 @@
   (-> score
       (add-note-or-rest rest-event)
       (update-score (apply-global-attributes))))
-
-(defn pause
-  "Causes every instrument in :current-instruments to rest (not play) for the
-   specified duration.
-
-   If no duration is specified, each instrument will rest for its own internal
-   duration, which will be the duration last specified on a note or rest in
-   that instrument's part."
-  [& [{:keys [beats ms] :as dur}]]
-   {:event-type :rest
-    :beats      beats
-    :ms         ms})
 

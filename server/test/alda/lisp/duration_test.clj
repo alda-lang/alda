@@ -59,7 +59,7 @@
   (testing "slurred notes ignore quantization"
     (let [s      (score
                    (part "piano" (tempo 120) (quant 90)
-                     (note (pitch :c) (duration (note-length 4) :slur))))
+                     (note (pitch :c) (duration (note-length 4)) :slur)))
           piano  (get-instrument s "piano")
           events (:events s)]
       (is (== 500 (:duration (first events)))))

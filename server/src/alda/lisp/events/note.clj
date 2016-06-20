@@ -1,13 +1,13 @@
 (ns alda.lisp.events.note
-  (:require [alda.lisp.model.global-attribute :refer (apply-global-attributes)]
-            [alda.lisp.model.duration         :refer (calculate-duration)]
-            [alda.lisp.model.event            :refer (update-score add-events)]
-            [alda.lisp.model.offset           :refer (offset+)]
-            [alda.lisp.model.records          :refer (map->Note)]
-            [alda.lisp.score.util             :refer (merge-instruments
-                                                      merge-voice-instruments
-                                                      get-current-instruments)]
-            [taoensso.timbre                  :as    log]))
+  (:require [alda.lisp.events         :refer (apply-global-attributes)]
+            [alda.lisp.model.duration :refer (calculate-duration)]
+            [alda.lisp.model.event    :refer (update-score add-events)]
+            [alda.lisp.model.offset   :refer (offset+)]
+            [alda.lisp.model.records  :refer (map->Note)]
+            [alda.lisp.score.util     :refer (merge-instruments
+                                              merge-voice-instruments
+                                              get-current-instruments)]
+            [taoensso.timbre          :as    log]))
 
 (defn- event-updates
   "Given a score and a (note/rest) event, returns a list of updates for each
@@ -114,25 +114,4 @@
   (-> score
       (add-note-or-rest note)
       (update-score (apply-global-attributes))))
-
-(defn note
-  "Causes every instrument in :current-instruments to play a note at its
-   :current-offset for the specified duration.
-
-   If no duration is specified, the note is played for the instrument's own
-   internal duration, which will be the duration last specified on a note or
-   rest in that instrument's part."
-  ([pitch-fn]
-    (note pitch-fn nil false))
-  ([pitch-fn x]
-    ; x could be a duration or :slur
-    (let [duration (when (map? x) x)
-          slur?    (= x :slur)]
-      (note pitch-fn duration slur?)))
-  ([pitch-fn {:keys [beats ms slurred]} slur?]
-     {:event-type :note
-      :pitch-fn   pitch-fn
-      :beats      beats
-      :ms         ms
-      :slur?      (or slur? slurred)}))
 

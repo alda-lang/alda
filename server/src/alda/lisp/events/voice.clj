@@ -42,27 +42,3 @@
   [score _]
   (end-voice-group score))
 
-(defn voice
-  "One voice in a voice group."
-  [voice-number & events]
-  {:event-type :voice
-   :number     voice-number
-   :events     events})
-
-(defn voices
-  "Voices are chronological sequences of events that each start at the same
-   time. The resulting :current-offset is at the end of the voice that finishes
-   last."
-  [& voices]
-  {:event-type :voice-group
-   :voices     voices})
-
-(defn end-voices
-  "By default, the score remains in 'voice mode' until it reaches an end-voices
-   event. This is so that if an instrument part ends with a voice group, the
-   same voices can be appended later if the part is resumed, e.g. when building
-   a score gradually in the Alda REPL or in a Clojure process.
-
-   The end-voices event is emitted by the parser when it parses 'V0:'."
-  []
-  {:event-type :end-voice-group})

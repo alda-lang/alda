@@ -1,9 +1,9 @@
-score             = <ows> header? <ows> part* <ows>
+score             = <ows> header? part*
 header            = !calls <ows> music-data+
 part              = calls <ows> music-data*
 calls             = name
                     (<ows> <"/"> <ows> name)*
                     (<ows> nickname)?
                     <ows> <":">
-<music-data>      = !part #".|\n|\r"
+<music-data>      = !calls #"[a-zA-Z]*[^a-zA-Z]*([a-zA-Z][^a-zA-Z]+)*"
 

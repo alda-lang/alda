@@ -12,12 +12,3 @@
                              (->Function current-offset id function))
                            (get-current-instruments score)))))
 
-(defn schedule
-  "Schedules an arbitrary function to be called at the current point in the
-   score (determined by the current instrument's marker and offset).
-
-   If there are multiple current instruments, the function will be executed
-   once for each instrument, at the marker + offset of that instrument."
-  [f]
-  {:event-type :function
-   :function   f})

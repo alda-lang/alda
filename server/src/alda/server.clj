@@ -2,7 +2,7 @@
   (:require [alda.lisp                        :refer :all]
             [alda.now                         :as    now]
             [alda.parser                      :refer (parse-input)]
-            [alda.parser-util                 :refer (parse-with-context)]
+            [alda.parser-util                 :refer (parse-to-events-with-context)]
             [alda.sound                       :refer (*play-opts*)]
             [alda.sound.midi                  :as    midi]
             [alda.util]
@@ -129,7 +129,7 @@
                   ]}]
   (try
     (require '[alda.lisp :refer :all])
-    (let [[context parse-result] (parse-with-context code)]
+    (let [[context events] (parse-to-events-with-context code)]
       (cond
         (and (or replace-score?
                  one-off?
@@ -148,18 +148,12 @@
             (new-score!))
           (when-not one-off?
             (score-text<< code))
-          (let [events (-> (case context
-                             :music-data (vec parse-result)
-                             :part       parse-result
-                             :score      (vec (rest parse-result))
-                             parse-result)
-                           eval)]
-            (cond
-              one-off? (now/with-new-score
-                         (now/play! events))
-              silent?  (swap! *current-score* continue events)
-              :else    (now/with-score *current-score*
-                         (now/play! events))))
+          (cond
+            one-off? (now/with-new-score
+                       (now/play! events))
+            silent?  (swap! *current-score* continue events)
+            :else    (now/with-score *current-score*
+                       (now/play! events)))
           (success "OK"))))
     (catch Throwable e
       (log/error e e)
@@ -169,10 +163,8 @@
   [code & {:keys [mode] :or {mode :lisp}}]
   (try
     (require '[alda.lisp :refer :all])
-    (let [parse-result (parse-input code)]
-      (edn-response (case mode
-                      :lisp parse-result
-                      :map (eval parse-result))))
+    (let [parse-result (parse-input code mode)]
+      (edn-response parse-result))
     (catch Throwable e
       (log/error e e)
       (server-error (.getMessage e)))))

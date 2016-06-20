@@ -10,7 +10,7 @@
           start (:current-offset piano)
           c     ((pitch :c) (:octave piano) (:key-signature piano))
           s     (continue s
-                  (note (pitch :c) (duration (note-length 4) :slur)))
+                  (note (pitch :c) (duration (note-length 4)) :slur))
           piano (get-instrument s "piano")
           {:keys [duration offset pitch] :as note} (first (:events s))]
       (testing "should be placed at the current offset"

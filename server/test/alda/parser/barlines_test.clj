@@ -1,6 +1,6 @@
 (ns alda.parser.barlines-test
   (:require [clojure.test :refer :all]
-            [alda.parser-util :refer (parse-with-context)]))
+            [alda.parser-util :refer (parse-to-lisp-with-context)]))
 
 (def alda-code-1
   "violin: c d | e f | g a")
@@ -40,7 +40,7 @@
 
 (deftest barline-tests
   (testing "barlines are included in alda.lisp code (even though they don't do anything)"
-    (is (= alda-lisp-code-1 (parse-with-context :score alda-code-1))))
+    (is (= alda-lisp-code-1 (parse-to-lisp-with-context :score alda-code-1))))
   (testing "notes can be tied over barlines"
-    (is (= alda-lisp-code-2 (parse-with-context :score alda-code-2)))))
+    (is (= alda-lisp-code-2 (parse-to-lisp-with-context :score alda-code-2)))))
 

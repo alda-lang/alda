@@ -1,6 +1,5 @@
 (ns alda.lisp.model.global-attribute
-  (:require [alda.lisp.model.attribute :refer (get-attr
-                                               set-attribute
+  (:require [alda.lisp.model.attribute :refer (set-attribute
                                                apply-attribute)]
             [alda.lisp.model.event     :refer (update-score)]
             [alda.lisp.model.offset    :refer (absolute-offset
@@ -22,22 +21,7 @@
                   "unclear. There are multiple instruments active with "
                   "different time offsets.")))))
 
-(defn global-attribute
-  "Public fn for setting global attributes in a score.
-   e.g. (global-attribute :tempo 100)"
-  [attr val]
-  {:event-type :global-attribute-change
-   :attr       (:kw-name (get-attr attr))
-   :val        val})
-
-(defn global-attributes
-  "Convenience fn for setting multiple global attributes at once.
-   e.g. (global-attributes :tempo 100 :volume 50)"
-  [& attrs]
-  (for [[attr val] (partition 2 attrs)]
-    (global-attribute attr val)))
-
-(defn global-attribute-changes
+(defn- global-attribute-changes
   "Determines the attribute changes to apply to an instrument, based on the
    attribute changes established in the score (global attributes) and the
    instrument's :last- and :current-offset.
@@ -75,15 +59,4 @@
                   inst
                   attr-changes))
         inst))))
-
-(defn apply-global-attributes
-  "For each instrument in :current-instruments, looks between the instrument's
-   :last-offset and :current-offset and applies any attribute changes occurring
-   within that window.
-
-   Both global and per-instrument attributes are applied; in the case that a
-   per-instrument attribute is applied at the exact same time as a global
-   attribute, the per-instrument attribute takes precedence for that instrument."
-  []
-  {:event-type :apply-global-attributes})
 
