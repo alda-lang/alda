@@ -82,8 +82,8 @@
 
 (defn apply-plugins
   [[input cache]]
-  (let [code (str/replace input "Em" "o2 e/>b/e/g/b/>e<<")]
-    [code cache]))
+  (load "plugins")
+  [((resolve 'apply-clojure-plugin) input) cache])
 
 (defn remove-comments
   "Strips comments from a string of Alda code.
