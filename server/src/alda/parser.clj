@@ -85,6 +85,11 @@
   [cache id]
   (get @cache (symbol id)))
 
+(defn apply-plugins
+  [[input cache]]
+  (load "plugins")
+  [((resolve 'apply-clojure-plugin) input) cache])
+
 (defn remove-comments
   "Strips comments from a string of Alda code.
 
@@ -250,6 +255,7 @@
   (let [mode  (or mode :lisp)
         cache (atom {})]
     (->> [alda-code cache]
+         apply-plugins
          remove-comments
          separate-parts
          (insta/transform
