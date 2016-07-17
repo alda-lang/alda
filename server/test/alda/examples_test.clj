@@ -62,18 +62,34 @@
                            io/resource
                            io/file
                            slurp)]
-        (testing (format "parsing (as code) %s.alda" score)
-          (println \newline (str score ".alda"))
-          (printf "   Parsing as code...        ")
-          (flush)
-          (is
-            (try
-              (let [[result time-ms] (time+ (parse-input score-text :lisp))]
-                (println (green "OK") (format "(%s ms)" time-ms))
-                true)
-              (catch Exception e
-                (println (red "FAIL"))
-                (throw e)))))
+        (let [score-code (atom nil)]
+          (testing (format "parsing (as code) %s.alda" score)
+            (println \newline (str score ".alda"))
+            (printf "   Parsing as code...        ")
+            (flush)
+            (is
+              (try
+                (let [[result time-ms] (time+ (parse-input score-text :lisp))]
+                  (println (green "OK") (format "(%s ms)" time-ms))
+                  (reset! score-code result)
+                  true)
+                (catch Exception e
+                  (println (red "FAIL"))
+                  (throw e)))))
+          (testing (format "evaluating score code parsed from %s.alda" score)
+            (printf "   Evaluating score code...  ")
+            (flush)
+            (is
+              (try
+                (let [[result time-ms] (time+ (eval @score-code))]
+                  (println (green "OK") (format "(%s ms)" time-ms))
+                  true)
+                (catch Exception e
+                  (println (red "FAIL"))
+                  (throw e))))))
+
+        (println)
+
         (let [parsed-score (atom nil)]
           (testing (format "parsing (as score) %s.alda" score)
             (printf "   Parsing as score...       ")
