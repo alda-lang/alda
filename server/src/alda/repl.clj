@@ -73,7 +73,7 @@
 
             (re-find #"^:" alda-code)
             (let [[_ cmd rest-of-line] (re-matches #":(\S+)\s*(.*)" alda-code)]
-              (repl-command cmd rest-of-line))
+              (repl-command cmd (str/trim rest-of-line)))
 
             :else
             (when (repl/interpret! alda-code)
