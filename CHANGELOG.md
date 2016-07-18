@@ -18,7 +18,7 @@
   b4.~b16~a~g~a
   ```
 
-  The parser was trying to read this as the (legato/slurred) note `b4.~` followed immediately by another note, `b16`. This is now explicitly now allowed. The example was changed to the following (valid) syntax:
+  The parser was trying to read this as the (legato/slurred) note `b4.~` followed immediately by another note, `b16`. This is now explicitly not allowed. The example was changed to the following (valid) syntax:
 
   ```
   b4.~ b16~ a~ g~ a
