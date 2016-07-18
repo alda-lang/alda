@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## 1.0.0-rc22 (7/18/16)
+
+* The previous release inadvertently made it invalid for a note to be followed immediately (no spaces) by an octave up/down operator, e.g. `c<`. This release makes it acceptable again to do that.
+
+  (It's also still acceptable to follow an octave up/down operator immediately with a note, e.g. `>c`, and to sandwich a note between octave up/down operators, e.g. `>c<`.)
+
+### Breaking Changes
+
+* Because the `=` sign is used to define variables, the natural sign, which used to be `=`, has been changed to `_` to avoid confusion. If you have any scores using naturals, make sure you change the `=`'s to `_`'s to avoid parse errors.
+
 ## 1.0.0-rc21 (7/18/16)
 
 * Variables implemented! This simple, but powerful feature allows you to define named sequences of musical events and refer to them by name. You can even define variables that refer to other variables, giving you the means to build a score out of modular parts. For details, see [the docs](doc/variables.md).
