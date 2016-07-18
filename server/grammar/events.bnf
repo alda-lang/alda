@@ -41,7 +41,7 @@ natural              = "_"
 
     (* octaves *)
 
-<octave-change>      = (octave-set | octave-up+ | octave-down+)
+<octave-change>      = octave-set | (octave-up | octave-down)+
 octave-set           = <"o"> number
 octave-up            = <">">
 octave-down          = <"<">
