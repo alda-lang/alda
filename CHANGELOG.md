@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## 1.0.0-rc23 (7/18/16)
+
+* Fixes another bug related to `>` and `<` being used back-to-back without spaces in between.
+
+* An Alda score containing only Clojure code (i.e. no instrument parts) is now considered a valid score. For example, the following is a valid Alda score:
+
+  ```
+  (part "bassoon"
+    (for [x (map (comp keyword str) "cdefgab")]
+      (note (pitch x) (ms 100))))
+  ```
+
 ## 1.0.0-rc22 (7/18/16)
 
 * The previous release inadvertently made it invalid for a note to be followed immediately (no spaces) by an octave up/down operator, e.g. `c<`. This release makes it acceptable again to do that.
