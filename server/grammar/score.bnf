@@ -1,4 +1,4 @@
-score        = <ows> header? <ows> part (<ows> part)*
+score        = <ows> header? (<ows> part)*
 header       = !calls <ows> music-data+
 part         = calls <ows> music-data*
 calls        = name

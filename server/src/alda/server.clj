@@ -131,13 +131,6 @@
     (require '[alda.lisp :refer :all])
     (let [[context events] (parse-to-events-with-context code)]
       (cond
-        (and (or replace-score?
-                 one-off?
-                 (empty? (:score-text @*current-score*)))
-             (not (or (= context :score)
-                      (= context :part))))
-        (user-error "Invalid Alda syntax.")
-
         (= context :parse-failure)
         (user-error "Invalid Alda syntax.")
 
