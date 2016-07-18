@@ -52,7 +52,7 @@ Flats and sharps will decrease/increase the pitch by one half step, e.g. C + 1/2
 
 As an alternative to placing flats and sharps on every note that needs them, you may prefer to set the [key signature](attributes.md#key-signature), which will add the necessary sharps/flats to any note that needs them in order to match the key. See below for an example of using a key signature.
 
-To overwrite the flat/sharp specified by a key signature, you can include an accidental, i.e. `-` or `+` to make the note flat or sharp. You can also override the key signature and force a note to be natural with `=`, i.e. `c=` is a C natural regardless of what key you are in.
+To overwrite the flat/sharp specified by a key signature, you can include an accidental, i.e. `-` or `+` to make the note flat or sharp. You can also override the key signature and force a note to be natural with `_`, i.e. `c_` is a C natural regardless of what key you are in.
 
 ## Example
 

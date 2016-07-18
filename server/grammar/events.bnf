@@ -37,7 +37,7 @@ pitch                = #"[a-g]" accidental*
 <accidental>         = flat | sharp | natural
 flat                 = "-"
 sharp                = "+"
-natural              = "="
+natural              = "_"
 
     (* octaves *)
 

@@ -152,8 +152,8 @@
       (into {}
         (map (fn [[_ _ letter accidentals]]
                [(keyword letter)
-                (map {\- :flat \+ :sharp \= :natural} accidentals)])
-             (re-seq #"(([a-g])([+-=]*))" key-sig)))
+                (map {\- :flat \+ :sharp \_ :natural} accidentals)])
+             (re-seq #"(([a-g])([+-_]*))" key-sig)))
 
       (sequential? key-sig)
       (let [[scale-type & more]    (reverse key-sig)
