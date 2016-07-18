@@ -28,7 +28,7 @@ chord                = (note | rest) subchord+
                        <ows> (note | rest)
 <inside-chord>       = octave-change | clj-expr-cached
 
-note                 = pitch duration? (<ows> slur)*
+note                 = pitch duration? (<ows> slur)?
 rest                 = <"r"> duration?
 
     (* pitch *)
