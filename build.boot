@@ -108,6 +108,7 @@
                           alda.lisp.parts-test
                           alda.lisp.pitch-test
                           alda.lisp.score-test
+                          alda.lisp.variables-test
                           alda.lisp.voices-test
                           alda.util-test
 
