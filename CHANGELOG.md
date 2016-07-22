@@ -22,6 +22,12 @@
   piano: bar  # still "c d e f g," because that's what it was when it was defined
   ```
 
+### Breaking Changes
+
+* Prior to this release, trying to use a variable that wasn't defined would result in that variable being ignored and the rest of the score processed as usual.
+
+  Now, trying to use a variable that hasn't been defined results in an error being thrown. This will help score writers catch unintentional bugs caused by misspelling variable names, etc.
+
 ## 1.0.0-rc23 (7/18/16)
 
 * Fixes another bug related to `>` and `<` being used back-to-back without spaces in between.
