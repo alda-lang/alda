@@ -1,5 +1,28 @@
 # CHANGELOG
 
+## 1.0.0-rc24 (7/21/16)
+
+* Refines the behavior of variables when used within the definitions of other variables. The "scope" of a variable is now tracked when it is defined. This makes it possible to do things like this:
+  ```
+  foo = c d e
+  foo = foo f g
+
+  piano: foo  # expands to "c d e f g"
+  ```
+  It also makes it so that you won't run into unexpected bugs when redefining a variable that another variable depends on, as in this example:
+  ```
+  foo = c d e
+  bar = foo f g
+
+  foo = c
+
+  piano: bar  # still "c d e f g," because that's what it was when it was defined
+  ```
+
+### Breaking Changes
+
+* Undefined Variables now throw an error
+
 ## 1.0.0-rc23 (7/18/16)
 
 * Fixes another bug related to `>` and `<` being used back-to-back without spaces in between.
