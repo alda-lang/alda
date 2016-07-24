@@ -1,5 +1,47 @@
 # CHANGELOG
 
+## 1.0.0-rc25 (7/23/16)
+
+### Breaking Changes
+
+* There was a breaking change in one of the last few versions that may not have been documented, where it is no longer acceptable to place barlines in between notes instead of whitespace, like this:
+
+  ```
+  c|d|e
+  ```
+
+  To improve parsing flexibility, make the parser easier to develop, avoid unexpected bugs in future releases, and enforce a convention that will make Alda scores easier to read, whitespace is now required between all events, including not only notes, chords, event sequences, etc., but also barlines.
+
+* As of this release, it is no longer valid to end a note duration with a barline, e.g.:
+
+  ```
+  c1| d
+  ```
+
+  The correct way to write the above is:
+
+  ```
+  c1 | d
+  ```
+
+  The reasoning for this is the same as the point above -- events (including barlines) must be separated by whitespace.
+
+* Note that there is one situation that is a minor exception where it is acceptable for a barline to not be preceded/succeeded by whitespace:
+
+  ```
+  c1~|1~|1 d
+  ```
+
+  In this case, there are technically two "events" -- the C note and the D note. Alda's parser reads the C note as a single event where the pitch is C and the duration is 3 whole notes tied across 2 bar lines.
+
+  If this is confusing, note that it is also acceptable to put spaces in between the barlines:
+
+  ```
+  c1 | ~1 | ~1 d
+  ```
+
+  The last two examples are equivalent.
+
 ## 1.0.0-rc24 (7/21/16)
 
 * Refines the behavior of variables when used within the definitions of other variables. The "scope" of a variable is now tracked when it is defined. This makes it possible to do things like this:
