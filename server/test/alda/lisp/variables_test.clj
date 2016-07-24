@@ -21,7 +21,7 @@
           (is (contains? (-> s :variables) :foo))
           (is (contains? (-> s :variables :foo) :env))
           (is (contains? (-> s :variables :foo) :events))
-          (is (nil? (-> s :variables :foo :env)))
+          (is (= {} (-> s :variables :foo :env)))
           (is (= 3 (count (-> s :variables :foo :events))))))))
   (testing "getting a variable that has NOT been set"
     (testing "should result in an exception"
@@ -58,7 +58,7 @@
       (testing "should result in a nested variable definition"
         (is (not (nil? (-> s :variables :foo :env))))
         (is (contains? (-> s :variables :foo :env) :foo))
-        (is (nil? (-> s :variables :foo :env :foo :env)))
+        (is (= {} (-> s :variables :foo :env :foo :env)))
         (is (not (nil? (-> s :variables :foo :env :foo :events)))))
       (testing "should correctly use the old value in the new definition"
         (let [s (continue s
@@ -88,4 +88,33 @@
             (let [s (continue s
                       (part "piano"
                         (get-variable :bar)))]
-              (is (= 5 (count (:events s)))))))))))
+              (is (= 5 (count (:events s))))))))))
+  (testing "defining a variable that uses an undefined variable"
+    (testing "should throw an undefined variable exception"
+      (is (thrown-with-msg? Exception
+                            #"Undefined variable: bar"
+                            (score
+                              (set-variable :foo
+                                (get-variable :bar))
+                              (part "piano"
+                                (get-variable :foo))))))
+    (testing "should throw an undefined variable exception every time"
+      (is (thrown-with-msg? Exception
+                            #"Undefined variable: bar"
+                            (score
+                              (set-variable :foo
+                                (get-variable :bar))
+                              (part "piano"
+                                (get-variable :foo)
+                                (set-variable :baz
+                                  (get-variable :quux))
+                                (get-variable :foo)))))
+      (is (thrown-with-msg? Exception
+                            #"Undefined variable: quux"
+                            (score
+                              (set-variable :foo
+                                (get-variable :bar))
+                              (set-variable :baz
+                                (get-variable :quux))
+                              (part "piano"
+                                (get-variable :baz))))))))
