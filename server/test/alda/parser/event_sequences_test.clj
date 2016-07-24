@@ -4,6 +4,8 @@
 
 (deftest event-sequence-tests
   (testing "event sequences"
+    (is (= (parse-to-lisp-with-context :music-data "[]") '([])))
+    (is (= (parse-to-lisp-with-context :music-data "[   ]") '([])))
     (is (= (parse-to-lisp-with-context :music-data "[ c d e f c/e/g ]")
            '([(alda.lisp/note (alda.lisp/pitch :c))
               (alda.lisp/note (alda.lisp/pitch :d))
