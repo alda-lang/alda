@@ -18,20 +18,18 @@
                    (note (pitch :e)))))]
       (testing "should update the score correctly"
         (doseq [s [s1 s2]]
-          (is (contains? (-> s :variables) :foo))
-          (is (contains? (-> s :variables :foo) :env))
-          (is (contains? (-> s :variables :foo) :events))
-          (is (= {} (-> s :variables :foo :env)))
-          (is (= 3 (count (-> s :variables :foo :events))))))))
+          (is (contains? (-> s :env) :foo))
+          (is (not (nil? (-> s :env :foo))))
+          (is (= 3 (count (-> s :env :foo))))))))
   (testing "getting a variable that has NOT been set"
     (testing "should result in an exception"
       (is (thrown-with-msg? Exception
-                            #"Undefined variable"
+                            #"Undefined variable: lolbadvariable"
                             (score
                               (get-variable :lolbadvariable)))))
     (testing "should result in an exception"
       (is (thrown-with-msg? Exception
-                            #"Undefined variable"
+                            #"Undefined variable: lolbadvariable"
                             (score
                               (part "piano"
                                 (get-variable :lolbadvariable)))))))
@@ -53,18 +51,19 @@
                 (note (pitch :e)))
               (set-variable :foo
                 (get-variable :foo)
-                (note (pitch :f))
-                (note (pitch :g))))]
+                (note (pitch :f))))]
       (testing "should result in a nested variable definition"
-        (is (not (nil? (-> s :variables :foo :env))))
-        (is (contains? (-> s :variables :foo :env) :foo))
-        (is (= {} (-> s :variables :foo :env :foo :env)))
-        (is (not (nil? (-> s :variables :foo :env :foo :events)))))
+        (is (contains? (-> s :env) :foo))
+        (is (not (nil? (-> s :env :foo))))
+        ; one event seq, one F note
+        (is (= 2 (count (-> s :env :foo))))
+        ; the event seq should have 3 events (the notes C, D, and E)
+        (is (= 3 (count (-> s :env :foo first)))))
       (testing "should correctly use the old value in the new definition"
         (let [s (continue s
                   (part "piano"
                     (get-variable :foo)))]
-          (is (= 5 (count (:events s))))))))
+          (is (= 4 (count (:events s))))))))
   (testing "defining a variable that uses another variable"
     (let [s (score
               (set-variable :foo
@@ -95,26 +94,5 @@
                             #"Undefined variable: bar"
                             (score
                               (set-variable :foo
-                                (get-variable :bar))
-                              (part "piano"
-                                (get-variable :foo))))))
-    (testing "should throw an undefined variable exception every time"
-      (is (thrown-with-msg? Exception
-                            #"Undefined variable: bar"
-                            (score
-                              (set-variable :foo
-                                (get-variable :bar))
-                              (part "piano"
-                                (get-variable :foo)
-                                (set-variable :baz
-                                  (get-variable :quux))
-                                (get-variable :foo)))))
-      (is (thrown-with-msg? Exception
-                            #"Undefined variable: quux"
-                            (score
-                              (set-variable :foo
-                                (get-variable :bar))
-                              (set-variable :baz
-                                (get-variable :quux))
-                              (part "piano"
-                                (get-variable :baz))))))))
+                                (get-variable :bar))))))))
+
