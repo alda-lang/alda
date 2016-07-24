@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 1.0.0-rc26 (7/24/16)
+
+* Minor bugfix: in some situations, undefined variables were not being appropriately caught. Now, an error will always be thrown if you try to use a variable that hasn't been defined.
+
+* Empty event sequences, e.g. `[]` are now supported. Hey, why not? ㄟ( ･ө･ )ㄏ
+
+* Defining a previously undefined variable as itself, e.g. `foo = foo` used to trigger a stack overflow. Now it throws an "undefined variable: foo" error, which is more helpful.
+
 ## 1.0.0-rc25 (7/23/16)
 
 ### Breaking Changes
