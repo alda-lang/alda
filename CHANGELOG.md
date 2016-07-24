@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## 1.0.0-rc27 (7/24/16)
+
+* Behind the scenes change: simplified the code that handles getting and setting variables. See ebf2a42c78e5be3ef1cbedc4c2579a7bd72d08bb for more details.
+
+  TL;DR: when you use a variable inside the definition of another variable, now the value of the variable is retrieved right away, instead of waiting until you try to get the value of the outer variable.
+
+  For the most part, you should not notice any changes to the way that variables work, aside from the Alda score map (i.e. the result of using `alda parse -m`, or `:map` in the Alda REPL.) no longer containing the key `:variables` and having a greatly simplified `:env` key that is no longer a nested map, but a simple lookup of variables to their values.
+
+* Trying to define a variable where the value includes an undefined variable now throws an error immediately, instead of waiting until you get the value of the variable. For example, the following score will now fail immediately because `bar` isn't defined:
+
+  ```
+  foo = bar
+  ```
+
+  Whereas before this release, the "undefined variable" error would not be thrown until you tried to use `foo` in an instrument part.
+
 ## 1.0.0-rc26 (7/24/16)
 
 * Minor bugfix: in some situations, undefined variables were not being appropriately caught. Now, an error will always be thrown if you try to use a variable that hasn't been defined.
