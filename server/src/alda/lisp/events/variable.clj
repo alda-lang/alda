@@ -19,7 +19,8 @@
 
    Throws an undefined variable error if the variable doesn't exist in the env."
   [events env]
-  (doall (for [{:keys [event-type variable] :as event} events]
+  (doall (for [{:keys [event-type variable] :as event} events
+               :when (not (empty? event))]
            (if (= event-type :get-variable)
              (get-variable env variable)
              event))))

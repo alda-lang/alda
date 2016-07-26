@@ -137,5 +137,33 @@
                           (note (pitch :e))]))
               (part "piano"
                 (get-variable :foo)))]
-      (is (= 9 (count (:events s)))))))
+      (is (= 9 (count (:events s))))))
+  (testing "variables can contain empty S-expressions"
+    (let [s (score
+              (set-variable :foo ())
+              (part "piano"
+                (get-variable :foo)))]
+      (is (empty? (:events s))))
+    (let [s (score
+              (set-variable :foo () () ())
+              (part "piano"
+                (get-variable :foo)))]
+      (is (empty? (:events s))))
+    (let [s (score
+              (set-variable :foo [() () ()])
+              (part "piano"
+                (get-variable :foo)))]
+      (is (empty? (:events s))))
+    (let [s (score
+              (set-variable :foo
+                ()
+                (note (pitch :c))
+                ()
+                (note (pitch :d))
+                ()
+                (note (pitch :e))
+                ())
+              (part "piano"
+                (get-variable :foo)))]
+      (is (= 3 (count (:events s)))))))
 
