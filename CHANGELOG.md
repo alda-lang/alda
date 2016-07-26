@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1.0.0-rc29 (7/26/16)
+
+* Fixed a bug where using chords with implicit note duration within a CRAM expression would result in incorrect timing.
+
 ## 1.0.0-rc28 (7/25/16)
 
 More variable-related bugfixes in this release:

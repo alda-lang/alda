@@ -1,8 +1,7 @@
 (ns alda.lisp.events.chord
-  (:require [alda.lisp.model.duration :refer (max-beats)]
-            [alda.lisp.model.event    :refer (update-score add-events)]
-            [alda.lisp.model.offset   :refer (offset+ offset=)]
-            [alda.lisp.score.util     :refer (update-instruments)]))
+  (:require [alda.lisp.model.event  :refer (update-score add-events)]
+            [alda.lisp.model.offset :refer (offset+ offset=)]
+            [alda.lisp.score.util   :refer (update-instruments)]))
 
 (comment
   "To add the note events for chords, we turn on the :chord-mode flag, which
@@ -36,11 +35,31 @@
                :min-duration   nil)
         inst))))
 
+(defn- chord-beats
+  "Examines the notes in a chord, in order, and returns a tuple containing:
+
+   - the number of beats of the longest note that has a duration measured in
+     beats
+
+   - the updated default note duration"
+  [events default-beats]
+  (loop [[event & more-events] events
+         most-beats  0
+         default     default-beats]
+    (if-let [{:keys [beats]} event]
+      (recur more-events
+             (max most-beats (or beats default))
+             (or beats default))
+      [most-beats default])))
+
 (defmethod update-score :chord
-  [{:keys [beats-tally current-instruments] :as score}
+  [{:keys [beats-tally beats-tally-default current-instruments] :as score}
    {:keys [events] :as chord}]
   (if (and beats-tally (not (empty? current-instruments)))
-    (update score :beats-tally + (max-beats events))
+    (let [[chord-beats new-default] (chord-beats events beats-tally-default)]
+      (-> score
+          (update :beats-tally + chord-beats)
+          (assoc  :beats-tally-default new-default)))
     (-> score
         (assoc :chord-mode true)
         initialize-min-durations

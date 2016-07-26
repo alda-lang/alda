@@ -24,17 +24,6 @@
      :value (* (/ 4 number)
                (- 2 (Math/pow 2 (- dots))))}))
 
-(defn max-beats
-  "Returns the duration in beats of the longest event in `events`.
-
-   Ignores events which have no duration in beats.
-
-   Returns 0 if none of the events have a duration in beats."
-  [events]
-  (apply max (for [{:keys [beats]} (cons {:beats 0} events)
-                   :when beats]
-               beats)))
-
 (defn calculate-duration
   "Given a number of beats, a tempo, and a time-scaling factor, calculates the
    duration in milliseconds.
