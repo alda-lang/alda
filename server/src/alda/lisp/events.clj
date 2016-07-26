@@ -128,7 +128,7 @@
 (defn times
   "Repeats an Alda event (or sequence of events) `n` times."
   [n event]
-  (repeat n event))
+  (vec (repeat n event)))
 
 (defn cram
   "A cram expression evaluates the events it contains, time-scaled based on the

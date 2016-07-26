@@ -94,5 +94,48 @@
                             #"Undefined variable: bar"
                             (score
                               (set-variable :foo
-                                (get-variable :bar))))))))
+                                (get-variable :bar)))))))
+  (testing "variables can contain event seqs"
+    (let [s (score
+              (set-variable :foo [])
+              (part "piano"
+                (get-variable :foo)))]
+      (is (empty? (:events s))))
+    (let [s (score
+              (set-variable :foo [(note (pitch :c))])
+              (part "piano"
+                (get-variable :foo)))]
+      (is (= 1 (count (:events s)))))
+    (let [s (score
+              (set-variable :foo [(note (pitch :c))
+                                  (note (pitch :d))
+                                  (note (pitch :e))])
+              (part "piano"
+                (get-variable :foo)))]
+      (is (= 3 (count (:events s))))))
+  (testing "variables can contain repeated event seqs"
+    (let [s (score
+              (set-variable :foo
+                (times 1 [(note (pitch :c))
+                          (note (pitch :d))
+                          (note (pitch :e))]))
+              (part "piano"
+                (get-variable :foo)))]
+      (is (= 3 (count (:events s)))))
+    (let [s (score
+              (set-variable :foo
+                (times 2 [(note (pitch :c))
+                          (note (pitch :d))
+                          (note (pitch :e))]))
+              (part "piano"
+                (get-variable :foo)))]
+      (is (= 6 (count (:events s)))))
+    (let [s (score
+              (set-variable :foo
+                (times 3 [(note (pitch :c))
+                          (note (pitch :d))
+                          (note (pitch :e))]))
+              (part "piano"
+                (get-variable :foo)))]
+      (is (= 9 (count (:events s)))))))
 
