@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## 1.0.0-rc28 (7/25/16)
+
+More variable-related bugfixes in this release:
+
+* Setting a variable that includes a repeated event sequence, e.g. `foo = [c c]*3` no longer throws an error.
+
+* Setting a variable that includes an empty Clojure expression, e.g. `foo = () c d e f` no longer throws an error.
+
+Shout-out to [elyisgreat] for finding all these bugs!
+
 ## 1.0.0-rc27 (7/24/16)
 
 * Behind the scenes change: simplified the code that handles getting and setting variables. See ebf2a42c78e5be3ef1cbedc4c2579a7bd72d08bb for more details.
