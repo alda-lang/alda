@@ -1,10 +1,10 @@
 (ns alda.sound
   (:require [alda.sound.midi :as    midi]
-            [taoensso.timbre :as    log]
             [alda.util       :refer (check-for
                                      parse-time
                                      pdoseq-block
-                                     parse-position)])
+                                     parse-position)]
+            [taoensso.timbre :as    log])
   (:import [com.softsynth.shared.time TimeStamp ScheduledCommand]
            [com.jsyn.engine SynthesisEngine]))
 
@@ -191,15 +191,47 @@
         keep?   (if cut-off
                   #(and (<= 0 %) (> cut-off %))
                   #(<= 0 %))]
-    (sequence (comp (map #(update-in % [:offset] - offset))
-                    (filter (comp keep? :offset)))
-              events)))
+    (->> (sequence (comp (map #(update-in % [:offset] - offset))
+                         (filter (comp keep? :offset)))
+                   events)
+         (sort-by :offset))))
 
 (defn schedule-event!
   [^SynthesisEngine engine offset f]
   (let [ts  (TimeStamp. offset)
         cmd (proxy [ScheduledCommand] [] (run [] (f)))]
     (.scheduleCommand engine ts cmd)))
+
+(defn schedule-events!
+  [events score audio-ctx playing?]
+  (let [{:keys [pre-buffer]}  *play-opts*
+        {:keys [instruments]} score
+        engine (:synthesis-engine @audio-ctx)
+        begin  (+ (.getCurrentTime ^SynthesisEngine engine)
+                  (or pre-buffer 0))]
+    (pdoseq-block [{:keys [offset instrument duration] :as event} events]
+      (let [inst   (-> instrument instruments)
+            start! #(when @playing?
+                      (if-let [f (:function event)]
+                        (future (f))
+                        (start-event! audio-ctx event inst)))
+            stop!  #(when-not (:function event)
+                      (stop-event! audio-ctx event inst))]
+        (schedule-event! engine (+ begin
+                                   (/ offset 1000.0)) start!)
+        (when-not (:function event)
+          (schedule-event! engine (+ begin
+                                     (/ offset 1000.0)
+                                     (/ duration 1000.0)) stop!))))))
+
+(defn clean-up-when-done
+  [events score audio-ctx audio-types]
+  (let [{:keys [pre-buffer post-buffer]} *play-opts*]
+    ; TODO: find a way to handle this that doesn't involve Thread/sleep
+    (Thread/sleep (+ (score-length events)
+                     (or pre-buffer 0)
+                     (or post-buffer 1000)))
+    (tear-down! audio-ctx audio-types score)))
 
 (defn play!
   "Plays an Alda score, optionally from given start/end marks determined by
@@ -214,13 +246,12 @@
 
    Returns a function that, when called mid-playback, will stop any further
    events from playing."
-  [{:keys [instruments audio-context] :as score} & [event-set]]
-  (let [{:keys [pre-buffer post-buffer one-off? async?]} *play-opts*
+  [score & [event-set]]
+  (let [{:keys [one-off? async?]} *play-opts*
         audio-types (determine-audio-types score)
-        audio-ctx   (or audio-context (new-audio-context))
+        audio-ctx   (or (:audio-context score) (new-audio-context))
         _           (set-up! audio-ctx audio-types score)
         _           (refresh! audio-ctx audio-types score)
-        engine      (:synthesis-engine @audio-ctx)
         playing?    (atom true)
         events      (if event-set
                       (let [earliest (->> (map :offset event-set)
@@ -232,32 +263,12 @@
                             [start end] (start-finish-times *play-opts*
                                                             markers)]
                         (shift-events event-set start end)))
-        begin       (+ (.getCurrentTime ^SynthesisEngine engine)
-                       (or pre-buffer 0))]
-    (pdoseq-block [{:keys [offset instrument duration] :as event} events]
-      (let [inst   (-> instrument instruments)
-            start! #(when @playing?
-                      (if-let [f (:function event)]
-                        (future (f))
-                        (start-event! audio-ctx event inst)))
-            stop!  #(when-not (:function event)
-                      (stop-event! audio-ctx event inst))]
-        (schedule-event! engine (+ begin
-                                   (/ offset 1000.0)) start!)
-        (when-not (:function event)
-          (schedule-event! engine (+ begin
-                                     (/ offset 1000.0)
-                                     (/ duration 1000.0)) stop!))))
-    (letfn [(clean-up-when-done []
-              ; TODO: find a way to handle this that doesn't involve Thread/sleep
-              (Thread/sleep (+ (score-length events)
-                               (or pre-buffer 0)
-                               (or post-buffer 1000)))
-              (when one-off?
-                (tear-down! audio-ctx audio-types score)))]
+        clean-up    #(clean-up-when-done events score audio-ctx audio-types)]
+    (schedule-events! events score audio-ctx playing?)
+    (when one-off?
       (if async?
-        (future (clean-up-when-done))
-        (clean-up-when-done)))
+        (future (clean-up))
+        (clean-up)))
     #(reset! playing? false)))
 
 (defn make-wav!
