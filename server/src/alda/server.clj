@@ -129,25 +129,28 @@
                   ]}]
   (try
     (require '[alda.lisp :refer :all])
-    (let [[context events] (parse-to-events-with-context code)]
-      (cond
-        (= context :parse-failure)
-        (user-error "Invalid Alda syntax.")
-
-        :else
+    (if one-off?
+      (if-let [score (try
+                       (parse-input code :map)
+                       (catch Throwable e
+                         nil))]
         (do
-          (when replace-score?
-            (close-score!)
-            (new-score!))
-          (when-not one-off?
-            (score-text<< code))
-          (cond
-            one-off? (now/with-new-score
-                       (now/play! events))
-            silent?  (swap! *current-score* continue events)
-            :else    (now/with-score *current-score*
-                       (now/play! events)))
-          (success "OK"))))
+          (now/play-score! score)
+          (success "OK"))
+        (user-error "Invalid Alda syntax."))
+      (let [[context events] (parse-to-events-with-context code)]
+        (if (= context :parse-failure)
+          (user-error "Invalid Alda syntax.")
+          (do
+            (when replace-score?
+              (close-score!)
+              (new-score!))
+            (score-text<< code)
+            (if silent?
+              (swap! *current-score* continue events)
+              (now/with-score *current-score*
+                (now/play! events)))
+            (success "OK")))))
     (catch Throwable e
       (log/error e e)
       (server-error (.getMessage e)))))
