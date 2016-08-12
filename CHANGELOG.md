@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## 1.0.0-rc30 (8/11/16)
+
+* Removed the `--pre-buffer` and `--post-buffer` options, as I realized they weren't necessary. For details, see [this issue comment](https://github.com/alda-lang/alda/issues/26#issuecomment-239345440).
+
+* Improved the timing of the behind-the-scenes clean-up that occurs after a score is finished playing.
+
+* Fixed a bug where in some cases, that clean-up might not have been happening.
+
+* Implemented a minor optimization to the way events are scheduled; earlier events are now given priority scheduling, making it less likely for events to be skipped during playback.
+
 ## 1.0.0-rc29 (7/26/16)
 
 * Fixed a bug where using chords with implicit note duration within a CRAM expression would result in incorrect timing.
