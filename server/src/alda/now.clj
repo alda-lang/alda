@@ -1,7 +1,7 @@
 (ns alda.now
   (:require [clojure.set :as set]
             [alda.lisp   :as lisp]
-            [alda.sound  :as sound]
+            [alda.sound  :as sound :refer (*play-opts*)]
             [alda.util   :as util]))
 
 (defn- prepare-audio-context!
@@ -74,7 +74,8 @@
    appended."
   [& body]
   (sound/with-play-opts {:async?   true
-                         :one-off? (not *current-score*)}
+                         :one-off? (or (:one-off? *play-opts*)
+                                       (not *current-score*))}
     (let [score-before (if *current-score*
                          @*current-score*
                          @(new-score))

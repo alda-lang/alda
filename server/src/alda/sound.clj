@@ -203,10 +203,11 @@
     (.scheduleCommand engine ts cmd)))
 
 (defn schedule-events!
-  [events score audio-ctx playing?]
+  [events score audio-ctx playing? done?]
   (let [{:keys [instruments]} score
         engine (:synthesis-engine @audio-ctx)
-        begin  (.getCurrentTime ^SynthesisEngine engine)]
+        begin  (.getCurrentTime ^SynthesisEngine engine)
+        end!   #(when @playing? (reset! done? true))]
     (pdoseq-block [{:keys [offset instrument duration] :as event} events]
       (let [inst   (-> instrument instruments)
             start! #(when @playing?
@@ -220,15 +221,16 @@
         (when-not (:function event)
           (schedule-event! engine (+ begin
                                      (/ offset 1000.0)
-                                     (/ duration 1000.0)) stop!))))))
+                                     (/ duration 1000.0)) stop!))))
+    (schedule-event! engine (+ begin
+                               (/ (score-length events) 1000.0)
+                               1) end!)))
 
-(defn clean-up-when-done
-  [events score audio-ctx audio-types]
-  (let [{:keys [post-buffer]} *play-opts*]
-    ; TODO: find a way to handle this that doesn't involve Thread/sleep
-    (Thread/sleep (+ (score-length events)
-                     (or post-buffer 1000)))
-    (tear-down! audio-ctx audio-types score)))
+(defn clean-up-when-done!
+  [done? score audio-ctx audio-types]
+  (while (not @done?)
+    (Thread/sleep 250))
+  (tear-down! audio-ctx audio-types score))
 
 (defn play!
   "Plays an Alda score, optionally from given start/end marks determined by
@@ -250,6 +252,7 @@
         _           (set-up! audio-ctx audio-types score)
         _           (refresh! audio-ctx audio-types score)
         playing?    (atom true)
+        done?       (atom false)
         events      (if event-set
                       (let [earliest (->> (map :offset event-set)
                                           (apply min Long/MAX_VALUE)
@@ -260,8 +263,8 @@
                             [start end] (start-finish-times *play-opts*
                                                             markers)]
                         (shift-events event-set start end)))
-        clean-up    #(clean-up-when-done events score audio-ctx audio-types)]
-    (schedule-events! events score audio-ctx playing?)
+        clean-up    #(clean-up-when-done! done? score audio-ctx audio-types)]
+    (schedule-events! events score audio-ctx playing? done?)
     (when one-off?
       (if async?
         (future (clean-up))

@@ -241,7 +241,7 @@
   ; evaluate/play code as a one-off score without affecting the current score
   (POST "/play" {:keys [play-opts params body] :as request}
     (let [code (get-input params body)]
-      (binding [*play-opts* play-opts]
+      (binding [*play-opts* (assoc play-opts :one-off? true)]
         (handle-code code :one-off? true))))
 
   ; evaluate/play code within the context of the current score
