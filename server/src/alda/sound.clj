@@ -204,11 +204,9 @@
 
 (defn schedule-events!
   [events score audio-ctx playing?]
-  (let [{:keys [pre-buffer]}  *play-opts*
-        {:keys [instruments]} score
+  (let [{:keys [instruments]} score
         engine (:synthesis-engine @audio-ctx)
-        begin  (+ (.getCurrentTime ^SynthesisEngine engine)
-                  (or pre-buffer 0))]
+        begin  (.getCurrentTime ^SynthesisEngine engine)]
     (pdoseq-block [{:keys [offset instrument duration] :as event} events]
       (let [inst   (-> instrument instruments)
             start! #(when @playing?
@@ -226,10 +224,9 @@
 
 (defn clean-up-when-done
   [events score audio-ctx audio-types]
-  (let [{:keys [pre-buffer post-buffer]} *play-opts*]
+  (let [{:keys [post-buffer]} *play-opts*]
     ; TODO: find a way to handle this that doesn't involve Thread/sleep
     (Thread/sleep (+ (score-length events)
-                     (or pre-buffer 0)
                      (or post-buffer 1000)))
     (tear-down! audio-ctx audio-types score)))
 

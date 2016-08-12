@@ -338,13 +338,12 @@
       #_(wrap-print-request)))
 
 (defn start-server!
-  [port & {:keys [pre-buffer post-buffer]}]
+  [port & {:keys [post-buffer]}]
   (log/info "Loading Alda environment...")
   (start-alda-environment!)
 
   (log/infof "Starting Alda server on port %s..." port)
-  (run-jetty (app :play-opts {:pre-buffer  pre-buffer
-                              :post-buffer post-buffer
+  (run-jetty (app :play-opts {:post-buffer post-buffer
                               :async?      true})
              {:port  port
               :join? false}))

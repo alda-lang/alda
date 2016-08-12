@@ -40,10 +40,6 @@ public class Client {
                description = "The port of the Alda server")
     public int port = 27713;
 
-    @Parameter(names = {"-b", "--pre-buffer"},
-               description = "A number of milliseconds of lead time for buffering")
-    public int preBuffer = 0;
-
     @Parameter(names = {"-B", "--post-buffer"},
                description = "A number of milliseconds to wait after playing " +
                              "the score, before exiting")
@@ -307,7 +303,6 @@ public class Client {
 
     AldaServer server = new AldaServer(globalOpts.host,
                                        globalOpts.port,
-                                       globalOpts.preBuffer,
                                        globalOpts.postBuffer);
 
     try {

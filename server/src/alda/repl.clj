@@ -48,13 +48,12 @@
   (println "done.")
   (Thread/sleep 400))
 
-(defn start-repl! [& {:keys [pre-buffer post-buffer]}]
+(defn start-repl! [& {:keys [post-buffer]}]
   (prepare-midi-system!)
   (print-banner!)
   (let [done? (atom false)]
     (binding [*out*             (.getOutput ^ConsoleReader *repl-reader*)
-              sound/*play-opts* {:pre-buffer  pre-buffer
-                                 :post-buffer post-buffer
+              sound/*play-opts* {:post-buffer post-buffer
                                  :async?      true}]
       (repl/refresh-prompt!)
       (require '[alda.lisp :refer :all])
