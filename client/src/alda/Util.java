@@ -338,7 +338,7 @@ public final class Util {
             int pid = Integer.parseInt(a.group(1));
             if (b.find()) {
               int port = Integer.parseInt(b.group(1));
-              AldaServer server = new AldaServer("localhost", port, 0, 0);
+              AldaServer server = new AldaServer("localhost", port);
               server.status();
             } else {
               System.out.println("[???] Mysterious server running on unknown " +

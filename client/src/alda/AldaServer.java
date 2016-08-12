@@ -47,16 +47,14 @@ import net.jodah.recurrent.RetryPolicy;
 public class AldaServer {
   private String host;
   private int port;
-  private int postBuffer;
   private CloseableHttpClient httpclient;
 
   public String getHost() { return host; }
   public int getPort() { return port; }
 
-  public AldaServer(String host, int port, int postBuffer) {
+  public AldaServer(String host, int port) {
     this.host = normalizeHost(host);
     this.port = port;
-    this.postBuffer = postBuffer;
 
     RequestConfig config = RequestConfig.custom()
                                         .setConnectTimeout(5000)
@@ -362,8 +360,8 @@ public class AldaServer {
       return;
     }
 
-    Object[] opts = {"--host", host, "--port", Integer.toString(port),
-                     "--post-buffer", Integer.toString(postBuffer),
+    Object[] opts = {"--host", host,
+                     "--port", Integer.toString(port),
                      "--alda-fingerprint"};
 
     Util.forkProgram(Util.conj(opts, "server"));
@@ -380,8 +378,7 @@ public class AldaServer {
   public void startFg() throws InvalidOptionsException {
     assertNotRemoteHost();
 
-    Object[] args = {port,
-                     Keyword.intern("post-buffer"), postBuffer};
+    Object[] args = {port};
 
     Util.callClojureFn("alda.server/start-server!", args);
   }
@@ -390,7 +387,7 @@ public class AldaServer {
   public void startRepl() throws InvalidOptionsException {
     assertNotRemoteHost();
 
-    Object[] args = {Keyword.intern("post-buffer"), postBuffer};
+    Object[] args = {};
 
     Util.callClojureFn("alda.repl/start-repl!", args);
   }

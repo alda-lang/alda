@@ -39,11 +39,6 @@ public class Client {
     @Parameter(names = {"-p", "--port"},
                description = "The port of the Alda server")
     public int port = 27713;
-
-    @Parameter(names = {"-B", "--post-buffer"},
-               description = "A number of milliseconds to wait after playing " +
-                             "the score, before exiting")
-    public int postBuffer = 1000;
   }
 
   private static class AldaCommand {
@@ -301,9 +296,7 @@ public class Client {
       System.exit(1);
     }
 
-    AldaServer server = new AldaServer(globalOpts.host,
-                                       globalOpts.port,
-                                       globalOpts.postBuffer);
+    AldaServer server = new AldaServer(globalOpts.host, globalOpts.port);
 
     try {
       if (globalOpts.help) {
