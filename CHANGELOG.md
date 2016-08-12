@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1.0.0-rc31 (8/12/16)
+
+* Fixed a bug where the Alda server was spinning its wheels for a long time trying to parse certain scores when played via the command-line.
+
 ## 1.0.0-rc30 (8/11/16)
 
 * Removed the `--pre-buffer` and `--post-buffer` options, as I realized they weren't necessary. For details, see [this issue comment](https://github.com/alda-lang/alda/issues/26#issuecomment-239345440).
