@@ -14,16 +14,12 @@
                   [instaparse             "1.4.1"]
                   [io.aviso/pretty        "0.1.20"]
                   [com.taoensso/timbre    "4.1.1"]
-                  [clj-http               "2.0.0"]
-                  [compojure              "1.4.0"]
+                  [cheshire               "5.6.3"]
                   [djy                    "0.1.4"]
-                  [instaparse             "1.4.1"]
-                  [io.aviso/pretty        "0.1.20"]
                   [jline                  "2.12.1"]
                   [org.clojars.sidec/jsyn "16.7.3"]
                   [potemkin               "0.4.1"]
-                  [ring                   "1.4.0"]
-                  [ring/ring-defaults     "0.1.5"]
+                  [cc.qbits/jilch         "0.3.0"]
                   [str-to-argv            "0.1.0"]
 
                   ; client

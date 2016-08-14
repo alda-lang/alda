@@ -52,7 +52,7 @@ This will build the `alda` and `alda.exe` executables and place them in the outp
 
 The Alda client is a fairly straightforward Java CLI app that uses [JCommander](http://jcommander.org) to parse command-line arguments.
 
-Interaction with servers is done via simple HTTP requests. Unless specified via the `-H/--host` option, the Alda client assumes the servers are run locally and sends requests to localhost. The default port is 27713.
+Interaction with servers is done via [ZeroMQ](http://zeromq.org) TCP/IP requests with a JSON payload. The Alda client takes command-line arguments, translates them into a JSON request, and sends the request to the server. Unless specified via the `-H/--host` option, the Alda client assumes the server is running locally and sends requests to localhost. The default port is 27713.
 
 Running `alda start` forks a new Alda process in the background, passing it the (hidden) `server` command to start the server. Server output is hidden from the user (though the client will report if there is an error).
 
@@ -92,8 +92,6 @@ To run an Alda server with any local changes you've made:
     boot dev -a server --port 27713 --alda-fingerprint
 
 The `--port` and `--alda-fingerprint` arguments are strictly optional, but including them will ensure that the Alda client recognizes your development server as an Alda server and includes it in the output of `alda list`.
-
-There is a middleware built into the development server that reloads all of the server namespaces before each request. This makes it so that the server does not need to be restarted each time you make a change to the code.
 
 #### Alda REPL
 
@@ -310,7 +308,7 @@ The core logic for what goes on behind the curtain when you use the REPL lives i
 
 #### alda.server
 
-`alda.server/start-server!` is the entrypoint to the Alda server. It starts a Clojure web app using [Ring](https://github.com/ring-clojure/ring) and [Compojure](https://github.com/weavejester/compojure), and serves it via [Jetty](https://en.wikipedia.org/wiki/Jetty_(web_server)).
+`alda.server/start-server!` is the entrypoint to the Alda server. It opens a [ZeroMQ](http://zeromq.org) socket and responds to requests until told to stop.
 
-Requests can be made to the server via any HTTP client, e.g. curl, or via the Alda client, which communicates with the server by making HTTP requests.
+Requests can be made to the server via any client that can make TCP/IP requests to a ZeroMQ REQ/RES socket.
 

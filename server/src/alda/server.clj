@@ -1,21 +1,19 @@
 (ns alda.server
-  (:require [alda.lisp                        :refer :all]
-            [alda.now                         :as    now]
-            [alda.parser                      :refer (parse-input)]
-            [alda.parser-util                 :refer (parse-to-events-with-context)]
-            [alda.sound                       :refer (*play-opts*)]
-            [alda.sound.midi                  :as    midi]
+  (:require [alda.lisp        :refer :all]
+            [alda.now         :as    now]
+            [alda.parser      :refer (parse-input)]
+            [alda.parser-util :refer (parse-to-events-with-context)]
+            [alda.sound       :refer (*play-opts*)]
+            [alda.sound.midi  :as    midi]
             [alda.util]
-            [alda.version                     :refer (-version-)]
-            [ring.middleware.defaults         :refer (wrap-defaults api-defaults)]
-            [ring.middleware.multipart-params :refer (wrap-multipart-params)]
-            [ring.adapter.jetty               :refer (run-jetty)]
-            [compojure.core                   :refer :all]
-            [compojure.route                  :refer (not-found)]
-            [taoensso.timbre                  :as    log]
-            [clojure.java.io                  :as    io]
-            [clojure.pprint                   :refer (pprint)]
-            [clojure.string                   :as    str]))
+            [alda.version     :refer (-version-)]
+            [qbits.jilch.mq   :as    zmq]
+            [taoensso.timbre  :as    log]
+            [cheshire.core    :as    json]
+            [clojure.edn      :as    edn]
+            [clojure.java.io  :as    io]
+            [clojure.pprint   :refer (pprint)]
+            [clojure.string   :as    str]))
 
 (defn new-server-score
   [& [score]]
@@ -86,36 +84,36 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn- response
-  [code]
-  (fn [body]
-    {:status  code
-     :headers {"Content-Type"   "text/html"
-               "X-Alda-Version" -version-}
-     :body    body}))
+(defn- success-response
+  [body]
+  {:success true
+   :body    body})
 
-(def ^:private success      (response 200))
-(def ^:private user-error   (response 400))
-(def ^:private server-error (response 500))
+(defn- need-confirmation-response
+  [prompt]
+  {:success false
+   :body (str prompt \newline
+              \newline
+              "If so, please re-submit your request and include the parameter "
+              "\"confirming\": true")})
 
-(def unsaved-changes-response
-  ((response 409) (str "Warning: the score has unsaved changes. Are you sure "
-                       "you want to do this?\n\n"
-                       "If so, please re-submit your request and include the "
-                       "header X-Alda-Confirm:yes.")))
+(def ^:private unsaved-changes-response
+  (need-confirmation-response
+    (str "Warning: the score has unsaved changes. Are you sure you want to "
+         "do this?")))
 
-(def existing-file-response
-  ((response 409) (str "Warning: there is an existing file with the filename "
-                       "you specified. Saving the score to this file will "
-                       "erase whatever is already there. Are you sure you "
-                       "want to do this?\n\n"
-                       "If so, please re-submit your request and include the "
-                       "header X-Alda-Confirm:yes.")))
+(def ^:private existing-file-response
+  (need-confirmation-response
+    (str "Warning: there is an existing file with the filename you specified. "
+         "Saving the score to this file will erase whatever is already there. "
+         "Are you sure you want to do this?")))
 
-(defn- edn-response
-  [x]
-  (-> (success (with-out-str (pprint x)))
-      (assoc-in [:headers "Content-Type"] "application/edn")))
+(defn- error-response
+  [e]
+  {:success false
+   :message (if (string? e)
+              e
+              (.getMessage e))})
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -129,224 +127,177 @@
                   ]}]
   (try
     (require '[alda.lisp :refer :all])
-    (if one-off?
-      (if-let [score (try
-                       (parse-input code :map)
-                       (catch Throwable e
-                         nil))]
-        (do
-          (now/play-score! score)
-          (success "OK"))
-        (user-error "Invalid Alda syntax."))
-      (let [[context events] (parse-to-events-with-context code)]
-        (if (= context :parse-failure)
-          (user-error "Invalid Alda syntax.")
+    (let [msg (if silent? "Loading..." "Playing...")]
+      (if one-off?
+        (if-let [score (try
+                         (parse-input code :map)
+                         (catch Throwable e
+                           nil))]
           (do
-            (when replace-score?
-              (close-score!)
-              (new-score!))
-            (score-text<< code)
-            (if silent?
-              (swap! *current-score* continue events)
-              (now/with-score *current-score*
-                (now/play! events)))
-            (success "OK")))))
+            (now/play-score! score)
+            (success-response msg))
+          (error-response "Invalid Alda syntax."))
+        (let [[context events] (parse-to-events-with-context code)]
+          (if (= context :parse-failure)
+            (error-response "Invalid Alda syntax.")
+            (do
+              (when replace-score?
+                (close-score!)
+                (new-score!))
+              (score-text<< code)
+              (if silent?
+                (swap! *current-score* continue events)
+                (now/with-score *current-score*
+                  (now/play! events)))
+              (success-response msg))))))
     (catch Throwable e
       (log/error e e)
-      (server-error (.getMessage e)))))
+      (error-response e))))
 
 (defn handle-code-parse
   [code & {:keys [mode] :or {mode :lisp}}]
   (try
     (require '[alda.lisp :refer :all])
-    (let [parse-result (parse-input code mode)]
-      (edn-response parse-result))
+    (success-response (case mode
+                        :lisp (let [result (parse-input code mode)]
+                                (with-out-str (pprint result)))
+                        :map  (parse-input code mode)))
     (catch Throwable e
       (log/error e e)
-      (server-error (.getMessage e)))))
+      (error-response "Invalid Alda syntax."))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def ^:private running? (atom true))
 
 (defn stop-server!
   []
   (log/info "Received request to stop. Shutting down...")
-  (try
-    (future
-      (Thread/sleep 300)
-      (System/exit 0))
-    (catch Throwable e
-      (log/error e e)
-      (server-error (.getMessage e))))
-  (success "Shutting down."))
+  (reset! running? false))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defmulti process :command)
 
-(defn- get-input [params body]
-  (slurp (if-let [file (:file params)]
-           (:tempfile file)
-           body)))
+(defmethod process :default
+  [{:keys [command]}]
+  (error-response (format "Unrecognized command: %s" command)))
 
-(defroutes server-routes
-  ; ping for server status
-  (GET "/" []
-    (edn-response (score-info)))
+(defmethod process nil
+  [_]
+  (error-response "Missing command"))
 
-  ; stop the server and exits (alias: GET "/stop")
-  (DELETE "/" {:as request}
-    (if (and (modified?) (not (confirming? request)))
+(defmethod process "append"
+  [{:keys [body]}]
+  (handle-code body :silent? true))
+
+(defmethod process "current-score"
+  [{:keys [options]}]
+  (let [{:keys [as]} options]
+    (case as
+      "lisp" (handle-code-parse (:score-text @*current-score*) :mode :lisp)
+      "map"  (success-response (dissoc @*current-score* :audio-context))
+      "text" (success-response (:score-text @*current-score*))
+      nil    (error-response "Missing option: as")
+      (error-response (format "Invalid score format: \"%s\"" as)))))
+
+(defmethod process "info"
+  [_]
+  (success-response (score-info)))
+
+(defmethod process "load"
+  [{:keys [body options confirming]}]
+  (if (and (modified?) (not confirming))
+    unsaved-changes-response
+    (let [{:keys [filename]} options]
+      (swap! *current-score* assoc :filename filename)
+      (handle-code body :silent? true :replace-score? true))))
+
+(defmethod process "new-score"
+  [{:keys [confirming]}]
+  (if (and (modified?) (not confirming))
+    unsaved-changes-response
+    (do
+      (close-score!)
+      (new-score!)
+      (success-response "New score initialized."))))
+
+(defmethod process "parse"
+  [{:keys [body options]}]
+  (let [{:keys [as]} options]
+    (case as
+      "lisp" (handle-code-parse body :mode :lisp)
+      "map"  (handle-code-parse body :mode :map)
+      nil    (error-response "Missing option: as")
+      (error-response (format "Invalid format: %s" as)))))
+
+(defmethod process "play"
+  [{:keys [body options confirming]}]
+  (let [{:keys [append replace]} options]
+    (if (and replace (modified?) (not confirming))
       unsaved-changes-response
       (do
-        (close-score!)
-        (stop-server!))))
+        (when replace (swap! *current-score* assoc :filename nil))
+        (cond
+          append  (handle-code body)
+          replace (handle-code body :replace-score? true)
+          :else   (binding [*play-opts* (assoc *play-opts* :one-off? true)]
+                    (handle-code body :one-off? true)))))))
 
-  ; add to the current score without playing anything
-  (POST "/add" {:keys [params body] :as request}
-    (let [code (get-input params body)]
-      (handle-code code :silent? true)))
+(defmethod process "play-score"
+  [{:keys [body options]}]
+  (let [{:keys [from to]} options]
+    (binding [*play-opts* (assoc *play-opts* :from from :to to)]
+      (now/play-score! *current-score*)
+      (success-response "Playing..."))))
 
-  ; (implementation detail, for use by alda client)
-  ; sets the filename of the score
-  (PUT "/filename" {:keys [params body] :as request}
-    (let [filename (get-input params body)]
-      (swap! *current-score* assoc :filename filename)
-      (success "OK")))
-
-  ; replace the current score with code from a file or string
-  (PUT "/load" {:keys [params body] :as request}
-    (let [code (get-input params body)]
-      (if (and (modified?) (not (confirming? request)))
-        unsaved-changes-response
-        (do
-          (swap! *current-score* assoc :filename nil)
-          (handle-code code :silent? true
-                            :replace-score? true)))))
-
-  ; parse code and return the resulting alda.lisp code
-  (POST "/parse" {:keys [params body] :as request}
-    (let [code (get-input params body)]
-      (handle-code-parse code)))
-  (POST "/parse/lisp" {:keys [params body] :as request}
-    (let [code (get-input params body)]
-      (handle-code-parse code :mode :lisp)))
-
-  ; parse + evaluate code and return the resulting score map
-  (POST "/parse/map" {:keys [params body] :as request}
-    (let [code (get-input params body)]
-      (if (and (modified?) (not (confirming? request)))
-        unsaved-changes-response
-        (handle-code-parse code :mode :map))))
-
-  ; play the full score (default), or from `from` to `to` params
-  (GET "/play" {:keys [play-opts params] :as request}
-    (let [{:keys [from to]} params]
-      (binding [*play-opts* (assoc play-opts :from from :to to)]
-        (now/play-score! *current-score*)
-        (success "OK"))))
-
-  ; evaluate/play code as a one-off score without affecting the current score
-  (POST "/play" {:keys [play-opts params body] :as request}
-    (let [code (get-input params body)]
-      (binding [*play-opts* (assoc play-opts :one-off? true)]
-        (handle-code code :one-off? true))))
-
-  ; evaluate/play code within the context of the current score
-  (POST "/play/append" {:keys [play-opts params body]:as request}
-    (let [code (get-input params body)]
-      (binding [*play-opts* play-opts]
-        (handle-code code))))
-
-  ; overwrite the current score and play it
-  (PUT "/play" {:keys [play-opts params body] :as request}
-    (if (and (modified?) (not (confirming? request)))
-      unsaved-changes-response
-      (let [code (get-input params body)]
-        (swap! *current-score* assoc :filename nil)
-        (binding [*play-opts* play-opts]
-          (handle-code code :replace-score? true)))))
-
-  ; save changes to a score's file
-  (GET "/save" []
-    (let [{:keys [filename score-text]} @*current-score*]
-      (if filename
-        (do
-          (spit filename score-text)
-          (success (str "File saved: " filename)))
-        (user-error "You must supply a filename."))))
-
-  ; save changes to a file
-  (PUT "/save" {:keys [params body] :as request}
-    (let [{:keys [score-text]} @*current-score*
-          filename             (str/trim (get-input params body))]
-      (if (and (.exists (io/as-file filename)) (not (confirming? request)))
+(defmethod process "save"
+  [{:keys [options confirming]}]
+  (let [{:keys [score-text]} @*current-score*]
+    (if-let [filename (:filename options)]
+      (if (and (.exists (io/as-file filename)) (not confirming))
         existing-file-response
         (do
           (spit filename score-text)
           (swap! *current-score* assoc :filename filename)
-          (success (str "File saved: " filename))))))
+          (success-response (format "File saved: %s" filename))))
+      (if-let [filename (:filename @*current-score*)]
+        (do
+          (spit filename score-text)
+          (success-response (format "File saved: %s" filename)))
+        (error-response "You must supply a filename.")))))
 
-  ; get the current score text
-  (GET "/score" []
-    (success (:score-text @*current-score*)))
-  (GET "/score/text" []
-    (success (:score-text @*current-score*)))
+(defmethod process "stop-server"
+  [{:keys [confirming]}]
+  (if (and (modified?) (not confirming))
+    unsaved-changes-response
+    (do
+      (close-score!)
+      (stop-server!)
+      (success-response "Shutting down."))))
 
-  ; get the current score, as alda.lisp code
-  (GET "/score/lisp" []
-    (handle-code-parse (:score-text @*current-score*) :mode :lisp))
-
-  ; get the current score-map
-  (GET "/score/map" []
-    (edn-response @*current-score*))
-
-  ; delete the current score and start a new one
-  (DELETE "/score" {:as request}
-    (if (and (modified?) (not (confirming? request)))
-      unsaved-changes-response
-      (do
-        (close-score!)
-        (new-score!)
-        (success "New score initialized."))))
-
-  ; stop the server (alias for DELETE "/")
-  (GET "/stop" {:as request}
-    (if (and (modified?) (not (confirming? request)))
-      unsaved-changes-response
-      (do
-        (close-score!)
-        (stop-server!))))
-
-  (GET "/version" []
-    (success -version-))
-
-  (not-found (user-error "Invalid route.")))
+(defmethod process "version"
+  [_]
+  (success-response -version-))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defn wrap-print-request
-  "For debug purposes."
-  [next-handler]
-  (fn [request]
-    (prn request)
-    (next-handler request)))
-
-(defn wrap-play-opts
-  [next-handler play-opts]
-  (fn [request]
-    (-> (assoc request :play-opts play-opts)
-        next-handler)))
-
-(defn app
-  [& {:keys [play-opts]}]
-  (-> (wrap-defaults server-routes api-defaults)
-      (wrap-multipart-params)
-      (wrap-play-opts (or play-opts *play-opts*))
-      #_(wrap-print-request)))
 
 (defn start-server!
   [port]
   (log/info "Loading Alda environment...")
   (start-alda-environment!)
 
-  (log/infof "Starting Alda server on port %s..." port)
-  (run-jetty (app :play-opts {:async? true})
-             {:port  port
-              :join? false}))
+  (log/infof "Starting Alda zmq server on port %s..." port)
+  (zmq/with-context zmq-ctx 2
+    (with-open [socket (-> zmq-ctx
+                           (zmq/socket zmq/rep)
+                           (zmq/bind (str "tcp://*:" port)))]
+      (while (and (not (.. Thread currentThread isInterrupted)) @running?)
+        (let [req (zmq/recv socket)]
+          (try
+            (let [msg (json/parse-string (String. req) true)
+                  res (process msg)]
+              (zmq/send socket (json/generate-string res)))
+            (catch Throwable e
+              (log/error e e)
+              (zmq/send socket (json/generate-string (error-response e)))))))))
+  (System/exit 0))
 
