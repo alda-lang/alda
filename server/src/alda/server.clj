@@ -151,9 +151,10 @@
                   ; don't replace or add to the current score, just play the code
                   one-off?
                   ]}]
-  (try
-    (require '[alda.lisp :refer :all])
-    (let [msg (if silent? "Loading..." "Playing...")]
+  (let [msg (if silent? "Loading..." "Playing...")
+        save-state @*current-score*]
+    (try
+      (require '[alda.lisp :refer :all])
       (if one-off?
         (if-let [score (try
                          (parse-input code :map)
@@ -176,10 +177,11 @@
                 (swap! *current-score* continue events)
                 (now/with-score *current-score*
                   (now/play! events)))
-              (success-response msg))))))
-    (catch Throwable e
-      (log/error e e)
-      (error-response e))))
+              (success-response msg)))))
+      (catch Throwable e
+        (log/error e e)
+        (reset! *current-score* save-state)
+        (error-response e)))))
 
 (defn handle-code-parse
   [code & {:keys [mode] :or {mode :lisp}}]
@@ -238,9 +240,10 @@
   [{:keys [body options confirming]}]
   (if (and (modified?) (not confirming))
     unsaved-changes-response
-    (let [{:keys [filename]} options]
+    (let [{:keys [filename]} options
+          result (handle-code body :silent? true :replace-score? true)]
       (swap! *current-score* assoc :filename filename)
-      (handle-code body :silent? true :replace-score? true))))
+      result)))
 
 (defmethod process "modified?"
   [_]

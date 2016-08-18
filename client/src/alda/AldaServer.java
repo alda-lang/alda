@@ -324,7 +324,7 @@ public class AldaServer {
                                    "that will be lost.\nAre you sure you " +
                                    "want to proceed?");
       if (confirm) {
-        load(code, true);
+        load(code, filename, true);
       }
 
       return;
