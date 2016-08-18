@@ -92,15 +92,6 @@ public class AldaServer {
       return true;
     } catch (ServerResponseException e) {
       return false;
-    } catch (InvalidOptionsException e) {
-      System.out.println("An InvalidOptionsException was thrown for some reason!");
-      return false;
-    } catch (URISyntaxException e) {
-      System.out.println("A URISyntaxException was thrown for some reason!");
-      return false;
-    } catch (IOException e) {
-      System.out.println("An IOException was thrown for some reason!");
-      return false;
     }
   }
 
@@ -139,7 +130,7 @@ public class AldaServer {
     return Recurrent.get(ping, retryPolicy);
   }
 
-  public void startBg() throws InvalidOptionsException, URISyntaxException, IOException {
+  public void startBg() throws InvalidOptionsException {
     assertNotRemoteHost();
 
     boolean serverAlreadyUp = checkForConnection();
@@ -152,14 +143,22 @@ public class AldaServer {
                      "--port", Integer.toString(port),
                      "--alda-fingerprint"};
 
-    Util.forkProgram(Util.conj(opts, "server"));
-    msg("Starting Alda server...");
+    try {
+      Util.forkProgram(Util.conj(opts, "server"));
+      msg("Starting Alda server...");
 
-    boolean serverUp = waitForConnection();
-    if (serverUp) {
-      serverUp();
-    } else {
-      serverDown();
+      boolean serverUp = waitForConnection();
+      if (serverUp) {
+        serverUp();
+      } else {
+        serverDown();
+      }
+    } catch (URISyntaxException e) {
+      error("Unable to fork '%s' into the background; " +
+            " got URISyntaxException: %s", e.getInput(), e.getReason());
+    } catch (IOException e) {
+      error("An IOException occurred trying to fork a background process: %s",
+            e.getMessage());
     }
   }
 
@@ -180,9 +179,7 @@ public class AldaServer {
     Util.callClojureFn("alda.repl/start-repl!", args);
   }
 
-  public void stop(boolean autoConfirm)
-    throws ServerResponseException, InvalidOptionsException,
-           URISyntaxException, IOException {
+  public void stop(boolean autoConfirm) throws ServerResponseException {
     boolean serverAlreadyDown = !checkForConnection();
     if (serverAlreadyDown) {
       msg("Server already down.");
@@ -224,8 +221,7 @@ public class AldaServer {
   }
 
   public void restart(boolean autoConfirm)
-    throws ServerResponseException, IOException,
-           InvalidOptionsException, URISyntaxException {
+    throws ServerResponseException, InvalidOptionsException {
     stop(autoConfirm);
     System.out.println();
     startBg();
@@ -240,9 +236,7 @@ public class AldaServer {
     }
   }
 
-  public void version()
-    throws ServerResponseException, InvalidOptionsException,
-           IOException, URISyntaxException {
+  public void version() throws ServerResponseException {
     AldaServerRequest req = new AldaServerRequest(this.host, this.port);
     req.command = "version";
     AldaServerResponse res = req.send();
@@ -251,9 +245,7 @@ public class AldaServer {
     msg(serverVersion);
   }
 
-  public String getFilename()
-    throws ServerResponseException, InvalidOptionsException,
-           IOException, URISyntaxException {
+  public String getFilename() throws ServerResponseException {
     AldaServerRequest req = new AldaServerRequest(this.host, this.port);
     req.command = "filename";
     AldaServerResponse res = req.send();
@@ -261,9 +253,7 @@ public class AldaServer {
     return res.body;
   }
 
-  public boolean isScoreModified()
-    throws ServerResponseException, InvalidOptionsException,
-           IOException, URISyntaxException {
+  public boolean isScoreModified() throws ServerResponseException {
     AldaServerRequest req = new AldaServerRequest(this.host, this.port);
     req.command = "modified?";
     AldaServerResponse res = req.send();
@@ -271,9 +261,7 @@ public class AldaServer {
     return (res.body.equals("true"));
   }
 
-  public void info()
-    throws ServerResponseException, InvalidOptionsException,
-           IOException, URISyntaxException {
+  public void info() throws ServerResponseException {
     AldaServerRequest req = new AldaServerRequest(this.host, this.port);
     req.command = "info";
     AldaServerResponse res = req.send();
@@ -285,9 +273,7 @@ public class AldaServer {
     }
   }
 
-  public void score(String mode)
-    throws ServerResponseException, InvalidOptionsException,
-           IOException, URISyntaxException {
+  public void score(String mode) throws ServerResponseException {
     AldaServerRequest req = new AldaServerRequest(this.host, this.port);
     req.command = "current-score";
     req.options = new AldaServerRequestOptions();
@@ -297,9 +283,7 @@ public class AldaServer {
     System.out.println(res.body);
   }
 
-  public void delete(boolean autoConfirm)
-    throws ServerResponseException, InvalidOptionsException,
-           IOException, URISyntaxException {
+  public void delete(boolean autoConfirm) throws ServerResponseException {
     AldaServerRequest req = new AldaServerRequest(this.host, this.port);
     req.command = "new-score";
     req.confirming = autoConfirm;
@@ -322,8 +306,7 @@ public class AldaServer {
   }
 
   public void load(String code, String filename, boolean autoConfirm)
-    throws ServerResponseException, InvalidOptionsException,
-           IOException, URISyntaxException {
+    throws ServerResponseException {
     AldaServerRequest req = new AldaServerRequest(this.host, this.port);
     req.command = "load";
     req.body = code;
@@ -351,23 +334,23 @@ public class AldaServer {
   }
 
   public void load(String code, boolean autoConfirm)
-    throws ServerResponseException, InvalidOptionsException,
-           IOException, URISyntaxException {
+    throws ServerResponseException {
     load(code, null, autoConfirm);
   }
 
   public void load(File file, boolean autoConfirm)
-    throws ServerResponseException, InvalidOptionsException,
-           IOException, URISyntaxException {
-    // TODO - handle IOException
-    String fileBody = Util.readFile(file);
-    String filename = file.getAbsolutePath();
-    load(fileBody, filename, autoConfirm);
+    throws ServerResponseException {
+    try {
+      String fileBody = Util.readFile(file);
+      String filename = file.getAbsolutePath();
+      load(fileBody, filename, autoConfirm);
+    } catch (IOException e) {
+      error("Unable to read file: " + file.getAbsolutePath());
+    }
   }
 
   private void saveImpl(String filename, boolean autoConfirm)
-    throws ServerResponseException, InvalidOptionsException,
-           IOException, URISyntaxException {
+    throws ServerResponseException {
     AldaServerRequest req = new AldaServerRequest(this.host, this.port);
     req.command = "save";
     req.confirming = autoConfirm;
@@ -400,22 +383,17 @@ public class AldaServer {
   }
 
   public void save(File file, boolean autoConfirm)
-    throws ServerResponseException, InvalidOptionsException,
-           IOException, URISyntaxException {
-    // TODO - catch IOException?
+    throws ServerResponseException {
     String filename = file.getAbsolutePath();
     saveImpl(filename, autoConfirm);
   }
 
-  public void save()
-    throws ServerResponseException, InvalidOptionsException,
-           IOException, URISyntaxException {
+  public void save() throws ServerResponseException {
     saveImpl(null, false);
   }
 
   public void play(String from, String to)
-    throws ServerResponseException, InvalidOptionsException,
-           IOException, URISyntaxException {
+    throws ServerResponseException {
     AldaServerRequest req = new AldaServerRequest(this.host, this.port);
     req.command = "play-score";
     req.options = new AldaServerRequestOptions();
@@ -435,8 +413,7 @@ public class AldaServer {
   }
 
   public void play(String code, String from, String to, boolean appendToScore)
-    throws ServerResponseException, InvalidOptionsException,
-           IOException, URISyntaxException {
+    throws ServerResponseException {
 
     AldaServerRequest req = new AldaServerRequest(this.host, this.port);
     req.command = "play";
@@ -459,15 +436,16 @@ public class AldaServer {
   }
 
   public void play(File file, String from, String to, boolean appendToScore)
-    throws ServerResponseException, InvalidOptionsException,
-           IOException, URISyntaxException {
-    String fileBody = Util.readFile(file);
-    play(fileBody, from, to, appendToScore);
+    throws ServerResponseException {
+    try {
+      String fileBody = Util.readFile(file);
+      play(fileBody, from, to, appendToScore);
+    } catch (IOException e) {
+      error("Unable to read file: " + file.getAbsolutePath());
+    }
   }
 
-  public void parse(String code, String mode)
-    throws ServerResponseException, InvalidOptionsException,
-           IOException, URISyntaxException {
+  public void parse(String code, String mode) throws ServerResponseException {
     AldaServerRequest req = new AldaServerRequest(this.host, this.port);
     req.command = "parse";
     req.body = code;
@@ -482,16 +460,16 @@ public class AldaServer {
     }
   }
 
-  public void parse(File file, String mode)
-    throws ServerResponseException, InvalidOptionsException,
-           IOException, URISyntaxException {
-    String fileBody = Util.readFile(file);
-    parse(fileBody, mode);
+  public void parse(File file, String mode) throws ServerResponseException {
+    try {
+      String fileBody = Util.readFile(file);
+      parse(fileBody, mode);
+    } catch (IOException e) {
+      error("Unable to read file: " + file.getAbsolutePath());
+    }
   }
 
-  public void append(String code)
-    throws ServerResponseException, InvalidOptionsException,
-           IOException, URISyntaxException {
+  public void append(String code) throws ServerResponseException {
     AldaServerRequest req = new AldaServerRequest(this.host, this.port);
     req.command = "append";
     req.body = code;
@@ -504,10 +482,12 @@ public class AldaServer {
     }
   }
 
-  public void append(File file)
-    throws ServerResponseException, InvalidOptionsException,
-           IOException, URISyntaxException {
-    String fileBody = Util.readFile(file);
-    append(fileBody);
+  public void append(File file) throws ServerResponseException {
+    try {
+      String fileBody = Util.readFile(file);
+      append(fileBody);
+    } catch (IOException e) {
+      error("Unable to read file: " + file.getAbsolutePath());
+    }
   }
 }

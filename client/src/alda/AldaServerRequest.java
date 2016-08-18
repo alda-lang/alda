@@ -1,8 +1,5 @@
 package alda;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
-
 import com.google.gson.Gson;
 
 import org.jeromq.ZContext;
@@ -34,8 +31,7 @@ public class AldaServerRequest {
   }
 
   private String sendRequest(String req, ZContext ctx, Socket client, int retries)
-    throws ServerResponseException, InvalidOptionsException,
-           URISyntaxException, IOException {
+    throws ServerResponseException {
     if (retries <= 0 || Thread.currentThread().isInterrupted()) {
       ctx.destroy();
       throw new ServerResponseException("Alda server is down. To start the server, run `alda up`.");
@@ -74,9 +70,7 @@ public class AldaServerRequest {
     return sendRequest(req, ctx, client, retries - 1);
   }
 
-  public AldaServerResponse send()
-    throws ServerResponseException, InvalidOptionsException,
-           URISyntaxException, IOException {
+  public AldaServerResponse send() throws ServerResponseException {
     ZContext ctx = new ZContext();
     Socket client = ctx.createSocket(ZMQ.REQ);
     String res = sendRequest(this.toJson(), ctx, client, REQUEST_RETRIES);
