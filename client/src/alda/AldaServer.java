@@ -186,20 +186,25 @@ public class AldaServer {
       req.confirming = true;
     }
 
-    AldaServerResponse res = req.send();
+    try {
+      AldaServerResponse res = req.send();
 
-    if (res.signal != null && res.signal.equals("unsaved-changes")) {
-      System.out.println();
-
-      boolean confirm =
-        Util.promptForConfirmation("The score has unsaved changes that will " +
-                                   "be lost.\nAre you sure you want to stop " +
-                                   "the server?");
-      if (confirm) {
+      if (res.signal != null && res.signal.equals("unsaved-changes")) {
         System.out.println();
-        stop(true);
-      }
 
+        boolean confirm =
+          Util.promptForConfirmation("The score has unsaved changes that will " +
+              "be lost.\nAre you sure you want to stop " +
+              "the server?");
+        if (confirm) {
+          System.out.println();
+          stop(true);
+        }
+
+        return;
+      }
+    } catch (ServerResponseException e) {
+      serverDown(true);
       return;
     }
 
