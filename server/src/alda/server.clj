@@ -267,6 +267,10 @@
       nil    (error-response "Missing option: as")
       (error-response (format "Invalid format: %s" as)))))
 
+(defmethod process "ping"
+  [_]
+  (success-response "OK"))
+
 (defmethod process "play"
   [{:keys [body options]}]
   (let [{:keys [from to append]} options]

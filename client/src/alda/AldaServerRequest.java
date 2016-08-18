@@ -30,7 +30,7 @@ public class AldaServerRequest {
     return gson.toJson(this);
   }
 
-  private String sendRequest(String req, ZContext ctx, Socket client, int retries)
+  private String sendRequest(String req, ZContext ctx, Socket client, int timeout, int retries)
     throws ServerResponseException {
     if (retries <= 0 || Thread.currentThread().isInterrupted()) {
       ctx.destroy();
@@ -38,16 +38,11 @@ public class AldaServerRequest {
     }
 
     assert (client != null);
-
-    // System.out.println("connecting to server");
     client.connect(this.host + ":" + this.port);
-
-    // System.out.println("sending request");
     client.send(req);
 
-    // System.out.println("polling socket for a response w/ timeout");
     PollItem items[] = {new PollItem(client, Poller.POLLIN)};
-    int rc = ZMQ.poll(items, REQUEST_TIMEOUT);
+    int rc = ZMQ.poll(items, timeout);
     if (rc == -1) {
       throw new ServerResponseException("Connection interrupted.");
     }
@@ -60,20 +55,37 @@ public class AldaServerRequest {
       return response;
     }
 
-    // System.out.println("W: no response from server, retrying\n");
-    //  Old socket is confused; close it and open a new one
+    // Old socket is confused; close it and open a new one
     ctx.destroySocket(client);
-    // System.out.println("I: reconnecting to server\n");
     client = ctx.createSocket(ZMQ.REQ);
 
-    //  Send request again, on new socket
-    return sendRequest(req, ctx, client, retries - 1);
+    // Send request again, on new socket
+    return sendRequest(req, ctx, client, retries - 1, timeout);
+  }
+
+  private String sendRequest(String req, ZContext ctx, Socket client, int timeout)
+    throws ServerResponseException {
+    return sendRequest(req, ctx, client, timeout, REQUEST_RETRIES);
+  }
+
+  private String sendRequest(String req, ZContext ctx, Socket client)
+    throws ServerResponseException {
+    return sendRequest(req, ctx, client, REQUEST_TIMEOUT, REQUEST_RETRIES);
+  }
+
+  public AldaServerResponse send(int timeout, int retries)
+    throws ServerResponseException {
+    ZContext ctx = new ZContext();
+    Socket client = ctx.createSocket(ZMQ.REQ);
+    String res = sendRequest(this.toJson(), ctx, client, retries, timeout);
+    return AldaServerResponse.fromJson(res);
+  }
+
+  public AldaServerResponse send(int timeout) throws ServerResponseException {
+    return send(timeout, REQUEST_RETRIES);
   }
 
   public AldaServerResponse send() throws ServerResponseException {
-    ZContext ctx = new ZContext();
-    Socket client = ctx.createSocket(ZMQ.REQ);
-    String res = sendRequest(this.toJson(), ctx, client, REQUEST_RETRIES);
-    return AldaServerResponse.fromJson(res);
+    return send(REQUEST_TIMEOUT, REQUEST_RETRIES);
   }
 }

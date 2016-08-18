@@ -14,6 +14,11 @@ import net.jodah.recurrent.Recurrent;
 import net.jodah.recurrent.RetryPolicy;
 
 public class AldaServer {
+  private static int PING_TIMEOUT = 100;    // ms
+  private static int PING_RETRIES = 5;
+  private static int STARTUP_TIMEOUT = 250; // ms
+  private static int STARTUP_RETRIES = 60;
+
   private String host;
   private int port;
 
@@ -84,39 +89,25 @@ public class AldaServer {
     serverDown(false);
   }
 
-  private boolean checkForConnection() {
+  private boolean checkForConnection(int timeout, int retries) {
     try {
       AldaServerRequest req = new AldaServerRequest(this.host, this.port);
-      req.command = "info";
-      req.send();
-      return true;
+      req.command = "ping";
+      AldaServerResponse res = req.send(timeout, retries);
+      return res.success;
     } catch (ServerResponseException e) {
       return false;
     }
   }
 
-  // Keeps trying to connect to the server for 30 seconds.
-  // Returns true if/when it gets a successful response.
-  // Returns false if it doesn't get one within 30 seconds.
-  //
-  // TODO - use a reliable REQ/RES pattern from the ZeroMQ guide so that we
-  //        don't have to do this.
-  private boolean waitForConnection() {
-    RetryPolicy retryPolicy = new RetryPolicy()
-      .withDelay(500, TimeUnit.MILLISECONDS)
-      .withMaxDuration(30, TimeUnit.SECONDS)
-      .retryFor(false);
-
-    Callable<Boolean> ping = new Callable<Boolean>() {
-      public Boolean call() { return checkForConnection(); }
-    };
-
-    return Recurrent.get(ping, retryPolicy);
+  private boolean checkForConnection() {
+    return checkForConnection(PING_TIMEOUT, PING_RETRIES);
   }
 
-  // Keeps trying to connect to the server for 30 seconds.
-  // Returns true as soon as it does NOT get a successful response.
-  // Returns false if it's been 30 seconds and it's still getting a response.
+  private boolean waitForConnection() {
+    return checkForConnection(STARTUP_TIMEOUT, STARTUP_RETRIES);
+  }
+
   private boolean waitForLackOfConnection() {
     RetryPolicy retryPolicy = new RetryPolicy()
       .withDelay(500, TimeUnit.MILLISECONDS)
