@@ -71,23 +71,47 @@
     (not (contains? #{"" "no" "false"} (.toLowerCase confirm-header)))))
 
 (defn score-info
-  []
-  (let [{:keys [filename score-text instruments]} @*current-score*]
-    {:status      "up"
-     :version     -version-
-     :filename    (or filename "(unsaved)")
-     :modified?   (modified?)
-     :line-count  (count (str/split score-text #"\n\r|\r\n|\n|\r"))
-     :char-count  (count score-text)
-     :instruments (for [[k v] instruments] {:name  k
-                                            :stock (:stock v)})}))
+  [& {:keys [formatted]}]
+  (let [{:keys [filename score-text instruments]} @*current-score*
+        info {:status      "up"
+              :version     -version-
+              :filename    filename
+              :modified?   (modified?)
+              :line-count  (count (str/split score-text #"\n\r|\r\n|\n|\r"))
+              :char-count  (count score-text)
+              :instruments (for [[k v] instruments] {:name  k
+                                                     :stock (:stock v)})}]
+    (if formatted
+      (let [{:keys [status version filename modified?
+                    line-count char-count instruments]} info]
+        (format (str "Server status: %s\n"
+                     "Server version: %s\n"
+                     "Filename: %s\n"
+                     "Modified: %s\n"
+                     "Line count: %d\n"
+                     "Character count: %d\n"
+                     "Instruments:%s")
+                status
+                version
+                (or filename "(new score)")
+                (if modified? "yes" "no")
+                line-count
+                char-count
+                (if (empty? instruments)
+                  " (none)"
+                  (apply str
+                         (for [{:keys [name stock]} instruments]
+                           (format "\n  • %s (%s)" name stock))))))
+      info)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn- success-response
   [body]
   {:success true
-   :body    body})
+   :body    (if (map? body)
+              (json/generate-string body)
+              body)})
 
 (defn- need-confirmation-response
   [prompt]
@@ -98,20 +122,22 @@
               "\"confirming\": true")})
 
 (def ^:private unsaved-changes-response
-  (need-confirmation-response
-    (str "Warning: the score has unsaved changes. Are you sure you want to "
-         "do this?")))
+  (-> (need-confirmation-response
+        (str "Warning: the score has unsaved changes. Are you sure you want to "
+             "do this?"))
+      (assoc :signal "unsaved-changes")))
 
 (def ^:private existing-file-response
-  (need-confirmation-response
-    (str "Warning: there is an existing file with the filename you specified. "
-         "Saving the score to this file will erase whatever is already there. "
-         "Are you sure you want to do this?")))
+  (-> (need-confirmation-response
+        (str "Warning: there is an existing file with the filename you "
+             "specified. Saving the score to this file will erase whatever is "
+             "already there. Are you sure you want to do this?"))
+      (assoc :signal "existing-file")))
 
 (defn- error-response
   [e]
   {:success false
-   :message (if (string? e)
+   :body    (if (string? e)
               e
               (.getMessage e))})
 
@@ -132,6 +158,7 @@
         (if-let [score (try
                          (parse-input code :map)
                          (catch Throwable e
+                           (log/error e e)
                            nil))]
           (do
             (now/play-score! score)
@@ -199,9 +226,13 @@
       nil    (error-response "Missing option: as")
       (error-response (format "Invalid score format: \"%s\"" as)))))
 
+(defmethod process "filename"
+  [_]
+  (success-response (:filename (score-info))))
+
 (defmethod process "info"
   [_]
-  (success-response (score-info)))
+  (success-response (score-info :formatted true)))
 
 (defmethod process "load"
   [{:keys [body options confirming]}]
@@ -210,6 +241,10 @@
     (let [{:keys [filename]} options]
       (swap! *current-score* assoc :filename filename)
       (handle-code body :silent? true :replace-score? true))))
+
+(defmethod process "modified?"
+  [_]
+  (success-response (str (modified?))))
 
 (defmethod process "new-score"
   [{:keys [confirming]}]
@@ -230,17 +265,15 @@
       (error-response (format "Invalid format: %s" as)))))
 
 (defmethod process "play"
-  [{:keys [body options confirming]}]
-  (let [{:keys [append replace]} options]
-    (if (and replace (modified?) (not confirming))
-      unsaved-changes-response
-      (do
-        (when replace (swap! *current-score* assoc :filename nil))
-        (cond
-          append  (handle-code body)
-          replace (handle-code body :replace-score? true)
-          :else   (binding [*play-opts* (assoc *play-opts* :one-off? true)]
-                    (handle-code body :one-off? true)))))))
+  [{:keys [body options]}]
+  (let [{:keys [from to append]} options]
+    (if append
+      (handle-code body)
+      (binding [*play-opts* (assoc *play-opts*
+                                   :from     from
+                                   :to       to
+                                   :one-off? true)]
+        (handle-code body :one-off? true)))))
 
 (defmethod process "play-score"
   [{:keys [body options]}]

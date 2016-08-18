@@ -117,10 +117,6 @@ public class Client {
     @Parameter(names = {"-a", "--append"},
                description = "Append to the existing score")
     public boolean appendToScore = false;
-
-    @Parameter(names = {"-y", "--yes"},
-               description = "Auto-respond 'y' to confirm e.g. score replacement")
-    public boolean autoConfirm = false;
   }
 
   @Parameters(commandDescription = "Display the result of parsing Alda code")
@@ -142,10 +138,6 @@ public class Client {
     @Parameter(names = {"-m", "--map"},
                description = "Display the map of score data")
     public boolean showScoreMap = false;
-
-    @Parameter(names = {"-y", "--yes"},
-               description = "Auto-respond 'y' to confirm e.g. score replacement")
-    public boolean autoConfirm = false;
   }
 
   @Parameters(commandDescription = "Evaluate Alda code and append it to the " +
@@ -379,16 +371,16 @@ public class Client {
 
           switch (inputType) {
             case "score":
-              server.play();
+              server.play(play.from, play.to);
               break;
             case "file":
-              server.play(play.file, play.appendToScore, play.autoConfirm);
+              server.play(play.file, play.from, play.to, play.appendToScore);
               break;
             case "code":
-              server.play(play.code, play.appendToScore, play.autoConfirm);
+              server.play(play.code, play.from, play.to, play.appendToScore);
               break;
             case "stdin":
-              server.play(Util.getStdIn(), play.appendToScore, play.autoConfirm);
+              server.play(Util.getStdIn(), play.from, play.to, play.appendToScore);
               break;
           }
           System.exit(0);
@@ -400,13 +392,13 @@ public class Client {
 
           switch (inputType) {
             case "file":
-              server.parse(parse.file, mode, parse.autoConfirm);
+              server.parse(parse.file, mode);
               break;
             case "code":
-              server.parse(parse.code, mode, parse.autoConfirm);
+              server.parse(parse.code, mode);
               break;
             case "stdin":
-              server.parse(Util.getStdIn(), mode, parse.autoConfirm);
+              server.parse(Util.getStdIn(), mode);
               break;
             default:
               throw new Exception("Please provide some Alda code in the form " +
@@ -505,31 +497,31 @@ public class Client {
             throw new Exception("EDITOR environment variable is not set.");
           }
 
-          AldaServerInfo scoreInfo = server.getInfo();
+          String filename = server.getFilename();
 
-          if (scoreInfo.filename == null) {
+          if (filename == null) {
             server.msg("Score has not been saved yet. There is no file to " +
                        "edit.");
-            break;
+            System.exit(1);
           }
 
-          File file = new File(scoreInfo.filename);
+          File file = new File(filename);
 
-          if (scoreInfo.isModified) {
+          if (server.isScoreModified()) {
             boolean saveFirst = Util.promptForConfirmation(
               "Your score has unsaved changes that will be lost unless you " +
-              "save first.\nWould you like to save before editing?", false);
+              "save first.\nWould you like to save before editing?");
 
             if (saveFirst) {
               server.save();
             }
           }
 
-          Util.runProgramInFg(editor, scoreInfo.filename);
-          server.loadWithoutAsking(file);
+          Util.runProgramInFg(editor, filename);
+          server.load(file, true);
           System.exit(0);
       }
-    } catch (Exception e) {
+    } catch (Throwable e) {
       server.error(e.getMessage());
       if (globalOpts.verbose) {
         System.out.println();

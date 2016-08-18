@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.HttpURLConnection;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Scanner;
 import java.util.regex.Matcher;
@@ -26,6 +27,7 @@ import java.io.BufferedInputStream;
 import java.io.BufferedInputStream;
 import java.io.FileOutputStream;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.SystemUtils;
 
 public final class Util {
@@ -43,13 +45,7 @@ public final class Util {
     return concat(a, new Object[]{b});
   }
 
-  public static boolean promptForConfirmation(String prompt, boolean autoConfirm) {
-    if (autoConfirm) {
-      System.out.println(prompt + "\n");
-      System.out.println("(-y/--yes flag set. Responding yes on your behalf.)");
-      return true;
-    }
-
+  public static boolean promptForConfirmation(String prompt) {
     Console console = System.console();
     if (System.console() != null) {
       Boolean confirm = null;
@@ -206,7 +202,11 @@ public final class Util {
     }
   }
 
-  public static String readFile(String path) {
+  public static String readFile(File file) throws IOException {
+    return FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+  }
+
+  public static String readResourceFile(String path) {
     StringBuilder out = new StringBuilder();
     BufferedReader reader = null;
     try {
@@ -233,7 +233,7 @@ public final class Util {
   }
 
   public static String version() {
-    return readFile("version.txt").trim();
+    return readResourceFile("version.txt").trim();
   }
 
   public static void updateAlda() throws URISyntaxException {
