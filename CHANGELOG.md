@@ -1,5 +1,64 @@
 # CHANGELOG
 
+## 1.0.0-rc32 (8/18/16)
+
+* The major change in this release is that we replaced the internal implementation of the server, previously a resource-intensive HTTP server, with a more lightweight [ZeroMQ](http://zeromq.org) REQ/RES socket. This means lower overhead for the server, which should translate to better performance.
+
+  > We are using [the pure Java implementation of ZeroMQ](https://github.com/zeromq/jeromq), which means no native dependencies to install. You can update Alda and it'll just work™.
+
+  This is a transparent change; you should not notice any difference in your usage of Alda via the `alda` command-line client, besides seeing better performance from the server.
+
+* Bugfix: I just realized that the `alda play` command's options `--from` and `--to` were not actually hooked up so that they did anything useful. Oops! Sorry about that. As of this release, you can use them to specify start and end points for playing back the score, either as marker names or minute/second markings. For real, this time.
+
+* I discovered that the `-y/--yes` auto-confirm option for the `alda play` and `alda parse` commands was never being used, so I removed the option from both commands.
+
+  When I first wrote the Alda client, the `play` and `parse` commands would overwrite whatever score you were currently working on in memory. So, if you had unsaved changes, the client would warn you that you were about to overwrite the in-memory score and lose your unsaved changes, and ask you for confirmation. The `-y` flag was there as a convenience so that if you didn't care about the score in memory and you just wanted to play a score file, you could include the flag and skip the unsaved changes warning and prompt.
+
+  A while back, we improved the experience so that the default behavior of `alda play` and `alda parse` is to play or parse a score separately without affecting the working score you might have in-memory. The client never needs to prompt you for confirmation anymore when using these two commands, so the `-y` flag is no longer necessary.
+
+  > Note: The `-y` flag is still available for other commands that _can_ affect the score in memory, such as `alda load` and `alda down`.
+
+### Breaking Changes
+
+* If you happened to be using the HTTP server directly (i.e. via `curl` instead of the Alda client), you will find that this will no longer work, since the server does not respond to HTTP requests anymore.
+
+  > If you still wish to have lower-level access to an Alda server, you can use ZeroMQ to make a REQ socket connection to `tcp://*:27713` (assuming 27713 is the port on which the Alda server is running), send a request with a JSON payload, and receive the response. For more information about ZeroMQ, read [the ZeroMQ guide](http://zguide.zeromq.org/page:all), it's excellent!
+
+* Before, if you ran a command that requires the Alda server to be up, for example `alda play -f somefile.alda`, and the Alda server is not up, the client would go ahead and start it for you. We have removed this behavior; now, you will get an error message notifying you that the server is down and explaining that you can start the server by running `alda up`. We are working toward making the server failsafe enough that you can leave it running in the background forever and forget about it (making it more of a daemon), so hopefully you will not need to run `alda down` or `alda up` very often.
+
+* When running `alda score -m` (to show the data representation of the current score) or `alda parse -m -f somefile.alda` (to show the data representation of the score in a file), the output is now JSON instead of [EDN](https://github.com/edn-format/edn).
+
+  The reason for this is that JSON is more widely supported and there are a variety of useful command-line tools like [`jq`](https://stedolan.github.io/jq/) for working with JSON on the command line.
+
+  For example, if you have `jq` installed, you can now run this command to pretty-print an Alda score map:
+
+  ```
+  $ alda score -m | jq .
+  {
+    "chord-mode": false,
+    "current-instruments": [
+      "flute-nUVei"
+    ],
+    "score-text": "(tempo! 90)\n(quant! 95)\n\npiano:\n  o5 g- > g- g-/f > e- d-4. < b-8 d-2 | c-4 e- d- d- <b-1/>g-\n\nflute:\n  r2 g-4 a- b-2. > d-32~ e-16.~8 < b-2 a- g-1\n",
+    "events": [
+      {
+  ...
+
+  ```
+
+  Or you can output the offsets of every event in the score:
+
+  ```
+  $ alda score -m | jq '.events[] .offset'
+  666.6666870117188
+  2000.0000610351562
+  5333.333465576172
+  1333.3333740234375
+  1333.3333740234375
+  4666.666748046875
+  4750.00008392334
+  ```
+
 ## 1.0.0-rc31 (8/12/16)
 
 * Fixed a bug where the Alda server was spinning its wheels for a long time trying to parse certain scores when played via the command-line.

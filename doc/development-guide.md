@@ -52,7 +52,7 @@ This will build the `alda` and `alda.exe` executables and place them in the outp
 
 The Alda client is a fairly straightforward Java CLI app that uses [JCommander](http://jcommander.org) to parse command-line arguments.
 
-Interaction with servers is done via [ZeroMQ](http://zeromq.org) TCP/IP requests with a JSON payload. The Alda client takes command-line arguments, translates them into a JSON request, and sends the request to the server. Unless specified via the `-H/--host` option, the Alda client assumes the server is running locally and sends requests to localhost. The default port is 27713.
+Interaction with servers is done via [ZeroMQ](http://zeromq.org) TCP requests with a JSON payload. The Alda client takes command-line arguments, translates them into a JSON request, and sends the request to the server. Unless specified via the `-H/--host` option, the Alda client assumes the server is running locally and sends requests to localhost. The default port is 27713.
 
 Running `alda start` forks a new Alda process in the background, passing it the (hidden) `server` command to start the server. Server output is hidden from the user (though the client will report if there is an error).
 
