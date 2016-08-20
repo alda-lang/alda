@@ -18,18 +18,25 @@
   `(doseq ~binding (future @body)))
 
 (defmacro pdoseq-block
-  "A fairly efficient hybrid of `doseq` and `pmap`, that blocks."
+  "A fairly efficient hybrid of `doseq` and `pmap`, that blocks.
+
+   If an error occurs on an async thread, it is rethrown on the main thread."
   [binding & body]
-  `(let [latch# (atom (count ~(second binding)))
-         done# (promise)]
+  `(let [remaining# (atom (count ~(second binding)))
+         error#     (atom nil)]
      (doseq ~binding
        (future
-         ~@body
-         (when (zero? (swap! latch# dec))
-           (deliver done# true))))
-     ;; don't block if unless loop will run and check latch
+         (try
+           ~@body
+           (swap! remaining# dec)
+           (catch Throwable e#
+             (reset! error# e#)))))
      (when (seq ~(second binding))
-       @done#)))
+       (loop []
+         (cond
+           @error#             (throw @error#)
+           (zero? @remaining#) nil
+           :else               (recur))))))
 
 (defmacro resetting [vars & body]
   (if (seq vars)
