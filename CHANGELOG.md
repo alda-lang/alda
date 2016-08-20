@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## 1.0.0-rc33 (8/20/16)
+
+* Made the server a little more resilient to failure. There are a handful of tasks that are handled in parallel, like setting up the audio systems (e.g. MIDI) for a score. This involves running the tasks in parallel background threads and waiting for them to complete. This works fine when the tasks are successful, but if they fail, then the server ends up waiting forever and needs to be restarted in order to serve any more requests.
+
+  Starting from this release, we are able to notice when the background tasks fail and re-throw the error so that the server can report the error back to the client and will be ready to handle any subsequent requests.
+
+  One example of a background task that can fail is if you try to play an Alda score with multiple MIDI percussion instruments. There is only one MIDI channel available, so this will throw a "Ran out of MIDI channels! :(" error. on the background thread that loads the instruments. Before this release, the server would just lock up when you tried to play such a score; now it will report the error back to the client.
+
+* Added more debug logging when running a server in debug mode.
+
 ## 1.0.0-rc32 (8/18/16)
 
 * The major change in this release is that we replaced the internal implementation of the server, previously a resource-intensive HTTP server, with a more lightweight [ZeroMQ](http://zeromq.org) REQ/RES socket. This means lower overhead for the server, which should translate to better performance.
