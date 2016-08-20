@@ -40,6 +40,8 @@
   []
   (fill-midi-synth-pool!)
   (drain-excess-midi-synths!)
+  (log/debugf "Taking a MIDI synth from the pool (available: %d)"
+              (count *midi-synth-pool*))
   (.take *midi-synth-pool*))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -81,6 +83,7 @@
 
 (defn load-instruments!
   [audio-ctx score]
+  (log/debug "Loading MIDI instruments into channels...")
   (let [midi-channels (ids->channels score)]
     (swap! audio-ctx assoc :midi-channels midi-channels)
     (doseq [{:keys [channel patch]} (set (vals midi-channels))

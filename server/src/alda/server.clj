@@ -154,14 +154,17 @@
   (let [msg (if silent? "Loading..." "Playing...")
         save-state @*current-score*]
     (try
+      (log/debug "Requiring alda.lisp...")
       (require '[alda.lisp :refer :all])
       (if one-off?
         (if-let [score (try
+                         (log/debug "Parsing input...")
                          (parse-input code :map)
                          (catch Throwable e
                            (log/error e e)
                            nil))]
           (do
+            (log/debug "Playing score...")
             (now/play-score! score)
             (success-response msg))
           (error-response "Invalid Alda syntax."))
@@ -331,11 +334,16 @@
                            (zmq/socket zmq/rep)
                            (zmq/bind (str "tcp://*:" port)))]
       (while (and (not (.. Thread currentThread isInterrupted)) @running?)
+        (log/debug "Receiving request...")
         (let [req (zmq/recv socket)]
+          (log/debug "Request received.")
           (try
             (let [msg (json/parse-string (String. req) true)
+                  _   (log/debug "Processing message...")
                   res (process msg)]
-              (zmq/send socket (json/generate-string res)))
+              (log/debug "Sending response...")
+              (zmq/send socket (json/generate-string res))
+              (log/debug "Response sent."))
             (catch Throwable e
               (log/error e e)
               (zmq/send socket (json/generate-string (error-response e)))))))))

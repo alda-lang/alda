@@ -28,6 +28,7 @@
 
 (defmethod set-up-audio-type! :midi
   [audio-ctx _ & [score]]
+  (log/debug "Setting up MIDI...")
   (midi/get-midi-synth! audio-ctx))
 
 (declare determine-audio-types)
@@ -247,12 +248,15 @@
    events from playing."
   [score & [event-set]]
   (let [{:keys [one-off? async?]} *play-opts*
+        _           (log/debug "Determining audio types...")
         audio-types (determine-audio-types score)
         audio-ctx   (or (:audio-context score) (new-audio-context))
+        _           (log/debug "Setting up audio types...")
         _           (set-up! audio-ctx audio-types score)
         _           (refresh! audio-ctx audio-types score)
         playing?    (atom true)
         done?       (atom false)
+        _           (log/debug "Determining events to schedule...")
         events      (if event-set
                       (let [earliest (->> (map :offset event-set)
                                           (apply min Long/MAX_VALUE)
@@ -264,6 +268,7 @@
                                                             markers)]
                         (shift-events event-set start end)))
         clean-up    #(clean-up-when-done! done? score audio-ctx audio-types)]
+    (log/debug "Scheduling events...")
     (schedule-events! events score audio-ctx playing? done?)
     (when one-off?
       (if async?
