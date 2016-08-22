@@ -129,7 +129,7 @@ public class AldaServer {
     return Recurrent.get(ping, retryPolicy);
   }
 
-  public void startBg() throws InvalidOptionsException {
+  public void upBg() throws InvalidOptionsException {
     assertNotRemoteHost();
 
     boolean serverAlreadyUp = checkForConnection();
@@ -177,7 +177,7 @@ public class AldaServer {
     }
   }
 
-  public void startFg() throws InvalidOptionsException {
+  public void upFg() throws InvalidOptionsException {
     assertNotRemoteHost();
 
     Object[] args = {port};
@@ -194,7 +194,7 @@ public class AldaServer {
     Util.callClojureFn("alda.repl/start-repl!", args);
   }
 
-  public void stop(boolean autoConfirm) throws ServerResponseException {
+  public void down() throws ServerResponseException {
     boolean serverAlreadyDown = !checkForConnection();
     if (serverAlreadyDown) {
       msg("Server already down.");
@@ -206,27 +206,8 @@ public class AldaServer {
     AldaServerRequest req = new AldaServerRequest(this.host, this.port);
     req.command = "stop-server";
 
-    if (autoConfirm) {
-      req.confirming = true;
-    }
-
     try {
       AldaServerResponse res = req.send();
-
-      if (res.signal != null && res.signal.equals("unsaved-changes")) {
-        System.out.println();
-
-        boolean confirm =
-          Util.promptForConfirmation("The score has unsaved changes that will " +
-              "be lost.\nAre you sure you want to stop " +
-              "the server?");
-        if (confirm) {
-          System.out.println();
-          stop(true);
-        }
-
-        return;
-      }
     } catch (ServerResponseException e) {
       serverDown(true);
       return;
@@ -240,11 +221,11 @@ public class AldaServer {
     }
   }
 
-  public void restart(boolean autoConfirm)
+  public void downUp()
     throws ServerResponseException, InvalidOptionsException {
-    stop(autoConfirm);
+    down();
     System.out.println();
-    startBg();
+    upBg();
   }
 
   public void status() {
@@ -265,174 +246,7 @@ public class AldaServer {
     msg(serverVersion);
   }
 
-  public String getFilename() throws ServerResponseException {
-    AldaServerRequest req = new AldaServerRequest(this.host, this.port);
-    req.command = "filename";
-    AldaServerResponse res = req.send();
-
-    return res.body;
-  }
-
-  public boolean isScoreModified() throws ServerResponseException {
-    AldaServerRequest req = new AldaServerRequest(this.host, this.port);
-    req.command = "modified?";
-    AldaServerResponse res = req.send();
-
-    return (res.body.equals("true"));
-  }
-
-  public void info() throws ServerResponseException {
-    AldaServerRequest req = new AldaServerRequest(this.host, this.port);
-    req.command = "info";
-    AldaServerResponse res = req.send();
-
-    if (res.success) {
-      System.out.println(res.body);
-    } else {
-      error(res.body);
-    }
-  }
-
-  public void score(String mode) throws ServerResponseException {
-    AldaServerRequest req = new AldaServerRequest(this.host, this.port);
-    req.command = "current-score";
-    req.options = new AldaServerRequestOptions();
-    req.options.as = mode;
-    AldaServerResponse res = req.send();
-
-    System.out.println(res.body);
-  }
-
-  public void delete(boolean autoConfirm) throws ServerResponseException {
-    AldaServerRequest req = new AldaServerRequest(this.host, this.port);
-    req.command = "new-score";
-    req.confirming = autoConfirm;
-    AldaServerResponse res = req.send();
-
-    if (res.signal != null && res.signal.equals("unsaved-changes")) {
-      System.out.println();
-      boolean confirm =
-        Util.promptForConfirmation("The current score has unsaved changes " +
-                                   "that will be lost.\nAre you sure you " +
-                                   "want to start a new score?");
-      if (confirm) {
-        delete(true);
-      }
-
-      return;
-    }
-
-    msg("New score initialized.");
-  }
-
-  public void load(String code, String filename, boolean autoConfirm)
-    throws ServerResponseException {
-    AldaServerRequest req = new AldaServerRequest(this.host, this.port);
-    req.command = "load";
-    req.body = code;
-    req.confirming = autoConfirm;
-    if (filename != null) {
-      req.options = new AldaServerRequestOptions();
-      req.options.filename = filename;
-    }
-    AldaServerResponse res = req.send();
-
-    if (res.signal != null && res.signal.equals("unsaved-changes")) {
-      System.out.println();
-      boolean confirm =
-        Util.promptForConfirmation("The current score has unsaved changes " +
-                                   "that will be lost.\nAre you sure you " +
-                                   "want to proceed?");
-      if (confirm) {
-        load(code, filename, true);
-      }
-
-      return;
-    }
-
-    msg(filename != null ? "Loaded file." : "Loaded code.");
-  }
-
-  public void load(String code, boolean autoConfirm)
-    throws ServerResponseException {
-    load(code, null, autoConfirm);
-  }
-
-  public void load(File file, boolean autoConfirm)
-    throws ServerResponseException {
-    try {
-      String fileBody = Util.readFile(file);
-      String filename = file.getAbsolutePath();
-      load(fileBody, filename, autoConfirm);
-    } catch (IOException e) {
-      error("Unable to read file: " + file.getAbsolutePath());
-    }
-  }
-
-  private void saveImpl(String filename, boolean autoConfirm)
-    throws ServerResponseException {
-    AldaServerRequest req = new AldaServerRequest(this.host, this.port);
-    req.command = "save";
-    req.confirming = autoConfirm;
-    if (filename != null) {
-      req.options = new AldaServerRequestOptions();
-      req.options.filename = filename;
-    }
-    AldaServerResponse res = req.send();
-
-    if (res.signal != null && res.signal.equals("existing-file")) {
-      System.out.println();
-      boolean confirm =
-        Util.promptForConfirmation("There is an existing file with the " +
-                                   "filename you specified. Saving the score " +
-                                   "to this file will erase whatever is " +
-                                   "already there.\n\n" +
-                                   "Are you sure you want to do this?");
-      if (confirm) {
-        saveImpl(filename, true);
-      }
-
-      return;
-    }
-
-    if (res.success) {
-      msg(res.body);
-    } else {
-      throw new ServerRuntimeError(res.body);
-    }
-  }
-
-  public void save(File file, boolean autoConfirm)
-    throws ServerResponseException {
-    String filename = file.getAbsolutePath();
-    saveImpl(filename, autoConfirm);
-  }
-
-  public void save() throws ServerResponseException {
-    saveImpl(null, false);
-  }
-
-  public void play(String from, String to)
-    throws ServerResponseException {
-    AldaServerRequest req = new AldaServerRequest(this.host, this.port);
-    req.command = "play-score";
-    req.options = new AldaServerRequestOptions();
-    if (from != null) {
-      req.options.from = from;
-    }
-    if (to != null) {
-      req.options.to = to;
-    }
-    AldaServerResponse res = req.send();
-
-    if (res.success) {
-      msg(res.body);
-    } else {
-      error(res.body);
-    }
-  }
-
-  public void play(String code, String from, String to, boolean appendToScore)
+  public void play(String code, String from, String to)
     throws ServerResponseException {
 
     AldaServerRequest req = new AldaServerRequest(this.host, this.port);
@@ -445,7 +259,6 @@ public class AldaServer {
     if (to != null) {
       req.options.to = to;
     }
-    req.options.append = appendToScore;
     AldaServerResponse res = req.send();
 
     if (res.success) {
@@ -455,11 +268,11 @@ public class AldaServer {
     }
   }
 
-  public void play(File file, String from, String to, boolean appendToScore)
+  public void play(File file, String from, String to)
     throws ServerResponseException {
     try {
       String fileBody = Util.readFile(file);
-      play(fileBody, from, to, appendToScore);
+      play(fileBody, from, to);
     } catch (IOException e) {
       error("Unable to read file: " + file.getAbsolutePath());
     }
@@ -484,28 +297,6 @@ public class AldaServer {
     try {
       String fileBody = Util.readFile(file);
       parse(fileBody, mode);
-    } catch (IOException e) {
-      error("Unable to read file: " + file.getAbsolutePath());
-    }
-  }
-
-  public void append(String code) throws ServerResponseException {
-    AldaServerRequest req = new AldaServerRequest(this.host, this.port);
-    req.command = "append";
-    req.body = code;
-    AldaServerResponse res = req.send();
-
-    if (res.success) {
-      msg("Appended code to score.");
-    } else {
-      error(res.body);
-    }
-  }
-
-  public void append(File file) throws ServerResponseException {
-    try {
-      String fileBody = Util.readFile(file);
-      append(fileBody);
     } catch (IOException e) {
       error("Unable to read file: " + file.getAbsolutePath());
     }

@@ -23,7 +23,6 @@ public class AldaServerRequest {
   public String command;
   public String body;
   public AldaServerRequestOptions options;
-  public boolean confirming;
 
   public String toJson() {
     Gson gson = new Gson();
