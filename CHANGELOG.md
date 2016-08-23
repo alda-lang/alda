@@ -6,7 +6,7 @@
 
   Starting from this release, we are able to notice when the background tasks fail and re-throw the error so that the server can report the error back to the client and will be ready to handle any subsequent requests.
 
-  One example of a background task that can fail is if you try to play an Alda score with multiple MIDI percussion instruments. There is only one MIDI channel available, so this will throw a "Ran out of MIDI channels! :(" error. on the background thread that loads the instruments. Before this release, the server would just lock up when you tried to play such a score; now it will report the error back to the client.
+  One example of a background task that can fail is if you try to play an Alda score with multiple MIDI percussion instruments. There is only one MIDI percussion channel available, so this will throw a "Ran out of MIDI channels! :(" error. on the background thread that loads the instruments. Before this release, the server would just lock up when you tried to play such a score; now it will report the error back to the client.
 
 * Added more debug logging when running a server in debug mode.
 
