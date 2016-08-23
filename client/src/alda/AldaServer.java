@@ -17,7 +17,7 @@ public class AldaServer {
   private static int PING_TIMEOUT = 100;    // ms
   private static int PING_RETRIES = 5;
   private static int STARTUP_TIMEOUT = 250; // ms
-  private static int STARTUP_RETRIES = 60;
+  private static int STARTUP_RETRIES = 120;
 
   private String host;
   private int port;
