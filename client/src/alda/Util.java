@@ -11,6 +11,7 @@ import java.net.URL;
 import java.net.HttpURLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -324,33 +325,51 @@ public final class Util {
     new ProcessBuilder(args).inheritIO().start().waitFor();
   }
 
-  public static void listServers(int timeout) throws Exception {
-    if (SystemUtils.IS_OS_UNIX) {
-      Process p = Runtime.getRuntime().exec("ps -e");
-      InputStreamReader isr = new InputStreamReader(p.getInputStream());
-      BufferedReader input = new BufferedReader(isr);
-      String line;
-      while ((line = input.readLine()) != null) {
-        if (line.contains("alda-fingerprint")) {
-          Matcher a = Pattern.compile("^\\s*(\\d+).*").matcher(line);
-          Matcher b = Pattern.compile(".*--port (\\d+).*").matcher(line);
-          if (a.find()) {
-            int pid = Integer.parseInt(a.group(1));
-            if (b.find()) {
-              int port = Integer.parseInt(b.group(1));
-              AldaServer server = new AldaServer("localhost", port, timeout);
-              server.status();
-            } else {
-              System.out.println("[???] Mysterious server running on unknown " +
-                                 "port (pid: " + pid + ")");
-            }
+  public static ArrayList<AldaProcess> findProcesses() throws IOException {
+    ArrayList<AldaProcess> processes = new ArrayList<AldaProcess>();
+
+    Process p = Runtime.getRuntime().exec("ps -e");
+    InputStreamReader isr = new InputStreamReader(p.getInputStream());
+    BufferedReader input = new BufferedReader(isr);
+    String line;
+    while ((line = input.readLine()) != null) {
+      if (line.contains("alda-fingerprint")) {
+        AldaProcess process = new AldaProcess();
+
+        Matcher a = Pattern.compile("^\\s*(\\d+).*").matcher(line);
+        Matcher b = Pattern.compile(".*--port (\\d+).*").matcher(line);
+        if (a.find()) {
+          process.pid = Integer.parseInt(a.group(1));
+          if (b.find()) {
+            process.port = Integer.parseInt(b.group(1));
+          } else {
+            process.port = -1;
           }
         }
+
+        processes.add(process);
       }
-      input.close();
-    } else {
+    }
+    input.close();
+    return processes;
+  }
+
+  public static void listServers(int timeout) throws Exception {
+    if (!SystemUtils.IS_OS_UNIX) {
       System.out.println("Sorry -- listing running servers is not currently " +
                          "supported for Windows users.");
+      return;
+    }
+
+    ArrayList<AldaProcess> processes = findProcesses();
+    for (AldaProcess process : processes) {
+      if (process.port == -1) {
+        System.out.println("[???] Mysterious server running on unknown " +
+                           "port (pid: " + process.pid + ")");
+      } else {
+        AldaServer server = new AldaServer("localhost", process.port, timeout);
+        server.status();
+      }
     }
   }
 
