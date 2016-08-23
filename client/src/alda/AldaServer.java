@@ -14,17 +14,18 @@ import net.jodah.recurrent.Recurrent;
 import net.jodah.recurrent.RetryPolicy;
 
 public class AldaServer {
-  private static int PING_TIMEOUT = 100;    // ms
+  private static int PING_TIMEOUT = 100; // ms
   private static int PING_RETRIES = 5;
-  private static int STARTUP_TIMEOUT = 250; // ms
-  private static int STARTUP_RETRIES = 120;
+  private static int STARTUP_RETRY_INTERVAL = 250; // ms
 
   private String host;
   private int port;
+  private int timeout;
 
-  public AldaServer(String host, int port) {
+  public AldaServer(String host, int port, int timeout) {
     this.host = normalizeHost(host);
     this.port = port;
+    this.timeout = timeout;
 
     AnsiConsole.systemInstall();
   }
@@ -105,7 +106,12 @@ public class AldaServer {
   }
 
   private boolean waitForConnection() {
-    return checkForConnection(STARTUP_TIMEOUT, STARTUP_RETRIES);
+    // Calculate the number of retries before giving up, based on the fixed
+    // STARTUP_RETRY_INTERVAL and the desired timeout in seconds.
+    int retriesPerSecond = 1000 / STARTUP_RETRY_INTERVAL;
+    int retries = this.timeout * retriesPerSecond;
+
+    return checkForConnection(STARTUP_RETRY_INTERVAL, retries);
   }
 
   private boolean waitForLackOfConnection() {

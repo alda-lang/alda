@@ -324,7 +324,7 @@ public final class Util {
     new ProcessBuilder(args).inheritIO().start().waitFor();
   }
 
-  public static void listServers() throws Exception {
+  public static void listServers(int timeout) throws Exception {
     if (SystemUtils.IS_OS_UNIX) {
       Process p = Runtime.getRuntime().exec("ps -e");
       InputStreamReader isr = new InputStreamReader(p.getInputStream());
@@ -338,7 +338,7 @@ public final class Util {
             int pid = Integer.parseInt(a.group(1));
             if (b.find()) {
               int port = Integer.parseInt(b.group(1));
-              AldaServer server = new AldaServer("localhost", port);
+              AldaServer server = new AldaServer("localhost", port, timeout);
               server.status();
             } else {
               System.out.println("[???] Mysterious server running on unknown " +

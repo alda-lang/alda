@@ -39,6 +39,10 @@ public class Client {
     @Parameter(names = {"-p", "--port"},
                description = "The port of the Alda server")
     public int port = 27713;
+
+    @Parameter(names = {"-t", "--timeout"},
+               description = "The number of seconds to wait for a server to start before giving up.")
+    public int timeout = 30;
   }
 
   private static class AldaCommand {
@@ -288,7 +292,9 @@ public class Client {
       System.exit(1);
     }
 
-    AldaServer server = new AldaServer(globalOpts.host, globalOpts.port);
+    AldaServer server = new AldaServer(globalOpts.host,
+                                       globalOpts.port,
+                                       globalOpts.timeout);
 
     try {
       if (globalOpts.help) {
@@ -344,7 +350,7 @@ public class Client {
 
         case "list":
           handleCommandSpecificHelp(jc, "list", list);
-          Util.listServers();
+          Util.listServers(globalOpts.timeout);
           System.exit(0);
 
         case "status":
