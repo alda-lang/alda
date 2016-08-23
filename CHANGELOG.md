@@ -1,5 +1,131 @@
 # CHANGELOG
 
+## 1.0.0-rc35 (9/4/16)
+
+> Quick TL;DR of what you should do when updating to this release:
+>
+> - _Before_ updating, run `alda down` to stop your Alda server if you have one running. If you don't do this before updating, you may need to find and kill the process manually.
+> - Run `alda update` to update.
+> - `alda start`, `alda stop` and `alda restart` have been renamed. From now on, you will need to use the commands `alda up`, `alda down` and `alda downup` or `alda start-server`, `alda stop-server` and `alda restart-server` instead. See below for more details about this change.
+
+* This release adds more internal architecture improvements, further leveraging ZeroMQ to break out the functionality of Alda into separate, specialized background processes.
+
+  Prior to this release, Alda was a two-process system:
+
+  - a **server** that runs in the background and plays scores on demand, and
+  - a command-line **client** used to make requests to the server
+
+  To help with performance issues related to playing multiple scores at once, each request is now handled by a separate **worker** process. The **client**/**server** relationship is still exactly the same; as an Alda user, you never need to communicate directly with the workers or worry about them in any way; they are solely the responsibility of the server.
+
+  When starting Alda with `alda up`, you will now see the server come up much faster than before, followed by a more typical wait for the first worker to become available:
+
+  ```bash
+  $ alda up
+  [27713] Starting Alda server...
+  # short wait
+  [27713] Server up ✓
+  [27713] Starting worker processes...
+  # longer wait
+  [27713] Ready ✓
+  ```
+
+  When you see the "Ready" line, you will be able to use Alda the same as before, e.g.:
+
+  ```bash
+  $ alda play -c 'bassoon: o2 d8 e (quant 33) f+ g (quant 90) a2'
+  [27713] Playing...
+  ```
+
+  You can safely leave the server running in the background and it will manage its own supply of workers, replacing any that become unresponsive. Similarly, a worker process will shut itself down if the server becomes unresponsive for any reason.
+
+  By default, an Alda server maintains a pool of 4 workers. If you try to play more than 4 scores at the same time, the server will respond that there are no workers available and ask you to wait until the next worker becomes available:
+
+  ```bash
+  $ alda play -c 'bassoon: o2 d1~1~1~1~1'
+  [27713] Playing...
+
+  $ alda play -c 'bassoon: o2 d1~1~1~1~1'
+  [27713] Playing...
+
+  $ alda play -c 'bassoon: o2 d1~1~1~1~1'
+  [27713] Playing...
+
+  $ alda play -c 'bassoon: o2 d1~1~1~1~1'
+  [27713] Playing...
+
+  $ alda play -c 'bassoon: o2 d1~1~1~1~1'
+  [27713] ERROR All worker processes are currently busy. Please wait until playback is complete and try again.
+  ```
+
+  If you desire more or fewer workers, you can use the `-w`/`--workers` option when starting the server:
+
+  ```bash
+  $ alda -w 6 up
+  [27713] Starting Alda server...
+  [27713] Server up ✓
+  [27713] Starting worker processes...
+  [27713] Ready ✓
+  ```
+
+  Be aware, however, that running a larger amount of servers uses more of your CPU. I think the default of 4 workers should be comfortable for most users.
+
+* Running `alda status` will now show you the number of workers currently available:
+
+  ```bash
+  $ alda status
+  [27713] Server up (4/4 workers available)
+
+  $ alda play -f examples/hello_world.alda
+  [27713] Playing...
+
+  # one worker is busy playing hello_world.alda
+  $ alda status
+  [27713] Server up (3/4 workers available)
+
+  # after playback completes, the worker is available again
+  $ alda status
+  [27713] Server up (4/4 workers available)
+  ```
+
+* Running `alda list` will now list all Alda processes, including servers and workers.
+
+  > This command is currently only available on Unix/Linux systems.
+  >
+  > Please let us know if you can help us implement the same functionality for Windows!
+
+  ```bash
+  $ alda list
+  [27713] Server up (4/4 workers available)
+  [58678] Worker (pid: 85804)
+  [58678] Worker (pid: 85805)
+  [58678] Worker (pid: 85806)
+  [58678] Worker (pid: 85807)
+  ```
+
+* If an Alda worker process ever encounters an error, it logs the error to `~/.alda/logs/error.log`. The logs in this folder are rotated weekly, making cleanup easy if you do not want to keep old error logs.
+
+* Fixed [issue #243](https://github.com/alda-lang/alda/issues/243). Prior to the infrastructure improvements made in this release, the server was a single process trying to play multiple scores at once, which caused the sound to break up. Having each worker be a separate process that only handles one score at a time results in more reliable playback. Thanks to [goog] for reporting this issue!
+
+* Fixed [issue #258](https://github.com/alda-lang/alda/issues/258). This issue was also related to the previous single-server/worker system. While busy handling one request, the server was not able to handle the next right away, causing the request to be re-submitted and handled more than once, resulting in scores playing more than once with unexpected timing. Now that the server's sole responsibility is to maintain worker processes and forward them requests, it can handle requests a lot faster, and the client no longer needs to submit them more than once. Thanks to [elyisgreat] for reporting this issue!
+
+### Breaking Changes
+
+* In order to enable the new server/workers architecture, we had to remove a handful of commands that relied on "stateful server" behavior. An Alda server no longer has a notion of the "current score" you are working with. Instead, the state of your score should be maintained in the form of Alda code in a file; the functionality of the removed commands is better left up to your file system and text editor.
+
+  The following commands have been removed:
+
+  - `alda play` (without a `--file` or `--code` argument, this command used to play the "current score" in memory on the server)
+  - `alda play --append` (this used to play a file or string of code and append it to the "current score").
+  - `alda append` / (same as `alda play --append`, but just appended to the "current score" without playing the new code)
+  - `alda score` (used to display the "current score")
+  - `alda info` (used to display information about the "current score")
+  - `alda new` (used to delete the "current score" and start a new one)
+  - `alda load` (used to replace the "current score" with the contents of a file or string of code)
+  - `alda save` (used to save the "current score" to a file)
+  - `alda edit` (used to open the "current score" in your text editor of choice)
+
+* In anticipation of a future `alda stop` command that will [stop playback](https://github.com/alda-lang/alda/issues/69) instead of stopping the server, the previous `alda stop` command (which would stop the server) has been renamed `alda stop-server`. By analogy, `alda start` has been renamed to `alda start-server` and `alda restart` has been renamed to `alda restart-server`. I recommend using the shorter aliases `alda up`, `alda down` and `alda downup` to start, stop, and restart the server.
+
 ## 1.0.0-rc34 (8/23/16)
 
 * This release adds a few safeguards against inadvertently starting more than one server process for the same port and ending up in a situation where you have potentially many Alda server processes hanging around, only one of which will be able to serve on that port. Thanks to [elyisgreat] for reporting this issue ([#258](https://github.com/alda-lang/alda/issues/258)).
@@ -762,3 +888,4 @@ Exit with error code 1 when parsing fails for `alda play` and `alda parse` tasks
 [elyisgreat]: https://github.com/elyisgreat
 [jgerman]: https://github.com/jgerman
 [aengelberg]: https://github.com/aengelberg
+[goog]: https://github.com/goog
