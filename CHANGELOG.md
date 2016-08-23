@@ -1,5 +1,33 @@
 # CHANGELOG
 
+## 1.0.0-rc34 (8/23/16)
+
+* This release adds a few safeguards against inadvertently starting more than one server process for the same port and ending up in a situation where you have potentially many Alda server processes hanging around, only one of which will be able to serve on that port. Thanks to [elyisgreat] for reporting this issue ([#258](https://github.com/alda-lang/alda/issues/258)).
+
+  Safeguards include:
+
+  * Increasing the "server startup timeout" back to 30 seconds. It turns out that I accidentally lowered it to 15 seconds in 1.0.0-rc32, and on some computers an Alda server can take longer than 15 seconds to start. 30 seconds seems like a better default.
+
+    This timeout is the number of seconds, after running `alda up`, before the client gives up on waiting for the server to start, assumes something went wrong, and tells you that the server is down.
+
+  * If your computer is particularly slow and it takes longer than 30 seconds to start an Alda server, you can increase the timeout by supplying a new global option `-t` / `--timeout`:
+
+    ```bash
+    alda --timeout 45 up # wait 45 seconds before giving up
+    ```
+
+    This should only be necessary on the slowest of computers, but the option is there if you need it.
+
+  * If you do experience a timeout and you try to start the server again, a helpful message is now displayed, letting you know that there is already a server trying to start on that port:
+
+    ```
+    [27713] There is already a server trying to start on this port. Please be patient -- this can take a while.
+    ```
+
+    ...and the client does not attempt to start a duplicate server for that port.
+
+    If you wait long enough, the existing server should be up and ready to play scores. You can check the status of the server by running `alda status`.
+
 ## 1.0.0-rc33 (8/20/16)
 
 * Made the server a little more resilient to failure. There are a handful of tasks that are handled in parallel, like setting up the audio systems (e.g. MIDI) for a score. This involves running the tasks in parallel background threads and waiting for them to complete. This works fine when the tasks are successful, but if they fail, then the server ends up waiting forever and needs to be restarted in order to serve any more requests.
