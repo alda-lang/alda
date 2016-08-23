@@ -2,27 +2,27 @@ package alda;
 
 import com.google.gson.Gson;
 
-import org.jeromq.ZContext;
-import org.jeromq.ZMQ;
-import org.jeromq.ZMQ.PollItem;
-import org.jeromq.ZMQ.Poller;
-import org.jeromq.ZMQ.Socket;
+import org.zeromq.ZContext;
+import org.zeromq.ZMQ;
+import org.zeromq.ZMQ.PollItem;
+import org.zeromq.ZMQ.Poller;
+import org.zeromq.ZMQ.Socket;
 
-public class AldaServerRequest {
+public class AldaRequest {
   private final static int REQUEST_TIMEOUT = 2500; //  ms
   private final static int REQUEST_RETRIES = 3;    //  Before we abandon
 
-  private String host;
-  private int port;
+  private transient String host;
+  private transient int port;
 
-  public AldaServerRequest(String host, int port) {
+  public AldaRequest(String host, int port) {
     this.host = host;
     this.port = port;
   }
 
   public String command;
   public String body;
-  public AldaServerRequestOptions options;
+  public AldaRequestOptions options;
 
   public String toJson() {
     Gson gson = new Gson();
@@ -30,10 +30,10 @@ public class AldaServerRequest {
   }
 
   private String sendRequest(String req, ZContext ctx, Socket client, int timeout, int retries)
-    throws ServerResponseException {
-    if (retries <= 0 || Thread.currentThread().isInterrupted()) {
+    throws NoResponseException {
+    if (retries < 0 || Thread.currentThread().isInterrupted()) {
       ctx.destroy();
-      throw new ServerResponseException("Alda server is down. To start the server, run `alda up`.");
+      throw new NoResponseException("Alda server is down. To start the server, run `alda up`.");
     }
 
     assert (client != null);
@@ -43,13 +43,13 @@ public class AldaServerRequest {
     PollItem items[] = {new PollItem(client, Poller.POLLIN)};
     int rc = ZMQ.poll(items, timeout);
     if (rc == -1) {
-      throw new ServerResponseException("Connection interrupted.");
+      throw new NoResponseException("Connection interrupted.");
     }
 
     if (items[0].isReadable()) {
       String response = client.recvStr();
       if (response == null) {
-        throw new ServerResponseException("Connection interrupted.");
+        throw new NoResponseException("Connection interrupted.");
       }
       return response;
     }
@@ -59,32 +59,32 @@ public class AldaServerRequest {
     client = ctx.createSocket(ZMQ.REQ);
 
     // Send request again, on new socket
-    return sendRequest(req, ctx, client, retries - 1, timeout);
+    return sendRequest(req, ctx, client, timeout, retries - 1);
   }
 
   private String sendRequest(String req, ZContext ctx, Socket client, int timeout)
-    throws ServerResponseException {
+    throws NoResponseException {
     return sendRequest(req, ctx, client, timeout, REQUEST_RETRIES);
   }
 
   private String sendRequest(String req, ZContext ctx, Socket client)
-    throws ServerResponseException {
+    throws NoResponseException {
     return sendRequest(req, ctx, client, REQUEST_TIMEOUT, REQUEST_RETRIES);
   }
 
-  public AldaServerResponse send(int timeout, int retries)
-    throws ServerResponseException {
+  public AldaResponse send(int timeout, int retries)
+    throws NoResponseException {
     ZContext ctx = new ZContext();
     Socket client = ctx.createSocket(ZMQ.REQ);
-    String res = sendRequest(this.toJson(), ctx, client, retries, timeout);
-    return AldaServerResponse.fromJson(res);
+    String res = sendRequest(this.toJson(), ctx, client, timeout, retries);
+    return AldaResponse.fromJson(res);
   }
 
-  public AldaServerResponse send(int timeout) throws ServerResponseException {
+  public AldaResponse send(int timeout) throws NoResponseException {
     return send(timeout, REQUEST_RETRIES);
   }
 
-  public AldaServerResponse send() throws ServerResponseException {
+  public AldaResponse send() throws NoResponseException {
     return send(REQUEST_TIMEOUT, REQUEST_RETRIES);
   }
 }

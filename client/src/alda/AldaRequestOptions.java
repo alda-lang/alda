@@ -1,6 +1,6 @@
 package alda;
 
-public class AldaServerRequestOptions {
+public class AldaRequestOptions {
   public String as;
   public String filename;
   public String from;

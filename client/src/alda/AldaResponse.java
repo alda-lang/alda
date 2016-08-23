@@ -2,13 +2,13 @@ package alda;
 
 import com.google.gson.Gson;
 
-public class AldaServerResponse {
+public class AldaResponse {
   public boolean success;
   public String signal;
   public String body;
 
-  public static AldaServerResponse fromJson(String json) {
+  public static AldaResponse fromJson(String json) {
     Gson gson = new Gson();
-    return gson.fromJson(json, AldaServerResponse.class);
+    return gson.fromJson(json, AldaResponse.class);
   }
 }

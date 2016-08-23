@@ -9,14 +9,30 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(comment
-  "It takes a second to initialize a MIDI synth. To avoid hiccups and make
-   playback more immediate, we maintain a handful of pre-initialized MIDI
-   synths, ready for immediate use.")
-
 (defn new-midi-synth
   []
   (doto ^Synthesizer (MidiSystem/getSynthesizer) .open))
+
+(comment
+  "When using separate worker processes, each process can have a single MIDI
+   synth instance and use it to play one score at a time.")
+
+(def ^:dynamic *midi-synth* nil)
+
+(defn open-midi-synth!
+  []
+  (alter-var-root #'*midi-synth* (constantly (new-midi-synth))))
+
+(comment
+  "It takes a second for a MIDI synth instance to initialize. This is fine for
+   worker processes because each worker only needs to do it once, when the
+   process starts. Multiple scores can be played simultaneously by using
+   multiple worker processes.
+
+   When we only have a single process and we need multiple MIDI synth
+   instances and we need to start them on demand, to avoid hiccups and make
+   playback more immediate, we can maintain a handful of pre-initialized MIDI
+   synths, ready for immediate use.")
 
 (def ^:dynamic *midi-synth-pool* (LinkedBlockingQueue.))
 
@@ -37,12 +53,22 @@
   (pos? (count *midi-synth-pool*)))
 
 (defn get-midi-synth
+  "If the global *midi-synth* has been initialized, then that's the synth you
+   get whenever you call this function.
+
+   Otherwise, takes a MIDI synth instance from the pool and makes sure the pool
+   is more-or-less topped off."
   []
-  (fill-midi-synth-pool!)
-  (drain-excess-midi-synths!)
-  (log/debugf "Taking a MIDI synth from the pool (available: %d)"
-              (count *midi-synth-pool*))
-  (.take *midi-synth-pool*))
+  (if *midi-synth*
+    (do
+      (log/debug "Using the global *midi-synth*")
+      *midi-synth*)
+    (do
+      (fill-midi-synth-pool!)
+      (drain-excess-midi-synths!)
+      (log/debugf "Taking a MIDI synth from the pool (available: %d)"
+                  (count *midi-synth-pool*))
+      (.take *midi-synth-pool*))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -93,8 +119,8 @@
       (load-instrument! patch (aget channels channel)))))
 
 (defn get-midi-synth!
-  "If there isn't already a :midi-synth in the audio context, grabs one from
-   the pool."
+  "If there isn't already a :midi-synth in the audio context, finds an
+   available MIDI synth and adds it."
   [audio-ctx]
   (when-not (:midi-synth @audio-ctx)
     (swap! audio-ctx assoc :midi-synth (get-midi-synth))))

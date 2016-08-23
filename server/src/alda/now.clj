@@ -92,8 +92,8 @@
    The score may be represented as a map of the form that results from
    evaluating alda.lisp code, e.g. (score (part 'piano' (note (pitch :c)))),
    or an atom referencing such a map."
-  [score]
-  (sound/with-play-opts {:async? true}
+  [score & [play-opts]]
+  (sound/with-play-opts (merge {:async? true} play-opts)
     (sound/play! (if (instance? clojure.lang.Atom score)
                    @score
                    score))))

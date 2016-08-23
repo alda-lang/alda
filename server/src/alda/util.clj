@@ -1,7 +1,10 @@
 (ns alda.util
-  (:require [clojure.string  :as str]
-            [taoensso.timbre :as timbre])
-  (:import (java.io File)))
+  (:require [clojure.string                              :as str]
+            [taoensso.timbre                             :as timbre]
+            [taoensso.timbre.appenders.core              :as appenders]
+            [taoensso.timbre.appenders.3rd-party.rolling :as rolling])
+  (:import (java.io File)
+           (java.nio.file Paths)))
 
  (defmacro while-let
   "Repeatedly executes body while test expression is true. Test
@@ -91,7 +94,7 @@
   (let [[x & xs] (sort xs)]
     (apply <= x (conj (vec xs) (+ x 0.01)))))
 
-(defn set-timbre-level!
+(defn set-log-level!
   ([]
     (timbre/set-level! (if-let [level (System/getenv "TIMBRE_LEVEL")]
                          (keyword (str/replace level #":" ""))
@@ -99,42 +102,84 @@
   ([level]
     (timbre/set-level! level)))
 
-(defn check-for
-  "Checks to see if a given file already exists. If it does, prompts the user
-   whether he/she wants to overwrite the file. If he/she doesn't, then prompts
-   the user to choose a new filename and calls itself to check the new file, etc.
-   Returns a filename that does not exist, or does exist and the user is OK with
-   overwriting it."
+(defn log-to-file!
   [filename]
-  (letfn [(prompt []
-            (print "> ") (flush) (read-line))
-          (overwrite-dialog []
-            (println
-              (format "File \"%s\" already exists. Overwrite? (y/n)" filename))
-            (let [response (prompt)]
-              (cond
-                (re-find #"(?i)y(es)?" response)
-                filename
+  (timbre/merge-config!
+    {:appenders {:spit (appenders/spit-appender {:fname filename})}
+     :output-fn (partial timbre/default-output-fn {:stacktrace-fonts {}})}))
 
-                (re-find #"(?i)no?" response)
-                (do
-                  (println "Please specify a different filename.")
-                  (check-for (prompt)))
+(defn rolling-log!
+  [filename]
+  (timbre/merge-config!
+    {:appenders {:spit (rolling/rolling-appender {:path    filename
+                                                  :pattern :weekly})}
+     :output-fn (partial timbre/default-output-fn {:stacktrace-fonts {}})}))
 
-               :else
-               (do
-                 (println "Answer the question, sir.")
-                 (recur)))))]
-    (cond
-      (.isFile (File. filename))
-      (overwrite-dialog)
+(defn program-path
+  "utility function to get the filename of jar in which this function is invoked
+   (source: http://stackoverflow.com/a/13276993/2338327)"
+  [& [ns]]
+  (-> (or ns (class *ns*))
+      .getProtectionDomain .getCodeSource .getLocation .getPath))
 
-      (.isDirectory (File. filename))
-      (do
-        (println (format (str "\"%s\" is a directory. "
-                              "Please specify a filename.")
-                         filename))
-        (recur (prompt)))
+(defn alda-home-path
+  "Returns the path to a folder/file inside the Alda home directory, or the
+   directory itself if no arguments are provided.
 
-      :else
-      filename)))
+   e.g. on a Unix system:
+   (alda-home-path) => ~/.alda
+   (alda-home-path \"logs\" \"error.log\") => ~/.alda/logs/error.log
+
+   e.g. on a Windows system:
+
+   (alda-home-path) => C:\\dave\\.alda
+   (alda-home-path \"logs\" \"error.log\") => C:\\dave\\.alda\\logs\\error.log"
+  [& segments]
+  (->> (cons ".alda" segments)
+       (into-array String)
+       (Paths/get (System/getProperty "user.home"))
+       str))
+
+(defn queue
+  "A janky custom data structure that acts like a queue and is a ref.
+
+   It's really just a vector wrapped in a ref.
+
+   Items are popped from the left and pushed onto the right."
+  ([]
+   (ref []))
+  ([init]
+   (ref (into [] init))))
+
+(defn push-queue
+  [q x]
+  (alter q #(conj % x)))
+
+(defn pop-queue
+  [q]
+  (let [x (first @q)]
+    (alter q #(vec (drop 1 %)))
+    x))
+
+(defn check-queue
+  "Returns true if there is at least one item in the queue that satisfies the
+   predicate."
+  [q pred]
+  (boolean (some pred @q)))
+
+(defn re-queue
+  "Finds all items in the queue that satisfy the predicate, and re-queues them
+   onto the end of the queue.
+
+   When a second function `f` is provided, it is called on each re-queued
+   element. This can be used e.g. to update the timestamps of queued items."
+  [q pred & [f]]
+  (alter q #(let [yes (for [x % :when (pred x)]
+                        ((or f identity) x))
+                  no  (filter (complement pred) %)]
+              (vec (concat no yes)))))
+
+(defn remove-from-queue
+  "Removes all items from the queue that satisfy the predicate."
+  [q pred]
+  (alter q #(vec (filter (complement pred) %))))

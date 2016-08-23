@@ -3,8 +3,6 @@ package alda;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.SystemUtils;
 
@@ -12,17 +10,10 @@ import org.fusesource.jansi.AnsiConsole;
 import static org.fusesource.jansi.Ansi.*;
 import static org.fusesource.jansi.Ansi.Color.*;
 
-import net.jodah.recurrent.Recurrent;
-import net.jodah.recurrent.RetryPolicy;
-
-public class AldaServer {
+public class AldaServer extends AldaProcess {
   private static int PING_TIMEOUT = 100; // ms
   private static int PING_RETRIES = 5;
   private static int STARTUP_RETRY_INTERVAL = 250; // ms
-
-  private String host;
-  private int port;
-  private int timeout;
 
   public AldaServer(String host, int port, int timeout) {
     this.host = normalizeHost(host);
@@ -83,7 +74,7 @@ public class AldaServer {
   }
 
   private void serverDown(boolean isGood) {
-    Color color = isGood? GREEN : RED;
+    Color color = isGood ? GREEN : RED;
     String glyph = isGood ? CHECKMARK : X;
     msg(ansi().a("Server down ").fg(color).a(glyph).reset().toString());
   }
@@ -92,56 +83,19 @@ public class AldaServer {
     serverDown(false);
   }
 
-  private boolean checkForConnection(int timeout, int retries) {
-    try {
-      AldaServerRequest req = new AldaServerRequest(this.host, this.port);
-      req.command = "ping";
-      AldaServerResponse res = req.send(timeout, retries);
-      return res.success;
-    } catch (ServerResponseException e) {
-      return false;
-    }
-  }
-
-  private boolean checkForConnection() {
-    return checkForConnection(PING_TIMEOUT, PING_RETRIES);
-  }
-
-  private boolean waitForConnection() {
-    // Calculate the number of retries before giving up, based on the fixed
-    // STARTUP_RETRY_INTERVAL and the desired timeout in seconds.
-    int retriesPerSecond = 1000 / STARTUP_RETRY_INTERVAL;
-    int retries = this.timeout * retriesPerSecond;
-
-    return checkForConnection(STARTUP_RETRY_INTERVAL, retries);
-  }
-
-  private boolean waitForLackOfConnection() {
-    RetryPolicy retryPolicy = new RetryPolicy()
-      .withDelay(500, TimeUnit.MILLISECONDS)
-      .withMaxDuration(30, TimeUnit.SECONDS)
-      .retryFor(false);
-
-    Callable<Boolean> ping = new Callable<Boolean>() {
-      public Boolean call() { return !checkForConnection(); }
-    };
-
-    return Recurrent.get(ping, retryPolicy);
-  }
-
-  public void upBg() throws InvalidOptionsException {
+  public void upBg(int numberOfWorkers) throws InvalidOptionsException {
     assertNotRemoteHost();
 
     boolean serverAlreadyUp = checkForConnection();
     if (serverAlreadyUp) {
       msg("Server already up.");
-      return;
+      System.exit(1);
     }
 
     boolean serverAlreadyTryingToStart;
     try {
       serverAlreadyTryingToStart = SystemUtils.IS_OS_UNIX &&
-                                   Util.checkForExistingServer(this.port);
+                                   AldaClient.checkForExistingServer(this.port);
     } catch (IOException e) {
       System.out.println("WARNING: Unable to detect whether or not there is " +
                          "already a server running on that port.");
@@ -156,6 +110,7 @@ public class AldaServer {
 
     Object[] opts = {"--host", host,
                      "--port", Integer.toString(port),
+                     "--workers", Integer.toString(numberOfWorkers),
                      "--alda-fingerprint"};
 
     try {
@@ -177,10 +132,10 @@ public class AldaServer {
     }
   }
 
-  public void upFg() throws InvalidOptionsException {
+  public void upFg(int numberOfWorkers) throws InvalidOptionsException {
     assertNotRemoteHost();
 
-    Object[] args = {port};
+    Object[] args = {numberOfWorkers, port};
 
     Util.callClojureFn("alda.server/start-server!", args);
   }
@@ -194,7 +149,7 @@ public class AldaServer {
     Util.callClojureFn("alda.repl/start-repl!", args);
   }
 
-  public void down() throws ServerResponseException {
+  public void down() throws NoResponseException {
     boolean serverAlreadyDown = !checkForConnection();
     if (serverAlreadyDown) {
       msg("Server already down.");
@@ -203,12 +158,12 @@ public class AldaServer {
 
     msg("Stopping Alda server...");
 
-    AldaServerRequest req = new AldaServerRequest(this.host, this.port);
+    AldaRequest req = new AldaRequest(this.host, this.port);
     req.command = "stop-server";
 
     try {
-      AldaServerResponse res = req.send();
-    } catch (ServerResponseException e) {
+      AldaResponse res = req.send();
+    } catch (NoResponseException e) {
       serverDown(true);
       return;
     }
@@ -217,15 +172,15 @@ public class AldaServer {
     if (serverIsDown) {
       serverDown(true);
     } else {
-      throw new ServerResponseException("Failed to stop server.");
+      throw new NoResponseException("Failed to stop server.");
     }
   }
 
-  public void downUp()
-    throws ServerResponseException, InvalidOptionsException {
+  public void downUp(int numberOfWorkers)
+    throws NoResponseException, InvalidOptionsException {
     down();
     System.out.println();
-    upBg();
+    upBg(numberOfWorkers);
   }
 
   public void status() {
@@ -237,29 +192,34 @@ public class AldaServer {
     }
   }
 
-  public void version() throws ServerResponseException {
-    AldaServerRequest req = new AldaServerRequest(this.host, this.port);
+  public void version() throws NoResponseException {
+    AldaRequest req = new AldaRequest(this.host, this.port);
     req.command = "version";
-    AldaServerResponse res = req.send();
+    AldaResponse res = req.send();
     String serverVersion = res.body;
 
     msg(serverVersion);
   }
 
   public void play(String code, String from, String to)
-    throws ServerResponseException {
+    throws NoResponseException {
 
-    AldaServerRequest req = new AldaServerRequest(this.host, this.port);
+    AldaRequest req = new AldaRequest(this.host, this.port);
     req.command = "play";
     req.body = code;
-    req.options = new AldaServerRequestOptions();
+    req.options = new AldaRequestOptions();
     if (from != null) {
       req.options.from = from;
     }
     if (to != null) {
       req.options.to = to;
     }
-    AldaServerResponse res = req.send();
+    // play requests need to be sent exactly once and not retried, otherwise
+    // the score could be played more than once.
+    //
+    // FIXME - implement "worker status" system so the client can poll to see
+    // if the worker is handling its request
+    AldaResponse res = req.send(3000, 0);
 
     if (res.success) {
       msg(res.body);
@@ -269,7 +229,7 @@ public class AldaServer {
   }
 
   public void play(File file, String from, String to)
-    throws ServerResponseException {
+    throws NoResponseException {
     try {
       String fileBody = Util.readFile(file);
       play(fileBody, from, to);
@@ -278,13 +238,13 @@ public class AldaServer {
     }
   }
 
-  public void parse(String code, String mode) throws ServerResponseException {
-    AldaServerRequest req = new AldaServerRequest(this.host, this.port);
+  public void parse(String code, String mode) throws NoResponseException {
+    AldaRequest req = new AldaRequest(this.host, this.port);
     req.command = "parse";
     req.body = code;
-    req.options = new AldaServerRequestOptions();
+    req.options = new AldaRequestOptions();
     req.options.as = mode;
-    AldaServerResponse res = req.send();
+    AldaResponse res = req.send();
 
     if (res.success) {
       System.out.println(res.body);
@@ -293,7 +253,7 @@ public class AldaServer {
     }
   }
 
-  public void parse(File file, String mode) throws ServerResponseException {
+  public void parse(File file, String mode) throws NoResponseException {
     try {
       String fileBody = Util.readFile(file);
       parse(fileBody, mode);

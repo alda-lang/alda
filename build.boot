@@ -4,12 +4,15 @@
                     "server/grammar" "examples" "resources"}
   :dependencies '[
                   ; dev
-                  [adzerk/bootlaces      "0.1.12" :scope "test"]
-                  [adzerk/boot-jar2bin   "1.1.0"  :scope "test"]
-                  [adzerk/boot-test      "1.0.4"  :scope "test"]
-                  [str-to-argv           "0.1.0"  :score "test"]
+                  [adzerk/bootlaces    "0.1.12" :scope "test"]
+                  [adzerk/boot-jar2bin "1.1.0"  :scope "test"]
+                  [adzerk/boot-test    "1.0.4"  :scope "test"]
+                  [str-to-argv         "0.1.0"  :score "test"]
 
-                  ; server
+                  ; shared
+                  [org.zeromq/jeromq "0.3.3"]
+
+                  ; server / worker
                   [org.clojure/clojure    "1.8.0"]
                   [instaparse             "1.4.1"]
                   [io.aviso/pretty        "0.1.20"]
@@ -19,20 +22,19 @@
                   [jline                  "2.12.1"]
                   [org.clojars.sidec/jsyn "16.7.3"]
                   [potemkin               "0.4.1"]
-                  [cc.qbits/jilch         "0.3.0"]
+                  [org.zeromq/cljzmq      "0.1.4" :exclusions (org.zeromq/jzmq)]
+                  [me.raynes/conch        "0.8.0"]
                   [str-to-argv            "0.1.0"]
 
                   ; client
                   [com.beust/jcommander                 "1.48"]
                   [net.jodah/recurrent                  "0.4.0"]
-                  [org.jeromq/jeromq                    "0.2.0"]
                   [commons-io/commons-io                "2.5"]
                   [org.apache.commons/commons-lang3     "3.4"]
                   [org.apache.httpcomponents/httpclient "4.5.1"]
                   [com.google.code.gson/gson            "2.6.1"]
                   [org.fusesource.jansi/jansi           "1.11"]
-                  [us.bpsm/edn-java                     "0.4.6"]
-                  ])
+                  [us.bpsm/edn-java                     "0.4.6"]])
 
 (require '[adzerk.bootlaces    :refer :all]
          '[adzerk.boot-jar2bin :refer :all]
@@ -70,12 +72,12 @@
   install {:pom "alda/alda"}
 
   jar     {:file "alda.jar"
-           :main 'alda.Client}
+           :main 'alda.Main}
 
   bin     {:jvm-opt jvm-opts}
 
   exe     {:name      'alda
-           :main      'alda.Client
+           :main      'alda.Main
            :version   (exe-version alda.version/-version-)
            :desc      "A music programming language for musicians"
            :copyright "2016 Dave Yarwood et al"
@@ -169,29 +171,40 @@
    Take care to include the --port long option as well, so the client knows
    the port on which the dev server is running.
 
-   There is a middleware that reloads all the server namespaces before each
-   request, so that the server does not need to be restarted after making
-   changes."
-  [a app              APP  str  "The Alda application to run (server, repl or client)."
-   x args             ARGS str  "The string of CLI args to pass to the client."
-   p port             PORT int  "The port on which to start the server."
-   F alda-fingerprint      bool "Allow the Alda client to identify this as an Alda server."]
+   *** WORKER ***
+
+   Starts a worker process that will receive requests from the socket on the
+   port specified by the -p/--port option. This option is required."
+  [a app              APP     str  "The Alda application to run (server, repl or client)."
+   x args             ARGS    str  "The string of CLI args to pass to the client."
+   p port             PORT    int  "The port on which to start the server/worker."
+   w workers          WORKERS int  "The number of workers for the server to start."
+   F alda-fingerprint         bool "Allow the Alda client to identify this as an Alda process."]
   (comp
-    (if (= app "client") (javac) identity)
+    (javac)
     (with-pre-wrap fs
       (let [direct-linking (System/getProperty "clojure.compiler.direct-linking")
             start-server!  (fn []
                              (require 'alda.server)
                              (require 'alda.util)
-                             ((resolve 'alda.util/set-timbre-level!) :debug)
-                             ((resolve 'alda.server/start-server!) (or port 27713)))
+                             ((resolve 'alda.util/set-log-level!) :debug)
+                             ((resolve 'alda.server/start-server!)
+                                (or workers 4)
+                                (or port 27713)))
+            start-worker!  (fn []
+                             (assert port
+                               "The --port option is mandatory for workers.")
+                             (require 'alda.worker)
+                             (require 'alda.util)
+                             ((resolve 'alda.util/set-log-level!) :debug)
+                             ((resolve 'alda.worker/start-worker!) port))
             start-repl!    (fn []
                              (require 'alda.repl)
                              ((resolve 'alda.repl/start-repl!)))
             run-client!    (fn []
                              (require '[str-to-argv])
-                             (import 'alda.Client)
-                             (eval `(alda.Client/main
+                             (import 'alda.Main)
+                             (eval `(alda.Main/main
                                       (into-array String
                                         (str-to-argv/split-args (or ~args ""))))))]
         (when-not (= direct-linking "true")
@@ -203,6 +216,7 @@
         (case app
           nil      (start-server!)
           "server" (start-server!)
+          "worker" (start-worker!)
           "repl"   (start-repl!)
           "client" (run-client!)
           (do
