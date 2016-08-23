@@ -373,6 +373,17 @@ public final class Util {
     }
   }
 
+  public static boolean checkForExistingServer(int port) throws IOException {
+    ArrayList<AldaProcess> processes = findProcesses();
+    for (AldaProcess process : processes) {
+      if (process.port == port) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   public static void callClojureFn(String fn, Object... args) {
     Symbol var = (Symbol)Clojure.read(fn);
     IFn require = Clojure.var("clojure.core", "require");

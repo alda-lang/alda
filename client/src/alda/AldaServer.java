@@ -6,6 +6,8 @@ import java.net.URISyntaxException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang3.SystemUtils;
+
 import org.fusesource.jansi.AnsiConsole;
 import static org.fusesource.jansi.Ansi.*;
 import static org.fusesource.jansi.Ansi.Color.*;
@@ -134,6 +136,22 @@ public class AldaServer {
     if (serverAlreadyUp) {
       msg("Server already up.");
       return;
+    }
+
+    boolean serverAlreadyTryingToStart;
+    try {
+      serverAlreadyTryingToStart = SystemUtils.IS_OS_UNIX &&
+                                   Util.checkForExistingServer(this.port);
+    } catch (IOException e) {
+      System.out.println("WARNING: Unable to detect whether or not there is " +
+                         "already a server running on that port.");
+      serverAlreadyTryingToStart = false;
+    }
+
+    if (serverAlreadyTryingToStart) {
+      msg("There is already a server trying to start on this port. Please " +
+          "be patient -- this can take a while.");
+      System.exit(1);
     }
 
     Object[] opts = {"--host", host,
