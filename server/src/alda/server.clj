@@ -14,6 +14,10 @@
 ; the amount of missed heartbeats before a worker is pronounced dead
 (def ^:const WORKER-LIVES          3)
 
+; the number of ms between checking on the number of workers
+(def ^:const WORKER-CHECK-INTERVAL 30000)
+
+
 (defn worker-expiration-date []
   (+ (System/currentTimeMillis) (* HEARTBEAT-INTERVAL WORKER-LIVES)))
 
@@ -23,11 +27,16 @@
 
 (def available-workers (util/queue))
 (def busy-workers      (ref #{}))
-(defn all-workers []   (concat @available-workers (for [address @busy-workers]
-                                                    {:address address})))
+(def worker-blacklist  (ref #{}))
+(defn all-workers []   (->> @available-workers
+                            (concat (for [address @busy-workers]
+                                      {:address address}))
+                            (remove #(contains? @worker-blacklist (:address %)))
+                            doall))
 
 ; (doseq [[x y] [[:available available-workers]
-;                [:busy busy-workers]]]
+;                [:busy      busy-workers]
+;                [:blacklist worker-blacklist]]]
 ;   (add-watch y :key (fn [_ _ old new]
 ;                       (when (not= old new)
 ;                         (prn x new)))))
@@ -46,11 +55,8 @@
   [address]
   (dosync
     (alter busy-workers disj address)
-    (if (util/check-queue available-workers #(= address (:address %)))
-      (util/re-queue available-workers
-                     #(= address (:address %))
-                     #(assoc % :expiry (worker-expiration-date)))
-      (util/push-queue available-workers (worker address)))))
+    (util/remove-from-queue available-workers #(= address (:address %)))
+    (util/push-queue available-workers (worker address))))
 
 (defn note-that-worker-is-busy
   [address]
@@ -58,11 +64,37 @@
     (util/remove-from-queue available-workers #(= address (:address %)))
     (alter busy-workers conj address)))
 
-(defn fire-lazy-workers
+(defn fire-lazy-workers!
   []
   (dosync
     (util/remove-from-queue available-workers
                             #(< (:expiry %) (System/currentTimeMillis)))))
+
+(defn lay-off-worker!
+  "Lays off the last worker in the queue. Bad luck on its part.
+
+   To 'lay off' a worker, we cannot simply send a KILL message, otherwise the
+   worker may die without finishing its workload (e.g. if it's in the middle of
+   playing a score). We want the worker to finish what it's doing and then shut
+   down.
+
+   To do this, we...
+   - remove it from the queue
+   - temporarily 'blacklist' its address so it won't be re-queued the next time
+     it sends a heartbeat
+   - in a separate thread, wait a safe amount of time and then remove the
+     address from the blacklist; this is to keep the blacklist from growing too
+     big over time
+
+   Once the worker is out of the queue and we aren't letting it back in, the
+   worker will stop getting heartbeats from the server and shut itself down."
+  []
+  (dosync
+    (let [{:keys [address]} (util/reverse-pop-queue available-workers)]
+      (alter worker-blacklist conj address)
+      (future
+        (Thread/sleep 30000)
+        (dosync (alter worker-blacklist disj address))))))
 
 (defn- find-open-port
   []
@@ -71,7 +103,8 @@
     (.close tmp-socket)
     port))
 
-(defn start-workers! [workers port]
+(defn start-workers!
+  [workers port]
   (let [program-path (util/program-path)
         cmd (if (re-find #"clojure.*jar$" program-path)
               ; this means we are running the `boot dev` task, and the "program
@@ -85,36 +118,32 @@
     (dotimes [_ workers]
       (apply sh/proc cmd))))
 
-(defn supervise-workers
+(defn supervise-workers!
   "Ensures that there are at least `desired` number of workers available by
    counting how many we have and starting more if needed."
   [port desired]
   (let [current (count (all-workers))
         needed  (- desired current)]
-    (when (pos? needed)
-      (log/infof "Starting %s more workers..." needed)
-      (start-workers! needed port))))
+    (cond
+      (pos? needed)
+      (do
+        (log/info "Supervisor says we need more workers.")
+        (log/infof "Starting %s more worker(s)..." needed)
+        (start-workers! needed port))
 
-(def ^:const WORKER-CHECK-INTERVAL 30000)
+      (neg? needed)
+      (do
+        (log/info "Supervisor says there are too many workers.")
+        (log/infof "Laying off %s worker(s)..." (- needed))
+        (dotimes [_ (- needed)]
+          (lay-off-worker!)
+          (Thread/sleep 100)))
 
-(def supervising? (atom true))
-
-(defn start-supervisor!
-  [desired-workers worker-port]
-  (future
-    (while @supervising?
-      (try
-        (Thread/sleep WORKER-CHECK-INTERVAL)
-        (log/debugf "WORKERS: %s" (count (all-workers)))
-        (supervise-workers worker-port desired-workers)
-        (catch Throwable e
-          (log/error e e))))))
+      :else
+      (log/debug "Supervisor approves of the current number of workers."))))
 
 (defn shut-down!
   [backend]
-  (log/info "Murdering supervisor...")
-  (reset! supervising? false)
-
   (log/info "Murdering workers...")
   (doseq [{:keys [address]} (all-workers)]
     (.send address backend (+ ZFrame/REUSE ZFrame/MORE))
@@ -124,9 +153,10 @@
   ([workers frontend-port]
    (start-server! workers frontend-port (find-open-port)))
   ([workers frontend-port backend-port]
-   (let [zmq-ctx        (zmq/zcontext)
-         poller         (zmq/poller zmq-ctx 2)
-         last-heartbeat (atom 0)]
+   (let [zmq-ctx         (zmq/zcontext)
+         poller          (zmq/poller zmq-ctx 2)
+         last-heartbeat  (atom 0)
+         last-supervised (atom (System/currentTimeMillis))]
      (log/infof "Binding frontend socket on port %s..." frontend-port)
      (log/infof "Binding backend socket on port %s..." backend-port)
      (with-open [frontend (doto (zmq/socket zmq-ctx :router)
@@ -137,9 +167,6 @@
        (zmq/register poller backend :pollin)
        (log/infof "Spawning %s workers..." workers)
        (start-workers! workers backend-port)
-       (log/infof "Starting supervisor thread to check on workers every %s ms..."
-                  WORKER-CHECK-INTERVAL)
-       (start-supervisor! workers backend-port)
        (.addShutdownHook (Runtime/getRuntime)
          (Thread. (fn []
                     (log/info "Interrupt (e.g. Ctrl-C) received.")
@@ -197,16 +224,28 @@
                                                       [no-workers-available-response]))
                                     (.wrap envelope))]
                      (.send msg frontend))))))
+
+           ; purge workers we haven't heard from in too long
+           (fire-lazy-workers!)
+
+           ; make sure we still have the desired number of workers
+           (when (> (System/currentTimeMillis)
+                    (+ @last-supervised WORKER-CHECK-INTERVAL))
+             (reset! last-supervised (System/currentTimeMillis))
+             (supervise-workers! backend-port workers))
+
+           ; send a heartbeat to all current workers
            (when (> (System/currentTimeMillis)
                     (+ @last-heartbeat HEARTBEAT-INTERVAL))
              (reset! last-heartbeat (System/currentTimeMillis))
              (doseq [{:keys [address]} (all-workers)]
                (.send address backend (+ ZFrame/REUSE ZFrame/MORE))
-               (.send (ZFrame. "HEARTBEAT") backend 0)))
-           (fire-lazy-workers))
+               (.send (ZFrame. "HEARTBEAT") backend 0))))
+
          (catch ZMQException e
            (when (= (.getErrorCode e) (.. ZMQ$Error ETERM getCode))
              (.. Thread currentThread interrupt)))
+
          (finally
            (log/info "Destroying zmq context...")
            (zmq/destroy zmq-ctx)

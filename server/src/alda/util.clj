@@ -156,9 +156,17 @@
   (alter q #(conj % x)))
 
 (defn pop-queue
+  "Pops off the first item in the queue and returns it."
   [q]
   (let [x (first @q)]
     (alter q #(vec (drop 1 %)))
+    x))
+
+(defn reverse-pop-queue
+  "Pops off the LAST item in the queue and returns it."
+  [q]
+  (let [x (last @q)]
+    (alter q #(vec (drop-last 1 %)))
     x))
 
 (defn check-queue
