@@ -182,8 +182,16 @@
          last-supervised (atom (System/currentTimeMillis))]
      (log/infof "Binding frontend socket on port %s..." frontend-port)
      (log/infof "Binding backend socket on port %s..." backend-port)
-     (with-open [frontend (doto (zmq/socket zmq-ctx :router)
-                            (zmq/bind (str "tcp://*:" frontend-port)))
+     (with-open [frontend (try
+                            (doto (zmq/socket zmq-ctx :router)
+                              (zmq/bind (str "tcp://*:" frontend-port)))
+                            (catch ZMQException e
+                              (if (= 48 (.getErrorCode e))
+                                (log/error
+                                  (str "There is already an Alda server "
+                                       "running on this port."))
+                                (throw e))
+                              (System/exit 1)))
                  backend  (doto (zmq/socket zmq-ctx :router)
                             (zmq/bind (str "tcp://*:" backend-port)))]
        (zmq/register poller frontend :pollin)
