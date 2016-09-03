@@ -254,7 +254,7 @@ public class Main {
 
         case "list":
           handleCommandSpecificHelp(jc, "list", list);
-          AldaClient.listServers(globalOpts.timeout);
+          AldaClient.listProcesses(globalOpts.timeout);
           System.exit(0);
 
         case "status":

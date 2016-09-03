@@ -131,10 +131,11 @@
               ; path" ends up being clojure-<version>.jar instead of alda; in
               ; this scenario, we can use the `boot dev` task to start each
               ; worker
-              ["boot" "dev" "--alda-fingerprint" "-a" "worker" "-p" (str port)]
+              ["boot" "dev" "--alda-fingerprint" "-a" "worker"
+                                                 "--port" (str port)]
               ; otherwise, use the same program that was used to start the
               ; server (e.g. /usr/local/bin/alda)
-              [program-path "-p" (str port) "--alda-fingerprint" "worker"])]
+              [program-path "--port" (str port) "--alda-fingerprint" "worker"])]
     (dotimes [_ workers]
       (apply sh/proc cmd))))
 

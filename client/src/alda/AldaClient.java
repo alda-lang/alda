@@ -98,12 +98,22 @@ public class AldaClient {
 
         Matcher a = Pattern.compile("^\\s*(\\d+).*").matcher(line);
         Matcher b = Pattern.compile(".*--port (\\d+).*").matcher(line);
+        Matcher c = Pattern.compile(".* server.*").matcher(line);
+        Matcher d = Pattern.compile(".* worker.*").matcher(line);
         if (a.find()) {
           process.pid = Integer.parseInt(a.group(1));
           if (b.find()) {
             process.port = Integer.parseInt(b.group(1));
           } else {
             process.port = -1;
+          }
+
+          if (c.find()) {
+            process.type = "server";
+          }
+
+          if (d.find()) {
+            process.type = "worker";
           }
         }
 
@@ -114,21 +124,45 @@ public class AldaClient {
     return processes;
   }
 
-  public static void listServers(int timeout) throws Exception {
+  public static void listProcesses(int timeout) throws IOException {
     if (!SystemUtils.IS_OS_UNIX) {
-      System.out.println("Sorry -- listing running servers is not currently " +
-                         "supported for Windows users.");
+      System.out.println("Sorry -- listing running processes is not " +
+                         "currently supported for Windows users.");
       return;
     }
 
     ArrayList<AldaProcess> processes = findProcesses();
     for (AldaProcess process : processes) {
-      if (process.port == -1) {
-        System.out.println("[???] Mysterious server running on unknown " +
-                           "port (pid: " + process.pid + ")");
+      if (process.type == "server") {
+        if (process.port == -1) {
+          System.out.printf("[???] Mysterious server running on unknown " +
+                            "port (pid: %d)\n", process.pid);
+          System.out.flush();
+        } else {
+          AldaServer server = new AldaServer("localhost",
+                                             process.port,
+                                             timeout);
+          server.status();
+        }
+      } else if (process.type == "worker") {
+        if (process.port == -1) {
+          System.out.printf("[???] Mysterious worker running on unknown " +
+                            "port (pid: %d)\n", process.pid);
+          System.out.flush();
+        } else {
+          System.out.printf("[%d] Worker (pid: %d)\n", process.port, process.pid);
+          System.out.flush();
+        }
       } else {
-        AldaServer server = new AldaServer("localhost", process.port, timeout);
-        server.status();
+        if (process.port == -1) {
+          System.out.printf("[???] Mysterious Alda process running on " +
+                            "unknown port (pid: %d)\n", process.pid);
+          System.out.flush();
+        } else {
+          System.out.printf("[%d] Mysterious Alda process (pid: %d)\n",
+                            process.port, process.pid);
+          System.out.flush();
+        }
       }
     }
   }

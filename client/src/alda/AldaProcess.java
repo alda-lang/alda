@@ -14,6 +14,7 @@ public class AldaProcess {
   public String host;
   public int pid;
   public int port;
+  public String type;
   public int timeout;
 
   public boolean checkForConnection(int timeout, int retries) {
