@@ -54,6 +54,12 @@
 
 (def shutting-down-response (successful-response "Shutting down..."))
 
+(defn status-response
+  [available total]
+  (successful-response (format "Server up (%s/%s workers available)"
+                               available
+                               total)))
+
 (def version-response (successful-response -version-))
 
 (def no-workers-available-response
@@ -212,6 +218,11 @@
                  ; the server responds directly to certain commands
                  "ping"
                  (util/respond-to msg frontend pong-response)
+
+                 "status"
+                 (util/respond-to msg frontend
+                                  (status-response (count @available-workers)
+                                                   workers))
 
                  "stop-server"
                  (do

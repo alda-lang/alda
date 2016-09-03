@@ -181,10 +181,18 @@ public class AldaServer extends AldaProcess {
   }
 
   public void status() {
-    boolean serverIsUp = checkForConnection();
-    if (serverIsUp) {
-      serverUp();
-    } else {
+    AldaRequest req = new AldaRequest(this.host, this.port);
+    req.command = "status";
+
+    try {
+      AldaResponse res = req.send();
+
+      if (res.success) {
+        msg(res.body);
+      } else {
+        error(res.body);
+      }
+    } catch (NoResponseException e) {
       serverDown();
     }
   }
