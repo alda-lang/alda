@@ -4,7 +4,8 @@
             [taoensso.timbre.appenders.core              :as appenders]
             [taoensso.timbre.appenders.3rd-party.rolling :as rolling])
   (:import (java.io File)
-           (java.nio.file Paths)))
+           (java.nio.file Paths)
+           (org.zeromq ZMsg)))
 
  (defmacro while-let
   "Repeatedly executes body while test expression is true. Test
@@ -191,3 +192,11 @@
   "Removes all items from the queue that satisfy the predicate."
   [q pred]
   (alter q #(vec (filter (complement pred) %))))
+
+(defn respond-to
+  [msg socket response & [envelope]]
+  (let [envelope (or envelope (.unwrap msg))
+        msg      (doto (ZMsg/newStringMsg (into-array String [response]))
+                   (.wrap envelope))]
+    (.send msg socket)))
+

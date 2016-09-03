@@ -3,6 +3,7 @@ package alda;
 import com.google.gson.Gson;
 
 import org.zeromq.ZContext;
+import org.zeromq.ZMsg;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMQ.PollItem;
 import org.zeromq.ZMQ.Poller;
@@ -38,7 +39,11 @@ public class AldaRequest {
 
     assert (client != null);
     client.connect(this.host + ":" + this.port);
-    client.send(req);
+
+    ZMsg msg = new ZMsg();
+    msg.addString(this.toJson());
+    msg.addString(this.command);
+    msg.send(client);
 
     PollItem items[] = {new PollItem(client, Poller.POLLIN)};
     int rc = ZMQ.poll(items, timeout);

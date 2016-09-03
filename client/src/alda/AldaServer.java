@@ -163,16 +163,13 @@ public class AldaServer extends AldaProcess {
 
     try {
       AldaResponse res = req.send();
+      if (res.success) {
+        serverDown(true);
+      } else {
+        throw new NoResponseException("Failed to stop server.");
+      }
     } catch (NoResponseException e) {
       serverDown(true);
-      return;
-    }
-
-    boolean serverIsDown = waitForLackOfConnection();
-    if (serverIsDown) {
-      serverDown(true);
-    } else {
-      throw new NoResponseException("Failed to stop server.");
     }
   }
 

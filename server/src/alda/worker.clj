@@ -144,6 +144,7 @@
         (if (zmq/check-poller poller 0 :pollin)
           (when-let [msg (ZMsg/recvMsg socket ZMQ/DONTWAIT)]
             (cond
+              ; the server sends 1-frame messages as signals
               (= 1 (.size msg))
               (let [frame (.getFirst msg)
                     data  (String. (.getData frame))]
@@ -156,29 +157,29 @@
                                 (reset! lives MAX-LIVES))
                   (log/errorf "Invalid message: %s" data)))
 
-              (= 3 (.size msg))
+              ; the server also forwards 4-frame messages from the client
+              ; Frames:
+              ;   1) the return address of the client
+              ;   2) (empty)
+              ;   3) a JSON string representing the client's request
+              ;   4) the command as a string (for use by the server)
+              (= 4 (.size msg))
               (if @playing?
                 (log/debug "Ignoring message. Busy playing.")
-                (let [envelope (-> msg .unwrap)
+                (let [envelope (.unwrap msg)
                       body     (-> msg .pop .getData (String.))]
                   (try
                     (log/debug "Processing message...")
                     (let [req (json/parse-string body true)
-                          res (json/generate-string (process req))
-                          _   (log/debug "Sending response...")
-                          msg (doto (ZMsg/newStringMsg (into-array String
-                                                                   [res]))
-                                (.wrap envelope))]
-                      (.send msg socket false)
+                          res (json/generate-string (process req))]
+                      (log/debug "Sending response...")
+                      (util/respond-to msg socket res envelope)
                       (log/debug "Response sent."))
                     (catch Throwable e
                       (log/error e e)
                       (log/info "Sending error response...")
-                      (let [err (json/generate-string (error-response e))
-                            msg (doto (ZMsg/newStringMsg (into-array String
-                                                                     [err]))
-                                  (.wrap envelope))]
-                        (.send msg socket false))
+                      (let [err (json/generate-string (error-response e))]
+                        (util/respond-to msg socket err envelope))
                       (log/info "Error response sent.")))))
 
               :else
