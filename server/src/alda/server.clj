@@ -137,7 +137,10 @@
               ; server (e.g. /usr/local/bin/alda)
               [program-path "--port" (str port) "--alda-fingerprint" "worker"])]
     (dotimes [_ workers]
-      (apply sh/proc cmd))))
+      (let [{:keys [in out err]} (apply sh/proc cmd)]
+        (.close in)
+        (.close out)
+        (.close err)))))
 
 (defn supervise-workers!
   "Ensures that there are at least `desired` number of workers available by

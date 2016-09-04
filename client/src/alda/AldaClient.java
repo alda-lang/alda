@@ -121,6 +121,10 @@ public class AldaClient {
       }
     }
     input.close();
+    p.getInputStream().close();
+    p.getOutputStream().close();
+    p.getErrorStream().close();
+    p.destroy();
     return processes;
   }
 

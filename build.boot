@@ -10,7 +10,7 @@
                   [str-to-argv         "0.1.0"  :score "test"]
 
                   ; shared
-                  [org.zeromq/jeromq "0.3.3"]
+                  [org.zeromq/jeromq "0.3.5"]
 
                   ; server / worker
                   [org.clojure/clojure    "1.8.0"]

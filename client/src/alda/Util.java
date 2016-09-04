@@ -244,7 +244,10 @@ public final class Util {
     Object[] objectArray = concat(program, args);
     String[] execArgs = Arrays.copyOf(objectArray, objectArray.length, String[].class);
 
-    Runtime.getRuntime().exec(execArgs);
+    Process p = Runtime.getRuntime().exec(execArgs);
+    p.getInputStream().close();
+    p.getOutputStream().close();
+    p.getErrorStream().close();
   }
 
   public static void runProgramInFg(String... args)
