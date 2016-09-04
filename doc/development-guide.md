@@ -89,9 +89,58 @@ The Alda server is written in Clojure. It handles a variety of things, including
 
 To run an Alda server with any local changes you've made:
 
-    boot dev -a server --port 27713 --alda-fingerprint
+    $ boot dev -a server --port 27713 --alda-fingerprint
 
 The `--port` and `--alda-fingerprint` arguments are strictly optional, but including them will ensure that the Alda client recognizes your development server as an Alda server and includes it in the output of `alda list`.
+
+#### Alda Worker
+
+To start an Alda worker process with any local changes you've made:
+
+    $ boot dev -a worker --port 12345
+
+The `--port` argument needs to be the backend port on which a server is managing its workers. You can see this in the output of the server when it starts up:
+
+    $ boot dev -a server --port 27713 --alda-fingerprint
+    ...
+    16-Sep-04 15:21:49 skeggox.local INFO [alda.server] - Binding frontend socket on port 27713...
+    16-Sep-04 15:21:49 skeggox.local INFO [alda.server] - Binding backend socket on port 60610...
+    16-Sep-04 15:21:49 skeggox.local INFO [alda.server] - Spawning 4 workers...
+
+    # in another terminal
+    $ boot dev -a worker --port 60610 --alda-fingerprint
+    ...
+    16-Sep-04 15:23:15 skeggox.local INFO [alda.worker] - Logging errors to /Users/dave/.alda/logs/error.log
+    Sep 04, 2016 3:23:15 PM com.jsyn.engine.SynthesisEngine start
+    INFO: Pure Java JSyn from www.softsynth.com, rate = 44100, RT, V16.7.3 (build 457, 2014-12-25)
+
+The server has a "supervisor" routine that it does every so often to make sure that it still has the correct number of workers. If you start your own worker process in addition to the workers that the server spawned, then the server will have one more worker than it needs and will "lay off" one worker, which could be your debug worker.
+
+To prevent your debug worker process from being laid off, set the environment variable `ALDA_DISABLE_SUPERVISOR` when starting the server. You can also set the number of workers spawned by the server to 0 in order to ensure that your worker will receive all of the requests.
+
+You may also want to set `ALDA_DEBUG_MODE` when starting the worker in order to see debug-level logs printed to the console, instead of only error logs logged to `~/.alda/logs/error.log` (instead of printed).
+
+    $ ALDA_DISABLE_SUPERVISOR=yes boot dev -a server \
+                                           --port 27713 \
+                                           --workers 0 \
+                                           --alda-fingerprint
+    ...
+    16-Sep-04 15:32:59 skeggox.local INFO [alda.server] - Binding frontend socket on port 27714...
+    16-Sep-04 15:32:59 skeggox.local INFO [alda.server] - Binding backend socket on port 60830...
+    16-Sep-04 15:32:59 skeggox.local INFO [alda.server] - Spawning 0 workers...
+
+    # in a separate terminal
+    $ ALDA_DEBUG_MODE=yes boot dev -a worker --port 60830 --alda-fingerprint
+    ...
+    16-Sep-04 15:34:55 skeggox.local INFO [alda.worker] - Loading Alda environment...
+    Sep 04, 2016 3:34:55 PM com.jsyn.engine.SynthesisEngine start
+    INFO: Pure Java JSyn from www.softsynth.com, rate = 44100, RT, V16.7.3 (build 457, 2014-12-25)
+    16-Sep-04 15:34:58 skeggox.local INFO [alda.worker] - Worker reporting for duty!
+    16-Sep-04 15:34:58 skeggox.local INFO [alda.worker] - Connecting to socket on port 60864...
+    16-Sep-04 15:34:58 skeggox.local INFO [alda.worker] - Sending READY signal.
+    16-Sep-04 15:34:58 skeggox.local DEBUG [alda.worker] - Got HEARTBEAT from server.
+    16-Sep-04 15:34:59 skeggox.local DEBUG [alda.worker] - Got HEARTBEAT from server.
+    16-Sep-04 15:35:00 skeggox.local DEBUG [alda.worker] - Got HEARTBEAT from server.
 
 #### Alda REPL
 
@@ -308,7 +357,7 @@ The core logic for what goes on behind the curtain when you use the REPL lives i
 
 #### alda.server
 
-`alda.server/start-server!` is the entrypoint to the Alda server. It opens a [ZeroMQ](http://zeromq.org) socket and responds to requests until told to stop.
+`alda.server/start-server!` is the entrypoint to the Alda server. It opens a couple of [ZeroMQ](http://zeromq.org) sockets, manages a fixed number of worker processes, and forwards requests from clients to workers until told to stop.
 
 Requests can be made to the server via any client that can make TCP/IP requests to a ZeroMQ REQ/RES socket.
 
