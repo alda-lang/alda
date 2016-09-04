@@ -3,6 +3,8 @@ package alda;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.SystemUtils;
 
@@ -69,6 +71,10 @@ public class AldaServer extends AldaProcess {
   private final String CHECKMARK = "\u2713";
   private final String X = "\u2717";
 
+  private void ready() {
+    msg(ansi().a("Ready ").fg(GREEN).a(CHECKMARK).reset().toString());
+  }
+
   private void serverUp() {
     msg(ansi().a("Server up ").fg(GREEN).a(CHECKMARK).reset().toString());
   }
@@ -83,7 +89,8 @@ public class AldaServer extends AldaProcess {
     serverDown(false);
   }
 
-  public void upBg(int numberOfWorkers) throws InvalidOptionsException {
+  public void upBg(int numberOfWorkers)
+    throws InvalidOptionsException, NoResponseException {
     assertNotRemoteHost();
 
     boolean serverAlreadyUp = checkForConnection();
@@ -122,6 +129,7 @@ public class AldaServer extends AldaProcess {
         serverUp();
       } else {
         serverDown();
+        return;
       }
     } catch (URISyntaxException e) {
       error("Unable to fork '%s' into the background; " +
@@ -130,6 +138,30 @@ public class AldaServer extends AldaProcess {
       error("An IOException occurred trying to fork a background process: %s",
             e.getMessage());
     }
+
+    msg("Starting worker processes...");
+
+    int workersAvailable = 0;
+    while (workersAvailable == 0) {
+      try {
+        Thread.sleep(100);
+      } catch (InterruptedException e) {
+        System.out.println("Thread interrupted.");
+        return;
+      }
+      AldaRequest req = new AldaRequest(this.host, this.port);
+      req.command = "status";
+      AldaResponse res = req.send();
+      if (res.body.contains("Server up")) {
+        Matcher a = Pattern.compile("(\\d+)/\\d+ workers available")
+                           .matcher(res.body);
+        if (a.find()) {
+          workersAvailable = Integer.parseInt(a.group(1));
+        }
+      }
+    }
+
+    ready();
   }
 
   public void upFg(int numberOfWorkers) throws InvalidOptionsException {
