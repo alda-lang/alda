@@ -18,6 +18,14 @@ public class AldaRequest {
     return zContext;
   }
 
+  private static Socket dealerSocket = null;
+  public static Socket getDealerSocket() {
+    if (dealerSocket == null) {
+      dealerSocket = getZContext().createSocket(ZMQ.DEALER);
+    }
+    return dealerSocket;
+  }
+
   private final static int REQUEST_TIMEOUT = 2500; //  ms
   private final static int REQUEST_RETRIES = 3;    //  Before we abandon
 
@@ -41,7 +49,6 @@ public class AldaRequest {
   private String sendRequest(String req, ZContext ctx, Socket client, int timeout, int retries)
     throws NoResponseException {
     if (retries < 0 || Thread.currentThread().isInterrupted()) {
-      ctx.destroy();
       throw new NoResponseException("Alda server is down. To start the server, run `alda up`.");
     }
 
@@ -60,6 +67,11 @@ public class AldaRequest {
     }
 
     if (items[0].isReadable()) {
+      String address = client.recvStr();
+      if (address == null) {
+        throw new NoResponseException("Connection interrupted.");
+      }
+
       String response = client.recvStr();
       if (response == null) {
         throw new NoResponseException("Connection interrupted.");
@@ -67,11 +79,7 @@ public class AldaRequest {
       return response;
     }
 
-    // Old socket is confused; close it and open a new one
-    ctx.destroySocket(client);
-    client = ctx.createSocket(ZMQ.REQ);
-
-    // Send request again, on new socket
+    // Send request again until we're out of retries
     return sendRequest(req, ctx, client, timeout, retries - 1);
   }
 
@@ -88,7 +96,7 @@ public class AldaRequest {
   public AldaResponse send(int timeout, int retries)
     throws NoResponseException {
     ZContext ctx = getZContext();
-    Socket client = ctx.createSocket(ZMQ.REQ);
+    Socket client = getDealerSocket();
     String res = sendRequest(this.toJson(), ctx, client, timeout, retries);
     return AldaResponse.fromJson(res);
   }

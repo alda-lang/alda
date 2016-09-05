@@ -157,13 +157,12 @@
                                 (reset! lives MAX-LIVES))
                   (log/errorf "Invalid message: %s" data)))
 
-              ; the server also forwards 4-frame messages from the client
+              ; the server also forwards 3-frame messages from the client
               ; Frames:
               ;   1) the return address of the client
-              ;   2) (empty)
-              ;   3) a JSON string representing the client's request
-              ;   4) the command as a string (for use by the server)
-              (= 4 (.size msg))
+              ;   2) a JSON string representing the client's request
+              ;   3) the command as a string (for use by the server)
+              (= 3 (.size msg))
               (if @playing?
                 (log/debug "Ignoring message. Busy playing.")
                 (let [envelope (.unwrap msg)
