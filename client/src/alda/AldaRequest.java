@@ -10,6 +10,14 @@ import org.zeromq.ZMQ.Poller;
 import org.zeromq.ZMQ.Socket;
 
 public class AldaRequest {
+  private static ZContext zContext = null;
+  public static ZContext getZContext() {
+    if (zContext == null) {
+      zContext = new ZContext();
+    }
+    return zContext;
+  }
+
   private final static int REQUEST_TIMEOUT = 2500; //  ms
   private final static int REQUEST_RETRIES = 3;    //  Before we abandon
 
@@ -79,7 +87,7 @@ public class AldaRequest {
 
   public AldaResponse send(int timeout, int retries)
     throws NoResponseException {
-    ZContext ctx = new ZContext();
+    ZContext ctx = getZContext();
     Socket client = ctx.createSocket(ZMQ.REQ);
     String res = sendRequest(this.toJson(), ctx, client, timeout, retries);
     return AldaResponse.fromJson(res);
