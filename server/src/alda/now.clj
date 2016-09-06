@@ -93,8 +93,9 @@
    evaluating alda.lisp code, e.g. (score (part 'piano' (note (pitch :c)))),
    or an atom referencing such a map."
   [score & [play-opts]]
-  (sound/with-play-opts (merge {:async? true} play-opts)
-    (sound/play! (if (instance? clojure.lang.Atom score)
-                   @score
-                   score))))
+  (println "testing alda dev setup"))
+  ;(sound/with-play-opts (merge {:async? true} play-opts)
+  ;  (sound/play! (if (instance? clojure.lang.Atom score)
+  ;                 @score
+  ;                 score))))
 
