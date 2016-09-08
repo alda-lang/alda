@@ -144,7 +144,7 @@ public class AldaServer extends AldaProcess {
     int workersAvailable = 0;
     while (workersAvailable == 0) {
       try {
-        Thread.sleep(100);
+        Thread.sleep(STARTUP_RETRY_INTERVAL);
       } catch (InterruptedException e) {
         System.out.println("Thread interrupted.");
         return;
