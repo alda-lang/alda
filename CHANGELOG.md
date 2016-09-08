@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 1.0.0-rc37 (9/8/16)
+
+* Continuing from the `ulimit -n`-related `alda up` issues noted in the previous release, this makes it so that we check the number of available workers every 250 ms instead of 100 ms. This does not solve the "Too many open files" issue, but as a workaround it appears to stop the error from happening when your `ulimit -n` is 256 and you're starting the default number (4) of workers.
+
+  See issue [#261](https://github.com/alda-lang/alda/issues/261) for further discussion.
+
 ## 1.0.0-rc36 (9/5/16)
 
 This release makes a handful of minor improvements to the way we're managing socket connections. The goal is avoid the `java.io.IOException: Too many open files` error, (issue [#261](https://github.com/alda-lang/alda/issues/261)) which can occur when Alda tries to open more socket connections than your system allows.
@@ -10,7 +16,7 @@ This release makes a handful of minor improvements to the way we're managing soc
 
 * When you run `alda up`, the client repeatedly sends requests to get an update on when the server is up so that it can notify you, then it does the same thing with the worker processes. The worker processes can take a while to spin up, so the client ends up sending a lot of requests to the server for the status of the worker processes. Prior to this release, each of these requests created a new connection, causing the "open files" limit to be quickly met. As of this release, a single Alda CLI command (like `alda up`) will only create a single connection and reuse it.
 
-I tested this release by setting my `ulimit -n` to 256 and saw some definite improvement, but still occasionally saw the "Too many files" error happening, especially when trying to use 4 Alda worker processes. I'll continue to tinker with this and see if there are other improvements to be made.
+I tested this release by setting my `ulimit -n` to 256 and saw some definite improvement, but still occasionally saw the "Too many open files" error happening, especially when trying to use 4 Alda worker processes. I'll continue to tinker with this and see if there are other improvements to be made.
 
 > If you have a low `ulimit -n` (256 is quite low; I would recommend 10240 at least) and would like to get better performance from Alda, you can set it higher for your current terminal session by running `ulimit -n 10240`. However, this setting will go away once you close your terminal window, so if you're looking for a more permanent solution, [the Riak docs](https://docs.basho.com/riak/kv/2.1.4/using/performance/open-files-limit/) happen to have an excellent description of how to set your open file limit more permanently.
 
