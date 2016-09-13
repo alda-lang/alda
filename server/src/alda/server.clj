@@ -18,6 +18,9 @@
 ; the number of ms between checking on the number of workers
 (def ^:const WORKER-CHECK-INTERVAL 30000)
 
+; the number of ms since last server heartbeat before we conclude the process has
+; been suspended (e.g. laptop lid closed)
+(def ^:const SUSPENDED-INTERVAL 10000)
 
 (defn worker-expiration-date []
   (+ (System/currentTimeMillis) (* HEARTBEAT-INTERVAL WORKER-LIVES)))
@@ -90,6 +93,13 @@
     (util/remove-from-queue available-workers
                             #(< (:expiry %) (System/currentTimeMillis)))))
 
+(defn blacklist-worker!
+  [address]
+  (dosync (alter worker-blacklist conj address))
+  (future
+    (Thread/sleep 30000)
+    (dosync (alter worker-blacklist disj address))))
+
 (defn lay-off-worker!
   "Lays off the last worker in the queue. Bad luck on its part.
 
@@ -111,10 +121,7 @@
   []
   (dosync
     (let [{:keys [address]} (util/reverse-pop-queue available-workers)]
-      (alter worker-blacklist conj address)
-      (future
-        (Thread/sleep 30000)
-        (dosync (alter worker-blacklist disj address))))))
+      (blacklist-worker! address))))
 
 (defn- find-open-port
   []
@@ -166,14 +173,33 @@
       :else
       (log/debug "Supervisor approves of the current number of workers."))))
 
+(defn murder-workers!
+  [backend]
+  (doseq [{:keys [address]} (all-workers)]
+    (.send address backend (+ ZFrame/REUSE ZFrame/MORE))
+    (.send (ZFrame. "KILL") backend 0)
+    (blacklist-worker! address)))
+
+(defn cycle-workers!
+  [backend port workers]
+  (murder-workers! backend)
+  (Thread/sleep 500)
+  (dosync
+    (alter available-workers empty)
+    (alter busy-workers empty))
+  (assert (empty? @available-workers))
+  (assert (empty? @busy-workers))
+  (Thread/sleep 500)
+  (assert (empty? @available-workers))
+  (assert (empty? @busy-workers))
+  (start-workers! workers port))
+
 (def running? (atom true))
 
 (defn shut-down!
   [backend]
   (log/info "Murdering workers...")
-  (doseq [{:keys [address]} (all-workers)]
-    (.send address backend (+ ZFrame/REUSE ZFrame/MORE))
-    (.send (ZFrame. "KILL") backend 0))
+  (murder-workers! backend)
   (reset! running? false))
 
 (defn start-server!
@@ -182,7 +208,7 @@
   ([workers frontend-port backend-port]
    (let [zmq-ctx         (zmq/zcontext)
          poller          (zmq/poller zmq-ctx 2)
-         last-heartbeat  (atom 0)
+         last-heartbeat  (atom (System/currentTimeMillis))
          last-supervised (atom (System/currentTimeMillis))]
      (log/infof "Binding frontend socket on port %s..." frontend-port)
      (log/infof "Binding backend socket on port %s..." backend-port)
@@ -215,11 +241,12 @@
                (if (= 1 (.size msg))
                  (let [frame   (.getFirst msg)
                        data    (-> frame .getData (String.))]
-                   (case data
-                     "BUSY"      (note-that-worker-is-busy address)
-                     "AVAILABLE" (add-or-requeue-worker address)
-                     "READY"     (add-or-requeue-worker address)
-                     (log/errorf "Invalid message: %s" data)))
+                   (when-not (contains? @worker-blacklist address)
+                     (case data
+                       "BUSY"      (note-that-worker-is-busy address)
+                       "AVAILABLE" (add-or-requeue-worker address)
+                       "READY"     (add-or-requeue-worker address)
+                       (log/errorf "Invalid message: %s" data))))
                  (do
                    (log/debug "Forwarding backend response to frontend...")
                    (.send msg frontend))))))
@@ -274,6 +301,15 @@
 
          ; purge workers we haven't heard from in too long
          (fire-lazy-workers!)
+
+         ; detect when the system has been suspended and cycle workers
+         ; (fixes a bug where MIDI audio is delayed)
+         (when (> (System/currentTimeMillis)
+                  (+ @last-heartbeat SUSPENDED-INTERVAL))
+           (log/info "Process suspension detected. Cycling workers...")
+           (cycle-workers! backend backend-port workers)
+           (reset! last-heartbeat  (System/currentTimeMillis))
+           (reset! last-supervised (System/currentTimeMillis)))
 
          ; make sure we still have the desired number of workers
          (when (> (System/currentTimeMillis)
