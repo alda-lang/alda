@@ -113,6 +113,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def ^:const HEARTBEAT-INTERVAL 1000)
+(def ^:const SUSPENDED-INTERVAL 10000)
 (def ^:const MAX-LIVES          10)
 
 (def lives (atom MAX-LIVES))
@@ -131,7 +132,7 @@
   (let [zmq-ctx        (zmq/zcontext)
         poller         (zmq/poller zmq-ctx 1)
         running?       (atom true)
-        last-heartbeat (atom 0)]
+        last-heartbeat (atom (System/currentTimeMillis))]
     (with-open [socket (doto (zmq/socket zmq-ctx :dealer)
                          (zmq/connect (str "tcp://*:" port))) ]
       (log/info "Sending READY signal.")
@@ -188,9 +189,20 @@
             (when (and (<= @lives 0) (not @playing?))
               (log/error "Unable to reach the server.")
               (reset! running? false))))
+
+        ; detect when the system has been suspended and stop working so the
+        ; server can replace it with a fresh worker (this fixes a bug where
+        ; MIDI audio is delayed)
+        (when (> (System/currentTimeMillis)
+                 (+ @last-heartbeat SUSPENDED-INTERVAL))
+          (log/info "Process suspension detected. Shutting down...")
+          (reset! last-heartbeat (System/currentTimeMillis))
+          (reset! running? false))
+
         (when (> (System/currentTimeMillis)
                  (+ @last-heartbeat HEARTBEAT-INTERVAL))
-          (.send (ZFrame. (if @playing? "BUSY" "AVAILABLE")) socket 0))))
+          (.send (ZFrame. (if @playing? "BUSY" "AVAILABLE")) socket 0)
+          (reset! last-heartbeat (System/currentTimeMillis)))))
     (log/info "Shutting down.")
     (System/exit 0)))
 
