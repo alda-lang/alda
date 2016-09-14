@@ -38,12 +38,25 @@
                             (remove #(contains? @worker-blacklist (:address %)))
                             doall))
 
+(defn- friendly-id
+  [address]
+  (->> address
+       .getData
+       (map int)
+       (apply str)))
+
 ; (doseq [[x y] [[:available available-workers]
 ;                [:busy      busy-workers]
 ;                [:blacklist worker-blacklist]]]
 ;   (add-watch y :key (fn [_ _ old new]
 ;                       (when (not= old new)
-;                         (prn x new)))))
+;                         (prn x (for [worker new]
+;                                  (conj []
+;                                        (if-let [address (:address worker)]
+;                                          (friendly-id address)
+;                                          (friendly-id worker))
+;                                        (when-let [expiry (:expiry worker)]
+;                                          expiry))))))))
 
 (defn- json-response
   [success?]
@@ -182,16 +195,15 @@
 
 (defn cycle-workers!
   [backend port workers]
+  ; kill workers (this might only get the busy ones)
   (murder-workers! backend)
+  ; wait for any stray zombie workers to wander in
   (Thread/sleep 500)
+  ; clear out the worker queues
   (dosync
     (alter available-workers empty)
     (alter busy-workers empty))
-  (assert (empty? @available-workers))
-  (assert (empty? @busy-workers))
-  (Thread/sleep 500)
-  (assert (empty? @available-workers))
-  (assert (empty? @busy-workers))
+  ; start new workers
   (start-workers! workers port))
 
 (def running? (atom true))
