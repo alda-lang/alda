@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## 1.0.0-rc38 (9/14/16)
+
+* Fixed issue [#160](https://github.com/alda-lang/alda/issues/160), re: MIDI audio being delayed after suspending and bringing back Alda processes, e.g. after closing and re-opening your laptop lid.
+
+  Now that we have a server/workers architecture, the solution to this is for the server and workers to each detect when the system has been suspended, and act accordingly:
+
+  - Each existing worker will shut down.
+  - The server will clear out its worker queue and start up new workers.
+
+  This is not a perfect solution in that if you close your laptop and then reopen it in under 10 seconds, the suspension may not be properly detected, so you might still have the same "bad" workers as before with delayed audio. If you ever observe this behavior, you can always fix it by restarting the server and workers via `alda downup`.
+
+* Fixed a minor bug where workers may be sending too many heartbeats, potentially resulting in poor performance. Now they should only send heartbeats once per second.
+
 ## 1.0.0-rc37 (9/8/16)
 
 * Continuing from the `ulimit -n`-related `alda up` issues noted in the previous release, this makes it so that we check the number of available workers every 250 ms instead of 100 ms. This does not solve the "Too many open files" issue, but as a workaround it appears to stop the error from happening when your `ulimit -n` is 256 and you're starting the default number (4) of workers.
