@@ -267,6 +267,7 @@
                        (log/errorf "Invalid message: %s" data))))
                  (do
                    (log/debug "Forwarding backend response to frontend...")
+                   (.add msg address)
                    (.send msg frontend))))))
          (when (zmq/check-poller poller 0 :pollin) ; frontend
            (when-let [msg (ZMsg/recvMsg frontend)]

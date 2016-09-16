@@ -76,6 +76,12 @@ public class AldaRequest {
       if (response == null) {
         throw new NoResponseException("Connection interrupted.");
       }
+
+      byte[] workerAddress = client.recv(ZMQ.DONTWAIT);
+      if (workerAddress != null) {
+        System.out.println("worker address: " + new String(workerAddress));
+      }
+
       return response;
     }
 
