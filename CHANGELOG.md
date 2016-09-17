@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## 1.0.0-rc39 (9/17/16)
+
+* There is [a CPU usage issue](https://github.com/alda-lang/alda/issues/266) that can cause poor performance when cycling out workers, a feature that was implemented in the last release.
+
+  The real solution is going to be to fix the CPU usage problem, but in the meantime, this release makes the worker-cycling behavior introduced in the last release an opt-in feature.
+
+  To opt in, include the `--cycle-workers` option when starting the server:
+
+  ```
+  alda --cycle-workers up
+  ```
+
+  Note that even when _not_ using this option, the worker cycling will still eventually happen (within 30 seconds of your computer coming out of suspended state). When it has been 10+ seconds since the worker was last active (e.g. if your computer was in suspended state), each worker will detect this and shut itself down. Every 30 seconds, the server checks to make sure it has the correct number of workers, so it will replace the workers that went down.
+
+  The change with this release is that the workers will not immediately be replaced upon coming out of suspended state. It would be better if they were immediately replaced, but we will have to fix the CPU usage problem first. (If you're good at profiling / determining the cause of high CPU usage, we could use your help!)
+
 ## 1.0.0-rc38 (9/14/16)
 
 * Fixed issue [#160](https://github.com/alda-lang/alda/issues/160), re: MIDI audio being delayed after suspending and bringing back Alda processes, e.g. after closing and re-opening your laptop lid.
