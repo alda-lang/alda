@@ -47,6 +47,10 @@ public class Main {
     @Parameter(names = {"-w", "--workers"},
                description = "The number of worker processes to start")
     public int numberOfWorkers = 4;
+
+    @Parameter(names = {"--cycle-workers"},
+               description = "Start new workers after coming out of sleep state.")
+    public boolean cycleWorkers = false;
   }
 
   private static class AldaCommand {
@@ -191,7 +195,8 @@ public class Main {
 
     AldaServer server = new AldaServer(globalOpts.host,
                                        globalOpts.port,
-                                       globalOpts.timeout);
+                                       globalOpts.timeout,
+                                       globalOpts.cycleWorkers);
 
     try {
       if (globalOpts.help) {

@@ -192,6 +192,7 @@
                              (require 'alda.util)
                              ((resolve 'alda.util/set-log-level!) :debug)
                              ((resolve 'alda.server/start-server!)
+                                false ; don't cycle workers
                                 (or workers 4)
                                 (or port 27713)))
             start-worker!  (fn []
