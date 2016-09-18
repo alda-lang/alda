@@ -17,13 +17,10 @@ public class AldaServer extends AldaProcess {
   private static int PING_RETRIES = 5;
   private static int STARTUP_RETRY_INTERVAL = 250; // ms
 
-  public boolean cycleWorkers;
-
-  public AldaServer(String host, int port, int timeout, boolean cycleWorkers) {
+  public AldaServer(String host, int port, int timeout) {
     this.host = normalizeHost(host);
     this.port = port;
     this.timeout = timeout;
-    this.cycleWorkers = cycleWorkers;
 
     AnsiConsole.systemInstall();
   }
@@ -123,10 +120,6 @@ public class AldaServer extends AldaProcess {
                      "--workers", Integer.toString(numberOfWorkers),
                      "--alda-fingerprint"};
 
-    if (cycleWorkers) {
-      opts = Util.conj(opts, "--cycle-workers");
-    }
-
     try {
       Util.forkProgram(Util.conj(opts, "server"));
       msg("Starting Alda server...");
@@ -174,7 +167,7 @@ public class AldaServer extends AldaProcess {
   public void upFg(int numberOfWorkers) throws InvalidOptionsException {
     assertNotRemoteHost();
 
-    Object[] args = {cycleWorkers, numberOfWorkers, port};
+    Object[] args = {numberOfWorkers, port};
 
     Util.callClojureFn("alda.server/start-server!", args);
   }

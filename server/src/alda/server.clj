@@ -215,9 +215,9 @@
   (reset! running? false))
 
 (defn start-server!
-  ([cycle-workers? workers frontend-port]
-   (start-server! cycle-workers? workers frontend-port (find-open-port)))
-  ([cycle-workers? workers frontend-port backend-port]
+  ([workers frontend-port]
+   (start-server! workers frontend-port (find-open-port)))
+  ([workers frontend-port backend-port]
    (let [zmq-ctx         (zmq/zcontext)
          poller          (zmq/poller zmq-ctx 2)
          last-heartbeat  (atom (System/currentTimeMillis))
@@ -319,15 +319,7 @@
          (when (> (System/currentTimeMillis)
                   (+ @last-heartbeat SUSPENDED-INTERVAL))
            (log/info "Process suspension detected. Cycling workers...")
-           ; FIXME: a CPU usage issue (#266) makes it problematic to start up
-           ; new workers while the old workers are on their way out -- too many
-           ; processes active at once, all using too much CPU.
-           ;
-           ; Once that issue is resolved, we can remove the
-           ; `cycle-workers?` option and just `cycle-workers!`
-           (if cycle-workers?
-             (cycle-workers! backend backend-port workers)
-             (murder-workers! backend))
+           (cycle-workers! backend backend-port workers)
            (reset! last-heartbeat  (System/currentTimeMillis))
            (reset! last-supervised (System/currentTimeMillis)))
 
