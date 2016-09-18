@@ -16,7 +16,11 @@
 (def ^:const WORKER-LIVES          3)
 
 ; the number of ms between checking on the number of workers
-(def ^:const WORKER-CHECK-INTERVAL 30000)
+(def ^:const WORKER-CHECK-INTERVAL 60000)
+
+; the number of ms to wait between starting workers
+; (starting them all at the same time causes heavy CPU usage)
+(def ^:const WORKER-START-INTERVAL 10000)
 
 ; the number of ms since last server heartbeat before we conclude the process has
 ; been suspended (e.g. laptop lid closed)
@@ -156,11 +160,13 @@
               ; otherwise, use the same program that was used to start the
               ; server (e.g. /usr/local/bin/alda)
               [program-path "--port" (str port) "--alda-fingerprint" "worker"])]
-    (dotimes [_ workers]
-      (let [{:keys [in out err]} (apply sh/proc cmd)]
-        (.close in)
-        (.close out)
-        (.close err)))))
+    (future
+      (dotimes [_ workers]
+        (let [{:keys [in out err]} (apply sh/proc cmd)]
+          (.close in)
+          (.close out)
+          (.close err))
+        (Thread/sleep WORKER-START-INTERVAL)))))
 
 (defn supervise-workers!
   "Ensures that there are at least `desired` number of workers available by
