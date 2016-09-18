@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## 1.0.0-rc41 (9/18/16)
+
+The focus of this release is to use less CPU when starting an Alda server and worker processes. Thanks to [0atman] for reporting [this issue](https://github.com/alda-lang/alda/issues/266)!
+
+* Prior to this release, when you started up and Alda server, it would simultaneously start all of its worker processes, which was heavy on the CPU. It turns out that waiting 10 seconds between starting each worker decreases CPU usage significantly, so that's what we're doing now.
+
+* Because it can take a little longer now for all workers to start (add an additional 10 seconds for each worker after 1), the server will now check on the current number of workers every 60 seconds instead of every 30 seconds.
+
+* The default number of workers is now 2 instead of 4. This uses significantly less CPU, and should be adequate for most Alda users. Remember that if you desire more workers, you can use the `--workers` option when starting the server, e.g. `alda --workers 4 up` for 4 workers.
+
+* Removed the temporary `--cycle-workers` option introduced in 1.0.0-rc39. Now that CPU usage will not be as much of a problem, it is safer to cycle workers by default.
+
 ## 1.0.0-rc40 (9/17/16)
 
 * Bugfix: prior to this release, if evaluating an Alda score resulted in any error, the client would report `ERROR Invalid Alda syntax.`. Now it will report the error message. (This may have been working at some point and then regressed in a recent release. Sorry about that!)
@@ -942,3 +954,4 @@ Exit with error code 1 when parsing fails for `alda play` and `alda parse` tasks
 [jgerman]: https://github.com/jgerman
 [aengelberg]: https://github.com/aengelberg
 [goog]: https://github.com/goog
+[0atman]: https://github.com/0atman
