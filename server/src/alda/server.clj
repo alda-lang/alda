@@ -16,7 +16,11 @@
 (def ^:const WORKER-LIVES          3)
 
 ; the number of ms between checking on the number of workers
-(def ^:const WORKER-CHECK-INTERVAL 30000)
+(def ^:const WORKER-CHECK-INTERVAL 60000)
+
+; the number of ms to wait between starting workers
+; (starting them all at the same time causes heavy CPU usage)
+(def ^:const WORKER-START-INTERVAL 10000)
 
 ; the number of ms since last server heartbeat before we conclude the process has
 ; been suspended (e.g. laptop lid closed)
@@ -156,11 +160,13 @@
               ; otherwise, use the same program that was used to start the
               ; server (e.g. /usr/local/bin/alda)
               [program-path "--port" (str port) "--alda-fingerprint" "worker"])]
-    (dotimes [_ workers]
-      (let [{:keys [in out err]} (apply sh/proc cmd)]
-        (.close in)
-        (.close out)
-        (.close err)))))
+    (future
+      (dotimes [_ workers]
+        (let [{:keys [in out err]} (apply sh/proc cmd)]
+          (.close in)
+          (.close out)
+          (.close err))
+        (Thread/sleep WORKER-START-INTERVAL)))))
 
 (defn supervise-workers!
   "Ensures that there are at least `desired` number of workers available by
@@ -215,9 +221,9 @@
   (reset! running? false))
 
 (defn start-server!
-  ([cycle-workers? workers frontend-port]
-   (start-server! cycle-workers? workers frontend-port (find-open-port)))
-  ([cycle-workers? workers frontend-port backend-port]
+  ([workers frontend-port]
+   (start-server! workers frontend-port (find-open-port)))
+  ([workers frontend-port backend-port]
    (let [zmq-ctx         (zmq/zcontext)
          poller          (zmq/poller zmq-ctx 2)
          last-heartbeat  (atom (System/currentTimeMillis))
@@ -319,15 +325,7 @@
          (when (> (System/currentTimeMillis)
                   (+ @last-heartbeat SUSPENDED-INTERVAL))
            (log/info "Process suspension detected. Cycling workers...")
-           ; FIXME: a CPU usage issue (#266) makes it problematic to start up
-           ; new workers while the old workers are on their way out -- too many
-           ; processes active at once, all using too much CPU.
-           ;
-           ; Once that issue is resolved, we can remove the
-           ; `cycle-workers?` option and just `cycle-workers!`
-           (if cycle-workers?
-             (cycle-workers! backend backend-port workers)
-             (murder-workers! backend))
+           (cycle-workers! backend backend-port workers)
            (reset! last-heartbeat  (System/currentTimeMillis))
            (reset! last-supervised (System/currentTimeMillis)))
 
