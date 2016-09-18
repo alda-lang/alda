@@ -46,7 +46,7 @@ public class Main {
 
     @Parameter(names = {"-w", "--workers"},
                description = "The number of worker processes to start")
-    public int numberOfWorkers = 4;
+    public int numberOfWorkers = 2;
   }
 
   private static class AldaCommand {
