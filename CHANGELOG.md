@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1.0.0-rc40 (9/17/16)
+
+* Bugfix: prior to this release, if evaluating an Alda score resulted in any error, the client would report `ERROR Invalid Alda syntax.`. Now it will report the error message. (This may have been working at some point and then regressed in a recent release. Sorry about that!)
+
 ## 1.0.0-rc39 (9/17/16)
 
 * There is [a CPU usage issue](https://github.com/alda-lang/alda/issues/266) that can cause poor performance when cycling out workers, a feature that was implemented in the last release.

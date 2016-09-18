@@ -41,21 +41,22 @@
   (try
     (log/debug "Requiring alda.lisp...")
     (require '[alda.lisp :refer :all])
-    (if-let [score (try
-                     (log/debug "Parsing input...")
-                     (parse-input code :map)
-                     (catch Throwable e
-                       (log/error e e)
-                       nil))]
-      (do
-        (log/debug "Playing score...")
-        (future
-          (reset! playing? true)
-          (now/play-score! score {:async? false :one-off? false})
-          (log/debug "Done playing score.")
-          (reset! playing? false))
-        (success-response "Playing..."))
-      (error-response "Invalid Alda syntax."))
+    (let [score (try
+                  (log/debug "Parsing input...")
+                  (parse-input code :map)
+                  (catch Throwable e
+                    (log/error e e)
+                    {:error e}))]
+      (if-let [error (:error score)]
+        (error-response error)
+        (do
+          (log/debug "Playing score...")
+          (future
+            (reset! playing? true)
+            (now/play-score! score {:async? false :one-off? false})
+            (log/debug "Done playing score.")
+            (reset! playing? false))
+          (success-response "Playing..."))))
     (catch Throwable e
       (log/error e e)
       (error-response e))))
@@ -70,7 +71,7 @@
                         :map  (parse-input code mode)))
     (catch Throwable e
       (log/error e e)
-      (error-response "Invalid Alda syntax."))))
+      (error-response e))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
