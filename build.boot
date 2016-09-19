@@ -240,7 +240,7 @@
 (deftask build
   "Builds an uberjar and executable binaries for Unix/Linux and Windows."
   [f file       PATH file "The path to an already-built uberjar."
-   o output-dir PATH str  "The directory in which to places the binaries."]
+   o output-dir PATH str  "The directory in which to place the binaries."]
   (comp
     (if-not file (package) identity)
     (bin :file file :output-dir output-dir)
