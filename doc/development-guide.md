@@ -52,7 +52,9 @@ This will build the `alda` and `alda.exe` executables and place them in the outp
 
 The Alda client is a fairly straightforward Java CLI app that uses [JCommander](http://jcommander.org) to parse command-line arguments.
 
-Interaction with servers is done via [ZeroMQ](http://zeromq.org) TCP requests with a JSON payload. The Alda client takes command-line arguments, translates them into a JSON request, and sends the request to the server. Unless specified via the `-H/--host` option, the Alda client assumes the server is running locally and sends requests to localhost. The default port is 27713.
+Interaction with servers is done via [ZeroMQ](http://zeromq.org) TCP requests with a JSON payload. The Alda client takes command-line arguments, translates them into a JSON request, and sends the request to the server. For more details about the way we use ZeroMQ, see [ZeroMQ Architecture](zeromq-architecture.md).
+
+Unless specified via the `-H/--host` option, the Alda client assumes the server is running locally and sends requests to localhost. The default port is 27713.
 
 Running `alda start` forks a new Alda process in the background, passing it the (hidden) `server` command to start the server. Server output is hidden from the user (though the client will report if there is an error).
 
@@ -359,5 +361,13 @@ The core logic for what goes on behind the curtain when you use the REPL lives i
 
 `alda.server/start-server!` is the entrypoint to the Alda server. It opens a couple of [ZeroMQ](http://zeromq.org) sockets, manages a fixed number of worker processes, and forwards requests from clients to workers until told to stop.
 
-Requests can be made to the server via any client that can make TCP/IP requests to a ZeroMQ REQ/RES socket.
+Requests can be made to the server via any client that can make ZeroMQ requests. The client connects to a DEALER socket on the port where the server is running. By default, this is port 27713.
+
+For more details about how we use ZeroMQ, see [ZeroMQ Architecture](zeromq-architecture.md).
+
+#### alda.worker
+
+`alda.worker/start-worker!` is the entrypoint to each Alda worker process. This function takes a single argument, which is the port number for the backend port where the server is forwarding requests from the client\*. An Alda worker takes requests from the server, does work (i.e. parsing, evaluating, and playing scores), and responds with a result or an error. The result or error is then returned to the client.
+
+\*Note that this is not the same port on which the client makes requests to the server. For more details, see [ZeroMQ Architecture](zeromq-architecture.md).
 
