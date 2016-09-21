@@ -1,0 +1,27 @@
+# Clapping Music (1972)
+# for two performers
+#
+# Steve Reich
+#
+# sheet music:
+# https://sites.ualberta.ca/~michaelf/SEM-O/SEM-O_2014/Steve's%20piece/clapping_reich.jpg
+
+(def clap (alda-code "o2 d+8"))
+
+(def pattern
+  (let [rest (pause (duration (note-length 8)))]
+    [clap clap clap rest clap clap rest clap rest clap clap rest]))
+
+(defn shift [n pattern]
+  (take (count pattern) (drop n (cycle pattern))))
+
+(tempo! 172)
+
+midi-percussion:
+  V1:
+    (times 13
+      (times 12 pattern))
+
+  V2:
+    (for [n (range 13)]
+      (times 12 (shift n pattern)))

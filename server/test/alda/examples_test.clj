@@ -18,6 +18,7 @@
    across_the_sea
    awobmolg
    bach_cello_suite_no_1
+   clapping_music
    debussy_quartet
    entropy
    gau
