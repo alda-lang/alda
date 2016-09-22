@@ -13,9 +13,8 @@ import static org.fusesource.jansi.Ansi.*;
 import static org.fusesource.jansi.Ansi.Color.*;
 
 public class AldaServer extends AldaProcess {
-  private static int PING_TIMEOUT = 100; // ms
-  private static int PING_RETRIES = 5;
   private static int STARTUP_RETRY_INTERVAL = 250; // ms
+  private static int PLAY_STATUS_INTERVAL = 250; // ms
 
   public AldaServer(String host, int port, int timeout) {
     this.host = normalizeHost(host);
@@ -254,14 +253,46 @@ public class AldaServer extends AldaProcess {
     // play requests need to be sent exactly once and not retried, otherwise
     // the score could be played more than once.
     //
-    // FIXME - implement "worker status" system so the client can poll to see
-    // if the worker is handling its request
+    // play requests are asynchronous; the response from the worker should be
+    // immediate, and then in the code below, we repeatedly ask the worker for
+    // status and send updates to the user until the status is "playing."
     AldaResponse res = req.send(3000, 0);
 
-    if (res.success) {
-      msg(res.body);
-    } else {
+    if (!res.success) {
       error(res.body);
+      return;
+    }
+
+    if (res.workerAddress == null) {
+      error("No worker address included in response; unable to check for status.");
+      return;
+    }
+
+    String status = "requested";
+
+    while (true) {
+      AldaResponse update = playStatus(res.workerAddress);
+      if (!update.success) {
+        error(update.body);
+        break;
+      } else if (!update.body.equals(status)) {
+        status = update.body;
+        switch (status) {
+          case "parsing": msg("Parsing/evaluating..."); break;
+          case "playing": msg("Playing..."); break;
+          default: msg(status);
+        }
+      }
+
+      if (update.pending) {
+        try {
+          Thread.sleep(PLAY_STATUS_INTERVAL);
+        } catch (InterruptedException e) {
+          System.out.println("Thread interrupted.");
+        }
+      } else {
+        break;
+      }
     }
   }
 
@@ -273,6 +304,14 @@ public class AldaServer extends AldaProcess {
     } catch (IOException e) {
       error("Unable to read file: " + file.getAbsolutePath());
     }
+  }
+
+  public AldaResponse playStatus(byte[] workerAddress)
+    throws NoResponseException {
+    AldaRequest req = new AldaRequest(this.host, this.port);
+    req.command = "play-status";
+    req.workerToUse = workerAddress;
+    return req.send();
   }
 
   public void parse(String code, String mode) throws NoResponseException {

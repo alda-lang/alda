@@ -34,32 +34,36 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def playing? (atom false))
+(def current-status (atom :available))
+(def current-error (atom nil))
 
-(defn handle-code
+(defn handle-code-play
   [code]
-  (try
+  (future
+    (reset! current-status :parsing)
     (log/debug "Requiring alda.lisp...")
     (require '[alda.lisp :refer :all])
     (let [score (try
                   (log/debug "Parsing input...")
                   (parse-input code :map)
                   (catch Throwable e
-                    (log/error e e)
                     {:error e}))]
       (if-let [error (:error score)]
-        (error-response error)
         (do
+          (log/error error error)
+          (reset! current-status :error)
+          (reset! current-error error))
+        (try
           (log/debug "Playing score...")
-          (future
-            (reset! playing? true)
-            (now/play-score! score {:async? false :one-off? false})
-            (log/debug "Done playing score.")
-            (reset! playing? false))
-          (success-response "Playing..."))))
-    (catch Throwable e
-      (log/error e e)
-      (error-response e))))
+          (reset! current-status :playing)
+          (now/play-score! score {:async? false :one-off? false})
+          (log/debug "Done playing score.")
+          (reset! current-status :available)
+          (catch Throwable e
+            (log/error e e)
+            (reset! current-status :error)
+            (reset! current-error e))))))
+  (success-response "Request received."))
 
 (defn handle-code-parse
   [code & {:keys [mode] :or {mode :lisp}}]
@@ -105,7 +109,17 @@
                                  :from     from
                                  :to       to
                                  :one-off? true)]
-      (handle-code body))))
+      (handle-code-play body))))
+
+(defmethod process "play-status"
+  [_]
+  (if (= :error @current-status)
+    (let [error @current-error]
+      (reset! current-status :available)
+      (reset! current-error nil)
+      (error-response error))
+    (-> (success-response (name @current-status))
+        (assoc :pending (not (#{:available :playing} @current-status))))))
 
 (defmethod process "version"
   [_]
@@ -165,10 +179,12 @@
               ;   2) a JSON string representing the client's request
               ;   3) the command as a string (for use by the server)
               (= 3 (.size msg))
-              (if @playing?
-                (log/debug "Ignoring message. Busy playing.")
-                (let [envelope (.unwrap msg)
-                      body     (-> msg .pop .getData (String.))]
+              (let [envelope (.unwrap msg)
+                    command  (-> msg .getLast .getData (String.))
+                    body     (-> msg .pop .getData (String.))]
+                (if (and (not= :available @current-status)
+                         (not= "play-status" command))
+                  (log/debug "Ignoring message. I'm busy.")
                   (try
                     (log/debug "Processing message...")
                     (let [req (json/parse-string body true)
@@ -187,7 +203,7 @@
               (log/errorf "Invalid message: %s" msg)))
           (do
             (swap! lives dec)
-            (when (and (<= @lives 0) (not @playing?))
+            (when (and (<= @lives 0) (= :available @current-status))
               (log/error "Unable to reach the server.")
               (reset! running? false))))
 
@@ -202,7 +218,11 @@
 
         (when (> (System/currentTimeMillis)
                  (+ @last-heartbeat HEARTBEAT-INTERVAL))
-          (.send (ZFrame. (if @playing? "BUSY" "AVAILABLE")) socket 0)
+          (.send (ZFrame. (if (= :available @current-status)
+                            "AVAILABLE"
+                            "BUSY"))
+                 socket
+                 0)
           (reset! last-heartbeat (System/currentTimeMillis)))))
     (log/info "Shutting down.")
     (System/exit 0)))

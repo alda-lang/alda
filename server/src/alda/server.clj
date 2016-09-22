@@ -277,6 +277,17 @@
                  "ping"
                  (util/respond-to msg frontend pong-response)
 
+                 "play-status"
+                 (do
+                   (let [client-address (.pop msg)
+                         request        (.pop msg)
+                         address        (.pop msg)]
+                     (log/debugf "Forwarding message to worker %s..." address)
+                     (.push msg request)
+                     (.push msg client-address)
+                     (.push msg address)
+                     (.send msg backend)))
+
                  "status"
                  (util/respond-to msg frontend
                                   (status-response (count @available-workers)
