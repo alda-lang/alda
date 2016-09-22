@@ -1,5 +1,26 @@
 # CHANGELOG
 
+## ??? (??/??/??)
+
+* Implemented an internal "worker status" system so that the Alda client has better visibility into the status of the worker process handling a request to play a score. This only affects the `alda play` command.
+
+  `alda play` requests that take longer than 3000 milliseconds will no longer time out and result in an incorrect error about the server being "down." The way it works now is more asynchronous:
+
+  - The client makes a request to play a large score.
+  - A worker gets the request and responds immediately. The server includes a note about which worker it is so that the client can follow up with the worker for status.
+  - The client repeatedly sends requests for the status of that worker, and the worker asynchronously responds to let the client know if it is parsing, playing, done, or if there was some error.
+  - As the client receives updates, it prints them to the console:
+
+  ```bash
+  $ alda play -c 'bassoon: (Thread/sleep 5000) o2 d1~1~1~1~1'
+  [27713] Parsing/evaluating... # immediate response
+  [27713] Playing... # 5 seconds later
+  ```
+
+### Breaking Changes
+
+* To accomplish the above, I had to make a couple of minor adjustments to the ZeroMQ message structure. If you are writing your own Alda client, server, or worker, you may need to adjust the way messages are handled slightly. The Alda [ZeroMQ Architecture](doc/zeromq-architecture.md) doc has been updated to reflect these changes to the message structure.
+
 ## 1.0.0-rc41 (9/18/16)
 
 The focus of this release is to use less CPU when starting an Alda server and worker processes. Thanks to [0atman] for reporting [this issue](https://github.com/alda-lang/alda/issues/266)!
