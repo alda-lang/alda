@@ -29,32 +29,43 @@ This is very close to the [Paranoid Pirate Pattern](http://zguide.zeromq.org/pag
 
 #### Outbound
 
-An Alda client will only send one type of message -- a three-frame message that consists of:
+An Alda client will mostly only send one type of message -- a three-frame message that consists of:
 
-  1. The return address of the client. This is usually added by default by ZeroMQ.
+1. The return address of the client. This is usually added by default by ZeroMQ.
 
-    This frame serves as a "return envelope" to ensure that the response from the worker goes back to the right client.
-  2. A string of JSON representing the request, which will be read and handled by the worker. For example, a request to play a string of code might look like this:
+  This frame serves as a "return envelope" to ensure that the response from the worker goes back to the right client.
+2. A string of JSON representing the request, which will be read and handled by the worker. For example, a request to play a string of code might look like this:
 
-    ```json
-    {"command": "play", "body": "piano: c8 d e f g2"}
-    ```
+  ```json
+  {"command": "parse", "body": "piano: c8 d e f g2"}
+  ```
 
-    Depending on the command, the request JSON may also contain a map of `"options"`.
+  Depending on the command, the request JSON may also contain a map of `"options"`.
 
-    _(TODO: definitive list of commands and options)_
+  _(TODO: definitive list of commands and options)_
 
-  3. A simple string representing the command. For example, `play`. The server examines this frame in order to quickly determine if a message is something it can handle itself or if it needs to forward the request to a worker.
+3. A simple string representing the command. For example, `play`. The server examines this frame in order to quickly determine if a message is something it can handle itself or if it needs to forward the request to a worker.
+
+In some cases, such as when issuing the `play-status` command, the client will indicate that the server needs to forward its request to a specific worker. To do this, the client will make a 4-frame request:
+
+1. The return address of the client. (same as above)
+2. The request JSON string. (same as above)
+3. The worker's address.
+4. A string representing the command. (same as frame 3 above)
 
 #### Inbound
 
 After sending a request, the client can receive a string of JSON in response. Here is an example response, after sending a request to play a string of Alda code:
 
 ```json
-{"success": true, "body": "Playing..."}
+{"success": true, "pending": false, "body": "playing"}
 ```
 
+  Depending on the request, there may be an additional frame in the response containing the address of the worker who serviced the request. The official Alda client uses this information after sending a `play` request in order to send subsequent `play-status` requests to the worker currently handling the request.
+
 A server response will always include a `"success"` field which will be a boolean indicating whether or not the operation was successful, and a `"body"` field providing additional context.
+
+In the case of a worker providing status, there will also be a `"pending"` key which will indicate whether or not the overall "request" is complete. For example, a worker will respond with `"success": true, "pending": true` if it has not encountered any error so far, but it is currently busy parsing a score. Once it gets to the point where it is playing the score, it will respond with `"success": true, "pending": false`.
 
 ### Server
 
@@ -62,7 +73,7 @@ A server response will always include a `"success"` field which will be a boolea
 
 See "Client - Outbound" above.
 
-Messages from the client contain 3 frames. The server inspects the last frame to determine which command is being requested and decide whether the server can handle the request itself or whether it needs to forward the request to a worker.
+Messages from the client contain 3 or 4 frames. The server inspects the last frame to determine which command is being requested and decide whether the server can handle the request itself or whether it needs to forward the request to a worker.
 
 #### Inbound - Backend Socket
 
@@ -76,7 +87,7 @@ If it contains 3 frames, it is a response to the client and should be forwarded 
 
 A server may send two types of messages on the frontend socket:
 
-* Forwarded worker responses.
+* Forwarded worker responses. The server adds a 4th frame, which is the worker's address, before sending the response to the client.
 
 * A direct response to a command the server can handle, e.g. `version`.
 
