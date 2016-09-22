@@ -110,7 +110,7 @@ cello:
 
 * **Abbreviations:** (none)
 
-* **Description:** The length that a note will have, if not specified. For example, `c4` is explicitly a quarter note; `c` will have a note-length equal to the value of the instrument's `duration` attribute. (Note that this attribute is more of an implementation detail, as an instrument's default note length is set implicitly whenever you specify a note-length on a note. You will probably never need to use this attribute directly.)
+* **Description:** The length that a note will have, if not specified. For example, `c4` is explicitly a quarter note; `c` will have a note-length equal to the value of the instrument's `duration` attribute. (Note that this attribute is more of an implementation detail, as an instrument's default note length is set implicitly whenever you specify a note-length on a note. You will probably never need to use this attribute directly, however it is worth mentioning that it is set via `set-duration` and *not* `duration`.)
 
 * **Value:** a number of beats (e.g. 2.5, which represents a dotted half note).
 
