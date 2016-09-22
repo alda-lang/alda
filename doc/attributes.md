@@ -120,7 +120,7 @@ cello:
 
 * **Abbreviations:** `key-sig`
 
-* **Description:** [a set of sharp or flat symbols](https://en.wikipedia.org/wiki/Key_signature) to be applied to certain notes by default when the note doesn't include accidentals. For example, if the key signature contains G-sharp, then a note `g` will become G-sharp by default, unless an accidental is placed after the note, i.e. `g-` (G-flat) or `g` (G natural).
+* **Description:** [a set of sharp or flat symbols](https://en.wikipedia.org/wiki/Key_signature) to be applied to certain notes by default when the note doesn't include accidentals. For example, if the key signature contains G-sharp, then a note `g` will become G-sharp by default, unless an accidental is placed after the note, i.e. `g-` (G-flat) or `g_` (G natural).
 
 * **Value:** either:
   * a map of letters (as keywords) to lists of accidentals for that letter, e.g. `{:f [:sharp] :c [:sharp] :g [:sharp]}`,
