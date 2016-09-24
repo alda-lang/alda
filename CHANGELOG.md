@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## ??? (??/??/??)
+## 1.0.0-rc42 (9/24/16)
 
 * Implemented an internal "worker status" system so that the Alda client has better visibility into the status of the worker process handling a request to play a score. This only affects the `alda play` command.
 
