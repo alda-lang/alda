@@ -65,7 +65,9 @@
 (defn- json-response
   [success?]
   (fn [body]
-    (json/generate-string {:success success? :body body})))
+    (json/generate-string {:success success?
+                           :body body
+                           :noWorker true})))
 
 (def successful-response   (json-response true))
 (def unsuccessful-response (json-response false))
@@ -267,6 +269,7 @@
                        (log/errorf "Invalid message: %s" data))))
                  (do
                    (log/debug "Forwarding backend response to frontend...")
+                   (.add msg address)
                    (.send msg frontend))))))
          (when (zmq/check-poller poller 0 :pollin) ; frontend
            (when-let [msg (ZMsg/recvMsg frontend)]
@@ -275,6 +278,17 @@
                  ; the server responds directly to certain commands
                  "ping"
                  (util/respond-to msg frontend pong-response)
+
+                 "play-status"
+                 (do
+                   (let [client-address (.pop msg)
+                         request        (.pop msg)
+                         address        (.pop msg)]
+                     (log/debugf "Forwarding message to worker %s..." address)
+                     (.push msg request)
+                     (.push msg client-address)
+                     (.push msg address)
+                     (.send msg backend)))
 
                  "status"
                  (util/respond-to msg frontend

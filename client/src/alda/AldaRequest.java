@@ -31,6 +31,7 @@ public class AldaRequest {
 
   private transient String host;
   private transient int port;
+  public transient byte[] workerToUse;
 
   public AldaRequest(String host, int port) {
     this.host = host;
@@ -46,7 +47,7 @@ public class AldaRequest {
     return gson.toJson(this);
   }
 
-  private String sendRequest(String req, ZContext ctx, Socket client, int timeout, int retries)
+  private AldaResponse sendRequest(String req, ZContext ctx, Socket client, int timeout, int retries)
     throws NoResponseException {
     if (retries < 0 || Thread.currentThread().isInterrupted()) {
       throw new NoResponseException("Alda server is down. To start the server, run `alda up`.");
@@ -57,6 +58,9 @@ public class AldaRequest {
 
     ZMsg msg = new ZMsg();
     msg.addString(this.toJson());
+    if (this.workerToUse != null) {
+      msg.add(this.workerToUse);
+    }
     msg.addString(this.command);
     msg.send(client);
 
@@ -72,10 +76,20 @@ public class AldaRequest {
         throw new NoResponseException("Connection interrupted.");
       }
 
-      String response = client.recvStr();
-      if (response == null) {
+      String responseJson = client.recvStr();
+      if (responseJson == null) {
         throw new NoResponseException("Connection interrupted.");
       }
+
+      AldaResponse response = AldaResponse.fromJson(responseJson);
+
+      if (!response.noWorker) {
+        byte[] workerAddress = client.recv(ZMQ.DONTWAIT);
+        if (workerAddress != null) {
+          response.workerAddress = workerAddress;
+        }
+      }
+
       return response;
     }
 
@@ -83,12 +97,13 @@ public class AldaRequest {
     return sendRequest(req, ctx, client, timeout, retries - 1);
   }
 
-  private String sendRequest(String req, ZContext ctx, Socket client, int timeout)
+  private AldaResponse sendRequest(String req, ZContext ctx, Socket client,
+                                   int timeout)
     throws NoResponseException {
     return sendRequest(req, ctx, client, timeout, REQUEST_RETRIES);
   }
 
-  private String sendRequest(String req, ZContext ctx, Socket client)
+  private AldaResponse sendRequest(String req, ZContext ctx, Socket client)
     throws NoResponseException {
     return sendRequest(req, ctx, client, REQUEST_TIMEOUT, REQUEST_RETRIES);
   }
@@ -97,8 +112,7 @@ public class AldaRequest {
     throws NoResponseException {
     ZContext ctx = getZContext();
     Socket client = getDealerSocket();
-    String res = sendRequest(this.toJson(), ctx, client, timeout, retries);
-    return AldaResponse.fromJson(res);
+    return sendRequest(this.toJson(), ctx, client, timeout, retries);
   }
 
   public AldaResponse send(int timeout) throws NoResponseException {
