@@ -83,9 +83,11 @@ public class AldaRequest {
 
       AldaResponse response = AldaResponse.fromJson(responseJson);
 
-      byte[] workerAddress = client.recv(ZMQ.DONTWAIT);
-      if (workerAddress != null) {
-        response.workerAddress = workerAddress;
+      if (!response.noWorker) {
+        byte[] workerAddress = client.recv(ZMQ.DONTWAIT);
+        if (workerAddress != null) {
+          response.workerAddress = workerAddress;
+        }
       }
 
       return response;

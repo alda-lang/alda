@@ -8,6 +8,7 @@ public class AldaResponse {
   public String signal;
   public String body;
   public byte[] workerAddress;
+  public boolean noWorker;
 
   public static AldaResponse fromJson(String json) {
     Gson gson = new Gson();

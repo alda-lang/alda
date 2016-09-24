@@ -67,6 +67,8 @@ A server response will always include a `"success"` field which will be a boolea
 
 In the case of a worker providing status, there will also be a `"pending"` key which will indicate whether or not the overall "request" is complete. For example, a worker will respond with `"success": true, "pending": true` if it has not encountered any error so far, but it is currently busy parsing a score. Once it gets to the point where it is playing the score, it will respond with `"success": true, "pending": false`.
 
+The server should signal to the client that there is no worker for a particular request (i.e. a command not handled by a worker, like `ping`) by including `"noWorker": true` in the response.
+
 ### Server
 
 #### Inbound - Frontend Socket

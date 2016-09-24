@@ -65,7 +65,9 @@
 (defn- json-response
   [success?]
   (fn [body]
-    (json/generate-string {:success success? :body body})))
+    (json/generate-string {:success success?
+                           :body body
+                           :noWorker true})))
 
 (def successful-response   (json-response true))
 (def unsuccessful-response (json-response false))
