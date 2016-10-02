@@ -25,6 +25,8 @@ This is very close to the [Paranoid Pirate Pattern](http://zguide.zeromq.org/pag
 
 ## Message Structure
 
+> See [ZeroMQ Messages](zeromq-messages.md) for a comprehensive list of example messages sent by each of Alda's components.
+
 ### Client
 
 #### Outbound
@@ -41,8 +43,6 @@ An Alda client will mostly only send one type of message -- a three-frame messag
   ```
 
   Depending on the command, the request JSON may also contain a map of `"options"`.
-
-  _(TODO: definitive list of commands and options)_
 
 3. A simple string representing the command. For example, `play`. The server examines this frame in order to quickly determine if a message is something it can handle itself or if it needs to forward the request to a worker.
 
