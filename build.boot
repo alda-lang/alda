@@ -57,12 +57,13 @@
 (def jvm-opts #{"-Dclojure.compiler.direct-linking=true"})
 
 (task-options!
-  javac   {:options (concat
-                      ["-source" "1.7"
-                       "-target" "1.7"]
-                      (when-let [jdk7-bootclasspath
-                                 (System/getenv "JDK7_BOOTCLASSPATH")]
-                        ["-bootclasspath" jdk7-bootclasspath]))}
+  javac   {:options (let [jdk7-bootclasspath (System/getenv "JDK7_BOOTCLASSPATH")]
+                      (concat
+                        []
+                        (when-not (empty? jdk7-bootclasspath)
+                          ["-source" "1.7"
+                           "-target" "1.7"
+                           "-bootclasspath" jdk7-bootclasspath])))}
 
   pom     {:project 'alda
            :version alda.version/-version-
