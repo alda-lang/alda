@@ -54,7 +54,7 @@
       (format "%s.999" n)
       version)))
 
-(def jvm-opts #{"-XX:+UseG1GC -XX:MaxGCPauseMillis=100 -Xms256m -Xmx1024m -Dclojure.compiler.direct-linking=true"})
+(def jvm-opts #{"-XX:+UseG1GC" "-XX:MaxGCPauseMillis=100" "-Xms256m" "-Xmx1024m" "-Dclojure.compiler.direct-linking=true"})
 
 (task-options!
   javac   {:options (let [jdk7-bootclasspath (System/getenv "JDK7_BOOTCLASSPATH")]
