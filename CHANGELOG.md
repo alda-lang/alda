@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 1.0.0-rc43 (9/25/16)
+
+* Tuned JVM performance to use less unnecessary memory and CPU. See issue [#269](https://github.com/alda-lang/alda/issues/269) for more context, but the TL;DR version is that prior to this release, the Alda server and worker processes were each provisioned with more memory and CPU settings than they needed, causing them to wastefully use up memory/CPU resources that your computer could otherwise be using.
+
+  Big thanks to [feldoh] for this contribution!
+
 ## 1.0.0-rc42 (9/24/16)
 
 * Implemented an internal "worker status" system so that the Alda client has better visibility into the status of the worker process handling a request to play a score. This only affects the `alda play` command.
@@ -976,3 +982,4 @@ Exit with error code 1 when parsing fails for `alda play` and `alda parse` tasks
 [aengelberg]: https://github.com/aengelberg
 [goog]: https://github.com/goog
 [0atman]: https://github.com/0atman
+[feldoh]: https://github.com/feldoh
