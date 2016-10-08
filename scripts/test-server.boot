@@ -30,9 +30,6 @@
       (.add worker-address)
       (.addString command))))
 
-(def backend-msgs
-  "TODO")
-
 (defn receive-all
   "Receives one frame, then keeps checking to see if there is more until there
    are no more frames to receive. Returns the result as a vector of strings."
@@ -93,4 +90,44 @@
            ; ...and use it to send the play-status msg
            msg      (frontend-play-status-msg (last response))]
        (test-msg msg frontend)
-       (Thread/sleep 500)))))
+       (Thread/sleep 500))
+     (println)
+     (println "Testing backend port...")
+     (println)
+
+     (comment
+       "In these tests, we are acting like a worker process interacting with
+        the server we are testing.
+
+        The backend receives two different types of messages from workers:
+          - responses to forward to the client that made the request
+          - heartbeats
+
+        It is difficult to test the first type of message, because the server
+        takes it and forwards it to the client, and does not send anything back
+        to the worker to let us know that this happened.
+
+        The frontend tests above actually confirm that this works properly; if
+        the server has at least one worker running, then if you send a message
+        to the frontend and the server sends a response from the worker, then
+        we know that the first type of message works.
+
+        Testing the second type of message here. As a worker, if we send an
+        AVAILABLE heartbeat to the server, it should start sending us HEARTBEAT
+        signals.")
+
+     (let [msg (doto (ZMsg.) (.addString "READY"))]
+       (println "Sending msg:" \newline msg)
+       (.send msg backend)
+       (loop [n 5]
+         (when (pos? n)
+           (let [msg (doto (ZMsg.) (.addString "AVAILABLE"))]
+             (println)
+             (println "Sending msg:" \newline msg)
+             (.send msg backend)
+             (println)
+             (let [msg (receive-all backend)]
+               (println "Received msg:" \newline (map #(String. %) msg))))
+           (recur (dec n))))))
+   (println)
+   (println "Done.")))
