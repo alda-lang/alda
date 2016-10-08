@@ -194,17 +194,16 @@
             start-server!  (fn []
                              (require 'alda.server)
                              (require 'alda.util)
-                             ((resolve 'alda.util/set-log-level!) :debug)
                              ((resolve 'alda.server/start-server!)
                                 (or workers 2)
-                                (or port 27713)))
+                                (or port 27713)
+                                true))
             start-worker!  (fn []
                              (assert port
                                "The --port option is mandatory for workers.")
                              (require 'alda.worker)
                              (require 'alda.util)
-                             ((resolve 'alda.util/set-log-level!) :debug)
-                             ((resolve 'alda.worker/start-worker!) port))
+                             ((resolve 'alda.worker/start-worker!) port true))
             start-repl!    (fn []
                              (require 'alda.repl)
                              ((resolve 'alda.repl/start-repl!)))

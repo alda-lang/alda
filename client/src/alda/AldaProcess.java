@@ -11,6 +11,7 @@ public class AldaProcess {
   private static int PING_RETRIES = 5;
   private static int STARTUP_RETRY_INTERVAL = 250; // ms
 
+  public boolean verbose = false;
   public String host;
   public int pid;
   public int port;

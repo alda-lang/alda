@@ -44,7 +44,7 @@
 (defn print-usage
   []
   (println "Example usage:")
-  (println "  $ alda -p 23232 server")
+  (println "  $ alda -v -p 23232 server")
   (println "  # take note of the frontend and backend ports")
   (println "  # let's say for example the backend port it uses is 56667")
   (println)

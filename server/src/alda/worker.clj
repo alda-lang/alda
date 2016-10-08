@@ -134,13 +134,13 @@
 (def lives (atom MAX-LIVES))
 
 (defn start-worker!
-  [port]
-  (when-not (System/getenv "ALDA_DEBUG")
+  [port & [verbose?]]
+  (util/set-log-level! :debug)
+  (when-not (or (System/getenv "ALDA_DEBUG") verbose?)
     (let [log-path (util/alda-home-path "logs" "error.log")]
       (log/infof "Logging errors to %s" log-path)
       (util/set-log-level! :error)
       (util/rolling-log! log-path)))
-  (log/info "Loading Alda environment...")
   (start-alda-environment!)
   (log/info "Worker reporting for duty!")
   (log/infof "Connecting to socket on port %d..." port)

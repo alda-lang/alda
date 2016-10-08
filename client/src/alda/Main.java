@@ -191,7 +191,8 @@ public class Main {
 
     AldaServer server = new AldaServer(globalOpts.host,
                                        globalOpts.port,
-                                       globalOpts.timeout);
+                                       globalOpts.timeout,
+                                       globalOpts.verbose);
 
     try {
       if (globalOpts.help) {
@@ -223,7 +224,8 @@ public class Main {
 
         case "worker":
           handleCommandSpecificHelp(jc, "worker", workerCmd);
-          AldaWorker worker = new AldaWorker(globalOpts.port);
+          AldaWorker worker = new AldaWorker(globalOpts.port,
+                                             globalOpts.verbose);
 
           worker.upFg();
           break;

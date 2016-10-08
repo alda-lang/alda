@@ -16,10 +16,11 @@ public class AldaServer extends AldaProcess {
   private static int STARTUP_RETRY_INTERVAL = 250; // ms
   private static int PLAY_STATUS_INTERVAL = 250; // ms
 
-  public AldaServer(String host, int port, int timeout) {
+  public AldaServer(String host, int port, int timeout, boolean verbose) {
     this.host = normalizeHost(host);
     this.port = port;
     this.timeout = timeout;
+    this.verbose = verbose;
 
     AnsiConsole.systemInstall();
   }
@@ -166,7 +167,7 @@ public class AldaServer extends AldaProcess {
   public void upFg(int numberOfWorkers) throws InvalidOptionsException {
     assertNotRemoteHost();
 
-    Object[] args = {numberOfWorkers, port};
+    Object[] args = {numberOfWorkers, port, verbose};
 
     Util.callClojureFn("alda.server/start-server!", args);
   }
