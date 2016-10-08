@@ -1,5 +1,73 @@
 # CHANGELOG
 
+## 1.0.0-rc44 (10/8/16)
+
+* The `-v` / `--verbose` option will now provide debug output when starting a `server` or `worker` process in the foreground:
+
+  ```
+  $ alda -v -p 27714 server
+  16-Oct-08 16:43:24 skeggox.local INFO [alda.server] - Binding frontend socket on port 27714...
+  16-Oct-08 16:43:24 skeggox.local INFO [alda.server] - Binding backend socket on port 56885...
+  16-Oct-08 16:43:24 skeggox.local INFO [alda.server] - Spawning 2 workers...
+  16-Oct-08 16:43:45 skeggox.local DEBUG [alda.server] - Receiving message from frontend...
+  16-Oct-08 16:43:45 skeggox.local DEBUG [alda.server] - Forwarding message to worker 00B757D1FC...
+  16-Oct-08 16:43:45 skeggox.local DEBUG [alda.server] - Forwarding backend response to frontend...
+  ```
+
+  ```
+  $ alda -v -p 56885 worker
+  Oct 08, 2016 4:45:40 PM com.jsyn.engine.SynthesisEngine start
+  INFO: Pure Java JSyn from www.softsynth.com, rate = 44100, RT, V16.7.3 (build 457, 2014-12-25)
+  16-Oct-08 16:45:41 skeggox.local INFO [alda.worker] - Worker reporting for duty!
+  16-Oct-08 16:45:41 skeggox.local INFO [alda.worker] - Connecting to socket on port 50292...
+  16-Oct-08 16:45:41 skeggox.local INFO [alda.worker] - Sending READY signal.
+  16-Oct-08 16:45:42 skeggox.local DEBUG [alda.worker] - Got HEARTBEAT from server.
+  16-Oct-08 16:45:43 skeggox.local DEBUG [alda.worker] - Got HEARTBEAT from server.
+  16-Oct-08 16:45:44 skeggox.local DEBUG [alda.worker] - Got HEARTBEAT from server.
+  16-Oct-08 16:45:45 skeggox.local DEBUG [alda.worker] - Got HEARTBEAT from server.
+  16-Oct-08 16:45:46 skeggox.local DEBUG [alda.worker] - Got HEARTBEAT from server.
+  16-Oct-08 16:45:46 skeggox.local DEBUG [alda.worker] - Processing message...
+  16-Oct-08 16:45:46 skeggox.local ERROR [alda.worker] - java.lang.Exception: Parse error at line 1, column 19:
+  (throw (Exception.
+                    ^
+  Expected one of:
+  ")"
+  "("
+  "\\"
+  "\""
+#".|\n|\r"
+
+                   alda.Main.main        Main.java: 230
+             alda.AldaWorker.upFg  AldaWorker.java:  12
+          alda.Util.callClojureFn        Util.java: 263
+                              ...
+        alda.worker/start-worker!       worker.clj: 136
+        alda.worker/start-worker!       worker.clj: 151
+     alda.worker/start-worker!/fn       worker.clj: 188
+  alda.worker/start-worker!/fn/fn       worker.clj: 191
+                              ...
+          alda.worker/eval8377/fn       worker.clj:  95
+    alda.worker/handle-code-parse       worker.clj:  72
+          alda.parser/parse-input       parser.clj: 284
+      alda.parser/remove-comments       parser.clj: 109
+    alda.parser/check-for-failure       parser.clj:  54
+  java.lang.Exception: Parse error at line 1, column 19:
+                       (throw (Exception.
+                                         ^
+                       Expected one of:
+                       ")"
+                       "("
+                       "\\"
+                       "\""
+                       #".|\n|\r"
+
+
+  16-Oct-08 16:45:46 skeggox.local DEBUG [alda.worker] - Sending response...
+  16-Oct-08 16:45:46 skeggox.local DEBUG [alda.worker] - Response sent.
+  16-Oct-08 16:45:47 skeggox.local DEBUG [alda.worker] - Got HEARTBEAT from server.
+  16-Oct-08 16:45:48 skeggox.local DEBUG [alda.worker] - Got HEARTBEAT from server.
+  ```
+
 ## 1.0.0-rc43 (9/25/16)
 
 * Tuned JVM performance to use less unnecessary memory and CPU. See issue [#269](https://github.com/alda-lang/alda/issues/269) for more context, but the TL;DR version is that prior to this release, the Alda server and worker processes were each provisioned with more memory and CPU settings than they needed, causing them to wastefully use up memory/CPU resources that your computer could otherwise be using.
