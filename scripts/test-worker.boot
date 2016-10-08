@@ -93,7 +93,6 @@
        (.send (doto (ZMsg.) (.addString "HEARTBEAT")) socket)
        (println "th-thump"))
      (Thread/sleep 500)
-     (println)
      (doseq [msg (concat frontend-msgs)]
        (test-msg msg socket true)
        (Thread/sleep 500))
