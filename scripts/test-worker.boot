@@ -67,37 +67,38 @@
    (print-usage)
    (System/exit 1))
   ([port]
-   (let [ctx      (ZContext. 1)
-         socket   (try
-                    (doto (.createSocket ctx ZMQ/DEALER)
-                      (.bind (format "tcp://*:%s" port)))
-                    (catch ZMQException e
-                      (if (= 48 (.getErrorCode e))
-                        (do
-                          (println (format "Port %s is already in use." port)
-                                   "Please choose a different port number.")
-                          (System/exit 1))
-                        (throw e))))]
-     (println
-       (format "Please start an Alda worker process listening on port %s."
-               port))
-     (println)
-     (println "Waiting for READY signal from worker...")
-     (expect-signals socket "READY")
-     (println "READY signal received.")
-     (Thread/sleep 500)
-     (println)
-     (println "Measuring worker's heartbeat...")
-     (dotimes [_ 5]
-       (expect-signals socket "READY" "AVAILABLE" "BUSY")
-       (.send (doto (ZMsg.) (.addString "HEARTBEAT")) socket)
-       (println "th-thump"))
-     (Thread/sleep 500)
-     (doseq [msg (concat frontend-msgs)]
-       (test-msg msg socket true)
-       (Thread/sleep 500))
-     (doseq [msg (concat server-signals)]
-       (test-msg msg socket false)
-       (Thread/sleep 500)))
+   (let [ctx      (ZContext. 1)]
+     (with-open [socket (try
+                          (doto (.createSocket ctx ZMQ/DEALER)
+                            (.bind (format "tcp://*:%s" port)))
+                          (catch ZMQException e
+                            (if (= 48 (.getErrorCode e))
+                              (do
+                                (println
+                                  (format "Port %s is already in use." port)
+                                  "Please choose a different port number.")
+                                (System/exit 1))
+                              (throw e))))]
+       (println
+         (format "Please start an Alda worker process listening on port %s."
+                 port))
+       (println)
+       (println "Waiting for READY signal from worker...")
+       (expect-signals socket "READY")
+       (println "READY signal received.")
+       (Thread/sleep 500)
+       (println)
+       (println "Measuring worker's heartbeat...")
+       (dotimes [_ 5]
+         (expect-signals socket "READY" "AVAILABLE" "BUSY")
+         (.send (doto (ZMsg.) (.addString "HEARTBEAT")) socket)
+         (println "th-thump"))
+       (Thread/sleep 500)
+       (doseq [msg (concat frontend-msgs)]
+         (test-msg msg socket true)
+         (Thread/sleep 500))
+       (doseq [msg (concat server-signals)]
+         (test-msg msg socket false)
+         (Thread/sleep 500))))
    (println)
    (println "Done.")))
