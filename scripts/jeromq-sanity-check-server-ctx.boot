@@ -23,40 +23,20 @@
       (println "Sending response:" res)
       (.send socket res))))
 
-(defprotocol SocketMaker
-  (create-socket [ctx socket-type]))
-
-(extend-protocol SocketMaker
-  ZContext
-  (create-socket [ctx socket-type] (.createSocket ctx socket-type))
-
-  org.zeromq.ZMQ$Context
-  (create-socket [ctx socket-type] (.socket ctx socket-type)))
-
-(defprotocol Destroyable
-  (destroy [ctx]))
-
-(extend-protocol Destroyable
-  ZContext
-  (destroy [ctx] (.destroy ctx))
-
-  org.zeromq.ZMQ$Context
-  (destroy [ctx] (.term ctx)))
-
 (defn run-tests
   [port ctx-desc ctx]
   (println)
   (println (format "Testing with %s..." ctx-desc))
   (println)
 
-  (with-open [socket (doto (create-socket ctx ZMQ/REP)
+  (with-open [socket (doto (.socket ctx ZMQ/REP)
                        (.bind (format "tcp://*:%s" port)))]
     (hello-world-test socket))
 
   (println)
   (print "Destroying context... ")
   (flush)
-  (destroy ctx)
+  (.term ctx)
   (println "done."))
 
 (defn -main
