@@ -78,7 +78,7 @@
              port))
 
    (run-tests port "ZContext" (ZContext. 1))
-   (run-tests port "Ctx (ZMQ.createContext(1))" (ZMQ/context 1)
+   (run-tests port "Ctx (ZMQ.createContext(1))" (ZMQ/context 1))
 
    (println)
    (println "Done.")))
