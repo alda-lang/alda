@@ -7,10 +7,10 @@
 (defn print-usage
   []
   (println "Example usage:")
-  (println "  $ boot scripts/jeromq-sanity-check-server.boot 12345")
+  (println "  $ boot scripts/jeromq-sanity-check-server-zcontext.boot 12345")
   (println)
   (println "  # in another terminal:")
-  (println "  $ boot scripts/jeromq-sanity-check-client.boot 12345"))
+  (println "  $ boot scripts/jeromq-sanity-check-client-zcontext.boot 12345"))
 
 (defn hello-world-test
   [socket]
