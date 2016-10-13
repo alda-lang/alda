@@ -77,10 +77,12 @@
 (def shutting-down-response (successful-response "Shutting down..."))
 
 (defn status-response
-  [available total]
-  (successful-response (format "Server up (%s/%s workers available)"
-                               available
-                               total)))
+  [available total backend-port]
+  (successful-response
+    (format "Server up (%s/%s workers available, backend port: %s)"
+            available
+            total
+            backend-port)))
 
 (def version-response (successful-response -version-))
 
@@ -293,7 +295,8 @@
                 "status"
                 (util/respond-to msg frontend
                                  (status-response (count @available-workers)
-                                                  workers))
+                                                  workers
+                                                  backend-port))
 
                 "stop-server"
                 (do
