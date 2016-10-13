@@ -3,11 +3,12 @@
             [taoensso.timbre                             :as timbre]
             [taoensso.timbre.appenders.core              :as appenders]
             [taoensso.timbre.appenders.3rd-party.rolling :as rolling])
-  (:import (java.io File)
-           (java.nio.file Paths)
-           (org.zeromq ZMsg)))
+  (:import [java.io File]
+           [java.net ServerSocket]
+           [java.nio.file Paths]
+           [org.zeromq ZMsg]))
 
- (defmacro while-let
+(defmacro while-let
   "Repeatedly executes body while test expression is true. Test
   expression is bound to binding.
 
@@ -192,6 +193,13 @@
   "Removes all items from the queue that satisfy the predicate."
   [q pred]
   (alter q #(vec (filter (complement pred) %))))
+
+(defn find-open-port
+  []
+  (let [tmp-socket (ServerSocket. 0)
+        port       (.getLocalPort tmp-socket)]
+    (.close tmp-socket)
+    port))
 
 (defn respond-to
   [msg socket response & [envelope]]

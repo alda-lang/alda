@@ -6,8 +6,7 @@
             [taoensso.timbre           :as    log]
             [zeromq.device             :as    zmqd]
             [zeromq.zmq                :as    zmq])
-  (:import [java.net ServerSocket]
-           [java.util.concurrent ConcurrentLinkedQueue]
+  (:import [java.util.concurrent ConcurrentLinkedQueue]
            [org.zeromq ZFrame ZMQException ZMQ$Error ZMsg]))
 
 ; the number of ms between heartbeats
@@ -144,13 +143,6 @@
     (let [{:keys [address]} (util/reverse-pop-queue available-workers)]
       (blacklist-worker! address))))
 
-(defn- find-open-port
-  []
-  (let [tmp-socket (ServerSocket. 0)
-        port       (.getLocalPort tmp-socket)]
-    (.close tmp-socket)
-    port))
-
 (defn start-workers!
   [workers port]
   (let [program-path (util/program-path)
@@ -227,7 +219,7 @@
 (defn start-server!
   [workers frontend-port & [verbose?]]
   (util/set-log-level! (if verbose? :debug :info))
-  (let [backend-port    (find-open-port)
+  (let [backend-port    (util/find-open-port)
         zmq-ctx         (zmq/zcontext)
         poller          (zmq/poller zmq-ctx 2)
         last-heartbeat  (atom (System/currentTimeMillis))
