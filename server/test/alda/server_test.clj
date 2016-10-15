@@ -18,7 +18,9 @@
 
 (defn start-server!
   []
-  (future (server/start-server! 2 *frontend-port*)))
+  (future
+    (binding [server/*no-system-exit* true]
+      (server/start-server! 2 *frontend-port*))))
 
 (defn receive-all
   "Receives one frame, then keeps checking to see if there is more until there
@@ -156,7 +158,11 @@
           (testing "should say the status is 'parsing' while the worker is parsing"
             (is (= body "parsing"))
             (testing "and 'pending' should be true"
-              (is pending))))))))
+              (is pending))))))
+    (testing "the 'stop-server' command"
+      (let [req {:command "stop-server"}]
+        (testing "gets a successful response"
+          (is (:success (response-for req))))))))
 
 (deftest backend-tests
   (comment

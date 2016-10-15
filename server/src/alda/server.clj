@@ -9,6 +9,12 @@
   (:import [java.util.concurrent ConcurrentLinkedQueue]
            [org.zeromq ZFrame ZMQException ZMQ$Error ZMsg]))
 
+(def ^:dynamic *no-system-exit* false)
+
+(defn exit!
+  [exit-code]
+  (when-not *no-system-exit* (System/exit exit-code)))
+
 ; the number of ms between heartbeats
 (def ^:const HEARTBEAT-INTERVAL 1000)
 ; the amount of missed heartbeats before a worker is pronounced dead
@@ -240,7 +246,7 @@
                                  (str "There is already an Alda server "
                                       "running on this port."))
                                (throw e))
-                             (System/exit 1)))
+                             (exit! 1)))
                 backend  (doto (zmq/socket zmq-ctx :router)
                            (zmq/bind (str "tcp://*:" backend-port)))]
       (zmq/register poller frontend :pollin)
@@ -363,5 +369,5 @@
       (zmq/destroy zmq-ctx)
 
       (log/info "Exiting.")
-      (System/exit 0))))
+      (exit! 0))))
 

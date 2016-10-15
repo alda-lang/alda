@@ -11,6 +11,14 @@
             [zeromq.zmq      :as    zmq])
   (:import [org.zeromq ZFrame ZMQ ZMsg]))
 
+(def ^:dynamic *no-system-exit* false)
+
+(defn exit!
+  [exit-code]
+  (when-not *no-system-exit* (System/exit exit-code)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defn start-alda-environment!
   []
   (sound/start-synthesis-engine!)
@@ -225,5 +233,5 @@
                  0)
           (reset! last-heartbeat (System/currentTimeMillis)))))
     (log/info "Shutting down.")
-    (System/exit 0)))
+    (exit! 0)))
 
