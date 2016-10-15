@@ -87,7 +87,7 @@
 
 (def no-workers-available-response
   (unsuccessful-response
-    "No workers processes are ready yet. Please wait a minute."))
+    "No worker processes are ready yet. Please wait a minute."))
 
 (def all-workers-are-busy-response
   (unsuccessful-response
