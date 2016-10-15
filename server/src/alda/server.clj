@@ -94,11 +94,16 @@
     (str "All worker processes are currently busy. Please wait until playback "
          "is complete and try again.")))
 
-(defn add-or-requeue-worker
+(defn remove-worker-from-queue
   [address]
   (dosync
     (alter busy-workers disj address)
-    (util/remove-from-queue available-workers #(= address (:address %)))
+    (util/remove-from-queue available-workers #(= address (:address %)))))
+
+(defn add-or-requeue-worker
+  [address]
+  (dosync
+    (remove-worker-from-queue address)
     (util/push-queue available-workers (worker address))))
 
 (defn note-that-worker-is-busy
@@ -260,6 +265,7 @@
                       "BUSY"      (note-that-worker-is-busy address)
                       "AVAILABLE" (add-or-requeue-worker address)
                       "READY"     (add-or-requeue-worker address)
+                      "DONE"      (remove-worker-from-queue address)
                       (log/errorf "Invalid message: %s" data))))
                 (do
                   (log/debug "Forwarding backend response to frontend...")
