@@ -6,9 +6,14 @@
             [taoensso.timbre           :as    log]
             [zeromq.device             :as    zmqd]
             [zeromq.zmq                :as    zmq])
-  (:import [java.net ServerSocket]
-           [java.util.concurrent ConcurrentLinkedQueue]
+  (:import [java.util.concurrent ConcurrentLinkedQueue]
            [org.zeromq ZFrame ZMQException ZMQ$Error ZMsg]))
+
+(def ^:dynamic *no-system-exit* false)
+
+(defn exit!
+  [exit-code]
+  (when-not *no-system-exit* (System/exit exit-code)))
 
 ; the number of ms between heartbeats
 (def ^:const HEARTBEAT-INTERVAL 1000)
@@ -77,27 +82,34 @@
 (def shutting-down-response (successful-response "Shutting down..."))
 
 (defn status-response
-  [available total]
-  (successful-response (format "Server up (%s/%s workers available)"
-                               available
-                               total)))
+  [available total backend-port]
+  (successful-response
+    (format "Server up (%s/%s workers available, backend port: %s)"
+            available
+            total
+            backend-port)))
 
 (def version-response (successful-response -version-))
 
 (def no-workers-available-response
   (unsuccessful-response
-    "No workers processes are ready yet. Please wait a minute."))
+    "No worker processes are ready yet. Please wait a minute."))
 
 (def all-workers-are-busy-response
   (unsuccessful-response
     (str "All worker processes are currently busy. Please wait until playback "
          "is complete and try again.")))
 
-(defn add-or-requeue-worker
+(defn remove-worker-from-queue
   [address]
   (dosync
     (alter busy-workers disj address)
-    (util/remove-from-queue available-workers #(= address (:address %)))
+    (util/remove-from-queue available-workers #(= address (:address %)))))
+
+(defn add-or-requeue-worker
+  [address]
+  (dosync
+    (remove-worker-from-queue address)
     (util/push-queue available-workers (worker address))))
 
 (defn note-that-worker-is-busy
@@ -141,13 +153,6 @@
   (dosync
     (let [{:keys [address]} (util/reverse-pop-queue available-workers)]
       (blacklist-worker! address))))
-
-(defn- find-open-port
-  []
-  (let [tmp-socket (ServerSocket. 0)
-        port       (.getLocalPort tmp-socket)]
-    (.close tmp-socket)
-    port))
 
 (defn start-workers!
   [workers port]
@@ -225,7 +230,7 @@
 (defn start-server!
   [workers frontend-port & [verbose?]]
   (util/set-log-level! (if verbose? :debug :info))
-  (let [backend-port    (find-open-port)
+  (let [backend-port    (util/find-open-port)
         zmq-ctx         (zmq/zcontext)
         poller          (zmq/poller zmq-ctx 2)
         last-heartbeat  (atom (System/currentTimeMillis))
@@ -241,7 +246,7 @@
                                  (str "There is already an Alda server "
                                       "running on this port."))
                                (throw e))
-                             (System/exit 1)))
+                             (exit! 1)))
                 backend  (doto (zmq/socket zmq-ctx :router)
                            (zmq/bind (str "tcp://*:" backend-port)))]
       (zmq/register poller frontend :pollin)
@@ -266,6 +271,7 @@
                       "BUSY"      (note-that-worker-is-busy address)
                       "AVAILABLE" (add-or-requeue-worker address)
                       "READY"     (add-or-requeue-worker address)
+                      "DONE"      (remove-worker-from-queue address)
                       (log/errorf "Invalid message: %s" data))))
                 (do
                   (log/debug "Forwarding backend response to frontend...")
@@ -293,7 +299,8 @@
                 "status"
                 (util/respond-to msg frontend
                                  (status-response (count @available-workers)
-                                                  workers))
+                                                  workers
+                                                  backend-port))
 
                 "stop-server"
                 (do
@@ -362,5 +369,5 @@
       (zmq/destroy zmq-ctx)
 
       (log/info "Exiting.")
-      (System/exit 0))))
+      (exit! 0))))
 

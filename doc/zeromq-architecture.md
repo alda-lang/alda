@@ -155,6 +155,7 @@ This section describes the technical requirements of each role in the Alda archi
       * `READY` (worker just spawned and is telling you it's ready)
       * `AVAILABLE` (worker is ready to take a request)
       * `BUSY` (worker is alive, but busy playing a score)
+      * `DONE` (worker is done working and is about to shut down)
 
       It is up to you to decide how to interpret these messages. For a bare minimum server implementation, the simplest thing you can do is ignore them; the message routing system will still work, but workers will be chosen "round-robin," and the server will have no knowledge about which workers are busy.
 
