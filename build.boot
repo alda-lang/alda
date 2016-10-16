@@ -28,7 +28,6 @@
 
                   ; client
                   [com.beust/jcommander                 "1.48"]
-                  [net.jodah/recurrent                  "0.4.0"]
                   [commons-io/commons-io                "2.5"]
                   [org.apache.commons/commons-lang3     "3.4"]
                   [org.apache.httpcomponents/httpclient "4.5.1"]

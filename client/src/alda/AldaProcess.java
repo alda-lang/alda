@@ -3,9 +3,6 @@ package alda;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
-import net.jodah.recurrent.Recurrent;
-import net.jodah.recurrent.RetryPolicy;
-
 public class AldaProcess {
   private static int PING_TIMEOUT = 100; // ms
   private static int PING_RETRIES = 5;
@@ -41,18 +38,4 @@ public class AldaProcess {
 
     return checkForConnection(this.STARTUP_RETRY_INTERVAL, retries);
   }
-
-  public boolean waitForLackOfConnection() {
-    RetryPolicy retryPolicy = new RetryPolicy()
-      .withDelay(500, TimeUnit.MILLISECONDS)
-      .withMaxDuration(30, TimeUnit.SECONDS)
-      .retryFor(false);
-
-    Callable<Boolean> ping = new Callable<Boolean>() {
-      public Boolean call() { return !checkForConnection(); }
-    };
-
-    return Recurrent.get(ping, retryPolicy);
-  }
-
 }
