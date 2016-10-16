@@ -30,11 +30,21 @@ The Alda client, server, and REPL can each be run in development (including any 
 
 You should run `boot test` prior to submitting any Pull Request involving changes to the server (Clojure) code. This will run automated tests that live in the `server/test` directory.
 
-#### Adding tests
+### Integration tests
+
+There is also a suite of integration tests that simulates communication between the Alda server and worker processes. When making changes to the server and worker, it is strongly recommended that you run these integration tests and add new tests if appropriate.
+
+To run the integration tests by themselves, run `boot test --integration`.
+
+To run both the unit tests and the integration tests, you can run `boot test --all`.
+
+`boot test` by default will only run the unit tests.
+
+### Adding tests
 
 It is generally good to add to the existing tests wherever it makes sense, i.e. whenever there is a new test case that Alda needs to consider. [Test-driven development](https://en.wikipedia.org/wiki/Test-driven_development) is a good idea.
 
-If you find yourself adding a new file to the tests, be sure to add its namespace to the `test` task option in `build.boot` so that it will be included when you run the entire test suite via `boot test`.
+If you find yourself adding a new file to the tests, be sure to add its namespace to either the `unit-tests` or `integration-tests` task in `build.boot` so that it will be included when you run the tests.
 
 The automated test battery includes parsing and evaluating all of the example Alda scores in the `examples/` directory. If you add an additional example score, be sure to add it to the list of score files in `server/test/alda/examples_test.clj`.
 
