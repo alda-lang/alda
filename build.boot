@@ -147,21 +147,6 @@
     integration (integration-tests)
     :default    (unit-tests)))
 
-(deftask assert-jdk7-bootclasspath
-  "Ensures that the JDK7_BOOTCLASSPATH environment variable is set, as required
-   to build the uberjar with JDK7 support."
-  []
-  (with-pre-wrap fileset
-    (assert (not (empty? (System/getenv "JDK7_BOOTCLASSPATH")))
-            (str "Alda requires JDK7 in order to build its uberjar, in order "
-                 "to provide out-of-the-box support for users who may have "
-                 "older versions of Java. Please install JDK7 and set the "
-                 "environment variable JDK7_BOOTCLASSPATH to the path to your "
-                 "JDK7 classpath jar, e.g. (OS X example) "
-                 "/Library/Java/JavaVirtualMachines/jdk1.7.0_71.jdk/Contents/"
-                 "Home/jre/lib/rt.jar"))
-    fileset))
-
 (deftask dev
   "Runs the Alda server (default), REPL, or client for development.
 
@@ -254,6 +239,21 @@
             (System/exit 1))))
       fs)
     (wait)))
+
+(deftask assert-jdk7-bootclasspath
+  "Ensures that the JDK7_BOOTCLASSPATH environment variable is set, as required
+   to build the uberjar with JDK7 support."
+  []
+  (with-pre-wrap fileset
+    (assert (not (empty? (System/getenv "JDK7_BOOTCLASSPATH")))
+            (str "Alda requires JDK7 in order to build its uberjar, in order "
+                 "to provide out-of-the-box support for users who may have "
+                 "older versions of Java. Please install JDK7 and set the "
+                 "environment variable JDK7_BOOTCLASSPATH to the path to your "
+                 "JDK7 classpath jar, e.g. (OS X example) "
+                 "/Library/Java/JavaVirtualMachines/jdk1.7.0_71.jdk/Contents/"
+                 "Home/jre/lib/rt.jar"))
+    fileset))
 
 (deftask package
   "Builds an uberjar."
