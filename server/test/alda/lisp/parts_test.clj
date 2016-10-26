@@ -59,3 +59,280 @@
           (is (some #(re-find #"^piano-" %) current-instruments))
           (is (some #(re-find #"^trumpet-" %) current-instruments)))))))
 
+(deftest instance-assignment-tests
+  (testing "one name, without nickname:"
+    (testing "if the name refers to a stock instrument,"
+      (testing "and we don't have that instrument yet in the score,"
+        (let [s (score
+                  (part "piano"))]
+          (testing "a new instance of that stock instrument is created"
+            (is (= 1 (count (:current-instruments s))))
+            (let [inst (first (:current-instruments s))
+                  stock-instrument (-> s :instruments (get inst) :stock)]
+              (is (= "midi-acoustic-grand-piano" stock-instrument))
+              (testing "and subsequent calls to that name will refer to that instance"
+                (let [s (continue s
+                          (part "piano"))]
+                  (is (= inst (first (:current-instruments s))))))))))
+      (testing "and we already have one of that instrument"
+        ; FIXME
+        #_(testing "and it's a named instance,"
+          (let [s (score
+                    (part "piano 'foo'"))]
+            (testing "an ambiguity error is thrown"
+              (is (thrown-with-msg?
+                    Exception
+                    #"Ambiguous instrument reference"
+                    (continue s
+                      (part "piano")))))))
+        (testing "and it doesn't have a name,"
+          (let [s     (score
+                        (part "piano"))
+                piano (first (:current-instruments s))]
+            (testing "the name refers to the existing instance of that instrument"
+              (let [s (continue s
+                        (part "piano"))]
+                (is (= piano (first (:current-instruments s))))))))))
+    (testing "if the name refers to a previously named instance,"
+      (let [s       (score
+                      (part "piano 'piano-1'"))
+            piano-1 (first (:current-instruments s))
+            s       (continue s
+                      (part "piano-1"))]
+        (testing "the nickname then refers to that instrument"
+          (is (= 1 (count (:current-instruments s))))
+          (is (= piano-1 (first (:current-instruments s)))))))
+    (testing "if the name refers to a previously named group,"
+      (let [s       (score
+                      (part "piano/guitar 'foos'"))
+            foos    (:current-instruments s)
+            s       (continue s
+                      (part "foos"))]
+        (testing "the nickname then refers to that group"
+          (is (= 2 (count (:current-instruments s))))
+          (is (= foos (:current-instruments s))))))
+    (testing "if the name does not refer to a stock instrument or an existing
+              instance or group,"
+      ; FIXME: error message currently says 'Stock instrument "____" undefined'
+      #_(testing "an unrecognized instrument error is thrown"
+        (is (thrown-with-msg?
+              Exception
+              #"Unrecognized instrument"
+              (score (part "quizzledyblarf")))))))
+  (testing "one name + nickname:"
+    (testing "if the name is not a stock instrument,"
+      ; FIXME: error message currently says 'Stock instrument "____" undefined'
+      #_(testing "an unrecognized instrument error is thrown"
+        (is (thrown-with-msg?
+              Exception
+              #"Unrecognized instrument"
+              (score (part "quizzledyblarf 'norman'"))))))
+    ; FIXME
+    #_(testing "if the nickname was already assigned to another instance,"
+      (testing "an informative error is thrown"
+        (is (thrown-with-msg?
+              Exception
+              #"The alias \"foo\" has already been assigned to another instrument/group."
+              (score
+                (part "piano 'foo'")
+                (part "clarinet 'foo'"))))))
+    ; FIXME
+    #_(testing "if the nickname was already assigned to a group,"
+      (testing "an informative error is thrown"
+        (is (thrown-with-msg?
+              Exception
+              #"The alias \"foo\" has already been assigned to another instrument/group."
+              (score
+                (part "piano/accordion 'foo'")
+                (part "clarinet 'foo'"))))))
+    ; FIXME
+    #_(testing "if there is already an unnamed instance of that instrument,"
+      (testing "an ambiguity error is thrown"
+        (is (thrown-with-msg?
+              Exception
+              #"Ambiguous instrument reference"
+              (score
+                (part "piano")
+                (part "piano 'foo'"))))))
+    (testing "creates a new named instrument instance"
+      (let [s        (score
+                       (part "piano 'foo'"))
+            piano-id (-> s :current-instruments first)
+            piano    (-> s :instruments (get piano-id))]
+        (testing "with the correct stock instrument"
+          (is (= "midi-acoustic-grand-piano" (:stock piano))))
+        (testing "and subsequent use of the nickname refers to that instance"
+          (let [s (continue s
+                    (part "foo"))]
+            (is (= piano-id (-> s :current-instruments first))))))))
+  (testing "multiple names, without nickname:"
+    ; FIXME
+    #_(testing "if all the names refer to the same named instance,"
+      ; FIXME
+      (let [s (score
+                (part "piano 'foo'"))]
+        (testing "a grouping error is thrown" ; because it makes no sense
+          (is (thrown-with-msg?
+                Exception
+                #"Invalid instrument grouping"
+                (continue s
+                          (part "foo/foo")))))))
+      ; FIXME
+    #_(testing "if all the names are the same and they refer to a stock
+                instrument,"
+      ; the next time that instrument is called, it would be an ambiguous
+      ; reference
+      (testing "a grouping error is thrown"
+        (is (thrown-with-msg?
+              Exception
+              #"Invalid instrument grouping"
+              (score
+                (part "piano/piano"))))))
+    (testing "if all the names refer to previously named instruments,"
+      (let [s   (score
+                  (part "piano 'foo'"))
+            foo (-> s :current-instruments first)
+            s   (continue s
+                  (part "clarinet 'bar'"))
+            bar (-> s :current-instruments first)]
+        (testing "it refers to those instruments as a group"
+          (let [s (continue s
+                    (part "foo/bar"))]
+            (is (= #{foo bar} (:current-instruments s)))))))
+    (testing "if all the names refer to stock instruments,"
+      (testing "it refers to those instruments as a group, creating new
+                instances for any instruments that don't exist yet in the
+                score"
+        (let [s (score
+                  (part "piano/clarinet"))]
+          (is (= 2 (count (:current-instruments s))))
+          (is (some (fn [[_ {:keys [stock]}]]
+                      (= "midi-acoustic-grand-piano" stock))
+                    (:instruments s)))
+          (is (some (fn [[_ {:keys [stock]}]]
+                      (= "midi-clarinet" stock))
+                    (:instruments s))))))
+    (testing "if the names are a mix of stock instruments and named instances,"
+      (let [s (score
+                (part "piano 'foo'"))]
+        ; nicknames should be used for creating new instances or grouping
+        ; existing ones, not both
+        ; FIXME
+        #_(testing "a grouping error is thrown"
+          (is (thrown-with-msg?
+                Exception
+                #"Invalid instrument grouping"
+                (continue s
+                  (part "foo/trumpet"))))))))
+  (testing "multiple names + nickname:"
+    ; FIXME
+    #_(testing "if all the names refer to the same named instance,"
+      ; FIXME
+      (let [s (score
+                (part "piano 'foo'"))]
+        (testing "a grouping error is thrown" ; because it makes no sense
+          (is (thrown-with-msg?
+                Exception
+                #"Invalid instrument grouping"
+                (continue s
+                          (part "foo/foo 'bar'")))))))
+      ; FIXME
+    #_(testing "if all the names are the same and they refer to a stock
+                instrument,"
+      ; if you want to call pianos.piano subsequently to refer to one of the
+      ; pianos, it won't be clear which one you mean
+      ;
+      ; the moral of the story is, if you want a group containing two of the
+      ; same instrument, you have to create the two named instances first and
+      ; then group them
+      (testing "a grouping error is thrown"
+        (is (thrown-with-msg?
+              Exception
+              #"Invalid instrument grouping"
+              (score
+                (part "piano/piano 'pianos'"))))))
+    (testing "if all the names refer to previously named instruments,"
+      (let [s   (score
+                  (part "piano 'foo'"))
+            foo (-> s :current-instruments first)
+            s   (continue s
+                  (part "clarinet 'bar'"))
+            bar (-> s :current-instruments first)]
+        (testing "it refers to those instruments as a group"
+          (let [s (continue s
+                            (part "foo/bar 'baz'"))]
+            (is (= #{foo bar} (:current-instruments s)))
+            (testing "and you can now use the nickname to refer to that group"
+              (let [s (continue s
+                        (part "baz"))]
+                (is (= #{foo bar} (:current-instruments s)))))
+            (testing "and you can continue to use the individual names to refer
+                      to each instance"
+              (let [s (continue s
+                        (part "foo"))]
+                (is (= #{foo} (:current-instruments s))))
+              (let [s (continue s
+                        (part "bar"))]
+                (is (= #{bar} (:current-instruments s)))))
+            ; FIXME
+            #_(testing "and you can now use the group-member operator to refer to
+                      each instance individually"
+              (let [s (continue s
+                        (part "baz.foo"))]
+                (is (= #{foo} (:current-instruments s))))
+              (let [s (continue s
+                        (part "baz.bar"))]
+                (is (= #{bar} (:current-instruments s)))))))))
+    (testing "if all the names refer to stock instruments,"
+      ; regardless of whether there are existing instances of those
+      ; instruments
+      (let [s     (score
+                    (part "piano"))
+            piano (-> s :current-instruments first)
+            s     (continue s
+                    (part "banjo"))
+            banjo (-> s :current-instruments first)
+            s     (continue s
+                    (part "piano/banjo/tuba 'floop'"))
+            tuba  (->> s
+                       :current-instruments
+                       (filter #(.startsWith % "tuba-"))
+                       first)]
+        (testing "it creates new instances for each group member"
+          (is (= 5 (count (:instruments s))))
+          (is (some (fn [[_ {:keys [stock]}]]
+                      (= "midi-acoustic-grand-piano" stock))
+                    (:instruments s)))
+          (is (some (fn [[_ {:keys [stock]}]]
+                      (= "midi-banjo" stock))
+                    (:instruments s)))
+          (is (some (fn [[_ {:keys [stock]}]]
+                      (= "midi-tuba" stock))
+                    (:instruments s))))
+        (testing "the group name now refers to the instances as a group"
+          (is (= 3 (count (:current-instruments s)))))
+        ; FIXME
+        #_(testing "you can now use the group-member operator to refer to each
+                  instance individually"
+          (let [s (continue s
+                    (part "floop.piano"))]
+            (is (= #{piano} (:current-instruments s))))
+          (let [s (continue s
+                    (part "floop.banjo"))]
+            (is (= #{banjo} (:current-instruments s))))
+          (let [s (continue s
+                    (part "floop.tuba"))]
+            (is (= #{tuba} (:current-instruments s)))))))
+    (testing "if the names are a mix of stock instruments and named instances,"
+      (let [s (score
+                (part "piano 'foo'"))]
+        ; nicknames should be used for creating new instances or grouping
+        ; existing ones, not both
+        ; FIXME
+        #_(testing "a grouping error is thrown"
+          (is (thrown-with-msg?
+                Exception
+                #"Invalid instrument grouping"
+                (continue s
+                  (part "foo/trumpet 'engelberthumperdinck'")))))))))
+
