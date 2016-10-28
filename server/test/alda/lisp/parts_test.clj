@@ -113,16 +113,14 @@
           (is (= foos (:current-instruments s))))))
     (testing "if the name does not refer to a stock instrument or an existing
               instance or group,"
-      ; FIXME: error message currently says 'Stock instrument "____" undefined'
-      #_(testing "an unrecognized instrument error is thrown"
+      (testing "an unrecognized instrument error is thrown"
         (is (thrown-with-msg?
               Exception
               #"Unrecognized instrument"
               (score (part "quizzledyblarf")))))))
   (testing "one name + nickname:"
     (testing "if the name is not a stock instrument,"
-      ; FIXME: error message currently says 'Stock instrument "____" undefined'
-      #_(testing "an unrecognized instrument error is thrown"
+      (testing "an unrecognized instrument error is thrown"
         (is (thrown-with-msg?
               Exception
               #"Unrecognized instrument"

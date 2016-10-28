@@ -33,7 +33,7 @@
            initial-vals
            (apply hash-map attrs))
     (throw (Exception.
-             (format "Stock instrument \"%s\" not defined." stock-inst)))))
+             (format "Unrecognized instrument: %s" stock-inst)))))
 
 (defn- add-part
   "Adds a new instrument instance to `score`.
