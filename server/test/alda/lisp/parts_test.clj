@@ -75,8 +75,7 @@
                           (part "piano"))]
                   (is (= inst (first (:current-instruments s))))))))))
       (testing "and we already have one of that instrument"
-        ; FIXME
-        #_(testing "and it's a named instance,"
+        (testing "and it's a named instance,"
           (let [s (score
                     (part "piano 'foo'"))]
             (testing "an ambiguity error is thrown"
@@ -119,14 +118,21 @@
               #"Unrecognized instrument"
               (score (part "quizzledyblarf")))))))
   (testing "one name + nickname:"
-    (testing "if the name is not a stock instrument,"
+    (testing "if the name is a named instance,"
+      (testing "an informative error is thrown"
+        (is (thrown-with-msg?
+              Exception
+              #"Can't assign alias \"bar\" to existing instance \"foo\"."
+              (score
+                (part "piano 'foo'")
+                (part "foo 'bar'"))))))
+    (testing "if the name is otherwise not a stock instrument,"
       (testing "an unrecognized instrument error is thrown"
         (is (thrown-with-msg?
               Exception
               #"Unrecognized instrument"
               (score (part "quizzledyblarf 'norman'"))))))
-    ; FIXME
-    #_(testing "if the nickname was already assigned to another instance,"
+    (testing "if the nickname was already assigned to another instance,"
       (testing "an informative error is thrown"
         (is (thrown-with-msg?
               Exception
@@ -134,8 +140,7 @@
               (score
                 (part "piano 'foo'")
                 (part "clarinet 'foo'"))))))
-    ; FIXME
-    #_(testing "if the nickname was already assigned to a group,"
+    (testing "if the nickname was already assigned to a group,"
       (testing "an informative error is thrown"
         (is (thrown-with-msg?
               Exception
@@ -143,8 +148,7 @@
               (score
                 (part "piano/accordion 'foo'")
                 (part "clarinet 'foo'"))))))
-    ; FIXME
-    #_(testing "if there is already an unnamed instance of that instrument,"
+    (testing "if there is already an unnamed instance of that instrument,"
       (testing "an ambiguity error is thrown"
         (is (thrown-with-msg?
               Exception
@@ -164,9 +168,7 @@
                     (part "foo"))]
             (is (= piano-id (-> s :current-instruments first))))))))
   (testing "multiple names, without nickname:"
-    ; FIXME
-    #_(testing "if all the names refer to the same named instance,"
-      ; FIXME
+    (testing "if all the names refer to the same named instance,"
       (let [s (score
                 (part "piano 'foo'"))]
         (testing "a grouping error is thrown" ; because it makes no sense
@@ -174,10 +176,9 @@
                 Exception
                 #"Invalid instrument grouping"
                 (continue s
-                          (part "foo/foo")))))))
-      ; FIXME
-    #_(testing "if all the names are the same and they refer to a stock
-                instrument,"
+                  (part "foo/foo")))))))
+    (testing "if all the names are the same and they refer to a stock
+              instrument,"
       ; the next time that instrument is called, it would be an ambiguous
       ; reference
       (testing "a grouping error is thrown"
@@ -215,17 +216,14 @@
                 (part "piano 'foo'"))]
         ; nicknames should be used for creating new instances or grouping
         ; existing ones, not both
-        ; FIXME
-        #_(testing "a grouping error is thrown"
+        (testing "a grouping error is thrown"
           (is (thrown-with-msg?
                 Exception
                 #"Invalid instrument grouping"
                 (continue s
                   (part "foo/trumpet"))))))))
   (testing "multiple names + nickname:"
-    ; FIXME
-    #_(testing "if all the names refer to the same named instance,"
-      ; FIXME
+    (testing "if all the names refer to the same named instance,"
       (let [s (score
                 (part "piano 'foo'"))]
         (testing "a grouping error is thrown" ; because it makes no sense
@@ -234,9 +232,8 @@
                 #"Invalid instrument grouping"
                 (continue s
                           (part "foo/foo 'bar'")))))))
-      ; FIXME
-    #_(testing "if all the names are the same and they refer to a stock
-                instrument,"
+    (testing "if all the names are the same and they refer to a stock
+              instrument,"
       ; if you want to call pianos.piano subsequently to refer to one of the
       ; pianos, it won't be clear which one you mean
       ;
@@ -326,8 +323,7 @@
                 (part "piano 'foo'"))]
         ; nicknames should be used for creating new instances or grouping
         ; existing ones, not both
-        ; FIXME
-        #_(testing "a grouping error is thrown"
+        (testing "a grouping error is thrown"
           (is (thrown-with-msg?
                 Exception
                 #"Invalid instrument grouping"
