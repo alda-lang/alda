@@ -367,5 +367,23 @@
           (doseq [expected ["midi-clarinet" "midi-flute" "midi-trumpet"]]
             (some (fn [[_ {:keys [stock]}]]
                     (= expected stock))
-                  (:instruments s))))))))
-
+                  (:instruments s)))))))
+  (testing "a group containing the member of another group"
+    (let [s (score
+              (part "piano/guitar 'foo'")
+              (part "clarinet 'bob'")
+              (part "bob/foo.piano 'bar'"))]
+      (testing "contains the correct instance"
+        (is (= 3 (count (:instruments s))))
+        (is (= 2 (count (:current-instruments s))))
+        (is (some #(.startsWith % "clarinet-") (:current-instruments s)))
+        (is (some #(.startsWith % "piano-") (:current-instruments s))))
+      (testing "creates the right aliases"
+        (let [s (continue s
+                          (part "foo.piano"))]
+          (is (= 1 (count (:current-instruments s))))
+          (is (some #(.startsWith % "piano-") (:current-instruments s))))
+        (let [s (continue s
+                  (part "bar.foo.piano"))]
+          (is (= 1 (count (:current-instruments s))))
+          (is (some #(.startsWith % "piano-") (:current-instruments s))))))))
