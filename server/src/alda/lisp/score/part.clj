@@ -177,9 +177,11 @@
                              (merge nicknames
                                     {nickname (map :id instances)}
                                     (into {}
-                                      (for [{:keys [id called]} instances
+                                      (for [[called instances]
+                                            (group-by :called instances)
                                             :when called]
-                                        [(str nickname \. called) (list id)])))
+                                        [(str nickname \. called)
+                                         (map :id instances)])))
                              nicknames)
       :instruments         (reduce (fn [insts {:keys [id] :as inst}]
                                      (assoc insts id inst))

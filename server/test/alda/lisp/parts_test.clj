@@ -333,5 +333,39 @@
                 Exception
                 #"Invalid instrument grouping"
                 (continue s
-                  (part "foo/trumpet 'engelberthumperdinck'")))))))))
+                  (part "foo/trumpet 'engelberthumperdinck'"))))))))
+  (testing "groups within groups:"
+    (testing "a group consisting of two groups"
+      (let [s        (score
+                       (part "clarinet/flute 'woodwinds'")
+                       (part "trumpet/trombone 'brass'"))
+            clarinet (get-instrument s "clarinet")
+            flute    (get-instrument s "flute")
+            trumpet  (get-instrument s "trumpet")
+            trombone (get-instrument s "trombone")
+            s        (continue s
+                       (part "woodwinds/brass 'wwab'"))]
+        (testing "refers to the set of instruments in both groups"
+          (is (= 4 (count (:current-instruments s))))
+          (doseq [expected ["midi-clarinet" "midi-flute"
+                            "midi-trumpet" "midi-trombone"]]
+            (is (some (fn [[_ {:keys [stock]}]]
+                        (= expected stock))
+                      (:instruments s))))
+          (is (= (set (map :id #{clarinet flute trumpet trombone}))
+                 (:current-instruments s))))))
+    (testing "a group consisting of two overlapping groups"
+      (let [s (score
+                (part "clarinet 'foo'")
+                (part "flute 'bar'")
+                (part "trumpet 'baz'")
+                (part "foo/bar 'group1'")
+                (part "foo/baz 'group2'")
+                (part "group1/group2 'groups1and2'"))]
+        (testing "refers to the set of instruments in both groups"
+          (is (= 3 (count (:current-instruments s))))
+          (doseq [expected ["midi-clarinet" "midi-flute" "midi-trumpet"]]
+            (some (fn [[_ {:keys [stock]}]]
+                    (= expected stock))
+                  (:instruments s))))))))
 
