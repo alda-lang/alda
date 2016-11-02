@@ -1,46 +1,75 @@
 # Instance and Group Assignment
 
-The way Alda assigns instances is slightly complicated, but ultimately lends itself to intuitive score-writing for the end user.
+> Note: this is a comprehensive explanation of how instance and group assignment works, for the curious. The details below are complicated, but can be simplified as a [handful of simple rules](scores-and-parts.md#how-instances-are-assigned).
+>
+> You may want to follow that link if you aren't concerned with the gory details!
 
-1. Just the name of the instrument, e.g. `piano:` -- this is a call to piano, which works because piano is a stock instrument that Alda knows about. The first time this call is made, the instance is registered as "piano 1." 
+There are four categories of **instrument calls** in Alda. Each category either _has a nickname_ or doesn't, and either _has multiple instances_ or doesn't.
 
-        piano: c c c c c   # piano 1
-        cello: g g g g g   # cello 1
-        piano: e e e e e   # still piano 1
-        cello: c c c c c   # still cello 1
+### `foo:`
 
-    If you then call a different instrument, say `cello:`, a new instrument instance is created ("cello 1"). Then, if you switch back to `piano:`, Alda will see that piano is already registered, and you'll be appending music events to the same instance, piano 1. **A new instance of an instrument is created whenever a stock instrument is called *that is not already in use*.**
+- If `foo` refers to a previously named instrument or group, e.g. `piano-1:`...
+  - ...refers to that instrument or group.
 
-2. Multiple instruments can be combined into groups like this: `trumpet/trombone/tuba:`. Any music events following such a call will be applied to each instrument in the group. **The instances are assigned just like with single instruments -- new instances will be created for any instrument that does not already exist, and if an instance of the instrument does exist, the music data will be appended to that instance.** (It's worth noting that the instrument instances in a group will have the same music events, but they don't necessarily have to start at the same time -- each instance will start the music events whenever it's finished with its own preceding events.)
+- If `foo` is a stock instrument, e.g. `piano:`...
+  - ...and we don't have a `piano` yet in the score...
+    - ...creates a new instance of the stock instrument`piano`.
+    - ...subsequent calls to `piano` will reference that instrument.
+  - ...and we already have a NAMED `piano` in the score...
+    - ...throws an ambiguity error. (Any additional `piano`s must also be named.)
+  - ...and we already have exactly one `piano`, and it doesn't have a name...
+    - ...refers to that `piano`.
 
-        trumpet: c4 c8 c c2   # trumpet 1
-        trumpet/trombone/tuba: c d e f g1   # trumpet 1 (still), trombone 1 and tuba 1
+- Else, throws an "unrecognized instrument" error.
 
-3. Instruments can be nicknamed, and in fact this is necessary if you want to have two or more instances of the same instrument:
+### `foo "bar":`
 
-        flute "bill": c d e f g2. # flute 1
-        flute "bob":  e f g a b2. # flute 2
+- `foo` is expected to be a stock instrument. If it's not, an error will be thrown.
 
-    **A new instance of an instrument is created whenever a stock instrument is called with any nickname, either as part of a group or not.**
+- If `"bar"` was already used as the nickname of another instance, throws an error.
 
-        flute: g a b > c d2.       # flute 1
-        flute "bill": c d e f g2.  # flute 2
-        flute "bob":  e f g a b2.  # flute 3
+- If there is an existing, unnamed instance of `foo` in the score, throws an error. (All instances of `foo` must be named.)
 
-    Another example: If there is already a clarinet 1 and there is already a cello 1 nicknamed 'thor', then the call `thor/clarinet 'band':` will refer to the same instance of cello (cello 1, 'thor'), but a *new* clarinet instance (clarinet 2) because a nickname, 'band' is being given to this group, and 'clarinet' refers to the stock instrument, not any particular named instance of clarinet. On the other hand, `thor/clarinet:` in the same scenario will refer to cello 1 and clarinet 1, the same instances that were already in use.
+- Creates a new instance named `bar` of type `foo`, e.g.:
+  - `piano "larry":` creates a new instance of the stock `piano` named `"larry"`
+  - Subsequently in the score, `larry:` refers to that instance.
 
-    Example 1:
+### `foo/bar:`
 
-        clarinet: g g g g2.                # clarinet 1
-        cello "thor": g b d > g2.          # cello 1
-        thor/clarinet "band": g d < b g2.  # cello 1 (still) and clarinet 2
+- If `foo` and `bar` are the same named instance, e.g. `foo/foo`...
+  - ...throw an error because that doesn't make any sense.
 
-    Example 2:
+- If `foo` and `bar` are the same stock instrument, e.g. `piano/piano`...
+  - ...throw an error because the next time you call `piano:`, it won't be clear which one you mean.
 
-        clarinet: g g g g2.                # clarinet 1
-        cello "thor": g b d > g2.          # cello 1
-        thor/clarinet: g < d b g2.         # cello 1 (still) and clarinet 1 (still)
+- If both `foo` and `bar` refer to previously named instrument instances...
+  - ...refers to those instances.
 
-    Again, the key thing to remember is that **a new instance of an instrument is created whenever a stock instrument is called with any nickname, either as part of a group or not.**
+- If both `foo` and `bar` are stock instruments, e.g. `piano/bassoon:`
+  - ...follows the `foo:` rules above to select and/or create instances.
+    - (new instances will be created for any instruments that don't exist yet in the score)
 
-Generally, I would recommend that score writers use the names of the stock instruments instead of nicknames if there is only one instance of each instrument -- and if there is more than one, assign nicknames to each instrument the first time it is called. (If you do it this way, you don't have to understand how any of the above works :smiley_cat:)
+- If e.g. `foo` is a named instrument and `bar` is not, or vice versa (e.g. `foo/trumpet:`):
+  - ...throws an ambiguity error. (Nicknames should be used for creating new instances or grouping existing ones, not both.)
+
+### `foo/bar "baz":`
+
+- If `foo` and `bar` are the same named instance, e.g. `foo/foo`...
+  - ...throw an error because that doesn't make any sense.
+
+- If `foo` and `bar` are the same stock instrument, e.g. `piano/piano`...
+  - ...throw an error because if you wanted to call `baz.piano:` to refer to one of the pianos, it won't be clear which one you mean.
+  - So the moral of the story is, if you want a group containing two of the same instrument, you have to name both instances individually first.
+
+- If both `foo` and `bar` refer to previously named instrument instances...
+  - ...refers to those instances.
+  - ...creates an alias `"baz"` which can now be used to refer to those instances as a group.
+  - ...subsequently, `baz.foo` and `baz.bar` are available to reference the group members, although you could also just keep calling them `foo` and `bar`.
+
+- If both `foo` and `bar` are stock instruments, e.g. `piano/guitar "floop":`...
+  - ...creates new instances for each group member.
+  - ...creates an alias `"floop"` which can now be used to refer to those instances as a group.
+  - ...subsequently, `floop.piano` and `floop.guitar` are available to reference the group members.
+
+- If `foo` is a named instrument and `bar` is a stock instrument or vice versa, e.g. `foo/trumpet "quux":`...
+  - ...throws an ambiguity error. (Groups should be used for creating new instances or grouping existing ones, not both.)

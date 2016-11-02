@@ -74,7 +74,9 @@ You can give a nickname to an instrument by putting it in double quotes after th
     oboe "oboe-1":
       c8 d e f g2
 
-Now `oboe-1` refers to our first oboe. From now on, to tell oboe #1 what to do, we must refer to it as `oboe-1`, *not* `oboe`. `oboe` can now be used to create a second oboe:
+Now `oboe-1` refers to our first oboe. From now on, to tell oboe #1 what to do, we must refer to it as `oboe-1`, *not* `oboe`.
+
+`oboe` can now be used to create a second oboe:
 
     oboe "oboe-2":
       e8 f g a b2
@@ -84,9 +86,14 @@ You can also nickname a group of instruments:
     oboe-1/oboe-2 "oboes":
       > c1
 
-[The details of how Alda creates and assigns instrument instances](instance-and-group-assignment.md) are slightly complicated, but you should only really need to know this simple rule of thumb: if you need to use more than one of the same instrument (or if you'd like to assign a nickname to a group of instruments), assign a nickname the first time each instrument (or the group) is used, and then use that nickname from then on to refer to that instrument/group.
+When a nickname is given to a group of instruments, the individual instruments can then be accessed via the dot (`.`) operator.
 
-### Acceptable Names
+This can be useful when you create a group of unnamed instances, and you end up wanting to use the individual instruments later:
+
+    violin/viola/cello "strings": g1~1~1
+    strings.cello: < c1~1~1
+
+### Acceptable Nicknames
 
 Instrument names and nicknames must adhere to the following rules:
 
@@ -96,3 +103,66 @@ Instrument names and nicknames must adhere to the following rules:
   * letters (upper- or lowercase)
   * digits 0-9
   * any of the following characters: `_ - + ' ( )`
+
+### How instances are assigned
+
+The details of how Alda creates and assigns instrument instances are [complicated](instance-and-group-assignment.md), but for practical purposes, you can avoid errors by following these simple rules:
+
+- If you assign a nickname to one instance of an instrument, then any other instance of that same instrument in your score must also have a nickname.
+
+  ```
+  # ERROR
+  piano "foo": c8 d e f g2
+  piano: e8 f g a b2
+
+  # ERROR
+  piano: c8 d e f g2
+  piano "bar": e8 f g a b2
+
+  # OK
+  piano "foo": c8 d e f g2
+  piano "bar": e8 f g a b2
+  ```
+
+- Once an instance is nicknamed, you cannot give it a new nickname.
+
+  ```
+  # ERROR
+  piano "foo": c8 d e f g
+  foo "bar": a b > c
+
+  # OK
+  piano "foo": c8 d e f g
+  foo: a b > c
+  ```
+
+- You cannot reassign a nickname to another instance.
+
+  ```
+  # ERROR
+  piano "foo": c8 d e f g2
+  clarinet "foo": e8 f g a b2
+
+  # OK
+  piano "foo": c8 d e f g2
+  clarinet "bar": e8 f g a b2
+  ```
+
+- When making a group, every member of the group must be either a) a new instance of an instrument, or b) an existing instrument _with a nickname_.
+
+  Combining the two is not allowed because it can lead to situations where it isn't clear which instrument instance should be used.
+
+  ```
+  # ERROR
+  piano "foo": c8 d e
+  foo/trumpet: g1
+
+  # OK
+  piano "foo": c8 d e
+  trumpet "bar": r8~8~8
+  foo/bar: g1
+
+  # OK
+  piano/trumpet: c8 d e g1
+  ```
+
