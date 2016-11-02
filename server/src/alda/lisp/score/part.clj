@@ -113,7 +113,7 @@
                          "another instrument/group.")
                     nickname)))
 
-              ; can't mix and match unnamed and named instances of the same
+              ; can't use both unnamed and named instances of the same
               ; instrument
               (or (and nickname
                        (existing-unnamed-instances score name))
@@ -122,9 +122,9 @@
               (throw
                 (Exception.
                   (format
-                    (str "Ambiguous instrument reference \"%s\": can't mix "
-                         "and match unnamed and named instances of the same "
-                         "instrument in the same score.")
+                    (str "Ambiguous instrument reference \"%s\": can't use "
+                         "both unnamed and named instances of the same "
+                         "instrument in a score.")
                     name)))
 
               ; always create a new instance if there's a nickname
@@ -147,30 +147,39 @@
                         (let [named   (existing-named-instances score name)
                               unnamed (existing-unnamed-instances score name)]
                           (cond
-                            named   [:named named]
-                            unnamed [:stock unnamed]
-                            :else   [:stock [(new-part name)]])))
+                            named   [:named (for [inst named]
+                                              (assoc inst :called name))]
+                            unnamed [:stock
+                                     (for [inst unnamed]
+                                       (assoc inst :called name))]
+                            :else   [:stock
+                                     [(assoc (new-part name) :called name)]])))
                 kinds (distinct (map first insts))]
             (cond
-              ; can't mix and match named and stock instruments
+              ; can't use both named and stock instruments in a group
               (> (count kinds) 1)
               (throw
                 (Exception.
                   (format
-                    (str "Invalid instrument grouping \"%s\": can't mix and "
-                         "match stock instruments and named instances.")
+                    (str "Invalid instrument grouping \"%s\": can't use both "
+                         "stock instruments and named instances in a group.")
                     (str/join "/" names))))
 
               ; always create new instances when creating a named group
               ; consisting of stock instruments
               (and nickname (= kinds [:stock]))
-              (for [name names] (new-part name))
+              (for [name names] (assoc (new-part name) :called name))
 
               :else
               (mapcat second insts))))]
     (assoc score
       :nicknames           (if nickname
-                             (assoc nicknames nickname (map :id instances))
+                             (merge nicknames
+                                    {nickname (map :id instances)}
+                                    (into {}
+                                      (for [{:keys [id called]} instances
+                                            :when called]
+                                        [(str nickname \. called) (list id)])))
                              nicknames)
       :instruments         (reduce (fn [insts {:keys [id] :as inst}]
                                      (assoc insts id inst))

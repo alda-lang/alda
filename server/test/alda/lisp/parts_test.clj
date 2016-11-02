@@ -32,15 +32,16 @@
             trumpet        (get-instrument s "trumpet")
             piano-offset   (:current-offset piano)
             trumpet-offset (:current-offset trumpet)]
-        (testing "instruments from a group can be separated at will"
+        (testing "instruments from a group can be accessed using the dot
+                  operator"
           (let [s     (continue s
-                        (part "piano"))
+                        (part "trumpiano.piano"))
                 piano (get-instrument s "piano")]
             (is (= 1 (count (:current-instruments s))))
             (is (re-find #"^piano-" (first (:current-instruments s))))
             (is (= piano-offset (:current-offset piano)))
             (let [s       (continue s
-                            (part "trumpet"))
+                            (part "trumpiano.trumpet"))
                   trumpet (get-instrument s "trumpet")]
               (is (= 1 (count (:current-instruments s))))
               (is (re-find #"^trumpet-" (first (:current-instruments s))))
@@ -255,7 +256,7 @@
             bar (-> s :current-instruments first)]
         (testing "it refers to those instruments as a group"
           (let [s (continue s
-                            (part "foo/bar 'baz'"))]
+                    (part "foo/bar 'baz'"))]
             (is (= #{foo bar} (:current-instruments s)))
             (testing "and you can now use the nickname to refer to that group"
               (let [s (continue s
@@ -269,8 +270,7 @@
               (let [s (continue s
                         (part "bar"))]
                 (is (= #{bar} (:current-instruments s)))))
-            ; FIXME
-            #_(testing "and you can now use the group-member operator to refer to
+            (testing "and you can now use the group-member operator to refer to
                       each instance individually"
               (let [s (continue s
                         (part "baz.foo"))]
@@ -283,12 +283,18 @@
       ; instruments
       (let [s     (score
                     (part "piano"))
-            piano (-> s :current-instruments first)
             s     (continue s
                     (part "banjo"))
-            banjo (-> s :current-instruments first)
             s     (continue s
                     (part "piano/banjo/tuba 'floop'"))
+            piano (->> s
+                       :current-instruments
+                       (filter #(.startsWith % "piano-"))
+                       first)
+            banjo (->> s
+                       :current-instruments
+                       (filter #(.startsWith % "banjo-"))
+                       first)
             tuba  (->> s
                        :current-instruments
                        (filter #(.startsWith % "tuba-"))
@@ -306,8 +312,7 @@
                     (:instruments s))))
         (testing "the group name now refers to the instances as a group"
           (is (= 3 (count (:current-instruments s)))))
-        ; FIXME
-        #_(testing "you can now use the group-member operator to refer to each
+        (testing "you can now use the group-member operator to refer to each
                   instance individually"
           (let [s (continue s
                     (part "floop.piano"))]

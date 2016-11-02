@@ -77,7 +77,7 @@
    :voice-number    #(Integer/parseInt %)})
 
 (def name-transforms
-  {:name     #(hash-map :name %)
+  {:name     #(hash-map :name (apply str %&))
    :nickname #(hash-map :nickname %)})
 
 (defn- read-clj-expr
