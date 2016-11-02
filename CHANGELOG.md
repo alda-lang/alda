@@ -1,5 +1,30 @@
 # CHANGELOG
 
+## 1.0.0-rc46 (11/2/16)
+
+This release includes improvements to the system that assigns instrument parts and groups in an Alda score ([#249](https://github.com/alda-lang/alda/issues/249)). Thanks, [elyisgreat] and [jimcheetham], for helping to talk me through all the different scenarios!
+
+[The documentation](doc/scores-and-parts.md) has also been updated and improved. We hope this will make the rules of instrument part and group assignment easier to understand and remember from here on out.
+
+* Errors are now thrown in the following scenarios, which prior to this release would lead to undefined or confusing behavior:
+
+  * Calls like `foo "bar"` where `foo` is a previously defined nickname (e.g. `piano "foo"`), not a stock instrument.
+
+  * Mixing and matching unnamed vs. named instances of the same instrument in a score.
+
+  * Mixing and matching stock instruments and named instances in the same group. Groups are now explicitly only for grouping named (existing) instances or creating new ones.
+
+  There is a [list of simple rules with examples](doc/scores-and-parts.md#how-instances-are-assigned) in the documentation, which I think is the best way to understand valid vs. invalid usage of parts in an Alda score.
+
+  For the curious, there is also a [comprehensive explanation](doc/instance-and-group-assignment.md) of what happens in different scenarios.
+
+* There is a new dot (`.`) operator for accessing members of groups:
+
+  ```
+  violin/viola/cello "strings": c8 d e f
+  strings.cello: g1
+  ```
+
 ## 1.0.0-rc45 (10/15/16)
 
 This release includes a handful of behind-the-scenes improvements that will make it easier for us to develop Alda.
@@ -1065,3 +1090,4 @@ Exit with error code 1 when parsing fails for `alda play` and `alda parse` tasks
 [goog]: https://github.com/goog
 [0atman]: https://github.com/0atman
 [feldoh]: https://github.com/feldoh
+[jimcheetham]: https://github.com/jimcheetham
