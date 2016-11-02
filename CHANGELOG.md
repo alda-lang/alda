@@ -33,7 +33,7 @@ This release includes a handful of behind-the-scenes improvements that will make
 
 * Added automated integration tests. These tests can be run alone with `boot test --integration`, or along with the existing unit tests with `boot test --all`.
 
-* Both the `alda.server` and `alda.worker` namespaces now include a `*no-system-exit*` dynamic var that is `true` by default, but can be bound to `false` in situations where you're running a server or worker within a Clojure program and you don't necessarily want the entire process to exit when the server or worker does. This makes it possible to run the suite of integration tests without being interrupted by a `System.exit` from a server or worker thread.
+* Both the `alda.server` and `alda.worker` namespaces now include a `*no-system-exit*` dynamic var that is `false` by default, but can be bound to `true` in situations where you're running a server or worker within a Clojure program and you don't necessarily want the entire process to exit when the server or worker does. This makes it possible to run the suite of integration tests without being interrupted by a `System.exit` from a server or worker thread.
 
 * The server now recognizes a new message, `DONE`, that can be sent by a worker process to indicate that it is done working and should not be considered available. When the server receives a `DONE` message from a worker, it removes that worker from its queue, thus ensuring that it will not use that worker to handle any subsequent client requests.
 
