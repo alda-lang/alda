@@ -452,7 +452,7 @@ Shout-out to [elyisgreat] for finding all these bugs!
 
 ## 1.0.0-rc27 (7/24/16)
 
-* Behind the scenes change: simplified the code that handles getting and setting variables. See ebf2a42c78e5be3ef1cbedc4c2579a7bd72d08bb for more details.
+* Behind the scenes change: simplified the code that handles getting and setting variables. See [ebf2a4](https://github.com/alda-lang/alda/commit/ebf2a42c78e5be3ef1cbedc4c2579a7bd72d08bb) for more details.
 
   TL;DR: when you use a variable inside the definition of another variable, now the value of the variable is retrieved right away, instead of waiting until you try to get the value of the outer variable.
 
