@@ -108,14 +108,15 @@
                   check-for-failure
                   (insta/transform
                     (merge clj-expr-transforms
-                           {:score
-                            #(reduce (fn [acc x]
-                                       (if (string? x)
-                                         (str acc x)
-                                         (str acc (store-in-cache!
-                                                    cache "clj-expr" x))))
-                                     ""
-                                     %&)})))]
+                           {:comment (constantly "\n")
+                            :score   #(reduce
+                                        (fn [acc x]
+                                          (if (string? x)
+                                            (str acc x)
+                                            (str acc (store-in-cache!
+                                                       cache "clj-expr" x))))
+                                        ""
+                                        %&)})))]
     [code cache]))
 
 (defn separate-parts

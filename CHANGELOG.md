@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1.0.0-rc47 (11/9/16)
+
+* Fixed [#284](https://github.com/alda-lang/alda/issues/284), bugs related to comment spacing. Thanks [elyisgreat] for reporting!
+
 ## 1.0.0-rc46 (11/2/16)
 
 This release includes improvements to the system that assigns instrument parts and groups in an Alda score ([#249](https://github.com/alda-lang/alda/issues/249)). Thanks, [elyisgreat] and [jimcheetham], for helping to talk me through all the different scenarios!
