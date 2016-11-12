@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 1.0.0-rc48 (11/12/16)
+
+* Fixed [#242](https://github.com/alda-lang/alda/issues/242) - in rare cases, error messages were sometimes hidden due to the way we were formatting them inside of the function that displays the error message.
+
+  Thanks to [bbqbaron] for the PR to fix this issue!
+
 ## 1.0.0-rc47 (11/9/16)
 
 * Fixed [#284](https://github.com/alda-lang/alda/issues/284), bugs related to comment spacing. Thanks [elyisgreat] for reporting!
@@ -1095,3 +1101,4 @@ Exit with error code 1 when parsing fails for `alda play` and `alda parse` tasks
 [0atman]: https://github.com/0atman
 [feldoh]: https://github.com/feldoh
 [jimcheetham]: https://github.com/jimcheetham
+[bbqbaron]: https://github.com/bbqbaron
