@@ -94,7 +94,14 @@
                             #"Undefined variable: bar"
                             (score
                               (set-variable :foo
-                                (get-variable :bar)))))))
+                                (get-variable :bar)))))
+      (is (thrown-with-msg? Exception
+                            #"Undefined variable: bar"
+                            (score
+                              (set-variable :foo
+                                (voices
+                                  (voice 1
+                                    (get-variable :bar)))))))))
   (testing "variables can contain event seqs"
     (let [s (score
               (set-variable :foo [])

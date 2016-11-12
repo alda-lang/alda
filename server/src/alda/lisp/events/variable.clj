@@ -18,17 +18,28 @@
    with their values from the `env`.
 
    Throws an undefined variable error if the variable doesn't exist in the env."
-  [events env]
-  (doall (for [{:keys [event-type variable] :as event} events
-               :when (not (empty? event))]
-           (if (= event-type :get-variable)
-             (get-variable env variable)
-             event))))
+  [env events]
+  (cond
+    (sequential? events)
+    (doall (map (partial replace-variables env)
+                (filter (complement empty?) events)))
+
+    (contains? events :events)
+    (update events :events (partial replace-variables env))
+
+    (contains? events :voices)
+    (update events :voices (partial replace-variables env))
+
+    (= (:event-type events) :get-variable)
+    (get-variable env (:variable events))
+
+    :else
+    events))
 
 (defmethod update-score :set-variable
   [{:keys [env] :as score}
    {:keys [variable events]}]
-  (let [events (replace-variables events env)]
+  (let [events (replace-variables env events)]
     (assoc-in score [:env variable] events)))
 
 (defmethod update-score :get-variable
