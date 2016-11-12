@@ -44,7 +44,7 @@ public class AldaServer extends AldaProcess {
     }
   }
 
-  public void msg(String message, Object... args) {
+  public void msg(String message) {
     String hostWithoutProtocol = host.replaceAll("tcp://", "");
 
     String prefix;
@@ -60,12 +60,12 @@ public class AldaServer extends AldaProcess {
                                           .reset()
                                           .toString());
 
-    System.out.printf(prefix + message + "\n", args);
+    System.out.println(prefix + message);
   }
 
-  public void error(String message, Object... args) {
+  public void error(String message) {
     String prefix = ansi().fg(RED).a("ERROR ").reset().toString();
-    msg(prefix + message, args);
+    msg(prefix + message);
   }
 
   private final String CHECKMARK = "\u2713";
@@ -132,11 +132,11 @@ public class AldaServer extends AldaProcess {
         return;
       }
     } catch (URISyntaxException e) {
-      error("Unable to fork '%s' into the background; " +
-            " got URISyntaxException: %s", e.getInput(), e.getReason());
+      error(String.format("Unable to fork '%s' into the background; " +
+            " got URISyntaxException: %s", e.getInput(), e.getReason()));
     } catch (IOException e) {
-      error("An IOException occurred trying to fork a background process: %s",
-            e.getMessage());
+      error(String.format("An IOException occurred trying to fork a background process: %s",
+            e.getMessage()));
     }
 
     msg("Starting worker processes...");
