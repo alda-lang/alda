@@ -72,14 +72,19 @@
                     (note (pitch :b))
                     (note (pitch :a))
                     (note (pitch :g))))))))))
-  (testing "an unclosed voice group"
-    (testing "implicitly closes at the end of a set-variable"
-      (let [{:keys [voice-instruments]} (score (set-variable :foo (voices (voice 1 (note (pitch :a))))))]
-        (is (nil? voice-instruments))))
-    (testing "implicitly closes at the end of a sequence"
-      (let [{:keys [voice-instruments]} (score [(voices (voice 1 (note (pitch :a))))])]
-        (is (nil? voice-instruments))))
-    (testing "does not implicitly close alone"
-      (let [{:keys [voice-instruments]} (score (voices (voice 1 (note (pitch :a)))))]
-        (is (some? voice-instruments))))))
+  (testing "a voice group"
+    (testing "can be repeated manually, closed"
+      (let [vs (voices (voice 1 (note (pitch :a))))
+            s (score (part "piano" [vs (end-voices) vs]))]
+        (is (= 2 (count (:events s))))))
+    (testing "can be repeated manually, unclosed"
+      (let [vs (voices (voice 1 (note (pitch :a))))
+            s (score (part "piano" [vs vs]))]
+        (is (= 2 (count (:events s))))))
+    (testing "can be repeated, closed"
+      (let [s (score (part "piano" (times 2 [(voices (voice 1 (note (pitch :a)))) (end-voices)])))]
+        (is (= 2 (count (:events s))))))
+    (testing "can be repeated, unclosed"
+      (let [s (score (part "piano" (times 2 (voices (voice 1 (note (pitch :a)))))))]
+        (is (= 2 (count (:events s))))))))
 
