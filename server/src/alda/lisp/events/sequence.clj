@@ -12,5 +12,5 @@
 
 (defmethod update-score :event-sequence
   [score events]
-  (reduce update-score score events))
+  (reduce update-score score (conj events {:event-type :end-voice-group})))
 

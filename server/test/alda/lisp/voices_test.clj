@@ -71,5 +71,15 @@
                     (octave :down)
                     (note (pitch :b))
                     (note (pitch :a))
-                    (note (pitch :g)))))))))))
+                    (note (pitch :g))))))))))
+  (testing "an unclosed voice group"
+    (testing "implicitly closes at the end of a set-variable"
+      (let [{:keys [voice-instruments]} (score (set-variable :foo (voices (voice 1 (note (pitch :a))))))]
+        (is (nil? voice-instruments))))
+    (testing "implicitly closes at the end of a sequence"
+      (let [{:keys [voice-instruments]} (score [(voices (voice 1 (note (pitch :a))))])]
+        (is (nil? voice-instruments))))
+    (testing "does not implicitly close alone"
+      (let [{:keys [voice-instruments]} (score (voices (voice 1 (note (pitch :a)))))]
+        (is (some? voice-instruments))))))
 
