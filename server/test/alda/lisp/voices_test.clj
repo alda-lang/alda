@@ -86,5 +86,15 @@
         (is (= 2 (count (:events s))))))
     (testing "can be repeated, unclosed"
       (let [s (score (part "piano" (times 2 (voices (voice 1 (note (pitch :a)))))))]
-        (is (= 2 (count (:events s))))))))
+        (is (= 2 (count (:events s))))))
+    (testing "left unclosed, leaves instrument state intact"
+      (let [s (score (part "piano" (times 2 (voices (voice 1 (note (pitch :a)))))))]
+        (is (not (empty? (:voice-instruments s))))
+        ))
+    (testing "closed, wipes instrument state"
+      (let [s (score (part "piano" (voices (voice 1 (note (pitch :a))) (end-voices))))]
+        (is (empty? (:voice-instruments s)))))
+    (testing "on part transition, wipes instrument state"
+      (let [s (score (part "piano" (voices (voice 1 (note (pitch :a))) (part "guitar" (note (pitch :a))))))]
+        (is (empty? (:voice-instruments s)))))))
 
