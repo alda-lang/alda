@@ -1,2 +1,0 @@
-cram          = <"{"> <ows> events <ows> <"}"> duration?
-
