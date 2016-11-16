@@ -2,6 +2,7 @@
   :dependencies '[; build
                   [adzerk/boot-jar2bin "1.1.0" :scope "test"]
                   [alda/client-java    "0.0.1"]
+                  [org.clojure/clojure "1.8.0"]
 
                   ; silence slf4j logging dammit
                   [org.slf4j/slf4j-nop "1.7.21"]])
