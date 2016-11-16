@@ -19,9 +19,7 @@
 </a>
 <br>
 
-<br>
-|
-<img src="https://alda-lang-slackin-nkonk.c9users.io/badge.svg">
+
 
 
 <b><a href="#installation">Installation</a></b>
@@ -39,6 +37,11 @@
 )
 
 <br>
+
+
+<a href="https://alda-lang-slackin-nkonk.c9users.io/"> <img src="https://alda-lang-slackin-nkonk.c9users.io/badge.svg"></a>
+<br>
+
 
 </p>
 
