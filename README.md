@@ -19,6 +19,8 @@
 </a>
 <br>
 
+<br>
+|
 <img src="https://alda-lang-slackin-nkonk.c9users.io/badge.svg">
 
 
