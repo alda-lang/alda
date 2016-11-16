@@ -1,12 +1,18 @@
 # CHANGELOG
 
+## 1.0.0-rc50 (11/16/16)
+
+* Fixed [#255](https://github.com/alda-lang/alda/issues/255). Voices can now be used inside of event sequences and variable definitions.
+
+  Thanks, [bbqbaron], for your work on fixing this issue!
+
 ## 1.0.0-rc49 (11/12/16)
 
 * Fixed a small bug where sometimes, using an undefined variable within a variable definition would not result in an error.
 
 ## 1.0.0-rc48 (11/12/16)
 
-* Fixed [#242](https://github.com/alda-lang/alda/issues/242) - in rare cases, error messages were sometimes hidden due to the way we were formatting them inside of the function that displays the error message.
+* Fixed [#242](https://github.com/alda-lang/alda/issues/242). In rare cases, error messages were sometimes hidden due to the way we were formatting them inside of the function that displays the error message.
 
   Thanks to [bbqbaron] for the PR to fix this issue!
 
