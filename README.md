@@ -39,7 +39,9 @@
 <br>
 
 
-<a href="https://alda-lang-slackin-nkonk.c9users.io/"> <img src="https://alda-lang-slackin-nkonk.c9users.io/badge.svg"></a>
+<a href="https://alda-lang-slackin-nkonk.c9users.io/">
+  <img src="https://alda-lang-slackin-nkonk.c9users.io/badge.svg">
+</a>
 <br>
 
 
