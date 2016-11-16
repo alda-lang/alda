@@ -44,7 +44,7 @@
 
 </p>
 
-<a href="https://alda-lang-slackin-nkonk.c9users.io/">
+<a style="test-decoration:none;" href="https://alda-lang-slackin-nkonk.c9users.io/">
   <img src="https://alda-lang-slackin-nkonk.c9users.io/badge.svg">
 </a>
 <br>
