@@ -35,8 +35,7 @@
 
 (defmethod update-score :voice-group
   [score {:keys [voices] :as voice-group}]
-  (let [score  (assoc score :voice-instruments {})]
-    (reduce update-score score voices)))
+  (reduce update-score score voices))
 
 (defmethod update-score :end-voice-group
   [score _]

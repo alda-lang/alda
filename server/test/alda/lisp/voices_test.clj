@@ -71,5 +71,30 @@
                     (octave :down)
                     (note (pitch :b))
                     (note (pitch :a))
-                    (note (pitch :g)))))))))))
+                    (note (pitch :g))))))))))
+  (testing "a voice group"
+    (testing "can be repeated manually, closed"
+      (let [vs (voices (voice 1 (note (pitch :a))))
+            s (score (part "piano" [vs (end-voices) vs]))]
+        (is (= 2 (count (:events s))))))
+    (testing "can be repeated manually, unclosed"
+      (let [vs (voices (voice 1 (note (pitch :a))))
+            s (score (part "piano" [vs vs]))]
+        (is (= 2 (count (:events s))))))
+    (testing "can be repeated, closed"
+      (let [s (score (part "piano" (times 2 [(voices (voice 1 (note (pitch :a)))) (end-voices)])))]
+        (is (= 2 (count (:events s))))))
+    (testing "can be repeated, unclosed"
+      (let [s (score (part "piano" (times 2 (voices (voice 1 (note (pitch :a)))))))]
+        (is (= 2 (count (:events s))))))
+    (testing "left unclosed, leaves instrument state intact"
+      (let [s (score (part "piano" (times 2 (voices (voice 1 (note (pitch :a)))))))]
+        (is (not (empty? (:voice-instruments s))))
+        ))
+    (testing "closed, wipes instrument state"
+      (let [s (score (part "piano" (voices (voice 1 (note (pitch :a))) (end-voices))))]
+        (is (empty? (:voice-instruments s)))))
+    (testing "on part transition, wipes instrument state"
+      (let [s (score (part "piano" (voices (voice 1 (note (pitch :a))) (part "guitar" (note (pitch :a))))))]
+        (is (empty? (:voice-instruments s)))))))
 
