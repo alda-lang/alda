@@ -19,6 +19,8 @@
 </a>
 <br>
 
+[![Slack Status](https://alda-lang-slackin-nkonk.c9users.io/badge.svg)](https://alda-lang-slackin-nkonk.c9users.io/)
+
 
 <b><a href="#installation">Installation</a></b>
 |
