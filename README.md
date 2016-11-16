@@ -39,13 +39,15 @@
 <br>
 
 
-<a align="left" href="https://alda-lang-slackin-nkonk.c9users.io/">
-  <img src="https://alda-lang-slackin-nkonk.c9users.io/badge.svg">
-</a>
-<br>
+
 
 
 </p>
+
+<a href="https://alda-lang-slackin-nkonk.c9users.io/">
+  <img src="https://alda-lang-slackin-nkonk.c9users.io/badge.svg">
+</a>
+<br>
 
 *New to Alda? You may be interested in reading [this blog post][alda-blog-post] as an introduction.*
 
