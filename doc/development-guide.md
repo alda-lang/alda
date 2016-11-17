@@ -56,39 +56,6 @@ The Alda client, server and REPL are packaged together in the same uberjar. You 
 
 This will build the `alda` and `alda.exe` executables and place them in the output directory of your choice.
 
-## Client
-
-### Overview
-
-The Alda client is a fairly straightforward Java CLI app that uses [JCommander](http://jcommander.org) to parse command-line arguments.
-
-Interaction with servers is done via [ZeroMQ](http://zeromq.org) TCP requests with a JSON payload. The Alda client takes command-line arguments, translates them into a JSON request, and sends the request to the server. For more details about the way we use ZeroMQ, see [ZeroMQ Architecture](zeromq-architecture.md).
-
-Unless specified via the `-H/--host` option, the Alda client assumes the server is running locally and sends requests to localhost. The default port is 27713.
-
-Running `alda start` forks a new Alda process in the background, passing it the (hidden) `server` command to start the server. Server output is hidden from the user (though the client will report if there is an error).
-
-To see server output (including error stacktraces) for development purposes, you can start a server in the foreground by running `alda server`. You may specify a port via the `-p/--port` option (e.g. `alda -p 2000 server`) -- just make sure you're sending requests from the client to the right port (e.g. `alda -p 2000 play -f my-score.alda`).
-
-To stop a running server, run `alda stop`.
-
-### Development
-
-To run the Alda client locally to test changes you've made to the code, you can run:
-
-    boot dev -a client -x "args here"
-
-For example, to test changes to the way the `alda play` command plays a file, you can run:
-
-    boot dev -a client -x "play --file /path/to/file.alda"
-
-Or, if you'd prefer, you can do a development build, outputting the executables to a directory of your choice (I like to use `/tmp`), and then use the outputted executable:
-
-    boot build -o /tmp
-    /tmp/alda play --file /path/to/file.alda
-
-Note that the client forks server processes into the background, which continue to run even after the client has exited. If you're testing out changes you've made to the server code, you will need to restart the server by running `alda restart`, which will stop the server and start a new process using your new build.
-
 ## Server
 
 ### Overview
