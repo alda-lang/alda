@@ -39,9 +39,9 @@ For a syrupy visual of what we have on our plate, check out our [waffle.io board
 
 If you're confused about how any aspect of the code works (Clojure questions, "what does this piece of code do," "can you walk me through how this works," etc.), don't hesitate to ask questions on the issue you're working on, or pop into the [Alda Slack group](http://slack.alda.io) -- we'll be more than happy to help!
 
-## Development Guide
+## Building the `alda` (or `alda.exe`) executable
 
-_TODO: break the development guide up into development info kept in each subproject repo_
+Dave is responsible for deploying subprojects to [Clojars](https://clojars.org/groups/alda) and building and releasing the latest builds of `alda` and `alda.exe`.
 
-For details about testing and building Alda, and a high-level overview of how Alda works, see our [development guide](./doc/development-guide.md).
+However, if you'd like to build a custom `alda` executable yourself (e.g. for funsies or as an experiment), the process is documented [here](doc/building-the-alda-executable.md).
 
