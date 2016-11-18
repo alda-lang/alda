@@ -11,7 +11,7 @@ For a syrupy visual of what we have on our plate, check out our [waffle.io board
 - Submit a Pull Request.
 - Your Pull Request should get the Dave Yarwood Seal of Approval™ before being merged. (Don't worry, he's not hard to win over.)
 
-If you're confused about how some aspect of the code works (Clojure questions, "what does this piece of code do," etc.), don't hesitate to ask questions on the issue you're working on, or pop into the #alda channel in the [Clojurians](http://clojurians.net) Slack network -- we'll be more than happy to help!
+If you're confused about how some aspect of the code works (Clojure questions, "what does this piece of code do," etc.), don't hesitate to ask questions on the issue you're working on, or pop into the [Alda Slack group](http://slack.alda.io) -- we'll be more than happy to help!
 
 ## Development Guide
 
