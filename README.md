@@ -20,6 +20,8 @@
 <br>
 
 
+
+
 <b><a href="#installation">Installation</a></b>
 |
 <b><a href="doc/index.md">Docs</a></b>
@@ -39,7 +41,16 @@
 
 <a href="http://slack.alda.io"><img src="http://slack.alda.io/badge.svg" alt="Join us on Slack!"></a> <i>composers chatting</i>
 
+
+
+
+
 </p>
+
+<a style="test-decoration:none;" href="https://alda-lang-slackin-nkonk.c9users.io/">
+  <img src="https://alda-lang-slackin-nkonk.c9users.io/badge.svg">
+</a>
+<br>
 
 *New to Alda? You may be interested in reading [this blog post][alda-blog-post] as an introduction.*
 
