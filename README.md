@@ -35,6 +35,9 @@
 )
 
 <br>
+<br>
+
+<a href="http://slack.alda.io"><img src="http://slack.alda.io/badge.svg" alt="Join us on Slack!"></a> <i>composers chatting</i>
 
 </p>
 
@@ -195,9 +198,9 @@ For more details on how you can contribute to Alda, see [CONTRIBUTING.md](CONTRI
 
 ## Support, Discussion, Comaraderie
 
-**Slack**: Sign up to the universe of Clojure chat @ http://clojurians.net/, then join us on #alda
+**Slack**: Joining the [Alda Slack group](http://slack.alda.io) is quick and painless. Come say hi!
 
-**Reddit**: Come join us in [/r/alda](https://www.reddit.com/r/alda/), where you can discuss all things Alda and share your Alda scores!
+**Reddit**: Subscribe to the [/r/alda](https://www.reddit.com/r/alda/) subreddit, where you can discuss all things Alda and share your Alda scores!
 
 ## License
 
