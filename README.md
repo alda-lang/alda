@@ -86,7 +86,7 @@ If you're a developer and you'd like to help, come on in -- [the water's fine](#
     g8 f+ e d c < b a g | f+ e d c < b a g4
     << g1/>g/>g/b/>d/g
 
-For more examples, see these [example scores](https://github.com/alda-lang/alda/tree/master/examples).
+For more examples, see these [example scores](https://github.com/alda-lang/alda-core/tree/master/examples).
 
 ## Installation
 
