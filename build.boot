@@ -6,6 +6,7 @@
                   [alda/server-clj       "0.0.1"]
                   [alda/core             "0.0.1"]
                   [alda/sound-engine-clj "0.0.1"]
+                  [alda/repl-clj         "0.0.1"]
 
                   ; silence slf4j logging dammit
                   [org.slf4j/slf4j-nop "1.7.21"]])
