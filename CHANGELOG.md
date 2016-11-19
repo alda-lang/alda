@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 1.0.0-rc51 (11/19/16)
+
+This release is technically no different than 1.0.0-rc50, but it's the first release under the new, multi-repository organization of the Alda project. See [#186](https://github.com/alda-lang/alda/issues/186) for more context.
+
+This release was built using the new system where each Alda "component" (e.g. the core library, the client, the server, etc.) is an isolated dependency. This is a more organized system that will make life easier for the developers working on Alda. The end user should not notice any difference.
+
+As a bonus, this new system of organization is a step towards allowing developers to write their own custom Alda components, swap them with the existing ones, and make custom builds.
+
 ## 1.0.0-rc50 (11/16/16)
 
 * Fixed [#255](https://github.com/alda-lang/alda/issues/255). Voices can now be used inside of event sequences and variable definitions.
