@@ -142,7 +142,6 @@
                       (list 'alda.lisp/times n event))
    :event-sequence  #(vec (list* %&))
    :cram            #(list* 'alda.lisp/cram %&)
-   :voices          #(list* 'alda.lisp/voices %&)
    :voice           (fn [voice-number & events]
                       (list* 'alda.lisp/voice voice-number events))
    :voice-zero      #(list 'alda.lisp/voice 0
@@ -181,7 +180,6 @@
                       (evts/times n event))
    :event-sequence  vector
    :cram            #(apply evts/cram %&)
-   :voices          #(apply evts/voices %&)
    :voice           (fn [voice-number & events]
                       (apply evts/voice
                              voice-number

@@ -9,32 +9,30 @@
     (testing "the first note of each voice should all start at the same time"
       (let [s      (score
                      (part "piano"
-                       (voices
-                         (voice 1
-                           (note (pitch :g) (duration (note-length 1))))
-                         (voice 2
-                           (note (pitch :b) (duration (note-length 1))))
-                         (voice 3
-                           (note (pitch :d) (duration (note-length 1)))))))
+                       (voice 1
+                         (note (pitch :g) (duration (note-length 1))))
+                       (voice 2
+                         (note (pitch :b) (duration (note-length 1))))
+                       (voice 3
+                         (note (pitch :d) (duration (note-length 1))))))
             events (-> s :events)]
         (is (= 1 (count (distinct (map :offset events)))))))
     (let [s            (score
                          (part "piano"
-                           (voices
-                             (voice 1
-                               (note (pitch :g) (duration (note-length 1)))
-                               (note (pitch :b) (duration (note-length 2))))
-                             (voice 2
-                               (note (pitch :b) (duration (note-length 1)))
-                               (note (pitch :d) (duration (note-length 1))))
-                             (voice 3
-                               (note (pitch :d) (duration (note-length 1)))
-                               (note (pitch :f) (duration (note-length 4))))
-                             (voice 2
-                               (octave :up)
-                               (octave :down)
-                               (note (pitch :g))
-                               (note (pitch :g))))
+                           (voice 1
+                             (note (pitch :g) (duration (note-length 1)))
+                             (note (pitch :b) (duration (note-length 2))))
+                           (voice 2
+                             (note (pitch :b) (duration (note-length 1)))
+                             (note (pitch :d) (duration (note-length 1))))
+                           (voice 3
+                             (note (pitch :d) (duration (note-length 1)))
+                             (note (pitch :f) (duration (note-length 4))))
+                           (voice 2
+                             (octave :up)
+                             (octave :down)
+                             (note (pitch :g))
+                             (note (pitch :g)))
                            (end-voices)))
           piano        (get-instrument s "piano")
           events       (-> s :events)
@@ -64,12 +62,11 @@
     (testing "should not throw an exception"
       (is (score
             (part "piano"
-              (voices
-                (voice 1
-                  (cram
-                    (note (pitch :c))
-                    (octave :down)
-                    (note (pitch :b))
-                    (note (pitch :a))
-                    (note (pitch :g)))))))))))
+              (voice 1
+                (cram
+                 (note (pitch :c))
+                 (octave :down)
+                 (note (pitch :b))
+                 (note (pitch :a))
+                 (note (pitch :g))))))))))
 

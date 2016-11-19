@@ -48,52 +48,48 @@
   (testing "voices"
     (is (= (parse-to-lisp-with-context :part "piano: V1: a b c")
            '(alda.lisp/part {:names ["piano"]}
-              (alda.lisp/voices
-                (alda.lisp/voice 1
-                  (alda.lisp/note (alda.lisp/pitch :a))
-                  (alda.lisp/note (alda.lisp/pitch :b))
-                  (alda.lisp/note (alda.lisp/pitch :c)))))))
+              (alda.lisp/voice 1
+                (alda.lisp/note (alda.lisp/pitch :a))
+                (alda.lisp/note (alda.lisp/pitch :b))
+                (alda.lisp/note (alda.lisp/pitch :c))))))
     (is (= (parse-to-lisp-with-context :part "piano:
                                         V1: a b c
                                         V2: d e f")
            '(alda.lisp/part {:names ["piano"]}
-              (alda.lisp/voices
-                (alda.lisp/voice 1
-                  (alda.lisp/note (alda.lisp/pitch :a))
-                  (alda.lisp/note (alda.lisp/pitch :b))
-                  (alda.lisp/note (alda.lisp/pitch :c)))
-                (alda.lisp/voice 2
-                  (alda.lisp/note (alda.lisp/pitch :d))
-                  (alda.lisp/note (alda.lisp/pitch :e))
-                  (alda.lisp/note (alda.lisp/pitch :f)))))))
+              (alda.lisp/voice 1
+                (alda.lisp/note (alda.lisp/pitch :a))
+                (alda.lisp/note (alda.lisp/pitch :b))
+                (alda.lisp/note (alda.lisp/pitch :c)))
+              (alda.lisp/voice 2
+                (alda.lisp/note (alda.lisp/pitch :d))
+                (alda.lisp/note (alda.lisp/pitch :e))
+                (alda.lisp/note (alda.lisp/pitch :f))))))
     (is (= (parse-to-lisp-with-context :part "piano:
                                         V1: a b c | V2: d e f")
            '(alda.lisp/part {:names ["piano"]}
-              (alda.lisp/voices
-                (alda.lisp/voice 1
-                  (alda.lisp/note (alda.lisp/pitch :a))
-                  (alda.lisp/note (alda.lisp/pitch :b))
-                  (alda.lisp/note (alda.lisp/pitch :c))
-                  (alda.lisp/barline))
-                (alda.lisp/voice 2
-                  (alda.lisp/note (alda.lisp/pitch :d))
-                  (alda.lisp/note (alda.lisp/pitch :e))
-                  (alda.lisp/note (alda.lisp/pitch :f)))))))
+              (alda.lisp/voice 1
+                (alda.lisp/note (alda.lisp/pitch :a))
+                (alda.lisp/note (alda.lisp/pitch :b))
+                (alda.lisp/note (alda.lisp/pitch :c))
+                (alda.lisp/barline))
+              (alda.lisp/voice 2
+                (alda.lisp/note (alda.lisp/pitch :d))
+                (alda.lisp/note (alda.lisp/pitch :e))
+                (alda.lisp/note (alda.lisp/pitch :f))))))
     (is (= (parse-to-lisp-with-context :part "piano:
                                         V1: [a b c] *8
                                         V2: [d e f] *8")
            '(alda.lisp/part {:names ["piano"]}
-              (alda.lisp/voices
-                (alda.lisp/voice 1
-                  (alda.lisp/times 8
-                    [(alda.lisp/note (alda.lisp/pitch :a))
-                     (alda.lisp/note (alda.lisp/pitch :b))
-                     (alda.lisp/note (alda.lisp/pitch :c))]))
-                (alda.lisp/voice 2
-                  (alda.lisp/times 8
-                    [(alda.lisp/note (alda.lisp/pitch :d))
-                     (alda.lisp/note (alda.lisp/pitch :e))
-                     (alda.lisp/note (alda.lisp/pitch :f))]))))))))
+              (alda.lisp/voice 1
+                (alda.lisp/times 8
+                  [(alda.lisp/note (alda.lisp/pitch :a))
+                   (alda.lisp/note (alda.lisp/pitch :b))
+                   (alda.lisp/note (alda.lisp/pitch :c))]))
+              (alda.lisp/voice 2
+                (alda.lisp/times 8
+                  [(alda.lisp/note (alda.lisp/pitch :d))
+                   (alda.lisp/note (alda.lisp/pitch :e))
+                   (alda.lisp/note (alda.lisp/pitch :f))])))))))
 
 (deftest marker-tests
   (testing "markers"

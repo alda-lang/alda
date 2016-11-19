@@ -107,14 +107,6 @@
    :number     voice-number
    :events     events})
 
-(defn voices
-  "Voices are chronological sequences of events that each start at the same
-   time. The resulting :current-offset is at the end of the voice that finishes
-   last."
-  [& voices]
-  {:event-type :voice-group
-   :voices     voices})
-
 (defn end-voices
   "By default, the score remains in 'voice mode' until it reaches an end-voices
    event. This is so that if an instrument part ends with a voice group, the
