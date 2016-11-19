@@ -14,30 +14,27 @@
 
 <p align="center">
 
-<a href="http://clojars.org/alda">
-  <img src="http://clojars.org/alda/latest-version.svg" alt="Clojars Project">
-</a>
-<br>
+  <b><a href="#installation">Installation</a></b>
+  |
+  <b><a href="doc/index.md">Docs</a></b>
+  |
+  <b><a href="CHANGELOG.md">Changelog</a></b>
+  |
+  <b><a href="#contributing">Contributing</a></b>
 
+  (
+    <a href="https://waffle.io/alda-lang/alda" alt="Features in Progress">
+      <img src="https://badge.waffle.io/alda-lang/alda.png?label=in%20progress&title=In%20Progress:">
+    </a>
+  )
 
-<b><a href="#installation">Installation</a></b>
-|
-<b><a href="doc/index.md">Docs</a></b>
-|
-<b><a href="CHANGELOG.md">Changelog</a></b>
-|
-<b><a href="#contributing">Contributing</a></b>
+  <br>
+  <br>
 
-(
-<a href="https://waffle.io/alda-lang/alda" alt="Features in Progress">
-  <img src="https://badge.waffle.io/alda-lang/alda.png?label=in%20progress&title=In%20Progress:">
-</a>
-)
-
-<br>
-<br>
-
-<a href="http://slack.alda.io"><img src="http://slack.alda.io/badge.svg" alt="Join us on Slack!"></a> <i>composers chatting</i>
+  <a href="http://slack.alda.io">
+    <img src="http://slack.alda.io/badge.svg" alt="Join us on Slack!">
+  </a>
+  <i>composers chatting</i>
 
 </p>
 
