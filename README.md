@@ -86,7 +86,7 @@ If you're a developer and you'd like to help, come on in -- [the water's fine](#
     g8 f+ e d c < b a g | f+ e d c < b a g4
     << g1/>g/>g/b/>d/g
 
-For more examples, see these [example scores](https://github.com/alda-lang/alda/tree/master/examples).
+For more examples, see these [example scores](https://github.com/alda-lang/alda-core/tree/master/examples).
 
 ## Installation
 
@@ -188,9 +188,13 @@ Alda's documentation can be found [here](doc/index.md).
 
 ## Contributing
 
-PRs welcome! See: [CONTRIBUTING.md](CONTRIBUTING.md)
+We'd love your help -- Pull Requests welcome!
 
-:clap: :clap: :clap: A big shout-out to our [contributors](https://github.com/alda-lang/alda/graphs/contributors)! :clap: :clap: :clap:
+The Alda project is composed of a number of subprojects, each of which has its own GitHub repository within the [alda-lang](https://github.com/alda-lang) organization.
+
+For an overview of what we're working on, take a look at our [waffle.io board](https://waffle.io/alda-lang/alda).
+
+For more details on how you can contribute to Alda, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Support, Discussion, Comaraderie
 

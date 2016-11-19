@@ -6,9 +6,9 @@ Hello! I'm an introductory paragraph, and this is the landing page for Alda's of
 
 * [README](../README.md)
 * [Contributing to Alda](../CONTRIBUTING.md)
-* [Development Guide](development-guide.md)
 * [CHANGELOG (Version History)](../CHANGELOG.md)
-* [Some background on Alda and a tutorial](http://daveyarwood.github.io/alda/2015/09/05/alda-a-manifesto-and-gentle-introduction)
+* [Some background on Alda and a tutorial](http://blog.djy.io/alda-a-manifesto-and-gentle-introduction)
+* [Alda for Clojurists](http://blog.djy.io/alda-for-clojurists)
 
 ## Where to Start
 

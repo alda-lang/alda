@@ -1,4 +1,0 @@
-score         = (non-comment | comment | clj-expr)*
-comment       = <"#"> #".*" <#"(\n|\r|$)+">
-<non-comment> = #"[^\#\(\)]+"
-

@@ -1,6 +1,0 @@
-(* these rules apply to instrument and marker names, but not variable names *)
-
-<acceptable-name> = #"[a-zA-Z]{2}[\w_\-+'()]*"
-name              = acceptable-name ("." acceptable-name)*
-nickname          = <"\""> acceptable-name <"\"">
-

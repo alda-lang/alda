@@ -1,2 +1,0 @@
-event-sequence          = <"["> <ows> events? <ows> <"]">
-

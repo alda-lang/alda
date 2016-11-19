@@ -1,9 +1,0 @@
-(* mandatory whitespace *)
-
-ws        = #"\s+"
-ws-inline = #"[^\S\n\r]+"
-
-(* optional whitespace *)
-
-ows        = #"\s*"
-ows-inline = #"[^\S\n\r]*"
