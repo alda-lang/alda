@@ -16,9 +16,9 @@ The Alda project is composed of a number of subprojects, each of which has its o
 
     This library includes the code that parses and compiles an Alda score into a data format that is "ready to play" by the server.
 
-  - _TODO: create alda-sound-engine-clj vs. keep it in alda-core_
+  - [**alda-sound-engine-clj**](https://github.com/alda-lang/alda-sound-engine-clj) is the part that interprets and plays the fully-realized score.
 
-  - _TODO: create alda-repl-clj vs. keep it in alda-core_
+  - [**alda-repl-clj**](https://github.com/alda-lang/alda-repl-clj) is the Alda **R**ead-**E**val-**P**lay **L**oop. It is currently implemented in Clojure, but will eventually be [rewritten as part of the Java client](https://github.com/alda-lang/alda/issues/154).
 
   - [**alda-lang.github.io**](https://github.com/alda-lang/alda-lang.github.io) is the source code for the [official Alda website](http://alda.io).
 
