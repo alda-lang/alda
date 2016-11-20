@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 1.0.0-rc52 (11/20/16)
+
+### Minor breaking change
+
+* Removed the `voices` (voice group) event, as [bbqbaron] and I figured out that it's not necessary. It turns out that each `voice` event manages its voice group implicitly. For more discussion, see [alda-lang/alda#286](https://github.com/alda-lang/alda/pull/286).
+
+  This change should not be noticeable, unless you have scores with [inline Clojure code](doc/inline-clojure-code.md) that use the `voices` event. Now you can simplify code like that by just writing `voice` events, without having to group them inside of a `voices` event.
+
 ## 1.0.0-rc51 (11/19/16)
 
 This release is technically no different than 1.0.0-rc50, but it's the first release under the new, multi-repository organization of the Alda project. See [#186](https://github.com/alda-lang/alda/issues/186) for more context.
