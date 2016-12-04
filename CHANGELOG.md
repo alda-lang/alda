@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 1.0.0-rc53 (12/3/16)
+
+* Refactored server code to use [ezzmq](https://github.com/daveyarwood/ezzmq) instead of JeroMQ. The server should still function exactly the same.
+
+* Minor bugfix in server shutdown code: in some cases if the timing was just right, a java.util.concurrent.RejectedExecutionException was being thrown, resulting in the server not shutting down cleanly.
+
 ## 1.0.0-rc52 (11/20/16)
 
 ### Minor breaking change
