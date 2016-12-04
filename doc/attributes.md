@@ -116,7 +116,11 @@ cello:
 
   Worth mentioning: if you do ever find yourself needing to set the duration attribute directly, the function you use is `set-duration`, *not* `duration`.
 
-* **Value:** a number of beats (e.g. 2.5, which represents a dotted half note).
+* **Value:** either:
+  - a number of beats (e.g. 2.5, which represents a dotted half note), or
+  - a number of milliseconds
+
+  If the value you provide is a number, it will be intepreted as a number of beats.
 
   Note that this value is a different number than the note value. For example, to set the duration to a quarter note, the value is `1`, not `4`, because a quarter note is 1 beat long:
 
@@ -130,7 +134,13 @@ cello:
   (set-duration (note-length 4))
   ```
 
-* **Initial Value:** 1 (i.e. a quarter note)
+  To specify the duration as a number of milliseconds, use the `ms` function:
+
+  ```
+  (set-duration (ms 2000))
+  ```
+
+* **Initial Value:** `(note-length 4)` (i.e. a quarter note, or 1 beat)
 
 ### `key-signature`
 
