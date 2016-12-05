@@ -13,7 +13,7 @@
 
 (require '[adzerk.boot-jar2bin :refer :all])
 
-(def ^:const +version+ "1.0.0-rc53")
+(def ^:const +version+ "1.0.0-rc54")
 
 (defn- exe-version
   "Convert non-exe-friendly version numbers like 1.0.0-rc1 to four-number
