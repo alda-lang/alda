@@ -4,7 +4,7 @@
                   [org.clojure/clojure   "1.8.0"]
                   [alda/client-java      "0.1.0"]
                   [alda/server-clj       "0.1.1"]
-                  [alda/core             "0.1.1"]
+                  [alda/core             "0.1.2"]
                   [alda/sound-engine-clj "0.1.0"]
                   [alda/repl-clj         "0.1.0"]
 

@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 1.0.0-rc54 (12/5/16)
+
+* Fixed [alda-lang/alda-core#27](https://github.com/alda-lang/alda-core/issues/27), a bug where, when using note durations specified in seconds/milliseconds, the subsequent "default" note duration was not being set.
+
+  Thanks to [damiendevienne] for reporting this bug!
+
 ## 1.0.0-rc53 (12/3/16)
 
 * Refactored server code to use [ezzmq](https://github.com/daveyarwood/ezzmq) instead of JeroMQ. The server should still function exactly the same.
@@ -1134,3 +1140,4 @@ Exit with error code 1 when parsing fails for `alda play` and `alda parse` tasks
 [feldoh]: https://github.com/feldoh
 [jimcheetham]: https://github.com/jimcheetham
 [bbqbaron]: https://github.com/bbqbaron
+[damiendevienne]: https://github.com/damiendevienne
