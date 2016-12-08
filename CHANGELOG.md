@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1.0.0-rc55 (12/7/16)
+
+* Fixed a regression introduced in 1.0.0-rc53. There was a bug causing worker processes not to cycle after suspending the process, e.g. closing and later re-opening your laptop's lid.
+
 ## 1.0.0-rc54 (12/5/16)
 
 * Fixed [alda-lang/alda-core#27](https://github.com/alda-lang/alda-core/issues/27), a bug where, when using note durations specified in seconds/milliseconds, the subsequent "default" note duration was not being set.
