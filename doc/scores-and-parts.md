@@ -93,7 +93,7 @@ This can be useful when you create a group of unnamed instances, and you end up 
     violin/viola/cello "strings": g1~1~1
     strings.cello: < c1~1~1
 
-### Acceptable Nicknames
+### Acceptable Names
 
 Instrument names and nicknames must adhere to the following rules:
 
