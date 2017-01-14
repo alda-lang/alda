@@ -8,23 +8,23 @@
 
 Major thanks to [tobiasriedling] for both fixes!
 
-## 1.0.0-rc55 (12/7/16)
+## 1.0.0-rc55 (2016-12-07)
 
 * Fixed a regression introduced in 1.0.0-rc53. There was a bug causing worker processes not to cycle after suspending the process, e.g. closing and later re-opening your laptop's lid.
 
-## 1.0.0-rc54 (12/5/16)
+## 1.0.0-rc54 (2016-12-05)
 
 * Fixed [alda-lang/alda-core#27](https://github.com/alda-lang/alda-core/issues/27), a bug where, when using note durations specified in seconds/milliseconds, the subsequent "default" note duration was not being set.
 
   Thanks to [damiendevienne] for reporting this bug!
 
-## 1.0.0-rc53 (12/3/16)
+## 1.0.0-rc53 (2016-12-03)
 
 * Refactored server code to use [ezzmq](https://github.com/daveyarwood/ezzmq) instead of JeroMQ. The server should still function exactly the same.
 
 * Minor bugfix in server shutdown code: in some cases if the timing was just right, a java.util.concurrent.RejectedExecutionException was being thrown, resulting in the server not shutting down cleanly.
 
-## 1.0.0-rc52 (11/20/16)
+## 1.0.0-rc52 (2016-11-20)
 
 ### Minor breaking change
 
@@ -32,7 +32,7 @@ Major thanks to [tobiasriedling] for both fixes!
 
   This change should not be noticeable, unless you have scores with [inline Clojure code](doc/inline-clojure-code.md) that use the `voices` event. Now you can simplify code like that by just writing `voice` events, without having to group them inside of a `voices` event.
 
-## 1.0.0-rc51 (11/19/16)
+## 1.0.0-rc51 (2016-11-19)
 
 This release is technically no different than 1.0.0-rc50, but it's the first release under the new, multi-repository organization of the Alda project. See [#186](https://github.com/alda-lang/alda/issues/186) for more context.
 
@@ -40,27 +40,27 @@ This release was built using the new system where each Alda "component" (e.g. th
 
 As a bonus, this new system of organization is a step towards allowing developers to write their own custom Alda components, swap them with the existing ones, and make custom builds.
 
-## 1.0.0-rc50 (11/16/16)
+## 1.0.0-rc50 (2016-11-16)
 
 * Fixed [#255](https://github.com/alda-lang/alda/issues/255). Voices can now be used inside of event sequences and variable definitions.
 
   Thanks, [bbqbaron], for your work on fixing this issue!
 
-## 1.0.0-rc49 (11/12/16)
+## 1.0.0-rc49 (2016-11-12)
 
 * Fixed a small bug where sometimes, using an undefined variable within a variable definition would not result in an error.
 
-## 1.0.0-rc48 (11/12/16)
+## 1.0.0-rc48 (2016-11-12)
 
 * Fixed [#242](https://github.com/alda-lang/alda/issues/242). In rare cases, error messages were sometimes hidden due to the way we were formatting them inside of the function that displays the error message.
 
   Thanks to [bbqbaron] for the PR to fix this issue!
 
-## 1.0.0-rc47 (11/9/16)
+## 1.0.0-rc47 (2016-11-09)
 
 * Fixed [#284](https://github.com/alda-lang/alda/issues/284), bugs related to comment spacing. Thanks [elyisgreat] for reporting!
 
-## 1.0.0-rc46 (11/2/16)
+## 1.0.0-rc46 (2016-11-02)
 
 This release includes improvements to the system that assigns instrument parts and groups in an Alda score ([#249](https://github.com/alda-lang/alda/issues/249)). Thanks, [elyisgreat] and [jimcheetham], for helping to talk me through all the different scenarios!
 
@@ -85,7 +85,7 @@ This release includes improvements to the system that assigns instrument parts a
   strings.cello: g1
   ```
 
-## 1.0.0-rc45 (10/15/16)
+## 1.0.0-rc45 (2016-10-15)
 
 This release includes a handful of behind-the-scenes improvements that will make it easier for us to develop Alda.
 
@@ -99,7 +99,7 @@ This release includes a handful of behind-the-scenes improvements that will make
 
   This message is not currently used during the lifetime of a "production" Alda worker process, but it ended up being useful for the integration test suite.
 
-## 1.0.0-rc44 (10/8/16)
+## 1.0.0-rc44 (2016-10-08)
 
 * The `-v` / `--verbose` option will now provide debug output when starting a `server` or `worker` process in the foreground:
 
@@ -167,13 +167,13 @@ This release includes a handful of behind-the-scenes improvements that will make
   16-Oct-08 16:45:48 skeggox.local DEBUG [alda.worker] - Got HEARTBEAT from server.
   ```
 
-## 1.0.0-rc43 (9/25/16)
+## 1.0.0-rc43 (2016-09-25)
 
 * Tuned JVM performance to use less unnecessary memory and CPU. See issue [#269](https://github.com/alda-lang/alda/issues/269) for more context, but the TL;DR version is that prior to this release, the Alda server and worker processes were each provisioned with more memory and CPU settings than they needed, causing them to wastefully use up memory/CPU resources that your computer could otherwise be using.
 
   Big thanks to [feldoh] for this contribution!
 
-## 1.0.0-rc42 (9/24/16)
+## 1.0.0-rc42 (2016-09-24)
 
 * Implemented an internal "worker status" system so that the Alda client has better visibility into the status of the worker process handling a request to play a score. This only affects the `alda play` command.
 
@@ -194,7 +194,7 @@ This release includes a handful of behind-the-scenes improvements that will make
 
 * To accomplish the above, I had to make a couple of minor adjustments to the ZeroMQ message structure. If you are writing your own Alda client, server, or worker, you may need to adjust the way messages are handled slightly. The Alda [ZeroMQ Architecture](doc/zeromq-architecture.md) doc has been updated to reflect these changes to the message structure.
 
-## 1.0.0-rc41 (9/18/16)
+## 1.0.0-rc41 (2016-09-18)
 
 The focus of this release is to use less CPU when starting an Alda server and worker processes. Thanks to [0atman] for reporting [this issue](https://github.com/alda-lang/alda/issues/266)!
 
@@ -206,11 +206,11 @@ The focus of this release is to use less CPU when starting an Alda server and wo
 
 * Removed the temporary `--cycle-workers` option introduced in 1.0.0-rc39. Now that CPU usage will not be as much of a problem, it is safer to cycle workers by default.
 
-## 1.0.0-rc40 (9/17/16)
+## 1.0.0-rc40 (2016-09-17)
 
 * Bugfix: prior to this release, if evaluating an Alda score resulted in any error, the client would report `ERROR Invalid Alda syntax.`. Now it will report the error message. (This may have been working at some point and then regressed in a recent release. Sorry about that!)
 
-## 1.0.0-rc39 (9/17/16)
+## 1.0.0-rc39 (2016-09-17)
 
 * There is [a CPU usage issue](https://github.com/alda-lang/alda/issues/266) that can cause poor performance when cycling out workers, a feature that was implemented in the last release.
 
@@ -226,7 +226,7 @@ The focus of this release is to use less CPU when starting an Alda server and wo
 
   The change with this release is that the workers will not immediately be replaced upon coming out of suspended state. It would be better if they were immediately replaced, but we will have to fix the CPU usage problem first. (If you're good at profiling / determining the cause of high CPU usage, we could use your help!)
 
-## 1.0.0-rc38 (9/14/16)
+## 1.0.0-rc38 (2016-09-14)
 
 * Fixed issue [#160](https://github.com/alda-lang/alda/issues/160), re: MIDI audio being delayed after suspending and bringing back Alda processes, e.g. after closing and re-opening your laptop lid.
 
@@ -239,13 +239,13 @@ The focus of this release is to use less CPU when starting an Alda server and wo
 
 * Fixed a minor bug where workers may be sending too many heartbeats, potentially resulting in poor performance. Now they should only send heartbeats once per second.
 
-## 1.0.0-rc37 (9/8/16)
+## 1.0.0-rc37 (2016-09-08)
 
 * Continuing from the `ulimit -n`-related `alda up` issues noted in the previous release, this makes it so that we check the number of available workers every 250 ms instead of 100 ms. This does not solve the "Too many open files" issue, but as a workaround it appears to stop the error from happening when your `ulimit -n` is 256 and you're starting the default number (4) of workers.
 
   See issue [#261](https://github.com/alda-lang/alda/issues/261) for further discussion.
 
-## 1.0.0-rc36 (9/5/16)
+## 1.0.0-rc36 (2016-09-05)
 
 This release makes a handful of minor improvements to the way we're managing socket connections. The goal is avoid the `java.io.IOException: Too many open files` error, (issue [#261](https://github.com/alda-lang/alda/issues/261)) which can occur when Alda tries to open more socket connections than your system allows.
 
@@ -259,7 +259,7 @@ I tested this release by setting my `ulimit -n` to 256 and saw some definite imp
 
 > If you have a low `ulimit -n` (256 is quite low; I would recommend 10240 at least) and would like to get better performance from Alda, you can set it higher for your current terminal session by running `ulimit -n 10240`. However, this setting will go away once you close your terminal window, so if you're looking for a more permanent solution, [the Riak docs](https://docs.basho.com/riak/kv/2.1.4/using/performance/open-files-limit/) happen to have an excellent description of how to set your open file limit more permanently.
 
-## 1.0.0-rc35 (9/4/16)
+## 1.0.0-rc35 (2016-09-04)
 
 > Quick TL;DR of what you should do when updating to this release:
 >
@@ -385,7 +385,7 @@ I tested this release by setting my `ulimit -n` to 256 and saw some definite imp
 
 * In anticipation of a future `alda stop` command that will [stop playback](https://github.com/alda-lang/alda/issues/69) instead of stopping the server, the previous `alda stop` command (which would stop the server) has been renamed `alda stop-server`. By analogy, `alda start` has been renamed to `alda start-server` and `alda restart` has been renamed to `alda restart-server`. I recommend using the shorter aliases `alda up`, `alda down` and `alda downup` to start, stop, and restart the server.
 
-## 1.0.0-rc34 (8/23/16)
+## 1.0.0-rc34 (2016-08-23)
 
 * This release adds a few safeguards against inadvertently starting more than one server process for the same port and ending up in a situation where you have potentially many Alda server processes hanging around, only one of which will be able to serve on that port. Thanks to [elyisgreat] for reporting this issue ([#258](https://github.com/alda-lang/alda/issues/258)).
 
@@ -413,7 +413,7 @@ I tested this release by setting my `ulimit -n` to 256 and saw some definite imp
 
     If you wait long enough, the existing server should be up and ready to play scores. You can check the status of the server by running `alda status`.
 
-## 1.0.0-rc33 (8/20/16)
+## 1.0.0-rc33 (2016-08-20)
 
 * Made the server a little more resilient to failure. There are a handful of tasks that are handled in parallel, like setting up the audio systems (e.g. MIDI) for a score. This involves running the tasks in parallel background threads and waiting for them to complete. This works fine when the tasks are successful, but if they fail, then the server ends up waiting forever and needs to be restarted in order to serve any more requests.
 
@@ -423,7 +423,7 @@ I tested this release by setting my `ulimit -n` to 256 and saw some definite imp
 
 * Added more debug logging when running a server in debug mode.
 
-## 1.0.0-rc32 (8/18/16)
+## 1.0.0-rc32 (2016-08-18)
 
 * The major change in this release is that we replaced the internal implementation of the server, previously a resource-intensive HTTP server, with a more lightweight [ZeroMQ](http://zeromq.org) REQ/RES socket. This means lower overhead for the server, which should translate to better performance.
 
@@ -473,7 +473,7 @@ I tested this release by setting my `ulimit -n` to 256 and saw some definite imp
 
   ```
   $ alda score -m | jq '.events[] .offset'
-  666.6666870117188
+  666.666687117188
   2000.0000610351562
   5333.333465576172
   1333.3333740234375
@@ -482,11 +482,11 @@ I tested this release by setting my `ulimit -n` to 256 and saw some definite imp
   4750.00008392334
   ```
 
-## 1.0.0-rc31 (8/12/16)
+## 1.0.0-rc31 (2016-08-12)
 
 * Fixed a bug where the Alda server was spinning its wheels for a long time trying to parse certain scores when played via the command-line.
 
-## 1.0.0-rc30 (8/11/16)
+## 1.0.0-rc30 (2016-08-11)
 
 * Removed the `--pre-buffer` and `--post-buffer` options, as I realized they weren't necessary. For details, see [this issue comment](https://github.com/alda-lang/alda/issues/26#issuecomment-239345440).
 
@@ -496,11 +496,11 @@ I tested this release by setting my `ulimit -n` to 256 and saw some definite imp
 
 * Implemented a minor optimization to the way events are scheduled; earlier events are now given priority scheduling, making it less likely for events to be skipped during playback.
 
-## 1.0.0-rc29 (7/26/16)
+## 1.0.0-rc29 (2016-07-26)
 
 * Fixed a bug where using chords with implicit note duration within a CRAM expression would result in incorrect timing.
 
-## 1.0.0-rc28 (7/25/16)
+## 1.0.0-rc28 (2016-07-25)
 
 More variable-related bugfixes in this release:
 
@@ -510,7 +510,7 @@ More variable-related bugfixes in this release:
 
 Shout-out to [elyisgreat] for finding all these bugs!
 
-## 1.0.0-rc27 (7/24/16)
+## 1.0.0-rc27 (2016-07-24)
 
 * Behind the scenes change: simplified the code that handles getting and setting variables. See [ebf2a4](https://github.com/alda-lang/alda/commit/ebf2a42c78e5be3ef1cbedc4c2579a7bd72d08bb) for more details.
 
@@ -526,7 +526,7 @@ Shout-out to [elyisgreat] for finding all these bugs!
 
   Whereas before this release, the "undefined variable" error would not be thrown until you tried to use `foo` in an instrument part.
 
-## 1.0.0-rc26 (7/24/16)
+## 1.0.0-rc26 (2016-07-24)
 
 * Minor bugfix: in some situations, undefined variables were not being appropriately caught. Now, an error will always be thrown if you try to use a variable that hasn't been defined.
 
@@ -534,7 +534,7 @@ Shout-out to [elyisgreat] for finding all these bugs!
 
 * Defining a previously undefined variable as itself, e.g. `foo = foo` used to trigger a stack overflow. Now it throws an "undefined variable: foo" error, which is more helpful.
 
-## 1.0.0-rc25 (7/23/16)
+## 1.0.0-rc25 (2016-07-23)
 
 ### Breaking Changes
 
@@ -576,7 +576,7 @@ Shout-out to [elyisgreat] for finding all these bugs!
 
   The last two examples are equivalent.
 
-## 1.0.0-rc24 (7/21/16)
+## 1.0.0-rc24 (2016-07-21)
 
 * Refines the behavior of variables when used within the definitions of other variables. The "scope" of a variable is now tracked when it is defined. This makes it possible to do things like this:
 
@@ -604,7 +604,7 @@ Shout-out to [elyisgreat] for finding all these bugs!
 
   Now, trying to use a variable that hasn't been defined results in an error being thrown. This will help score writers catch unintentional bugs caused by misspelling variable names, etc.
 
-## 1.0.0-rc23 (7/18/16)
+## 1.0.0-rc23 (2016-07-18)
 
 * Fixes another bug related to `>` and `<` being used back-to-back without spaces in between.
 
@@ -616,7 +616,7 @@ Shout-out to [elyisgreat] for finding all these bugs!
       (note (pitch x) (ms 100))))
   ```
 
-## 1.0.0-rc22 (7/18/16)
+## 1.0.0-rc22 (2016-07-18)
 
 * The previous release inadvertently made it invalid for a note to be followed immediately (no spaces) by an octave up/down operator, e.g. `c<`. This release makes it acceptable again to do that.
 
@@ -626,7 +626,7 @@ Shout-out to [elyisgreat] for finding all these bugs!
 
 * Because the `=` sign is used to define variables, the natural sign, which used to be `=`, has been changed to `_` to avoid confusion. If you have any scores using naturals, make sure you change the `=`'s to `_`'s to avoid parse errors.
 
-## 1.0.0-rc21 (7/18/16)
+## 1.0.0-rc21 (2016-07-18)
 
 * Variables implemented! This simple, but powerful feature allows you to define named sequences of musical events and refer to them by name. You can even define variables that refer to other variables, giving you the means to build a score out of modular parts. For details, see [the docs](doc/variables.md).
 
@@ -650,11 +650,11 @@ Shout-out to [elyisgreat] for finding all these bugs!
   b4.~ b16~ a~ g~ a
   ```
 
-## 1.0.0-rc20 (6/20/16)
+## 1.0.0-rc20 (2016-06-20)
 
 * Fixed a regression caused by 1.0.0-rc19, which was causing scores not to parse correctly.
 
-## 1.0.0-rc19 (6/19/16)
+## 1.0.0-rc19 (2016-06-19)
 
 * Parsing/playing Alda scores is now significantly faster, thanks to some optimizations to the parser. (Many thanks to [aengelberg] for your help with this!)
 
@@ -694,11 +694,11 @@ Shout-out to [elyisgreat] for finding all these bugs!
 
   This is a trivial change, but I thought I'd mention it just in case anyone runs into it.
 
-## 1.0.0-rc18 (5/28/16)
+## 1.0.0-rc18 (2016-05-28)
 
 * Fixes a bug related to the fix introduced in 1.0.0-rc17. For more details, see [issue #231](https://github.com/alda-lang/alda/issues/231).
 
-## 1.0.0-rc17 (5/21/16)
+## 1.0.0-rc17 (2016-05-21)
 
 * Fixed issue #27. Setting note quantization to 100 or higher no longer causes issues with notes stopping other notes that have the same MIDI note number.
 
@@ -706,11 +706,11 @@ Shout-out to [elyisgreat] for finding all these bugs!
 
       bassoon: o2 (quant 100) a8 b > c+2.
 
-## 1.0.0-rc16 (5/18/16)
+## 1.0.0-rc16 (2016-05-18)
 
 * Fixed issue #228. There was a bug where repeated calls to the same voice were being treated as if they were separate voices. Hat tip to [elyisgreat] for catching this!
 
-## 1.0.0-rc15 (5/15/16)
+## 1.0.0-rc15 (2016-05-15)
 
 * This release includes numerous improvements to the Alda codebase. The primary goal was to make the code easier to understand and more predictable, which will make it possible to improve Alda and add new features at a much faster pace.
 
@@ -789,7 +789,7 @@ Shout-out to [elyisgreat] for finding all these bugs!
 
 * Because Alda event functions no longer work via side effects, inline Clojure code works a bit differently. Basically, you'll just write code that returns one or more Alda events, instead of code that produces side effects (modifying the score) and returns nil. See [entropy.alda](examples/entropy.alda) for an example of the way inline Clojure code works starting with this release.
 
-## 1.0.0-rc14 (4/1/16)
+## 1.0.0-rc14 (2016-04-01)
 
 * Command-specific help text is now available when using the Alda command-line client. ([jgerman])
 
@@ -817,54 +817,54 @@ Shout-out to [elyisgreat] for finding all these bugs!
              Auto-respond 'y' to confirm e.g. score replacement
              Default: false
 
-## 1.0.0-rc13 (3/10/16)
+## 1.0.0-rc13 (2016-03-10)
 
 * Setting quantization to 0 now makes notes silent as expected. (#205, thanks to [elyisgreat] for reporting)
 
-## 1.0.0-rc12 (3/10/16)
+## 1.0.0-rc12 (2016-03-10)
 
 * Improve validation of attribute values to avoid buggy behavior when using invalid values like negative tempos, non-integer octaves, etc. (#195, thanks to [elyisgreat] for reporting and [jgkamat] for fixing)
 
-## 1.0.0-rc11 (3/8/16)
+## 1.0.0-rc11 (2016-03-08)
 
 * Fix parsing bugs related to ending a voice in a voice group with a certain type of event (e.g. Clojure expressions, barlines) followed by whitespace. (#196, #197 - thanks to [elyisgreat] for reporting!)
 
-## 1.0.0-rc10 (2/28/16)
+## 1.0.0-rc10 (2016-02-28)
 
 * Fix parsing bug re: placing an octave change before the slash in a chord instead of after it, e.g. `b>/d/f` (#192 - thanks to [elyisgreat] for reporting!)
 
-## 1.0.0-rc9 (2/21/16)
+## 1.0.0-rc9 (2016-02-21)
 
 * Fix parsing bug re: starting an event sequence with an event sequence. (#187 - Thanks to [heikkil] for reporting!)
 * Fix similar parsing bug re: starting a cram expression with a cram expression.
 
-## 1.0.0-rc8 (2/16/16)
+## 1.0.0-rc8 (2016-02-16)
 
 * You can now update to the latest version of Alda from the command line by running `alda update`. ([jgkamat])
 
 * This will be the last update you have to install manually :)
 
-## 1.0.0-rc7 (2/12/16)
+## 1.0.0-rc7 (2016-02-12)
 
 * Fixed a bug that was happening when using a cram expression inside of a voice. (#184 -- thanks to [jgkamat] for reporting!)
 
-## 1.0.0-rc6 (1/27/16)
+## 1.0.0-rc6 (2016-01-27)
 
 * Fixed a bug where voices were not being parsed correctly in some cases ([#177](https://github.com/alda-lang/alda/pull/177)).
 
-## 1.0.0-rc5 (1/24/16)
+## 1.0.0-rc5 (2016-01-24)
 
 * Added `midi-percussion` instrument. See [the docs](doc/list-of-instruments.md#percussion) for more info.
 
-## 1.0.0-rc4 (1/21/16)
+## 1.0.0-rc4 (2016-01-21)
 
 * Upgraded to the newly released Clojure 1.8.0 and adjusted the way we compile Alda so that we can utilize the new Clojure 1.8.0 feature [direct linking](https://github.com/clojure/clojure/blob/master/changes.md#11-direct-linking). This improves both performance and startup speed significantly.
 
-## 1.0.0-rc3 (1/13/16)
+## 1.0.0-rc3 (2016-01-13)
 
 * Support added for running Alda on systems with Java 7, whereas before it was Java 8 only.
 
-## 1.0.0-rc2 (1/2/16)
+## 1.0.0-rc2 (2016-01-02)
 
 * Alda now uses [JSyn](http://www.softsynth.com/jsyn) for higher precision of note-scheduling by doing it in realtime. This solves a handful of issues, such as [#134][issue133], [#144][issue144], and [#160][issue160]. Performance is probably noticeably better now.
 * Running `alda new` now asks you for confirmation if there are unsaved changes to the score you're about to delete in order to start one.
@@ -884,7 +884,7 @@ Shout-out to [elyisgreat] for finding all these bugs!
 [issue160]: https://github.com/alda-lang/alda/issues/160
 
 
-## 1.0.0-rc1 (12/25/15) :christmas_tree:
+## 1.0.0-rc1 (2015-12-25) :christmas_tree:
 
 * Server/client relationship allows you to run Alda servers in the background and interact with them via a much more lightweight CLI, implemented in Java. Everything is packaged into a single uberjar containing both the server and the client. The client is able to manage/start/stop servers as well as interact with them by handing them Alda code to play, etc.
 * This solves start-up time issues, making your Alda CLI experience much more lightweight and responsive. It still takes a while to start up an Alda server, but now you only have to do it once, and then you can leave the server running in the background, where it will be ready to parse/play code whenever you want, at a moment's notice.
@@ -895,11 +895,11 @@ Shout-out to [elyisgreat] for finding all these bugs!
 
 ---
 
-## 0.14.2 (11/13/15)
+## 0.14.2 (2015-11-13)
 
 * Minor aesthetic fixes to the way errors are reported in the Alda REPL and when using the `alda parse` task.
 
-## 0.14.1 (11/13/15)
+## 0.14.1 (2015-11-13)
 
 * Improved parsing performance, especially noticeable for larger scores. More information [here](https://github.com/alda-lang/alda/issues/143), but the TL;DR version is that we now parse each instrument part individually using separate parsers, and we also make an initial pass of the entire score to strip out comments. This should not be a breaking change; you may notice that it takes less time to parse large scores.
 
@@ -907,7 +907,7 @@ Shout-out to [elyisgreat] for finding all these bugs!
 
 * Minor note that will not affect most users: `alda.parser/parse-input` no longer returns an Instaparse failure object when given invalid Alda code, but instead throws an exception with the Instaparse failure output as a message.
 
-## 0.14.0 (10/20/15)
+## 0.14.0 (2015-10-20)
 
 * [Custom events](doc/inline-clojure-code.md#scheduling-custom-events) can now be scheduled via inline Clojure code.
 
@@ -915,7 +915,7 @@ Shout-out to [elyisgreat] for finding all these bugs!
 
 ---
 
-## 0.13.0 (10/16/15)
+## 0.13.0 (2015-10-16)
 
 * Note lengths can now be optionally specified in seconds (`c2s`) or milliseconds (`c2000ms`).
 
@@ -923,29 +923,29 @@ Shout-out to [elyisgreat] for finding all these bugs!
 
 ---
 
-## 0.12.4 (10/15/15)
+## 0.12.4 (2015-10-15)
 
 * Added `:quit` to the list of commands available when you type `:help`.
 
-## 0.12.3 (10/15/15)
+## 0.12.3 (2015-10-15)
 
 * There is now a help system in the Alda REPL. Enter `:help` to see all available commands, or `:help <command>` for additional information about a command.
 
-## 0.12.2 (10/13/15)
+## 0.12.2 (2015-10-13)
 
 * Fix bug re: nested CRAM rhythms. (#124)
 
-## 0.12.1 (10/8/15)
+## 0.12.1 (2015-10-08)
 
 * Fix minor bug in Alda REPL where ConsoleReader was trying to expand `!` characters like bash does. (#125)
 
-## 0.12.0 (10/6/15)
+## 0.12.0 (2015-10-06)
 
 * [CRAM](doc/cram.md), a fun way to represent advanced rhythms ([crisptrutski]/[daveyarwood])
 
 ---
 
-## 0.11.0 (10/5/15)
+## 0.11.0 (2015-10-05)
 
 * Implemented code block literals, which don't do anything yet, but will pave the way for features like repeats.
 
@@ -953,26 +953,26 @@ Shout-out to [elyisgreat] for finding all these bugs!
 
 ---
 
-## 0.10.4 (10/5/15)
+## 0.10.4 (2015-10-05)
 
 * Bugfix (#120), don't allow negative note lengths.
 
 * Handy `alda script` task allows you to print the latest alda script to STDOUT, so you can pipe it to wherever you keep it on your `$PATH`, e.g. `alda script > /usr/local/bin/alda`.
 
-## 0.10.3 (10/4/15)
+## 0.10.3 (2015-10-04)
 
 * Fix edge case regression caused by the 0.10.2.
 
-## 0.10.2 (10/4/15)
+## 0.10.2 (2015-10-04)
 
 * Fix bug in playback `from`/`to` options where playback would always start at offset 0, instead of whenever the first note in the playback slice comes in.
 
-## 0.10.1 (10/4/15)
+## 0.10.1 (2015-10-04)
 
 * Fix bug where playback hangs if no instruments are defined (#114)
   May have also caused lock-ups in other situations also.
 
-## 0.10.0 (10/3/15)
+## 0.10.0 (2015-10-03)
 
 * `from` and `to` arguments allow you to play from/to certain time markings (e.g. 1:02 for 1 minute, 2 seconds in) or markers. This works both from the command-line (`alda play --from 0:02 --to myMarker`) and in the Alda REPL (`:play from 0:02 to myMarker`). ([crisptrutski])
 
@@ -998,13 +998,13 @@ Shout-out to [elyisgreat] for finding all these bugs!
 
 ---
 
-## 0.9.0 (10/1/15)
+## 0.9.0 (2015-10-01)
 
 * Implemented panning via the `panning` attribute.
 
 ---
 
-## 0.8.0 (9/30/15)
+## 0.8.0 (2015-09-30)
 
 * Added the ability to specify a key signature via the `key-signature` attribute. Accidentals can be left off of notes if they are in the key signature. See [the docs](doc/attributes.md#key-signature) for more info on how to use key signatures. ([FragLegs]/[daveyarwood])
 
@@ -1012,11 +1012,11 @@ Shout-out to [elyisgreat] for finding all these bugs!
 
 ---
 
-## 0.7.1 (9/26/15)
+## 0.7.1 (2015-09-26)
 
 * Fixed a couple of bugs around inline Clojure code. ([crisptrutski])
 
-## 0.7.0 (9/25/15)
+## 0.7.0 (2015-09-25)
 
 ### New features
 
@@ -1033,48 +1033,48 @@ To preserve backwards compatibility, attributes still work the same way -- they 
 
 ---
 
-## 0.6.4 (9/22/15)
+## 0.6.4 (2015-09-22)
 
 * Bugfix: parsing no longer fails when following a voice group with an instrument call.
 
-## 0.6.3 (9/19/15)
+## 0.6.3 (2015-09-19)
 
 * Fixed another regression caused by 0.6.1 -- tying notes across barlines was no longer working because the barlines were evaluating to `nil` and throwing a wrench in duration calculation.
 
 * Added a `--tree` flag to the `alda parse` task, which prints the intermediate parse tree before being transformed to alda.lisp code.
 
-## 0.6.2 (9/18/15)
+## 0.6.2 (2015-09-18)
 
 * Fixed a regression caused by 0.6.1 -- the `barline` function in `alda.lisp.events.barline` wasn't actually being loaded into `alda.lisp`. Also, add debug log that this namespace was loaded into `alda.lisp`.
 
-## 0.6.1 (9/17/15)
+## 0.6.1 (2015-09-17)
 
 * Bar lines are now parsed as events (events that do nothing when evaluated) instead of comments; this is done in preparation for being able to generate visual scores.
 
-## 0.6.0 (9/11/15)
+## 0.6.0 (2015-09-11)
 
 * Alda REPL `:play` command -- plays the current score from the beginning. ([crisptrutski]/[daveyarwood])
 
 ---
 
-## 0.5.4 (9/10/15)
+## 0.5.4 (2015-09-10)
 
 * Allow quantization > 100% for overlapping notes. ([crisptrutski])
 
-## 0.5.3 (9/10/15)
+## 0.5.3 (2015-09-10)
 
 Exit with error code 1 when parsing fails for `alda play` and `alda parse` tasks. ([MadcapJake])
 
-## 0.5.2 (9/9/15)
+## 0.5.2 (2015-09-09)
 
 * Bugfix: add any pre-buffer time to the synchronous wait time -- keeps scores from ending prematurely when using the `alda play` task.
 * Grammar improvement: explicit `octave-set`, `octave-up` and `octave-down` tokens instead of one catch-all `octave-change` token. ([crisptrutski][crisptrutski])
 
-## 0.5.1 (9/8/15)
+## 0.5.1 (2015-09-08)
 
 * Pretty-print the results of the `alda parse` task.
 
-## 0.5.0 (9/7/15)
+## 0.5.0 (2015-09-07)
 
 * New Alda REPL commands:
   * `:load` loads a score from a file.
@@ -1083,28 +1083,28 @@ Exit with error code 1 when parsing fails for `alda play` and `alda parse` tasks
 
 ---
 
-## 0.4.5 (9/7/15)
+## 0.4.5 (2015-09-07)
 
 * Turn off debug logging by default. WARN is the new default debug level.
 * Debug level can be explicitly set via the `TIMBRE_LEVEL` environment variable.
 
-## 0.4.4 (9/6/15)
+## 0.4.4 (2015-09-06)
 
 * Bugfix/backwards compatibility: don't use Clojure 1.7 `update` command.
 
-## 0.4.3 (9/5/15)
+## 0.4.3 (2015-09-05)
 
 * Don't print the score when exiting the REPL (preparing for the `:score` REPL command which will print the score whenever you want.
 
-## 0.4.2 (9/4/15)
+## 0.4.2 (2015-09-04)
 
 * `help` and `version` tasks moved to the top of help text
 
-## 0.4.1 (9/4/15)
+## 0.4.1 (2015-09-04)
 
 * `alda help` command
 
-## 0.4.0 (9/3/15)
+## 0.4.0 (2015-09-03)
 
 * `alda` executable script
 * version number now stored in `alda.version`
@@ -1112,17 +1112,17 @@ Exit with error code 1 when parsing fails for `alda play` and `alda parse` tasks
 
 ---
 
-## 0.3.0 (9/1/15)
+## 0.3.0 (2015-09-01)
 
 * Long comment syntax changed from `#{ this }` to `(* this *)`.
 
 ---
 
-## 0.2.1 (8/31/15)
+## 0.2.1 (2015-08-31)
 
 * `alda play` task now reports parse errors.
 
-## 0.2.0 (8/30/15)
+## 0.2.0 (2015-08-30)
 
 * `alda.sound/play!` now automatically determines the audio types needed for a score, making `alda.sound/set-up! <type>` optional.
 
@@ -1130,11 +1130,11 @@ Exit with error code 1 when parsing fails for `alda play` and `alda parse` tasks
 
 ---
 
-## 0.1.1 (8/28/15)
+## 0.1.1 (2015-08-28)
 
 * Minor bugfix, `track-volume` attribute was not being included in notes due to a typo.
 
-## 0.1.0 (8/27/15)
+## 0.1.0 (2015-08-27)
 
 * "Official" first release of Alda. Finally deployed to clojars, after ~3 years of tinkering.
 
