@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 1.0.0-rc56 (2017-01-14)
+
+* Fixed 2 bugs re: `alda list` output:
+  * It didn't work correctly on non-OS X systems like Ubuntu due to differences in the `ps` command across Unix distributions.
+  * Fixed buggy output when running multiple Alda servers ([#4](https://github.com/alda-lang/alda-client-java/issues/4)).
+
+Major thanks to [tobiasriedling] for both fixes!
+
 ## 1.0.0-rc55 (12/7/16)
 
 * Fixed a regression introduced in 1.0.0-rc53. There was a bug causing worker processes not to cycle after suspending the process, e.g. closing and later re-opening your laptop's lid.
@@ -1145,3 +1153,5 @@ Exit with error code 1 when parsing fails for `alda play` and `alda parse` tasks
 [jimcheetham]: https://github.com/jimcheetham
 [bbqbaron]: https://github.com/bbqbaron
 [damiendevienne]: https://github.com/damiendevienne
+[tobiasriedling]: https://github.com/tobiasriedling
+
