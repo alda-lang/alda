@@ -1,18 +1,7 @@
-```
-                                       ________________________________
-                                      /    o   oooo ooo oooo   o o o  /\
-                                     /    oo  ooo  oo  oooo   o o o  / /
-                                    /    _________________________  / /
-                                   / // / // /// // /// // /// / / / /
-                                  /___ //////////////////////////_/ /
-                                  \____\________________________\_\/
-
-                                               ~ alda ~
-```
-
-<h2 align=center>a music programming language for musicians</h2>
-
 <p align="center">
+  <img src="alda-logo.png" alt="alda logo">
+
+  <h2 align=center>a music programming language for musicians</h2>
 
   <b><a href="#installation">Installation</a></b>
   |
