@@ -46,7 +46,9 @@ Asks the server to play a string of Alda code.
 
 Options include `from` and `to` strings, representing minute/second markings or score marker names directing the server where in the score to start/end. (When omitted, the score will default to the beginning and end of the score.)
 
-#### Example
+Another option is to supply a `history` string of Alda code, representing the score so far up until the current moment in time. The `body` then represents any new notes/events, starting now. This can be useful for implementing an alternate Alda client, for example to implement a text editor plugin. When `history` is supplied, the entire score (i.e. `history` + `body`) is parsed and evaluated for context, but only the `body` is played.
+
+#### Examples
 
 ```json
 {
@@ -55,6 +57,16 @@ Options include `from` and `to` strings, representing minute/second markings or 
   "options": {
     "from": "chorus",
     "to": "5:55"
+  }
+}
+```
+
+```json
+{
+  "command": "play",
+  "body": "g a b > c",
+  "options": {
+    "history": "piano: (tempo 200) c8 d e f"
   }
 }
 ```

@@ -86,7 +86,7 @@ For more examples, see these [example scores](https://github.com/alda-lang/alda-
 
 * Make the file executable:
 
-        chmod +x alda
+      chmod +x alda
 
 * Make `alda` available on your `$PATH`:
 
