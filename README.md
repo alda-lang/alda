@@ -3,6 +3,7 @@
 
   <h2 align=center>a music programming language for musicians</h2>
 
+  <p align="center">
   <b><a href="#installation">Installation</a></b>
   |
   <b><a href="doc/index.md">Docs</a></b>
@@ -10,21 +11,20 @@
   <b><a href="CHANGELOG.md">Changelog</a></b>
   |
   <b><a href="#contributing">Contributing</a></b>
-
   (
-    <a href="https://waffle.io/alda-lang/alda" alt="Features in Progress">
-      <img src="https://badge.waffle.io/alda-lang/alda.png?label=in%20progress&title=In%20Progress:">
-    </a>
+  <a href="https://waffle.io/alda-lang/alda" alt="Features in Progress">
+    <img src="https://badge.waffle.io/alda-lang/alda.png?label=in%20progress&title=In%20Progress:">
+  </a>
   )
 
   <br>
   <br>
 
   <a href="http://slack.alda.io">
-    <img src="http://slack.alda.io/badge.svg" alt="Join us on Slack!">
+  <img src="http://slack.alda.io/badge.svg" alt="Join us on Slack!">
   </a>
   <i>composers chatting</i>
-
+  </p>
 </p>
 
 *New to Alda? You may be interested in reading [this blog post][alda-blog-post] as an introduction.*
@@ -86,7 +86,7 @@ For more examples, see these [example scores](https://github.com/alda-lang/alda-
 
 * Make the file executable:
 
-      chmod +x alda
+        chmod +x alda
 
 * Make `alda` available on your `$PATH`:
 
