@@ -1,5 +1,7 @@
 <p align="center">
-  <img src="alda-logo.png" alt="alda logo">
+  <a href="http://alda.io">
+    <img src="alda-logo.png" alt="alda logo">
+  </a>
 
   <h2 align=center>a music programming language for musicians</h2>
 
