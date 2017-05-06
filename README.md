@@ -15,7 +15,7 @@
   <b><a href="#contributing">Contributing</a></b>
   (
   <a href="https://waffle.io/alda-lang/alda" alt="Features in Progress">
-    <img src="https://badge.waffle.io/alda-lang/alda.png?label=in%20progress&title=In%20Progress:">
+    <img src="https://img.shields.io/waffle/label/alda-lang/alda/in%20progress.svg">
   </a>
   )
 
