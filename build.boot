@@ -3,9 +3,9 @@
                   [adzerk/boot-jar2bin   "1.1.0" :scope "test"]
                   [org.clojure/clojure   "1.8.0"]
                   [alda/client-java      "0.1.1"]
-                  [alda/server-clj       "0.1.2"]
+                  [alda/server-clj       "0.1.4"]
                   [alda/core             "0.1.2"]
-                  [alda/sound-engine-clj "0.1.0"]
+                  [alda/sound-engine-clj "0.1.2"]
                   [alda/repl-clj         "0.1.0"]
 
                   ; silence slf4j logging dammit
