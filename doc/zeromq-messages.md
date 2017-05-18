@@ -163,7 +163,7 @@ Asks the server for its Alda version number.
 ### Example Response
 
 ```json
-{"success": true, "pending": false, "body": "playing"}
+{"success": true, "pending": false, "body": "parsing"}
 ```
 
 ## See Also
