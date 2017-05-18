@@ -79,6 +79,11 @@ Another option is to supply a `history` string of Alda code, representing the sc
 
 Asks a worker for its current status, e.g. parsing a score, playing a score, done.
 
+The `body` of the response is a string like "parsing," "available," etc.
+
+In addition, the response may contain a `score` key, whose value is a JSON
+object representing the score data resulting from parsing the Alda code.
+
 > Note that this message is sent not to the server, but to a specific worker. To do this, you add an extra frame with the worker's address. For more details, see [ZeroMQ Architecture#Message Structure](zeromq-architecture.md#message-structure).
 
 #### Example
