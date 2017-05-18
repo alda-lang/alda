@@ -81,6 +81,12 @@ Asks a worker for its current status, e.g. parsing a score, playing a score, don
 
 The `body` of the response is a string like "parsing," "available," etc.
 
+There is also a `pending` key in the response, which is `true` or `false` to
+indicate whether there is still more work to be done. As playback is
+asynchronous, the playback process is effectively "done" (meaning the client can
+stop querying for status) when playback has started, even if playback hasn't
+finished.
+
 In addition, the response may contain a `score` key, whose value is a JSON
 object representing the score data resulting from parsing the Alda code.
 
