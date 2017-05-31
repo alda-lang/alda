@@ -15,14 +15,14 @@ improving, and we're getting ever closer to a 1.0.0 release!
   Clojure runtime has an unpleasantly long start-up time, making it not
   well-suited for command-line applications.
 
-  We've solved this problem in Alda by architecting it as a client/server system
-  The server is a Clojure process that runs in the background and does all of
-  the hard work of parsing, building, and playing musical scores written in the
-  Alda language. Meanwhile, the Alda client is a lightweight Java program that
-  is quick to start. This is nothing new; Alda has had this architecture since
-  December 2015. It is what allows you to play an Alda score almost immediately
-  from the command-line. One goal of Alda is to be snappy -- to let you type
-  some code and hear it within seconds, allowing you to compose music
+  We've solved this problem in Alda by architecting it as a client/server
+  system. The server is a Clojure process that runs in the background and does
+  all of the hard work of parsing, building, and playing musical scores written
+  in the Alda language. Meanwhile, the Alda client is a lightweight Java program
+  that is quick to start. This is nothing new; Alda has had this architecture
+  since December 2015. It is what allows you to play an Alda score almost
+  immediately from the command-line. One goal of Alda is to be snappy -- to let
+  you type some code and hear it within seconds, allowing you to compose music
   spontaneously in your text editor.
 
   Until now, though, the Alda REPL has been cumbersome to start because it did
