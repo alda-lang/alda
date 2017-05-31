@@ -8,7 +8,7 @@ If you are new to ZeroMQ, the [ZeroMQ Guide](http://zguide.zeromq.org/page:all) 
 
 The official Alda client, server, and workers use [JeroMQ](https://github.com/zeromq/jeromq), a pure Java implementation of libzmq that is compatible with (non-Java, native) ZeroMQ. If you are writing your own Alda client, server, or worker, you do not need to use JeroMQ in order to communicate with the existing implementations of these components. As long as you are using a compatible version of libzmq, your implementation should be compatible.
 
-We are using JeroMQ 0.3.5, which is based on libzmq 3.2.5 (version string "3.2.5", version int 30205). The transport protocol is ZMTP/2.0.
+We are using JeroMQ 0.4.0, which is based on libzmq 4.1.7. The transport protocol is ZMTP/3.0.
 
 ## Overview
 

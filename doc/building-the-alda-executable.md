@@ -16,9 +16,7 @@ Knowledge is Power. :bulb:
 
       brew install launch4j
 
-* [Java Development Kit 7](http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html) is needed in order to create executables that will run on systems that have Java 7+.
-
-  After installing JDK7, set the environment variable `JDK7_BOOTCLASSPATH` to the path to your JDK7 classpath jar. This location will vary depending on your OS. On my Mac, the path is `/Library/Java/JavaVirtualMachines/jdk1.7.0_71.jdk/Contents/Home/jre/lib/rt.jar`.
+  Java Development Kit (JDK) 8 is needed.
 
 ## The `boot build` task
 

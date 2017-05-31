@@ -8,7 +8,7 @@
 
 Asks the server to parse a string of Alda code.
 
-Options include `as`, which can be one of `lisp` or `map`, indicating whether the score should be parsed into [`alda.lisp`](alda-lisp.md) code or the final map of score data. When omitted, the default behavior is to parse as `lisp` code.
+The result returned by the server is a JSON object representing the score data.
 
 #### Example
 
@@ -16,9 +16,6 @@ Options include `as`, which can be one of `lisp` or `map`, indicating whether th
 {
   "command": "parse",
   "body": "piano: c8 d e f g2",
-  "options": {
-    "as": "map"
-  }
 }
 ```
 
@@ -48,6 +45,10 @@ Options include `from` and `to` strings, representing minute/second markings or 
 
 Another option is to supply a `history` string of Alda code, representing the score so far up until the current moment in time. The `body` then represents any new notes/events, starting now. This can be useful for implementing an alternate Alda client, for example to implement a text editor plugin. When `history` is supplied, the entire score (i.e. `history` + `body`) is parsed and evaluated for context, but only the `body` is played.
 
+The `jobId` option is used internally to differentiate one score from another
+and coordinate with the server that the client and server are both talking about
+the same score.
+
 #### Examples
 
 ```json
@@ -56,7 +57,8 @@ Another option is to supply a `history` string of Alda code, representing the sc
   "body": "piano: c8 d e f g2",
   "options": {
     "from": "chorus",
-    "to": "5:55"
+    "to": "5:55",
+    "jobId": "ba2a6924-45aa-11e7-a919-92ebcb67fe33"
   }
 }
 ```
@@ -66,7 +68,8 @@ Another option is to supply a `history` string of Alda code, representing the sc
   "command": "play",
   "body": "g a b > c",
   "options": {
-    "history": "piano: (tempo 200) c8 d e f"
+    "history": "piano: (tempo 200) c8 d e f",
+    "jobId": "c2d43f32-45aa-11e7-a919-92ebcb67fe33"
   }
 }
 ```
@@ -78,6 +81,11 @@ Another option is to supply a `history` string of Alda code, representing the sc
 #### Description
 
 Asks a worker for its current status, e.g. parsing a score, playing a score, done.
+
+The `jobId` option is used internally to differentiate one score from another
+and coordinate with the server that the client and server are both talking about
+the same score. The client should use the same `jobId` that it supplied when it
+submitted the `play` request for the score.
 
 The `body` of the response is a string like "parsing," "available," etc.
 
@@ -95,7 +103,12 @@ object representing the score data resulting from parsing the Alda code.
 #### Example
 
 ```json
-{"command": "play-status"}
+{
+  "command": "play-status",
+  "options": {
+    "jobId": "c2d43f32-45aa-11e7-a919-92ebcb67fe33"
+  }
+}
 ```
 
 ---

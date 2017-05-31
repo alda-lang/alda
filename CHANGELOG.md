@@ -1,5 +1,121 @@
 # CHANGELOG
 
+## 1.0.0-rc57 (2017-05-30)
+
+This is a big release, packed with exciting features. Things are rapidly
+improving, and we're getting ever closer to a 1.0.0 release!
+
+### New Features
+
+* The Alda REPL has been rewritten from the ground-up as a client-side
+  application that talks to the Alda server.
+
+  Prior to this release, the Alda REPL was a [standalone application written in
+  Clojure](https://github.com/alda-lang/alda-repl-clj). Unfortunately, the
+  Clojure runtime has an unpleasantly long start-up time, making it not
+  well-suited for command-line applications.
+
+  We've solved this problem in Alda by architecting it as a client/server system
+  The server is a Clojure process that runs in the background and does all of
+  the hard work of parsing, building, and playing musical scores written in the
+  Alda language. Meanwhile, the Alda client is a lightweight Java program that
+  is quick to start. This is nothing new; Alda has had this architecture since
+  December 2015. It is what allows you to play an Alda score almost immediately
+  from the command-line. One goal of Alda is to be snappy -- to let you type
+  some code and hear it within seconds, allowing you to compose music
+  spontaneously in your text editor.
+
+  Until now, though, the Alda REPL has been cumbersome to start because it did
+  not participate in the client/server system. After running `alda repl`, you
+  would have to wait a good while (just long enough to be annoying) as the
+  Clojure runtime finished loading and the program set up the audio environment.
+  This felt less than snappy, and snappiness is what we strive for in a
+  command-line application like Alda.
+
+  The new REPL is a faithful reproduction of the old one, but rewritten as a
+  Java frontend to the Clojure backend. The REPL is quick to start, being a
+  simple Java program, and provided that you have an Alda server running in the
+  background (via the `alda up` command), you can start typing Alda code right
+  away and hearing each line played back immediately.
+
+  If you aren't already in the habit of having an Alda server running in the
+  background, now might be a good time to start. With our new REPL
+  implementation and its fast startup time, it is refreshing to be able to type
+  `alda repl` anytime you want and immediately start writing music in Alda in an
+  interactive environment.
+
+  The new Alda REPL is, admittedly, still a little bit rough around the edges.
+  Please bear with us! We are working to make the experience more comfortable as
+  rapidly as we can. As always, feel free to [join us in Slack][slack] and let
+  us know what you think of the new REPL and how we can improve it.
+
+* Alda's parser has also been rewritten from the ground up with a special focus
+  on performance and the ability to parse scores in an asynchronous, streaming
+  fashion.
+
+  You should already notice a big improvement in the time it takes to parse
+  larger scores, and thanks to the ability to parse scores asynchronously, we
+  may be able to speed up parse times even more in the future.
+
+  Because this is a complete rewrite of the parser, it's likely that there are a
+  number of subtle bugs or, at least, things that work differently than before.
+  If you encounter any problems, please let us know so that we can fix them!
+
+* The `alda play` command now takes an optional `--history` option, which can be
+  used to provide a string of Alda code to be used as context for the string or
+  file that you are currently playing.
+
+  For example:
+
+  ```
+  $ alda play --history "trumpet: (tempo 200) c8 d e" --code "f g a b > c"
+  ```
+
+  The command above will result in the notes f g a b > c being played as eighth notes, on a trumpet, at 200 bpm.
+
+  This feature was developed out of necessity for the new Alda REPL, and it may
+  not be immediately useful for most Alda composers, but we are exposing as a
+  convenience for anyone who is interested in writing an Alda editor plugin or
+  another type of frontend for Alda.
+
+### Bug Fixes
+
+* Rewriting the parser also enabled us to fix [longstanding
+  issues](https://github.com/alda-lang/alda-core/issues/12) where if a score
+  failed to parse, the error messages would sometimes be misleading and/or
+  include incorrect line and column numbers.
+
+  Error messages are now easier to understand, and they include correct line and
+  column numbers that point you to the exact location in your score where there
+  was a syntax error or other issue.
+
+* You are now less likely to run into a weird bug that can happen when you have
+  an Alda server running and you suspend your system (e.g. close the laptop lid)
+  and then resume it. The bug causes MIDI playback to be delayed by a number of
+  seconds; [this is a bug in
+  Java](https://bugs.openjdk.java.net/browse/JDK-8164300), which makes it
+  difficult for us to fix it at the source.
+
+  While it is still possible to encounter this strange behavior, we now have a
+  good workaround where the server is regularly replacing the processes that
+  perform the scores with fresh, new ones. It is now the case that if your
+  computer has been out of suspend mode for 20 minutes or more, you should not
+  experience the delayed playback bug.
+
+### Breaking Changes
+
+* Because of the parser rewrite, we do not currently have a way to generate
+  `alda.lisp` code. This used to be the default behavior of the `alda parse`
+  command, which now returns the score JSON by default.
+
+  Generating `alda.lisp` code is now a deprecated feature.
+
+* The Alda client now requires Java 8 or higher. Chances are, if you have a
+  fairly recent operating system, you already have a new enough version of Java.
+  You can verify your version of Java by running `java -version`. If your
+  version of Java is earlier than 1.8 (i.e. Java 7 or below), you can [download
+  the latest version of Java](https://www.java.com/en/download).
+
 ## 1.0.0-rc56 (2017-01-14)
 
 * Fixed 2 bugs re: `alda list` output:
@@ -912,3 +1028,4 @@ Shout-out to [elyisgreat] for finding all these bugs!
 [damiendevienne]: https://github.com/damiendevienne
 [tobiasriedling]: https://github.com/tobiasriedling
 
+[slack]: http://slack.alda.io
