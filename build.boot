@@ -4,7 +4,7 @@
                   [org.clojure/clojure   "1.8.0"]
                   [alda/client-java      "0.2.0"]
                   [alda/server-clj       "0.3.0"]
-                  [alda/core             "0.2.1"]
+                  [alda/core             "0.2.2"]
                   [alda/sound-engine-clj "0.2.0"]
 
                   ; silence slf4j logging dammit
@@ -12,7 +12,7 @@
 
 (require '[adzerk.boot-jar2bin :refer :all])
 
-(def ^:const +version+ "1.0.0-rc57")
+(def ^:const +version+ "1.0.0-rc58")
 
 (defn- exe-version
   "Convert non-exe-friendly version numbers like 1.0.0-rc1 to four-number

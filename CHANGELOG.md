@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 1.0.0-rc58 (2017-05-31)
+
+* Fixed [a bug](https://github.com/alda-lang/alda-core/issues/41), where `r`
+  followed by e.g. `]` would trigger a parser error.
+
 ## 1.0.0-rc57 (2017-05-30)
 
 This is a big release, packed with exciting features. Things are rapidly
