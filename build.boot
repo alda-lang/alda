@@ -2,7 +2,7 @@
   :dependencies '[; build
                   [adzerk/boot-jar2bin   "1.1.0" :scope "test"]
                   [org.clojure/clojure   "1.8.0"]
-                  [alda/client-java      "0.2.0"]
+                  [alda/client-java      "0.3.0"]
                   [alda/server-clj       "0.3.0"]
                   [alda/core             "0.2.2"]
                   [alda/sound-engine-clj "0.2.0"]
@@ -12,7 +12,7 @@
 
 (require '[adzerk.boot-jar2bin :refer :all])
 
-(def ^:const +version+ "1.0.0-rc58")
+(def ^:const +version+ "1.0.0-rc59")
 
 (defn- exe-version
   "Convert non-exe-friendly version numbers like 1.0.0-rc1 to four-number
