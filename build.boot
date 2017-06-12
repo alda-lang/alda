@@ -50,7 +50,7 @@
            :main      'alda.Main
            :version   (exe-version +version+)
            :desc      "A music programming language for musicians"
-           :copyright "2016 Dave Yarwood et al"
+           :copyright "2017 Dave Yarwood et al"
            :jvm-opt   jvm-opts}
 
   target  {:dir #{"target"}})
