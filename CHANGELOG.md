@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## 1.0.0-rc60 (2017-06-11)
+
+Now, at long last, you can stop playback without restarting the server!
+
+Simply run `alda stop` at the command line or `:stop` in the Alda REPL.
+
+"Pause / resume" functionality is a TODO item, as it will be a little tricky to
+implement. It's coming, though! For now, running `:play` after you run `:stop`
+will start playback from the beginning of the score again.
+
 ## 1.0.0-rc59 (2017-06-05)
 
 This release adds a bunch of features and improvements to the new, faster Alda

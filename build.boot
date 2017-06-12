@@ -2,17 +2,17 @@
   :dependencies '[; build
                   [adzerk/boot-jar2bin   "1.1.0" :scope "test"]
                   [org.clojure/clojure   "1.8.0"]
-                  [alda/client-java      "0.3.0"]
-                  [alda/server-clj       "0.3.0"]
+                  [alda/client-java      "0.3.1"]
+                  [alda/server-clj       "0.3.1"]
                   [alda/core             "0.2.2"]
-                  [alda/sound-engine-clj "0.2.0"]
+                  [alda/sound-engine-clj "0.3.0"]
 
                   ; silence slf4j logging dammit
                   [org.slf4j/slf4j-nop "1.7.25"]])
 
 (require '[adzerk.boot-jar2bin :refer :all])
 
-(def ^:const +version+ "1.0.0-rc59")
+(def ^:const +version+ "1.0.0-rc60")
 
 (defn- exe-version
   "Convert non-exe-friendly version numbers like 1.0.0-rc1 to four-number
