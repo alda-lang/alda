@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## 1.0.0-rc61 (2017-06-22)
+
+* Fixed a bug where running `alda stop` (or `:stop` in the Alda REPL) would not
+  stop sound on every channel.
+
+* Fixed a bug where if an error occurs while trying to download a new version of
+  Alda, the client would incorrectly report that the update was successful.
+
+* Fixed a bug where, when reading Alda code from STDIN, newlines were omitted.
+  This could break scores in some cases, e.g. scores containing single-line
+  variable definitions.
+
+* Minor improvements to error handling. In some cases, parse errors were being
+  swallowed.
+
 ## 1.0.0-rc60 (2017-06-11)
 
 Now, at long last, you can stop playback without restarting the server!
