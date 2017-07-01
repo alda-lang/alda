@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## 1.0.0-rc62 (2017-07-01)
+
+* Prior to this release, the client would almost always exit with an exit code
+  of 0, even if there was an error of some kind.
+
+  Starting with this release, Alda has a handful of meaningful [exit codes](https://github.com/alda-lang/alda-client-java/blob/master/src/alda/error/ExitCode.java). Crucially, there is now a distinction between 0 (success) and non-0 (error/failure).
+
+* Minor improvements to a handful of error messages.
+
 ## 1.0.0-rc61 (2017-06-22)
 
 * Fixed a bug where running `alda stop` (or `:stop` in the Alda REPL) would not
