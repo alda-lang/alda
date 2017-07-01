@@ -144,7 +144,7 @@ To replace the default soundfont on a Windows OS:
 2. Make a new folder named `audio`.
 3. Copy any `.sf2` file into this folder.
 
-A variety of popular freeware soundfonts, including FluidR3, are available for download [here](https://musescore.org/en/handbook/soundfont#list).
+A variety of popular freeware soundfonts, including FluidR3, are available for download [here](https://musescore.org/en/handbook/soundfonts#list).
 
 ### Editor Plugins
 
