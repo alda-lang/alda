@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## 1.0.0-rc62 (2017-07-01)
+## 1.0.0-rc63 (2017-07-07)
 
 * Prior to this release, the client would almost always exit with an exit code
   of 0, even if there was an error of some kind.
@@ -8,6 +8,14 @@
   Starting with this release, Alda has a handful of meaningful [exit codes](https://github.com/alda-lang/alda-client-java/blob/master/src/alda/error/ExitCode.java). Crucially, there is now a distinction between 0 (success) and non-0 (error/failure).
 
 * Minor improvements to a handful of error messages.
+
+* Running `alda update` has been known not to work on Windows because of
+  limitations of the OS: Windows apparently will not let you download a new
+  version of a program to replace the program while it is running.
+
+  As a workaround, if your OS is Windows and you run `alda update`, we now print
+  detailed instructions with a command to run in your terminal that will update
+  alda.exe. (Thanks, [jgkamat]!)
 
 ## 1.0.0-rc61 (2017-06-22)
 

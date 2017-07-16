@@ -1,8 +1,9 @@
 (set-env!
-  :dependencies '[; build
+  :dependencies '[; build / release
                   [adzerk/boot-jar2bin   "1.1.0" :scope "test"]
+                  [io.djy/boot-github    "0.1.1" :scope "test"]
                   [org.clojure/clojure   "1.8.0"]
-                  [alda/client-java      "0.3.2"]
+                  [alda/client-java      "0.4.1"]
                   [alda/server-clj       "0.3.1"]
                   [alda/core             "0.3.0"]
                   [alda/sound-engine-clj "0.3.1"]
@@ -10,9 +11,10 @@
                   ; silence slf4j logging dammit
                   [org.slf4j/slf4j-nop "1.7.25"]])
 
-(require '[adzerk.boot-jar2bin :refer :all])
+(require '[adzerk.boot-jar2bin :refer :all]
+         '[io.djy.boot-github  :refer (push-version-tag create-release)])
 
-(def ^:const +version+ "1.0.0-rc62")
+(def ^:const +version+ "1.0.0-rc63")
 
 (defn- exe-version
   "Convert non-exe-friendly version numbers like 1.0.0-rc1 to four-number
@@ -70,4 +72,21 @@
     (if-not file (package) identity)
     (bin :file file :output-dir output-dir)
     (exe :file file :output-dir output-dir)))
+
+(deftask release
+  "* Builds to `output-dir`. (? use a temp dir?)
+   * Pushes a new git version tag.
+   * Creates a new release via the GitHub API.
+   * Generates a release description from the CHANGELOG.
+   * Uploads the executables to the release.
+   * (TODO) Posts to Alda Slack #general about the new release."
+  []
+  (let [tmpdir (System/getProperty "java.io.tmpdir")
+        assets (into #{} (map #(str tmpdir %) ["alda" "alda.exe"]))]
+    (comp
+      (build :output-dir tmpdir)
+      (push-version-tag :version +version+)
+      (create-release :version   +version+
+                      :changelog true
+                      :assets    assets))))
 
