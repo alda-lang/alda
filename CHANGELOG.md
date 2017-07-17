@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 1.0.0-rc65 (2017-07-16)
+
+* Bugfix: reversed logic in the `alda update` command so that the Windows update
+  logic happens if you HAVE Windows, not if you don't have it. Whoops.
+
 ## 1.0.0-rc64 (2017-07-16)
 
 * Fixed a bug where the `--history` option to the `alda play` command was being
