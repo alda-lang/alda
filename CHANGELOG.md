@@ -1,6 +1,11 @@
 # CHANGELOG
 
-## 1.0.0-rc63 (2017-07-07)
+## 1.0.0-rc64 (2017-07-16)
+
+* Fixed a bug where the `--history` option to the `alda play` command was being
+  ignored if the `--file` option was used or code was being piped into STDIN.
+
+## 1.0.0-rc63 (2017-07-16)
 
 * Prior to this release, the client would almost always exit with an exit code
   of 0, even if there was an error of some kind.
