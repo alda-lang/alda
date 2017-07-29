@@ -3,7 +3,7 @@
                   [adzerk/boot-jar2bin   "1.1.0" :scope "test"]
                   [io.djy/boot-github    "0.1.2" :scope "test"]
                   [org.clojure/clojure   "1.8.0"]
-                  [alda/client-java      "0.4.3"]
+                  [alda/client-java      "0.4.4"]
                   [alda/server-clj       "0.3.1"]
                   [alda/core             "0.3.0"]
                   [alda/sound-engine-clj "0.3.1"]
@@ -19,7 +19,7 @@
          '[cheshire.core   :as json]
          '[clj-http.client :as http])
 
-(def ^:const +version+ "1.0.0-rc65")
+(def ^:const +version+ "1.0.0-rc66")
 
 (defn- exe-version
   "Convert non-exe-friendly version numbers like 1.0.0-rc1 to four-number

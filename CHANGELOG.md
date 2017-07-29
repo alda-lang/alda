@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 1.0.0-rc66 (2017-07-28)
+
+* Added a `--history-file` (`-I`) option. It's like `--history`, except that it
+  takes the name of a file containing Alda code to be used as history.
+
 ## 1.0.0-rc65 (2017-07-16)
 
 * Bugfix: reversed logic in the `alda update` command so that the Windows update
