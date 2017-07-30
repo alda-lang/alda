@@ -39,7 +39,7 @@ Alda is designed in a way that equally favors aesthetics, flexibility and
 ease of use, with (eventual) support for the text-based creation of all manner
 of music: classical, popular, chiptune, electroacoustic, and more!
 
-[alda-blog-post]: http://daveyarwood.github.io/alda/2015/09/05/alda-a-manifesto-and-gentle-introduction
+[alda-blog-post]: https://blog.djy.io/alda-a-manifesto-and-gentle-introduction/
 [ppmck]: http://ppmck.wikidot.com/what-is-ppmck
 [lilypond]: http://www.lilypond.org
 [chuck]: http://chuck.cs.princeton.edu
