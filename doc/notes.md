@@ -35,6 +35,13 @@ Alda keeps track of both the current octave and the current default note duratio
 
 * A special feature of Alda is that you can use non-standard numbers as note durations. For example, 6 is a note that lasts 1/6 of a measure in 4/4 time. In standard notation, there is no such thing as a "sixth note," but this note length would be commonly expressed as one note in a quarter note triplet; in Alda, a "6th note" doesn't necessarily need to be part of a triplet, however, which raises interesting rhythmic possibilities.
 
+* Extending this concept, Alda allows for non-integer decimal note lengths.
+
+  For example, `c0.5` (or a double whole note, in Western classical notation) is
+  twice the length of `c1` (a whole note).
+
+  The numbers do not need to be powers of 2. For example, `c2.4` is valid.
+
 * Alda also has an alternate way of specifying rhythms called [CRAM](cram.md).
 
 * Note lengths can also be expressed in milliseconds and seconds, which can optionally be mixed and matched with standard note lengths:
