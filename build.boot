@@ -1,7 +1,7 @@
 (set-env!
   :dependencies '[; build / release
                   [adzerk/boot-jar2bin   "1.1.0" :scope "test"]
-                  [io.djy/boot-github    "0.1.2" :scope "test"]
+                  [io.djy/boot-github    "0.1.3" :scope "test"]
                   [org.clojure/clojure   "1.8.0"]
                   [alda/client-java      "0.4.4"]
                   [alda/server-clj       "0.3.1"]
@@ -105,13 +105,15 @@
    * Uploads the executables to the release.
    * Posts to Alda Slack #general about the new release."
   []
+  (env/def GITHUB_TOKEN :required)
   (let [tmpdir (System/getProperty "java.io.tmpdir")
         assets (into #{} (map #(str tmpdir %) ["alda" "alda.exe"]))]
     (comp
       (build :output-dir tmpdir)
       (push-version-tag :version +version+)
-      (create-release :version   +version+
-                      :changelog true
-                      :assets    assets)
+      (create-release :version      +version+
+                      :changelog    true
+                      :assets       assets
+                      :github-token GITHUB_TOKEN)
       (announce-release :version +version+))))
 
