@@ -1,5 +1,30 @@
 # CHANGELOG
 
+## 1.0.0-rc69 (2017-10-02)
+
+* Added the following modes:
+
+  * `:ionian`
+  * `:dorian`
+  * `:phrygian`
+  * `:lydian`
+  * `:mixolydian`
+  * `:aeolian`
+  * `:locrian`
+
+  These can be used as an alternative to `:major` and `:minor` when specifying a
+  key signature.
+
+  For example:
+
+  ```
+  piano:
+    (key-sig [:d :locrian])
+    d8 e f g a b > c d8~1
+  ```
+
+  Thanks, [iggar], for this contribution!
+
 ## 1.0.0-rc68 (2017-09-29)
 
 * Fixed a parser bug where a rest `r` followed by a newline inside of a variable
@@ -1144,5 +1169,6 @@ Shout-out to [elyisgreat] for finding all these bugs!
 [bbqbaron]: https://github.com/bbqbaron
 [damiendevienne]: https://github.com/damiendevienne
 [tobiasriedling]: https://github.com/tobiasriedling
+[iggar]: https://github.com/iggar
 
 [slack]: http://slack.alda.io

@@ -152,6 +152,14 @@ cello:
   * a map of letters (as keywords) to lists of accidentals for that letter, e.g. `{:f [:sharp] :c [:sharp] :g [:sharp]}`,
   * a string like `"f+ c+ g+"`, or
   * a vector like `[:a :major]` or `[:e :flat :minor]`
+    * supported scales/modes:
+      * `:ionian` (`:major`)
+      * `:dorian`
+      * `:phrygian`
+      * `:lydian`
+      * `:mixolydian`
+      * `:aeolian` (`:minor`)
+      * `:locrian`
 
 * **Initial Value:** `{}` (an empty map, signifying no flats/sharps will be applied for any letter)
 
