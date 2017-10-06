@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## 1.0.0-rc70 (2017-10-05)
+
+* A behind-the-scenes improvement:
+
+  Increased the duration that a worker will wait if it hasn't heard from the server in a while, before it times out and shuts down.
+
+  This duration used to be 10 seconds, and is now 30 seconds.
+
+  This should help in environments (slow processor, low resources, poor
+  networking situation, etc.) where it takes the server longer than 10 seconds
+  before it sends a worker its first heartbeat.
+
+  The trade-off is that stale worker processes will hang around for 30 seconds
+  instead of 10 seconds, which hopefully won't be much of an inconvenience.
+
 ## 1.0.0-rc69 (2017-10-02)
 
 * Added the following modes:
