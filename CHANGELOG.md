@@ -1,5 +1,147 @@
 # CHANGELOG
 
+## 1.0.0-rc71 (2017-10-07)
+
+* Added an `--output` (`-o`) option to the `alda parse` command that allows you
+  to specify what should be output. Valid values are:
+
+  * `data` (default) is the map of score data that includes instruments, events,
+    etc.
+
+  * `events` is the sequence of events parsed from the score.
+
+  For example (using [`jq`][jq] to pretty-print the JSON for readability):
+
+  ```
+  # score data output
+  $ alda parse -c 'piano: c d e' | jq .
+
+  {
+    "chord-mode": false,
+    "current-instruments": [
+      "piano-cnLzW"
+    ],
+    "events": [
+      {
+        "offset": 500,
+        "instrument": "piano-cnLzW",
+        "volume": 1,
+        "track-volume": 0.7874015748031497,
+        "panning": 0.5,
+        "midi-note": 62,
+        "pitch": 293.6647679174076,
+        "duration": 450,
+        "voice": null
+      },
+      {
+        "offset": 0,
+        "instrument": "piano-cnLzW",
+        "volume": 1,
+        "track-volume": 0.7874015748031497,
+        "panning": 0.5,
+        "midi-note": 60,
+        "pitch": 261.6255653005986,
+        "duration": 450,
+        "voice": null
+      },
+      {
+        "offset": 1000,
+        "instrument": "piano-cnLzW",
+        "volume": 1,
+        "track-volume": 0.7874015748031497,
+        "panning": 0.5,
+        "midi-note": 64,
+        "pitch": 329.6275569128699,
+        "duration": 450,
+        "voice": null
+      }
+    ],
+    "beats-tally": null,
+    "instruments": {
+      "piano-cnLzW": {
+        "octave": 4,
+        "current-offset": {
+          "offset": 1500
+        },
+        "key-signature": {},
+        "config": {
+          "type": "midi",
+          "patch": 1
+        },
+        "duration": {
+          "beats": 1,
+          "ms": null
+        },
+        "min-duration": null,
+        "volume": 1,
+        "last-offset": {
+          "offset": 1000
+        },
+        "id": "piano-cnLzW",
+        "quantization": 0.9,
+        "duration-inside-cram": null,
+        "tempo": 120,
+        "panning": 0.5,
+        "current-marker": "start",
+        "time-scaling": 1,
+        "stock": "midi-acoustic-grand-piano",
+        "track-volume": 0.7874015748031497
+      }
+    },
+    "markers": {
+      "start": 0
+    },
+    "cram-level": 0,
+    "global-attributes": {},
+    "nicknames": {},
+    "beats-tally-default": null
+  }
+  ```
+
+  ```
+  # events output
+  $ alda parse -c 'piano: c d e' -o events | jq .
+
+  [
+    {
+      "event-type": "part",
+      "instrument-call": {
+        "names": [
+          "piano"
+        ]
+      },
+      "events": null
+    },
+    {
+      "event-type": "note",
+      "letter": "c",
+      "accidentals": [],
+      "beats": null,
+      "ms": null,
+      "slur?": null
+    },
+    {
+      "event-type": "note",
+      "letter": "d",
+      "accidentals": [],
+      "beats": null,
+      "ms": null,
+      "slur?": null
+    },
+    {
+      "event-type": "note",
+      "letter": "e",
+      "accidentals": [],
+      "beats": null,
+      "ms": null,
+      "slur?": null
+    }
+  ]
+  ```
+
+The new "events" output mode can be useful for debugging Alda code that isn't
+behaving as expected.
+
 ## 1.0.0-rc70 (2017-10-05)
 
 * A behind-the-scenes improvement:
@@ -724,7 +866,7 @@ I tested this release by setting my `ulimit -n` to 256 and saw some definite imp
 
 * When running `alda score -m` (to show the data representation of the current score) or `alda parse -m -f somefile.alda` (to show the data representation of the score in a file), the output is now JSON instead of [EDN](https://github.com/edn-format/edn).
 
-  The reason for this is that JSON is more widely supported and there are a variety of useful command-line tools like [`jq`](https://stedolan.github.io/jq/) for working with JSON on the command line.
+  The reason for this is that JSON is more widely supported and there are a variety of useful command-line tools like [`jq`][jq] for working with JSON on the command line.
 
   For example, if you have `jq` installed, you can now run this command to pretty-print an Alda score map:
 
@@ -1187,3 +1329,4 @@ Shout-out to [elyisgreat] for finding all these bugs!
 [iggar]: https://github.com/iggar
 
 [slack]: http://slack.alda.io
+[jq]: https://stedolan.github.io/jq/
