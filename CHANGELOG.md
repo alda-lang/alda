@@ -1,5 +1,55 @@
 # CHANGELOG
 
+## 1.0.0-rc72 (2017-10-09)
+
+* Added an overload of `tempo` that allows you to specify the tempo in terms of
+  a note value other than (the default) a quarter note.
+
+  For example, "♩. = 150" can be expressed as:
+
+  ```
+  (tempo! "4." 150)
+  ```
+
+  (NB: the note value can be either a number or a string containing a
+  number followed by dots.)
+
+  It is still OK to leave out the note value; the default behavior is to set the
+  tempo relative to a quarter note. "♩ = 60" can still be expressed as:
+
+  ```
+  (tempo! 60)
+  ```
+
+* Added a new function, `metric-modulation`, which sets the tempo based on a
+  [metric modulation](https://en.wikipedia.org/wiki/Metric_modulation), i.e.
+  shifting from one meter to another.
+
+  Say, for example, that you're writing a score that starts in 9/8 -- three
+  beats per measure, where each beat is a dotted quarter note.
+
+  At a certain point in the piece, you want to transition into a 3/2 section --
+  still three beats per measure, but now each beat is a half note. You want the
+  "pulse" to stay the same, but now each beat is subdivided into 4 half notes
+  instead of 3. How do you do it?
+
+  In traditional notation, it is common to see annotations like "♩. = 𝅗𝅥 " at the
+  moment in the score where the time signature changes. This signifies that at
+  that moment, the pulse stays the same, but the amount of time that used to
+  represent a dotted quarter note now represents a half note. When the orchestra
+  arrives at this point in the score, the conductor continues to conduct at the
+  same "speed," but each musician mentally adjusts his/her perception of how to
+  read his/her part, mentally subdividing each beat into 4 eighth notes instead
+  of 3 eighth notes.
+
+  In Alda, you can now express a metric modulation like "♩. = 𝅗𝅥 " as:
+
+  ```
+  (metric-modulation! "4." 2)
+  ```
+
+Thanks, [pzxwang], for the PR to add these new features!
+
 ## 1.0.0-rc71 (2017-10-07)
 
 * Added an `--output` (`-o`) option to the `alda parse` command that allows you
@@ -1327,6 +1377,7 @@ Shout-out to [elyisgreat] for finding all these bugs!
 [damiendevienne]: https://github.com/damiendevienne
 [tobiasriedling]: https://github.com/tobiasriedling
 [iggar]: https://github.com/iggar
+[pzxwang]: https://github.com/pzxwang
 
 [slack]: http://slack.alda.io
 [jq]: https://stedolan.github.io/jq/
