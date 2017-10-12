@@ -3,7 +3,7 @@
                   [adzerk/boot-jar2bin   "1.1.0" :scope "test"]
                   [io.djy/boot-github    "0.1.3" :scope "test"]
                   [org.clojure/clojure   "1.8.0"]
-                  [alda/client-java      "0.4.6"]
+                  [alda/client-java      "0.4.7"]
                   [alda/server-clj       "0.3.3"]
                   [alda/core             "0.3.4"]
                   [alda/sound-engine-clj "0.3.1"]

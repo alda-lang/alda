@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## Unreleased
+
+* Fixed a strange issue in the client where, after updating Alda successfully, a
+  `java.lang.NoClassDefFoundError` would be printed.
+
 ## 1.0.0-rc73 (2017-10-12)
 
 * Improved the timing of waiting for the server to stop before starting a new
