@@ -8,7 +8,10 @@
 
 Asks the server to parse a string of Alda code.
 
-The result returned by the server is a JSON object representing the score data.
+The result returned by the server is, by default, a JSON object representing the score data.
+
+If the request includes `"options": {"output": "events"}`, the result returned
+is a JSON array of objects representing Alda events.
 
 #### Example
 
@@ -16,6 +19,9 @@ The result returned by the server is a JSON object representing the score data.
 {
   "command": "parse",
   "body": "piano: c8 d e f g2",
+  "options": {
+    "output": "events"
+  }
 }
 ```
 
