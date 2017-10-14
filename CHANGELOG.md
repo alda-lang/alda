@@ -1,6 +1,16 @@
 # CHANGELOG
 
-## Unreleased
+## 1.0.0-rc74 (2017-10-14)
+
+* Minor improvement to the new `tempo` function overload and `metric-modulation`
+  function: the supplied note-length can be a string representing multiple note
+  lengths tied together, e.g.:
+
+  ```
+  (tempo "4~16" 120)
+  ```
+
+  Thanks to [elyisgreat] for the issue and [pzxwang] for the pull request!
 
 * Fixed a strange issue in the client where, after updating Alda successfully, a
   `java.lang.NoClassDefFoundError` would be printed.
