@@ -1,5 +1,36 @@
 # CHANGELOG
 
+## 1.0.0-rc75 (2017-10-17)
+
+* Added a `reference-pitch` (alias: `tuning-constant`) attribute, which will
+  have an affect on the pitch of each note in Hz. This number is the desired
+  pitch of A4 (the note A in the 4th octave). The default value is 440 Hz.
+
+  However, please note that this value is not currently used. We are still
+  figuring out how to tune MIDI notes in Java -- it is more difficult that one
+  might expect. If you're interested in helping with this, please let us know!
+
+* Added a `transposition` (alias: `transpose`) attribute, which moves all notes
+  (either per-instrument, or globally, depending on whether you are using
+  `transpose` or `transpose!`) up or down by a desired number of semitones.
+  Positive numbers represent increasing semitones, and negative numbers
+  represent decreasing semitones.
+
+  This attribute can be used to make writing parts for [transposing
+  instruments](https://en.wikipedia.org/wiki/Transposing_instrument) more
+  convenient. To see `transpose` in use, see [this example
+  score](https://github.com/alda-lang/alda-core/blob/master/examples/jimenez-divertimento.alda),
+  a transcription of a saxophone quartet by Juan Santiago Jiménez.
+
+  Saxophones are transposing instruments; soprano and tenor saxophones are
+  considered "Bb" instruments, and alto and baritone saxophones are considered
+  "Eb" instruments.  This means that an instrument part written for a baritone
+  saxophone, for example, might appear to be written in C major, but when read
+  and performed by a baritone saxophonist, it will sound like Eb major, the
+  intended key.
+
+Thanks, [pzxwang], for implementing these new features!
+
 ## 1.0.0-rc74 (2017-10-14)
 
 * Minor improvement to the new `tempo` function overload and `metric-modulation`
