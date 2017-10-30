@@ -56,7 +56,7 @@
   exe     {:name      'alda
            :main      'alda.Main
            :version   (exe-version +version+)
-           :desc      "A music programming language for musicians"
+           :desc      "Alda"
            :copyright "2017 Dave Yarwood et al"
            :jvm-opt   jvm-opts}
 

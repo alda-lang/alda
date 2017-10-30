@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## Unreleased
+
+* On Windows, Alda processes would show up in Task Manager as "A music
+  programming language for musicians" due to confusion on my part (as a
+  non-Windows user) about the properties of a Windows executable. Now they ought
+  to show up as "Alda" so you can easily identify them.
+
 ## 1.0.0-rc76 (2017-10-30)
 
 * Fixed a bug in the way the program path is determined when a server starts
