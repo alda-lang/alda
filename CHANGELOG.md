@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## 1.0.0-rc76 (2017-10-30)
+
+* Fixed a bug in the way the program path is determined when a server starts
+  workers. (That code lives in alda.util, in this repo.) The bug was showing
+  itself when the path to the `alda` (or `alda.exe`) executable contained spaces
+  or other special characters. This was causing the worker processes not to
+  start in environments where the path to `alda` (or `alda.exe`) contains
+  spaces.
+
+  Thanks to [Hemaolle] for the detective work and PR to fix this issue!
+
 ## 1.0.0-rc75 (2017-10-17)
 
 * Added a `reference-pitch` (alias: `tuning-constant`) attribute, which will
@@ -1455,6 +1466,7 @@ Shout-out to [elyisgreat] for finding all these bugs!
 [tobiasriedling]: https://github.com/tobiasriedling
 [iggar]: https://github.com/iggar
 [pzxwang]: https://github.com/pzxwang
+[Hemaolle]: https://github.com/Hemaolle
 
 [slack]: http://slack.alda.io
 [jq]: https://stedolan.github.io/jq/
