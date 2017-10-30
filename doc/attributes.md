@@ -218,6 +218,20 @@ cello:
 
 * **Initial Value:** 78.7 (this number comes from 100/127, which is the default track volume for MIDI, at least in the Java VM)
 
+### `transposition`
+
+* **Abbreviations:** `transpose`
+
+* **Description:** Moves all notes up or down by a desired number of semitones.
+  This attribute can be used to make writing parts for [transposing
+  instruments](https://en.wikipedia.org/wiki/Transposing_instrument) more
+  convenient.
+
+* **Value:** a positive or negative integer representing a number of semitones
+  (half-steps) to move each note up or down.
+
+* **Initial Value:** 0
+
 ### `volume`
 
 * **Abbreviations:** `vol`
