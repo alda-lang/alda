@@ -8,8 +8,8 @@ Of note, [`alda.repl`](alda-repl.md) and [`alda.server`](alda-server.md) both us
 
 ```clojure
 ; add to your dependencies in build.boot or project.clj
-[alda/alda-core             "X.X.X"]
-[alda/alda-sound-engine-clj "X.X.X"]
+[alda/core             "X.X.X"]
+[alda/sound-engine-clj "X.X.X"]
 ```
 
 ```clojure
