@@ -98,7 +98,7 @@
           (println response))))))
 
 (deftask release
-  "* Builds to `output-dir`. (? use a temp dir?)
+  "* Builds to `output-dir`.
    * Pushes a new git version tag.
    * Creates a new release via the GitHub API.
    * Generates a release description from the CHANGELOG.
