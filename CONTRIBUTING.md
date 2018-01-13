@@ -20,7 +20,7 @@ The Alda project is composed of a number of subprojects, each of which has its o
 
   - [**alda-repl-clj**](https://github.com/alda-lang/alda-repl-clj) is the Alda **R**ead-**E**val-**P**lay **L**oop. It is currently implemented in Clojure, but will eventually be [rewritten as part of the Java client](https://github.com/alda-lang/alda/issues/154).
 
-  - [**alda-lang.github.io**](https://github.com/alda-lang/alda-lang.github.io) is the source code for the [official Alda website](http://alda.io).
+  - [**alda.io**](https://github.com/alda-lang/alda.io) is the source code for the [official Alda website](http://alda.io).
 
     The website is currently under construction. We could use your help to make it look awesome and make sure it has all the information it needs!
 
