@@ -29,11 +29,6 @@ own GitHub repo:
   - [**alda-sound-engine-clj**](https://github.com/alda-lang/alda-sound-engine-clj)
     is the part that interprets and plays the fully-realized score.
 
-  - [**alda-repl-clj**](https://github.com/alda-lang/alda-repl-clj) is the Alda
-    **R**ead-**E**val-**P**lay **L**oop. It is currently implemented in Clojure,
-    but will eventually be [rewritten as part of the Java
-    client](https://github.com/alda-lang/alda/issues/154).
-
   - [**alda.io**](https://github.com/alda-lang/alda.io) is the source code for
     the [official Alda website](http://alda.io).
 
