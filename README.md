@@ -160,7 +160,7 @@ For the best experience when editing Alda score files, install the Alda file-typ
 
 ## Demo
 
-First start Alda server (this may take a minute):
+First start the Alda server (this may take a minute):
 
     alda up
 
