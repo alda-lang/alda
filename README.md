@@ -164,11 +164,11 @@ First start the Alda server (this may take a minute):
 
     alda up
 
-To play a file:
+To play a file containing Alda code:
 
     alda play --file examples/bach_cello_suite_no_1.alda
 
-To play arbitrary code:
+To play arbitrary code at the command line:
 
     alda play --code "piano: c6 d12 e6 g12~4"
 
