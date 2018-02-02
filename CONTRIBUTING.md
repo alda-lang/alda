@@ -56,8 +56,8 @@ board](https://waffle.io/alda-lang/alda).
 If you're confused about how any aspect of the code works (Clojure questions,
 "what does this piece of code do," "can you walk me through how this works,"
 etc.), don't hesitate to ask questions on the issue you're working on, or pop
-into the [Alda Slack group](http://slack.alda.io) -- we'll be more than happy to
-help!
+into the #development channel in the [Alda Slack group](http://slack.alda.io) --
+we'll be more than happy to help!
 
 ## Building the `alda` (or `alda.exe`) executable
 
