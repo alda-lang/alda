@@ -160,6 +160,10 @@ For the best experience when editing Alda score files, install the Alda file-typ
 
 ## Demo
 
+First start Alda server (this may take a minute):
+
+    alda up
+
 To play a file:
 
     alda play --file examples/bach_cello_suite_no_1.alda
