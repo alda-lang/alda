@@ -1,7 +1,7 @@
 (set-env!
   :dependencies '[; build / release
                   [adzerk/boot-jar2bin   "1.1.1" :scope "test"]
-                  [io.djy/boot-github    "0.1.3" :scope "test"]
+                  [io.djy/boot-github    "0.1.4" :scope "test"]
                   [org.clojure/clojure   "1.8.0"]
                   [alda/client-java      "0.4.7"]
                   [alda/server-clj       "0.3.3"]
