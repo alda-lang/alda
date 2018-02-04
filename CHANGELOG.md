@@ -1,11 +1,32 @@
 # CHANGELOG
 
-## Unreleased
+## 1.0.0-rc77 (2018-02-03)
 
 * On Windows, Alda processes would show up in Task Manager as "A music
   programming language for musicians" due to confusion on my part (as a
   non-Windows user) about the properties of a Windows executable. Now they ought
   to show up as "Alda" so you can easily identify them.
+
+* Fixed a bug in the Alda REPL where the `:play from` and `to` options were
+  being completely ignored.
+
+* Fixed a separate bug where the `--from` command-line option to `alda play` was
+  being ignored.
+
+* Fixed issues where `!` is not escaped properly in the Alda REPL.
+
+  This is something that had been fixed previously in the Clojure version of the
+  Alda REPL, but not ported over when we rewrote the REPL as part of the Java
+  client.
+
+  For context, see [this issue](https://github.com/alda-lang/alda/issues/125).
+
+* Enabled persistent history for the Alda REPL. For example, if you start a REPL
+  session and enter a bunch of lines of input, then close the session and start
+  a new one, you can access the lines you typed in the previous session by
+  pressing the Up arrow.
+
+  History is stored in a file at `~/.alda-repl-history`.
 
 ## 1.0.0-rc76 (2017-10-30)
 

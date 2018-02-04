@@ -3,10 +3,10 @@
                   [adzerk/boot-jar2bin   "1.1.1" :scope "test"]
                   [io.djy/boot-github    "0.1.4" :scope "test"]
                   [org.clojure/clojure   "1.8.0"]
-                  [alda/client-java      "0.4.7"]
+                  [alda/client-java      "0.4.8"]
                   [alda/server-clj       "0.3.3"]
                   [alda/core             "0.3.7"]
-                  [alda/sound-engine-clj "0.3.1"]
+                  [alda/sound-engine-clj "0.3.2"]
 
                   ; silence slf4j logging dammit
                   [org.slf4j/slf4j-nop "1.7.25"]])
@@ -19,7 +19,7 @@
          '[cheshire.core   :as json]
          '[clj-http.client :as http])
 
-(def ^:const +version+ "1.0.0-rc76")
+(def ^:const +version+ "1.0.0-rc77")
 
 (defn- exe-version
   "Convert non-exe-friendly version numbers like 1.0.0-rc1 to four-number
