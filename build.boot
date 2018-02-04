@@ -107,7 +107,7 @@
   []
   (env/def GITHUB_TOKEN :required)
   (let [tmpdir (System/getProperty "java.io.tmpdir")
-        assets (into #{} (map #(str tmpdir %) ["alda" "alda.exe"]))]
+        assets (into #{} (map #(str tmpdir "/" %) ["alda" "alda.exe"]))]
     (comp
       (build :output-dir tmpdir)
       (push-version-tag :version +version+)
