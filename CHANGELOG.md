@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 1.0.0-rc78 (2018-02-05)
+
+* Fixed [a bug](https://github.com/alda-lang/alda-core/issues/55) where the
+  parser did not correctly parse nested events in some situations, for example a
+  set-variable expression containing a CRAM expression containing a chord.
+
+  Thanks to [elyisgreat] for reporting this issue!
+
 ## 1.0.0-rc77 (2018-02-03)
 
 * On Windows, Alda processes would show up in Task Manager as "A music

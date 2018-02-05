@@ -5,7 +5,7 @@
                   [org.clojure/clojure   "1.8.0"]
                   [alda/client-java      "0.4.8"]
                   [alda/server-clj       "0.3.3"]
-                  [alda/core             "0.3.7"]
+                  [alda/core             "0.3.8"]
                   [alda/sound-engine-clj "0.3.2"]
 
                   ; silence slf4j logging dammit
@@ -19,7 +19,7 @@
          '[cheshire.core   :as json]
          '[clj-http.client :as http])
 
-(def ^:const +version+ "1.0.0-rc77")
+(def ^:const +version+ "1.0.0-rc78")
 
 (defn- exe-version
   "Convert non-exe-friendly version numbers like 1.0.0-rc1 to four-number
