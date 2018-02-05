@@ -1,6 +1,6 @@
 # Notes
 
-Alda's syntax for **notes** is heavily inspired by [MML](https://en.wikipedia.org/wiki/Music_Macro_Language).
+Alda's syntax for **notes** is heavily inspired by [MML](https://en.wikipedia.org/wiki/Music_Macro_Language#Modern_MML).
 
 ## Components
 
