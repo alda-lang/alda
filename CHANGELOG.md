@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 1.0.0-rc79 (2018-02-16)
+
+* Fixed a minor bug in the parser that is only evident when using the `alda
+  parse` command. The bug was that in certain situations where the code is
+  syntactically valid, but there is an error at score build time (e.g. `piano:
+  undefined` where a variable is referenced that has not been defined), the
+  parser was returning nil instead of throwing an error.
+
 ## 1.0.0-rc78 (2018-02-05)
 
 * Fixed [a bug](https://github.com/alda-lang/alda-core/issues/55) where the
