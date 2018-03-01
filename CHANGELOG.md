@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## 1.0.0-rc80 (2018-02-28)
+
+* Fixed [a minor bug](https://github.com/alda-lang/alda-core/issues/64) in the
+  parser: there was an edge case where a "get variable" event wasn't being
+  disambiguated from its earlier, less-specific "name" form if the "get
+  variable" event happened to be the last thing in the definition of another
+  variable.
+
+  Thanks to [elyisgreat] for spotting the bug!
+
 ## 1.0.0-rc79 (2018-02-16)
 
 * Fixed a minor bug in the parser that is only evident when using the `alda
