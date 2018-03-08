@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## 1.0.0-rc81 (2018-03-08)
+
+* Added an `:info` command to the Alda REPL. It prints some user-readable
+  information about the current score, for example:
+
+  ```
+  p> :info
+  Instruments: piano-sFz6g
+  Current instruments: piano-sFz6g
+  Events: 6
+  Markers: start, one, two, three
+  ```
+
+  Thanks, [TBuc], for implementing this new feature!
+
 ## 1.0.0-rc80 (2018-02-28)
 
 * Fixed [a minor bug](https://github.com/alda-lang/alda-core/issues/64) in the
@@ -1521,6 +1536,7 @@ Shout-out to [elyisgreat] for finding all these bugs!
 [iggar]: https://github.com/iggar
 [pzxwang]: https://github.com/pzxwang
 [Hemaolle]: https://github.com/Hemaolle
+[TBuc]: https://github.com/TBuc
 
 [slack]: http://slack.alda.io
 [jq]: https://stedolan.github.io/jq/
