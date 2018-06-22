@@ -41,19 +41,3 @@ bassoon:
   (alda-code (apply str (repeatedly 5 #(str (rand-nth "abcdefg") \space))))
 ```
 
-## Scheduling custom events
-
-You might initially think that each Clojure expression is not evaluated until the point in time where it is situated in the score, but this is actually not the case. Clojure expressions *are* evaluated in score-order, but this happens very quickly during the brief period of time before the score is played. When the score is evaluated, it queues up a bunch of events (mostly notes being played), and it is during this very brief period that your Clojure code will run.
-
-It is still possible, however to schedule custom events to occur at a specific time in the score, thanks to the `schedule` function.
-
-```
-piano:
-  (schedule #(println "playing c")) c8
-  (schedule #(println "playing d")) d
-  (schedule #(println "playing e")) e
-  (schedule #(println "playing f")) f
-  (schedule #(println "playing g")) g2
-```
-
-`schedule` takes a function as its argument. The function that you give it can be any Clojure function that takes zero arguments.
