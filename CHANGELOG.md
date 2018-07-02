@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 1.0.0-rc82 (2018-07-01)
+
+* Upgraded JLine dependency to 2.14.6 to fix the platform-specific "Failed to
+  construct terminal" part of [this
+  issue](https://github.com/alda-lang/alda-sound-engine-clj/issues/13).
+
 ## 1.0.0-rc81 (2018-03-08)
 
 * Added an `:info` command to the Alda REPL. It prints some user-readable
