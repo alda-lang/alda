@@ -85,10 +85,10 @@
   (with-pass-thru _
     (util/info "Announcing release on Slack...\n")
     (env/def ALDA_SLACK_WEBHOOK_URL :required)
-    (let [text    (format "Alda version %s released!\n\n%s"
-                          +version+
-                          (changelog-for +version+))
-          payload (json/generate-string {:text text})
+    (let [text     (format "Alda version %s released!\n\n%s"
+                           +version+
+                           (changelog-for +version+))
+          payload  (json/generate-string {:text text :channel "#general"})
           response (http/post ALDA_SLACK_WEBHOOK_URL
                               {:form-params {:payload payload}})]
       (if (= 200 (:status response))
