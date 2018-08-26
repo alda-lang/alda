@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1.0.0-rc83 (2018-08-25)
+
+* Implemented a `--no-color` CLI option, which suppresses ANSI color codes.
+
 ## 1.0.0-rc82 (2018-07-01)
 
 * Upgraded JLine dependency to 2.14.6 to fix the platform-specific "Failed to
