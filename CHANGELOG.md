@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 1.0.0-rc84 (2018-08-25)
+
+* Handled an edge case re: what to display when playing extremely short scores.
+
+* Improved the help text descriptions of the `:info` and `:save` REPL commands.
+
 ## 1.0.0-rc83 (2018-08-25)
 
 * Implemented a `--no-color` CLI option, which suppresses ANSI color codes.
