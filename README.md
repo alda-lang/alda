@@ -107,7 +107,7 @@ For more examples, see these [example scores](https://github.com/alda-lang/alda-
 * Copy `alda.exe` to a location that makes sense for you. If you follow standard Windows conventions, this means creating a folder called `Alda` in your `Program Files (x86)` folder, and then moving the `alda.exe` file into it.
 
 * Make `alda` available on your `PATH`:
-  *  Go to the Windows `System` control panel option, select `Advanced System Settings` and then click on `Environment Variables`, then edit the `PATH` variable (either specifically for your user account or for the system in general) and add `;C:\Program Files (x86)\Alda` to the end. Save this edit. Note that if you placed `alda.exe` in a different folder, you will need to use that folder's full path name in your edit, instead.
+  *  Go to the Windows `System` Control Panel option, select `Advanced System Settings` and then click on `Environment Variables`, then edit the `PATH` variable (either specifically for your user account or for the system in general) and add `;C:\Program Files (x86)\Alda` to the end. Save this edit. Note that if you placed `alda.exe` in a different folder, you will need to use that folder's full path name in your edit, instead.
 
 You will now be able to run Alda from anywhere in the command prompt by typing `alda`, but note that command prompts that were already open will need to be restarted before they will pick up on the new PATH value.
 
@@ -140,7 +140,7 @@ This will download FluidR3 and replace `~/.gervill/soundbank-emg.sf2` (your JVM'
 To replace the default soundfont on a Windows OS:
 
 1. Locate your Java Runtime (JRE) folder and navigate into the `lib` folder. 
-  * If you have JDK 8 or earlier installed, locate your JDK folder instead and navigate into the `jre\lib` folder. 
+   * If you have JDK 8 or earlier installed, locate your JDK folder instead and navigate into the `jre\lib` folder. 
 2. Make a new folder named `audio`.
 3. Copy any `.sf2` file into this folder.
 
