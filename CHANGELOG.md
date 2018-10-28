@@ -1,5 +1,25 @@
 # CHANGELOG
 
+## 1.0.0-rc85 (2018-10-28)
+
+* Made internal improvements to the Alda sound engine. Specifically, the sound
+  engine now uses a Java MIDI Sequencer to schedule and play MIDI notes, whereas
+  before we were using a third party library called JSyn.
+
+  You shouldn't notice any difference in note scheduling, but if you do notice
+  any problems, please file an issue in the
+  [alda-sound-engine-clj][sound-engine] repo so that we can address them!
+
+* The `schedule` function has been removed from alda.lisp. Scheduled functions
+  haven't been very useful since we moved to a client/server architecture, and
+  we haven't implemented a way for them to work with the new changes to the
+  sound engine. So, we are removing the feature for now. We may re-implement the
+  scheduled functions feature in the future, in a way that works with both the
+  client/server architecture and the current implementation of the sound engine.
+
+  For more context on this, see
+  [alda-core#65](https://github.com/alda-lang/alda-core/pull/65).
+
 ## 1.0.0-rc84 (2018-08-25)
 
 * Handled an edge case re: what to display when playing extremely short scores.
@@ -1556,3 +1576,4 @@ Shout-out to [elyisgreat] for finding all these bugs!
 
 [slack]: http://slack.alda.io
 [jq]: https://stedolan.github.io/jq/
+[sound-engine]: https://github.com/alda-lang/alda-sound-engine-clj
