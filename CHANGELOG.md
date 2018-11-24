@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## 1.0.0 (2018-11-24)
+
+This release is functionally equivalent to the previous release, 1.0.0-rc85.
+After 3 years of working on a series of 1.0.0 release candidates, the focus has
+shifted toward re-architecting Alda in a way that will allow us to make some
+substantial improvements. The result of this restructuring will become a new
+major version of Alda, version 2.0.0.
+
+The work has only just started on Alda 2.0.0, and it will probably be a long
+while before the initial release in the 2.0.0 series. We will continue to
+maintain the 1.0.0 series in the meantime. As such, it feels like now is as good
+a time as any to release Alda 1.0.0!
+
 ## 1.0.0-rc85 (2018-10-28)
 
 * Made internal improvements to the Alda sound engine. Specifically, the sound

@@ -19,7 +19,7 @@
          '[cheshire.core   :as json]
          '[clj-http.client :as http])
 
-(def ^:const +version+ "1.0.0-rc85")
+(def ^:const +version+ "1.0.0")
 
 (defn- exe-version
   "Convert non-exe-friendly version numbers like 1.0.0-rc1 to four-number
