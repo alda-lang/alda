@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## 1.0.1 (2018-11-24)
+
+Whoops! It turns out that the mechanism we had in place in the Alda client for
+determining whether or not your version of Alda is up-to-date had a flaw that
+prevents one from updating from Alda 1.0.0-rcXX to Alda 1.0.0!
+
+That's fixed in this version. Also, your client will be able to update to the
+latest version now because now the latest version is 1.0.1 instead of 1.0.0. :)
+
 ## 1.0.0 (2018-11-24)
 
 This release is functionally equivalent to the previous release, 1.0.0-rc85.
