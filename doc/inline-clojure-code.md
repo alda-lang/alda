@@ -27,7 +27,7 @@ The `alda-code` function provides a convenient way to parse and evaluate a strin
 
 Here is an example where we repeat a 3-note phrase 7 times by building the string `"e f g e f g e f g e f g e f g e f g e f g "` and evaluating it:
 
-```
+```clojure
 cello:
   o3
   (alda-code (apply str (repeat 7 "e8 f g ")))
@@ -35,7 +35,7 @@ cello:
 
 Here is another example, where we play 5 random notes out of the C major scale:
 
-```
+```clojure
 bassoon:
   o3
   (alda-code (apply str (repeatedly 5 #(str (rand-nth "abcdefg") \space))))
