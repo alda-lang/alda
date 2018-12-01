@@ -40,7 +40,7 @@ beginning" and an "alternate middle":
 
 ```
 piano:
-  [ [c8 d e]'1,3 [e8 d c]'1,3
+  [ [c8 d e]'1,3 [e8 d c]'2,4
     f
     [g f e]'1-3 [g a b]'4
     > c <
