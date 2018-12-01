@@ -1,5 +1,44 @@
 # CHANGELOG
 
+## 1.1.0 (2018-12-01)
+
+New feature alert!
+
+An ["alternate
+ending"](http://dictionary.onmusic.org/terms/4798-second_ending_735)-like
+feature has been added to the Alda language. The syntax looks like this:
+
+```
+piano:
+  [ c8 d e f
+    [g f e4]'1-3
+    [g a b > c4.]'4
+  ]*4
+```
+
+This allows you to have repeated phrases that can differ on each iteration. In
+the example above, each repeat starts with `c8 d e f`; on times 1 through 3
+through the repeated phrase, the phrase ends with `g f e4`, whereas on the 4th
+time through, the phrase ends with `g a b > c4.`.
+
+Note that these "adjustments" can occur anywhere within the repeated phrase, not
+necessarily at the end, making this feature of Alda more flexible than the
+"alternate endings" notation seen in sheet music. To illustrate this, here is
+another example where the phrase has what you might describe as an "alternate
+beginning" and an "alternate middle":
+
+```
+piano:
+  [ [c8 d e]'1,3 [e8 d c]'1,3
+    f
+    [g f e]'1-3 [g a b]'4
+    > c <
+  ]*4
+```
+
+Thanks to [elyisgreat] for the initial idea/discussion and [pzxwang] for
+implementing the feature! :balloon:
+
 ## 1.0.1 (2018-11-24)
 
 Whoops! It turns out that the mechanism we had in place in the Alda client for
