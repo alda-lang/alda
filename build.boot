@@ -57,7 +57,7 @@
            :main      'alda.Main
            :version   (exe-version +version+)
            :desc      "Alda"
-           :copyright "2012-2018 Dave Yarwood et al"
+           :copyright "2012-2019 Dave Yarwood et al"
            :jvm-opt   jvm-opts}
 
   target  {:dir #{"target"}})
