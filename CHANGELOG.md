@@ -1,5 +1,22 @@
 # CHANGELOG
 
+## 1.2.0 (2019-01-19)
+
+* New CLI command: `alda instruments` and REPL command: `:instruments`
+
+  This new command lists all available instruments, which is currently the 128
+  instruments in the General MIDI spec, as well as `midi-percussion`.
+
+  NB: Alda does have a number of aliases for these instruments, e.g. `piano` is
+  recognized as `midi-acoustic-grand-piano`. These aliases are not included in
+  the list.
+
+* Made adjustments to the command that prints for Windows users when running
+  `alda update` to update the Alda client.
+
+  For details, see issue
+  [#35](https://github.com/alda-lang/alda-client-java/issues/35).
+
 ## 1.1.0 (2018-12-01)
 
 New feature alert!
