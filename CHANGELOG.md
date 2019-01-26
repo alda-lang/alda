@@ -764,9 +764,15 @@ Major thanks to [tobiasriedling] for both fixes!
 
 ### Minor breaking change
 
-* Removed the `voices` (voice group) event, as [bbqbaron] and I figured out that it's not necessary. It turns out that each `voice` event manages its voice group implicitly. For more discussion, see [alda-lang/alda#286](https://github.com/alda-lang/alda/pull/286).
+* Removed the `voices` (voice group) event, as [bbqbaron] and I figured out that
+  it's not necessary. It turns out that each `voice` event manages its voice
+  group implicitly. For more discussion, see
+  [alda-lang/alda#286](https://github.com/alda-lang/alda/pull/286).
 
-  This change should not be noticeable, unless you have scores with [inline Clojure code](doc/inline-clojure-code.md) that use the `voices` event. Now you can simplify code like that by just writing `voice` events, without having to group them inside of a `voices` event.
+  This change should not be noticeable, unless you have scores with inline
+  Clojure code that use the `voices` event. Now you can simplify code like that
+  by just writing `voice` events, without having to group them inside of a
+  `voices` event.
 
 ## 1.0.0-rc51 (2016-11-19)
 
@@ -1523,7 +1529,13 @@ Shout-out to [elyisgreat] for finding all these bugs!
 
 * The `$` syntax in alda.lisp (e.g. `($volume)`) for getting the current value of an attribute for the current instrument is no longer supported due to the way the code has been rewritten. We could probably find a way to add this feature back if there is a demand for it, but its use case is probably pretty obscure.
 
-* Because Alda event functions no longer work via side effects, inline Clojure code works a bit differently. Basically, you'll just write code that returns one or more Alda events, instead of code that produces side effects (modifying the score) and returns nil. See [entropy.alda](examples/entropy.alda) for an example of the way inline Clojure code works starting with this release.
+* Because Alda event functions no longer work via side effects, inline Clojure
+  code works a bit differently. Basically, you'll just write code that returns
+  one or more Alda events, instead of code that produces side effects (modifying
+  the score) and returns nil. See
+  [entropy.alda](https://github.com/alda-lang/alda-core/blob/master/examples/entropy.alda)
+  for an example of the way inline Clojure code works starting with this
+  release.
 
 ## 1.0.0-rc14 (2016-04-01)
 

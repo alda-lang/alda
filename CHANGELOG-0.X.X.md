@@ -18,7 +18,7 @@ For recent versions, see [CHANGELOG](CHANGELOG.md).
 
 ## 0.14.0 (2015-10-20)
 
-* [Custom events](doc/inline-clojure-code.md#scheduling-custom-events) can now be scheduled via inline Clojure code.
+* Custom events can now be scheduled via inline Clojure code.
 
 * Added `electric-bass` alias for `midi-electric-bass-finger`.
 
@@ -58,7 +58,12 @@ For recent versions, see [CHANGELOG](CHANGELOG.md).
 
 * Implemented code block literals, which don't do anything yet, but will pave the way for features like repeats.
 
-* `alda-code` function added to the `alda.lisp` namespace, for use in inline Clojure code. This function takes a string of Alda code, parses and evaluates it in the context of the current score. This is useful because it allows you to build up a string of Alda code programmatically via Clojure, then evaluate it as if it were written in the score to begin with! More info on this in [the docs](doc/inline-clojure-code.md#evaluating-strings-of-alda-code).
+* `alda-code` function added to the `alda.lisp` namespace, for use in inline
+  Clojure code. This function takes a string of Alda code, parses and evaluates
+  it in the context of the current score. This is useful because it allows you
+  to build up a string of Alda code programmatically via Clojure, then evaluate
+  it as if it were written in the score to begin with! More info on this in the
+  docs.
 
 ---
 

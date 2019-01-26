@@ -2,8 +2,6 @@
 
 An **attribute** defines some quality of how an [instrument](scores-and-parts.md) (or multiple instruments) plays its [notes](notes.md).
 
-Under the hood, attributes are implemented as [inline clojure code](inline-clojure-code.md).
-
 ## Setting the Value of an Attribute
 
 Just like setting [octaves](notes.md#octave), setting an attribute will take effect for all of an instrument's upcoming notes, until that attribute is changed again. (In fact, `octave` is also a settable attribute.)
