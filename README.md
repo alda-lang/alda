@@ -32,12 +32,12 @@
 *New to Alda? You may be interested in reading [this blog post][alda-blog-post] as an introduction.*
 
 Inspired by other music/audio programming languages such as [PPMCK][ppmck],
-[LilyPond][lilypond] and [ChucK][chuck], Alda aims to be a
-powerful and flexible programming language for the musician who wants to easily
-compose and generate music on the fly, using naught but a text editor.
-Alda is designed in a way that equally favors aesthetics, flexibility and
-ease of use, with (eventual) support for the text-based creation of all manner
-of music: classical, popular, chiptune, electroacoustic, and more!
+[LilyPond][lilypond] and [ChucK][chuck], Alda aims to be a powerful and flexible
+programming language for the musician who wants to easily compose and generate
+music on the fly, using only a text editor.  Alda is designed in a way that
+equally favors aesthetics, flexibility and ease of use, with (eventual) support
+for the text-based creation of all manner of music: classical, popular,
+  chiptune, electroacoustic, and more!
 
 [alda-blog-post]: https://blog.djy.io/alda-a-manifesto-and-gentle-introduction/
 [ppmck]: http://ppmck.wikidot.com/what-is-ppmck
