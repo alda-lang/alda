@@ -206,7 +206,7 @@ cello:
 > By default, `(tempo 100)` will set the tempo to 100 beats per minute, where
 > each beat takes up the length of a quarter note.
 >
-> Alda also offers additional ways te express tempo. See: [tempo](tempo.md).
+> Alda also offers additional ways to express tempo. See: [tempo](tempo.md).
 
 ### `track-volume`
 
