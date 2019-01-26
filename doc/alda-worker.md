@@ -15,6 +15,3 @@ used by the server to communicate with its workers.
 Each worker process has its own Alda environment, including its own MIDI
 Synthesizer instance and JSyn SynthesisEngine instance.
 
-## See Also
-
-* [ZeroMQ Architecture](zeromq-architecture.md)

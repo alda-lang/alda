@@ -14,6 +14,3 @@ background. When you run a command using the Alda command line client (such as
 `alda play -f some-file.alda`), the client makes a request to the server, and
 the server delegates the work to the first available worker process.
 
-## See Also
-
-* [ZeroMQ Architecture](zeromq-architecture.md)

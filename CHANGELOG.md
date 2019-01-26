@@ -934,7 +934,11 @@ This release includes a handful of behind-the-scenes improvements that will make
 
 ### Breaking Changes
 
-* To accomplish the above, I had to make a couple of minor adjustments to the ZeroMQ message structure. If you are writing your own Alda client, server, or worker, you may need to adjust the way messages are handled slightly. The Alda [ZeroMQ Architecture](doc/zeromq-architecture.md) doc has been updated to reflect these changes to the message structure.
+* To accomplish the above, I had to make a couple of minor adjustments to the
+  ZeroMQ message structure. If you are writing your own Alda client, server, or
+  worker, you may need to adjust the way messages are handled slightly. The Alda
+  ZeroMQ Architecture doc has been updated to reflect these changes to the
+  message structure.
 
 ## 1.0.0-rc41 (2016-09-18)
 
