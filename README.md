@@ -47,14 +47,17 @@ for the text-based creation of all manner of music: classical, popular,
 ## Features
 
 * Easy to understand, markup-like syntax
-* Perfect for musicians who don't know how to program and programmers who don't know how to music
-* Represent scores as text files and play them back with the `alda` command-line tool
-* [Interactive REPL](doc/alda-repl.md) lets you type Alda code and hear the results in real time
-* [Underlying Clojure DSL](doc/alda-lisp.md) allows you to [use Alda directly in your Clojure project](doc/alda-now.md).
-* [Inline Clojure code](doc/inline-clojure-code.md) allows you to [hack the Gibson][hackers] and write scores programmatically
-* Create MIDI music using any of the instruments in the [General MIDI Sound Set][gm-sound-set]
+* Designed for musicians who don't know how to program, and programmers who
+  don't know how to music
+* A score is a text file that can be played using the `alda` command-line tool
+* [Interactive REPL](doc/alda-repl.md) lets you enter Alda code and hear the
+  results in real time
+* Supports [writing music
+  programmatically](doc/writing-music-programmatically.md) (for algorithmic
+  composition, live-coding, etc.)
+* Create MIDI music using any of the instruments in the [General MIDI Sound
+  Set][gm-sound-set]
 
-[hackers]: https://www.youtube.com/watch?v=vYNnPx8fZBs
 [gm-sound-set]: http://www.midi.org/techspecs/gm1sound.php
 
 ### TODO
