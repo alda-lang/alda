@@ -207,5 +207,3 @@ midi-percussion:
     o2 f+8 f+ r o3 c+8~8 f16 f r8 a
 ```
 
-In the future, hopefully there will be a [plug-in](https://github.com/alda-lang/alda/issues/37) to provide a nicer syntax for writing percussion parts. Perhaps we could map ASCII characters to the different percussion sounds, and percussion parts could be written with some sort of drum tab-like syntax.
-
