@@ -63,10 +63,9 @@ for the text-based creation of all manner of music: classical, popular,
 ### TODO
 
 * [Define and use waveform synthesis instruments](https://github.com/alda-lang/alda/issues/100)
-* [Import MIDI files](https://github.com/alda-lang/alda/issues/85)
-* [Export to MusicXML](https://github.com/alda-lang/alda/issues/44) for inter-operability with other music software
-* [A more robust REPL](https://github.com/alda-lang/alda/issues/54), tailor-made for editing scores interactively
-* [A plugin system](https://github.com/alda-lang/alda/issues/37) allowing users to define custom/unofficial syntax in Alda scores
+* [Import MIDI files](https://github.com/alda-lang/alda-core/issues/25)
+* [Export to MusicXML](https://github.com/alda-lang/alda-core/issues/3) for inter-operability with other music software
+* [A more robust REPL](https://github.com/alda-lang/alda-client-java/issues/2), tailor-made for editing scores interactively
 
 If you're a developer and you'd like to help, come on in -- [the water's fine](#contributing)!
 
