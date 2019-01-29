@@ -4,9 +4,9 @@
                   [io.djy/boot-github    "0.1.4" :scope "test"]
                   [org.clojure/clojure   "1.8.0"]
                   [alda/client-java      "0.6.1"]
-                  [alda/server-clj       "0.4.2"]
-                  [alda/core             "0.5.1"]
-                  [alda/sound-engine-clj "1.0.0"]
+                  [alda/server-clj       "0.4.3"]
+                  [alda/core             "0.5.2"]
+                  [alda/sound-engine-clj "1.1.0"]
 
                   ; silence slf4j logging dammit
                   [org.slf4j/slf4j-nop "1.7.25"]])
