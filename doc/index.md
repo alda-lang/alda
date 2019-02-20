@@ -9,6 +9,7 @@ Hello! I'm an introductory paragraph, and this is the landing page for Alda's of
 * [CHANGELOG (Version History)](../CHANGELOG.md)
 * [Some background on Alda and a tutorial](http://blog.djy.io/alda-a-manifesto-and-gentle-introduction)
 * [Alda for Clojurists](http://blog.djy.io/alda-for-clojurists)
+* [Community](community.md)
 
 ## Where to Start
 
