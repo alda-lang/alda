@@ -38,8 +38,10 @@ own GitHub repo:
 Pull requests to any of these repos are warmly welcomed. Please feel free to
 take on any open issue that interests you.
 
-For a syrupy visual of what we have on our plate, check out our [waffle.io
-board](https://waffle.io/alda-lang/alda).
+For a top-level overview of things we're talking about and working on across all
+of these repos, check out the [Alda GitHub Project board][gh-project].
+
+[gh-project]: https://github.com/orgs/alda-lang/projects/1
 
 ## Instructions
 

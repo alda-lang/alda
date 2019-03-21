@@ -13,11 +13,6 @@
   <b><a href="CHANGELOG.md">Changelog</a></b>
   |
   <b><a href="#contributing">Contributing</a></b>
-  (
-  <a href="https://waffle.io/alda-lang/alda" alt="Features in Progress">
-    <img src="https://img.shields.io/waffle/label/alda-lang/alda/in%20progress.svg">
-  </a>
-  )
 
   <br>
   <br>
@@ -186,9 +181,14 @@ Alda's documentation can be found [here](doc/index.md).
 
 We'd love your help -- Pull Requests welcome!
 
-The Alda project is composed of a number of subprojects, each of which has its own GitHub repository within the [alda-lang](https://github.com/alda-lang) organization.
+The Alda project is composed of a number of subprojects, each of which has its
+own GitHub repository within the [alda-lang][gh-org] organization.
 
-For an overview of what we're working on, take a look at our [waffle.io board](https://waffle.io/alda-lang/alda).
+For a top-level overview of things we're talking about and working on across all
+of the subprojects, check out the [Alda GitHub Project board][gh-project].
+
+[gh-org]: https://github.com/alda-lang
+[gh-project]: https://github.com/orgs/alda-lang/projects/1
 
 For more details on how you can contribute to Alda, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
