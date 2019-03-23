@@ -1,4 +1,4 @@
-# Alda via OSC
+# Alda OSC API
 
 This document describes the OSC API for the Alda player process. The Alda client
 communicates with the player using this API. Alternate (non-Alda) clients could

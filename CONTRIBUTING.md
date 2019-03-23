@@ -1,73 +1,64 @@
 # Contributing to Alda
 
-The Alda project is composed of a number of subprojects, each of which has its
-own GitHub repo:
+We're working on the following projects:
 
-  - [**alda**](https://github.com/alda-lang/alda) is the "main" repository.
+- The Alda [**client**](#client), written in Go.
+- The Alda [**player**](#player), written in Kotlin.
+- The official Alda website, [**alda.io**](https://alda.io).
 
-    It includes a `build.boot` file that we use to pull together all of the
-    subprojects and build the `alda` (or `alda.exe`, for Windows users)
-    command-line executable.
+The source code for the Alda client and player lives in this repo.
 
-    This repo also includes the Alda documentation, installation instructions,
-    and downloadable releases. It serves as a landing page for newcomers to
-    Alda.
+The website has [its own repo][alda-site-repo]. It's currently under
+construction and we could use your help making it look awesome and making sure
+it has all the information it needs!
 
-  - [**alda-client-java**](https://github.com/alda-lang/alda-client-java) is the
-    Alda command-line client, written in Java.
+Pull requests to contribute to any of these projects are warmly welcomed. Please
+feel free to take on any open issue that interests you, and let us know if you
+need any help!
 
-  - [**alda-server-clj**](https://github.com/alda-lang/alda-server-clj) is the
-    Alda server process, which runs in the background and handles commands from
-    the client. The server is implemented in Clojure.
-
-  - [**alda-core**](https://github.com/alda-lang/alda-core) is the core
-    implementation of Alda in the form of a Clojure library.
-
-    This library includes the code that parses and compiles an Alda score into a
-    data format that is "ready to play" by the server.
-
-  - [**alda-sound-engine-clj**](https://github.com/alda-lang/alda-sound-engine-clj)
-    is the part that interprets and plays the fully-realized score.
-
-  - [**alda.io**](https://github.com/alda-lang/alda.io) is the source code for
-    the [official Alda website](http://alda.io).
-
-    The website is currently under construction. We could use your help to make
-    it look awesome and make sure it has all the information it needs!
-
-Pull requests to any of these repos are warmly welcomed. Please feel free to
-take on any open issue that interests you.
-
-For a top-level overview of things we're talking about and working on across all
-of these repos, check out the [Alda GitHub Project board][gh-project].
+For a top-level overview of things we're talking about and working on, check out
+the [Alda GitHub Project board][gh-project].
 
 [gh-project]: https://github.com/orgs/alda-lang/projects/1
+[alda-site-repo]: https://github.com/alda-lang/alda.io
 
-## Instructions
+## General Instructions
 
 - Fork the repository and make changes on your fork.
-- See the README of each Alda subproject repo for details useful for developing
-  that component.  You will find information like how to run and test that
-  component locally and how to run the unit tests.
 - Test your changes and make sure everything is working. Please add to the unit
   tests whenever it is appropriate.
 - Submit a Pull Request.
 - Your Pull Request should get the Dave Yarwood Seal of Approval™ before being
-  merged. (Don't worry, he's not hard to win over.)
+  merged. (Don't worry, he's not hard to win over!)
 
-If you're confused about how any aspect of the code works (Clojure questions,
-"what does this piece of code do," "can you walk me through how this works,"
-etc.), don't hesitate to ask questions on the issue you're working on, or pop
-into the #development channel in the [Alda Slack group](http://slack.alda.io) --
-we'll be more than happy to help!
+If you need help understanding how the code works or you have any other
+questions, stop by the `#development` channel in the [Alda Slack
+group](http://slack.alda.io) and say hi. We'll be happy to help!
 
-## Building the `alda` (or `alda.exe`) executable
+## Development Guide
 
-Dave is responsible for deploying subprojects to
-[Clojars](https://clojars.org/groups/alda) and building and releasing the latest
-builds of `alda` and `alda.exe`.
+### Client
 
-However, if you'd like to build a custom `alda` executable yourself (e.g. for
-funsies or as an experiment), the process is documented
-[here](doc/building-the-alda-executable.md).
+The Alda client is a Go program that parses input (Alda code), turns it into a
+data representation of a musical score, and sends instructions to an Alda player
+process to perform the score.
+
+For more info, see the [README](client) in the `client/` folder of this repo.
+
+### Player
+
+Alda is designed so that playback is asynchronous. When you use the Alda client
+to play a score, the client sends a bunch of [OSC][osc-intro] messages to a
+player process running in the background.
+
+The player process is agnostic of the Alda language. It simply receives and
+handles OSC messages containing lower-level instructions pertaining to audio
+playback.
+
+The player supports live coding in that it allows one to define, modify, and
+loop patterns during playback.
+
+For more info, see the [README](player) in the `player/` folder of this repo.
+
+[osc-intro]: http://opensoundcontrol.org/introduction-osc
 
