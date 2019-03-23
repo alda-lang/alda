@@ -1,4 +1,4 @@
-package osc.spike
+package io.alda.player
 
 import com.illposed.osc.OSCMessage
 import java.util.concurrent.LinkedBlockingQueue

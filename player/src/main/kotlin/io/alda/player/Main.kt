@@ -1,4 +1,4 @@
-package osc.spike
+package io.alda.player
 
 import java.util.Scanner
 import kotlin.system.exitProcess

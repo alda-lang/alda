@@ -23,7 +23,7 @@ dependencies {
 }
 
 application {
-  mainClassName = "osc.spike.MainKt"
+  mainClassName = "io.alda.player.MainKt"
 }
 
 val run by tasks.getting(JavaExec::class) {
@@ -33,7 +33,7 @@ val run by tasks.getting(JavaExec::class) {
 val fatJar = task("fatJar", type = Jar::class) {
     baseName = "${project.name}-fat"
     manifest {
-        attributes["Main-Class"] = "osc.spike.MainKt"
+        attributes["Main-Class"] = "io.alda.player.MainKt"
     }
     from(configurations.compile.get().map({ if (it.isDirectory) it else zipTree(it) }))
     from(configurations.runtime.get().map({ if (it.isDirectory) it else zipTree(it) }))

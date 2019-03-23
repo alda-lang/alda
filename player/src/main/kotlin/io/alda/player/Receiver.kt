@@ -1,4 +1,4 @@
-package osc.spike
+package io.alda.player
 
 import com.illposed.osc.OSCBadDataEvent
 import com.illposed.osc.OSCBundle
