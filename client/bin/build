@@ -1,0 +1,40 @@
+#!/bin/bash
+
+set -e
+
+mkdir -p target
+
+function build() {
+  os="$1"
+  arch="$2"
+
+  if [[ "$os" == "windows" ]]; then
+    ext=".exe"
+  else
+    ext=""
+  fi
+
+  output_filename="target/client-$os-$arch$ext"
+
+  echo "Building $output_filename..."
+
+  # Install the standard packages locally to speed up subsequent builds.
+  GOOS="$os" GOARCH="$arch" go install
+
+  # Build.
+  CGO_ENABLED=0 GOOS="$os" GOARCH="$arch" \
+    go build \
+    -tags netgo \
+    -ldflags '-w -extldflags "-static"' \
+    -o "$output_filename" \
+    main.go
+}
+
+for os in windows darwin linux; do
+  for arch in 386 amd64; do
+    build $os $arch
+  done
+done
+
+echo "Done."
+
