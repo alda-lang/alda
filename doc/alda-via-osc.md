@@ -1,5 +1,10 @@
 # Alda via OSC
 
+This document describes the OSC API for the Alda player process. The Alda client
+communicates with the player using this API. Alternate (non-Alda) clients could
+potentially be implemented that use the Alda player as a backend, using the API
+below to communicate with the player via OSC.
+
 ## Duration
 
 There are two aspects of the duration of a note:

@@ -237,7 +237,7 @@ include some that are about defining, playing, and looping patterns.
 
 ## OSC API
 
-See [Alda via OSC](alda-via-osc.md).
+See [Alda via OSC](doc/alda-via-osc.md).
 
 ## Demo
 
