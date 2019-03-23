@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+# This script is a placeholder for now.
+
+# TODO:
+#
+# * Build client.
+# * Build player.
+# * Output both the client and player to a `target/` directory.
+# * Maybe have a zip file (containing client and player) per arch?
+
+echo Not yet implemented.
+exit 1

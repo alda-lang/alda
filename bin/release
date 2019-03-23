@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+# This script is a placeholder for now.
+
+ALDA_VERSION=1.99.0
+
+# TODO:
+#
+# * Verify that a release with the current version number doesn't already exist.
+#   * Could use the GitHub API for this.
+#
+# * Look for current build in the `target/` directory.
+#
+# * Maybe verify that the build is current, somehow.
+#   * Maybe bin/build could tag the builds with a checksum of the current state
+#     of the project, and bin/release could verify the checksum?
+#
+# * Push a new git version tag.
+#
+# * Create a new release via the GitHub API.
+#
+# * Generate a release description from the CHANGELOG.
+#
+# * Upload the builds to the release.
+#
+# * Post to Alda slack #general about the new release.
+
+echo Not yet implemented.
+exit 1
