@@ -1,5 +1,33 @@
 # CHANGELOG
 
+## 1.3.0 (2019-04-14)
+
+* New CLI command: `alda export` and REPL command: `:export`
+
+  This command exports an Alda score to another format. Currently, the only
+  supported format is MIDI. MIDI files are exported at a resolution of 128
+  pulses per quarter note (PPQ).
+
+  The score is provided in the same way as it is for `alda play` and `alda
+  parse`: by specifying either a `-f / --file`, a string of `-c / --code`, or
+  piping in the code via STDIN.
+
+  ```
+  alda export -f my-score.alda -F midi -o my-score.alda
+  alda export -c 'piano: c8 d e f' -o piano-notes.mid
+  echo 'piano: c8 d e f' | alda export -o piano-notes.mid
+  ```
+
+  The `:export` REPL command takes a single argument, the output filename:
+
+  ```
+  > :export /path/to/desired-filename.mid
+  ```
+
+* The `alda parse` JSON output has a couple of new keys: `tempo/values` and
+  `tempo/role`.  These values are used internally to schedule MIDI notes in a
+  way that is exportable.
+
 ## 1.2.0 (2019-01-19)
 
 * New CLI command: `alda instruments` and REPL command: `:instruments`
