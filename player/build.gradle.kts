@@ -18,7 +18,7 @@ dependencies {
 
 dependencies {
   constraints {
-    compile("com.illposed.osc:javaosc-core:0.5-SNAPSHOT")
+    compile("com.illposed.osc:javaosc-core:0.5")
   }
 }
 
