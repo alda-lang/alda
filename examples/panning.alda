@@ -1,0 +1,16 @@
+piano:
+  (key-signature '(a flat major))
+  (panning 0)   a8
+  (panning 15)  b >
+  (panning 30)  c
+  (panning 45)  d
+  (panning 60)  e
+  (panning 75)  f
+  (panning 90)  g
+  (panning 100) a
+
+  V1: (panning 0)
+    o2 e2/a/>c < f-/a/>d < e1/a/>c
+
+  V2: (panning 100)
+    o4 r4 a2/>c/e < a4/>d/f- < a1/>c/e

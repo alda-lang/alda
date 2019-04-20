@@ -1,0 +1,53 @@
+# String Quartet in G Minor, Claude Debussy (1862-1918)
+# (excerpt)
+
+(tempo! 126)
+(key-sig! '(g minor))
+
+violin "violin-1":
+  o4
+  (quant 40) g4 (quant 90) f4~8 d8 f {a-~ b~ a-~} | g8 f4 g8 d4 d
+  b8 r g4~8 b8 {g b > d <}4 | b8 r g4~8 b8 {g b > d <}4 |
+
+  (quant 40) > g4 (quant 90) f4~8 d8 f {a-~ b~ a-~} |
+  g8 f4~ g8 d4~8~ {e~ f~ e~}8 |
+
+  d8 < (vol 85) b_4~ > c8 (vol 75) < a-4~8 {a-~ b~ a-~}8 |
+  g8 f4~ g8 d4~8~ {a-~ b~ a-~}8 | g8 f4~ g8 d8 f4~ {a-~ b~ a-}8
+
+  g8 f4~ g8 (vol 65) d8 f4~ g8 | d2 r8 f4~ g8 | d2 r2 | r4 > d2 d4~ |
+
+violin "violin-2":
+  o3
+  (quant 40) b4 (quant 90) > c4~8 < b8 > c c < | b > c4 < b8 b4 > c~ < |
+  b8 r b2~12 > d12 g | d8 r < b4~8~ > d8 < {b > d g}4 |
+
+  (quant 40) b4 (quant 90) a4~8 a-8 g a-8~|2. a-4~|2. (vol 75) e4 |
+  d4.~ c8 < b4~ a- | > e2~ < a-
+
+  > e2 (vol 65) < a-8 > e4~ < b8 | > c2 r8 e4~ < b8 | > c2 r2 |
+  (vol 40) d16~ e_~ d~ e_~ (vol 50) f+~ g~ f+~ g~
+  (vol 60) a~ b~ a~ b~ (vol 70) > c~ d~ c~ d~
+
+viola:
+  o3
+  (quant 40) d4 (quant 90) d4~8 f8 d d | d d4 g8 f4 f+~ |
+  g8 r f+4 f {e_ g b}4 | g8 r f+4 f {e_ g b}4 |
+
+  (quant 40) > d4 (quant 90) e-4~8 e8 d- c | < b_ > d4~ f8 < b_4 > c |
+  < b_8 > (vol 85) d4~ e8 (vol 75) c2 | < a-2. > c4 < a2~ f
+
+  b_2 > (vol 65) c8 c4~ d8 | < a-2 r8 > c4~ d8 | < a-2 r8 f4~ (vol 50) g8 |
+  (vol 40) a_16~ b~ a_~ b_ (vol 50) > c~ d~ c~ d~
+  (vol 60) e~ f~ e~ f~ (vol 70) g~ a~ g~ a~
+
+cello:
+  o2
+  (quant 50) g4 (quant 90) a-4~8 b8 a- f | g a-4 g8 b4 a- | g1 | g |
+
+  (quant 50) > c4 (quant 90) f4~8 < b8 > e < a-8~2./>e < a-4~2./>e (vol 75) < a-4 |
+  b_8 > d4~ e8 e_4~ f b_2~ > c
+
+  < a-2 f8 a-4~ g8 | f f4~ g8 d a-4~ g8 | f f4~ g8 d r r4 |
+  (vol 40) f+16~ g~ f+~ g~ (vol 50) a~ b~ a~ b~
+  (vol 60) > c~ d~ c~ d~ (vol 70) e~ f~ e~ f~

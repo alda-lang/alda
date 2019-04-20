@@ -1,0 +1,48 @@
+# Excerpt from the beginning of:
+#
+# Divertimento para cuarteto de saxofones (2004) op. 112
+# Juan Santiago Jiménez
+#
+# sheet music: http://imslp.org/wiki/Divertimento_No.1%2C_Op.112_(Jim%C3%A9nez_Nogales%2C_Juan_Santiago)
+
+(tempo! 100)
+
+short = (quant 75)
+breathe = (quant 90)
+restMeasure = r4~4~8
+
+soprano-sax: (transpose -2) (key-sig '(c major)) (vol 80)
+  o4 a8 > c f e g | f4 e8 d c | d4 c8 < b a | b4 > d g8 |
+  f g short e4 breathe > d8 |
+
+  c8 < a e f d | e4 f8 g a | g4 a8 b > c |
+  < short b4 breathe > c8 d e | f e d c < b | a g f e g |
+
+  f r d c < b | a g f e g | f4 > f r8 | restMeasure*3
+
+alto-sax: (transpose -9) (key-sig '(g major)) (vol 85)
+  restMeasure | o4 g8 b > e d f | e4 a4. | d4 g4. | c4 f4. |
+
+  e4. short d4 breathe | a8 f d e g | f4 b4. | e4 a4. | d4. g4 |
+  short c4 breathe f8 e d
+
+  o5 e8 < b > e d c | d < a > d c < b | > c < g > c < b a | b f b a g |
+  a4 > a r8 | restMeasure
+
+tenor-sax: (transpose -14) (key-sig '(c major)) (vol 90)
+  restMeasure*2 | o4 g8 b > e d f | e < a > d c e | d < g > c < b > d |
+
+  short c4 breathe f e8 | d4 g f8 | e g > c < b > d | c < f b a > c |
+  < b e a g b | short a4 breathe g f8 |
+
+  e4 d c8 | < b4 > c d8 | < a4 b > c8 | < g4 r8 r4 |
+  > c8 < g > c < b a | b f b a g
+
+bari-sax: (transpose -21) (key-sig '(g major)) (vol 100)
+  restMeasure | o5 c4. < b4 | > c4. d4 | e4. d4 | e4. f4 |
+
+  short g4 breathe < a8 b g | a4 b8 > c < a | b4 > c8 d < b > | c4 < b8 a4 |
+  g4 f8 short e4 breathe | d4.~4~|
+
+  |~4.~8 g8 | c4. f4 | g4. g4 | c4 r8 r4 | restMeasure*2
+

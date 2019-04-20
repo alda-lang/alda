@@ -1,0 +1,51 @@
+(comment "
+  ALL WATCHED OVER BY
+  MACHINES OF LOVING GRACE
+
+  a setting of the poem
+  by Richard Brautigan
+
+  for piano and voice
+
+  by Dave Yarwood
+")
+
+(tempo! 90)
+
+piano:  # verse 1
+# LH
+V1: o2 b1/>b | o2 g+/>g+ | o2 g/>g
+    o2 f+2/>f+ o2 e+/>e+ | o2 e/>e o2 d+/d+ | o2 d1/>d
+# RH
+V2: r4 o4 d+/f+ e/g f+/a | d1/f+/b | d/f+/b |
+    r4 c+4/f+/a+ c+2/e+/g+ | r4 c+/e/g < a+2/>d+/f+ |
+    %voiceIn # I'd like to think...
+    < a1/>d/f+
+
+V0: o1 f+2/>f+/a+/>c+/g | o1 b4/>b/>b/>d  o1 f4./>f/>f/a+ |
+    o1 c+2./>c+/>c+/e+/g+ r4
+
+    o2 d4/>d/f+ < a/>c+/e d/f+8 f4./r8 < g4/b
+
+# LH
+V1: o2 c4/g < b/>f+ e/b | f2./>c | <e/b |
+       d/g | c4/g d+/b e/b
+# RH
+V2: o3 e/b f+/b e/b8 g+ | a4 a8/>c <f a/>c <f | g4/b g8/b e g8/b e |
+    f4/g/b f8/g/b d f/g/b d | e4/g/>c < d+/f+/b e/g/b
+
+V0: o1 g16 > g b > d   f g b > d   f g o2 f8/>>b16 > d |
+    o2 e16 g b > c e g b > c   o2 e+ g+ b > d e+ g+ b > d
+
+    o2 f+2/a/>c+ <f+/>c+/f+/a+/>c+ o2 c+/>c+/e+/g+/b
+
+cello "voice":
+@voiceIn   # verse 1
+r2 r8 o3 f+ f+ f+ g2 | < b8 > d f g+ b | > d c+4.~8 r8 < f+ a |
+> d c+ < b a f+ f4 f8 | > e d c < b b g+ | a2 r8 f |
+
+    # slur(b a g a)
+> c8 < b4.~ b16~ a~ g~ a b2 r8 g | > e d c < b b a16 g |
+a b b8~2~ | > d2 r4. < g+8 | a4 g+16 f+8.~4 e+8 d++ e+ g+4. | f+4
+
+piano: # verse 2...

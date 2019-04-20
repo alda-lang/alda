@@ -1,0 +1,21 @@
+# Gau's Theme - Nobuo Uematsu (from Final Fantasy VI OST)
+
+(tempo! 80)
+
+cello:
+  (quant 95) o2
+  e4 | > c+4. c+8 < b a g+ a | > e2. f+8 g+ | a4 c+ d+ | e1
+  d8 c+ d < b8~8 > c+8 d4~|1
+  c+8 < b > c+ < a8~8 b8 > c+4~2
+
+acoustic-guitar:
+  o2 r4
+  a8 > e a > c+8~2 <<
+  g+8 > e g+ > c+8~2 <<
+  f+8 > c+ f+ a b4/d+ <
+  e8 b > d a g+2 <
+
+  b8 > f+ b > d << a > f+ b > d <<
+  g > d g b8~8 > d8 < b g <
+  a > e a > c+ << d+ > d+ f+ > c+ <<
+  g+ > e g+ e > c+ < e g+ e

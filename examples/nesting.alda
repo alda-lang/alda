@@ -1,0 +1,16 @@
+piano:
+  V1:
+    c8 d e f g2~
+
+  V2:
+    [ [c8 d]*2 e [ f g*3 (key-sig '(b (flat) e (flat)))*5
+                   { {c c} [ g/e/c [ d ]*2 ]*1
+                     { c d }*5 }*5
+                     [ a/b/c ] b ]
+                  c/e ]
+
+  V3:
+    a8 b > c2~
+
+clarinet:
+  a2 e

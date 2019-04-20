@@ -1,0 +1,16 @@
+# transcribed from:
+# https://www.rosegardenmusic.com/tutorials/supplemental/n-endings/index.html
+
+vibraphone "vibes-1":
+  (panning 10)
+  [ a b8 > d < b g b > c | e4 < a > c < g |
+    [g > g8 f e c < a4] '1-2
+    [b8 > d g2.]        '3
+  ] *3
+
+vibraphone "vibes-2":
+  (panning 90)
+  [ a > e < a r | b r b r |
+    [g r > g < g] '1-2
+    [> d r a g]   '3
+  ] *3

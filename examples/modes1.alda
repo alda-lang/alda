@@ -1,0 +1,22 @@
+# This example is essentially just in C major (ionian), but is a test of the
+# other modes that contain the same notes as C ionian (D dorian, E phrygian,
+# etc.)
+
+(tempo! 180)
+
+piano:
+  (key-sig '(c ionian))
+  c8 d e f g a b > c <
+  (key-sig '(d dorian))
+  d  e f g a b > c d <
+  (key-sig '(e phrygian))
+  e  f g a b > c d e <
+  (key-sig '(f lydian))
+  f  g a b > c d e f <
+  (key-sig '(g mixolydian))
+  g  a b > c d e f g <
+  (key-sig '(a aeolian))
+  a  b > c d e f g a <
+  (key-sig '(b locrian))
+  b  > c d e f g a b >
+  c1

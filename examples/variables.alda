@@ -1,0 +1,18 @@
+(tempo! 160)
+
+riffA = f8 f g+ a > c c d c <
+riffB = b-8 b- > c+ d f f g f <
+riffC = > c8 c d+ e g g a g <
+riffD = f8 f g+ a > c c d < b > | c c < b- b- a a g g
+
+rockinRiff = [
+  riffA*4
+  riffB*2 riffA*2
+  riffC riffB riffD
+]
+
+electric-guitar-distorted "guitar": o2
+tenor-saxophone "sax": o3
+
+guitar/sax:
+  rockinRiff*8

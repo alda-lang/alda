@@ -1,0 +1,59 @@
+midi-woodblock:
+  o2
+  {c c} {c c} {c c} {c c}
+  {c c} {c c} {c c} {c c}
+  {c c} {c c} {c c} {c c}
+  {c c} {c c} {c c} {c c}
+  {c c c c c c c} {c c c c c c c} {c c c c c c c} {c c c c c c c}
+  {c c c c c c c} {c c c c c c c} {c c c c c c c} {c c c c c c c}
+  {c c c c c c c} {c c c c c c c} {c c c c c c c} {c c c c c c c}
+  {c c c c c c c} {c c c c c c c} {c c c c c c c} {c c c c c c c}
+  {c {c c c} c}
+  {c {c c c c} c}
+  {c {c c c c c} c}
+  {c {c c c c c c} c}
+  {c {c c c c c c c} c}
+midi-agogo:
+  o3
+  r1
+  (set-duration 1)
+  {c c c} {c c c} {c c c} {d d d}
+  {c c c} {c c c} {c c c} {d d d}
+  {c c c} {c c c} {c c c} {d d d}
+  o4
+  {c c c c c} {c c c c c} {c c c c c} {c c c c c}
+  {c c c c c} {c c c c c} {c c c c c} {c c c c c}
+  {c c c c c} {c c c c c} {c c c c c} {c c c c c}
+  r1
+  (set-duration 1)
+  o3
+  {c4 c2 c4} {c4 c2 c4} {c4 c2 c4} {c4 c2 c4}
+  {c4 c1 c4} {c4 c1 c4} {c4 c1 c4} {c4 c1 c4}
+  {c8 c1 c8} {c8 c1 c8} {c8 c1 c8} {c8 c1 c8}
+  {c16 c1 c16} {c16 c1 c16} {c16 c1 c16} {c16 c1 c16}
+  {c32 c1 c32} {c32 c1 c32} {c32 c1 c32} {c16 c1 c32}
+  (set-duration 2)
+  {c32 c1 c32} {c32 c1 c32} {c32 c1 c32} {c16 c1 c32}
+midi-guitar-fret-noise:
+  o4
+  r1
+  r1
+  (set-duration 1)
+  {c c c c c} {c c c c c} {c c c c c} {c c c c c}
+  {c c c c c} {c c c c c} {c c c c c} {c c c c c}
+  {c c c} {c c c} {c c c} {d d d}
+  o3
+  {c c c} {c c c} {c c c} {d d d}
+piano:
+  o2
+  r1
+  r1
+  r1
+  (set-duration 1)
+  {c c c c c c c} {c c c c c c c} {c c c c c c c} {c c c c c c c}
+  r1
+  r1
+  r1
+  (set-duration 1)
+  {e e} {e e} {e e} {e e}
+  {e e} {e e} {e e} {e e}
