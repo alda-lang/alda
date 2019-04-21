@@ -142,6 +142,12 @@ func printUsage() {
 	fmt.Printf("Usage: %s PORT EXAMPLE\n", os.Args[0])
 }
 
+// TODO:
+// * Command/arg parsing via cobra or similar
+// * Top-level -v / --verbose flag that sets the log level:
+//   zerolog.SetGlobalLevel(zerolog.WarnLevel)
+//   zerolog.SetGlobalLevel(zerolog.DebugLevel)
+
 func main() {
 	rand.Seed(time.Now().Unix())
 
