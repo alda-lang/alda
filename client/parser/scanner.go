@@ -51,14 +51,16 @@ const (
 	AtMarker TokenType = iota
 	Barline
 	Colon
+	CramClose
+	CramOpen
 	Dot
 	Endings
 	EOF
 	Equals
+	EventSeqClose
+	EventSeqOpen
 	Flat
 	Integer
-	LeftCram
-	LeftEventSeq
 	LeftParen
 	Marker
 	Name
@@ -73,8 +75,6 @@ const (
 	OctaveSet
 	OctaveUp
 	RestLetter
-	RightCram
-	RightEventSeq
 	RightParen
 	Separator
 	Sharp
@@ -101,6 +101,10 @@ func (tt TokenType) ToString() string {
 		return "Barline"
 	case Colon:
 		return "Colon"
+	case CramClose:
+		return "CramClose"
+	case CramOpen:
+		return "CramOpen"
 	case Dot:
 		return "Dot"
 	case Endings:
@@ -109,14 +113,14 @@ func (tt TokenType) ToString() string {
 		return "EOF"
 	case Equals:
 		return "Equals"
+	case EventSeqClose:
+		return "EventSeqClose"
+	case EventSeqOpen:
+		return "EventSeqOpen"
 	case Flat:
 		return "Flat"
 	case Integer:
 		return "Integer"
-	case LeftCram:
-		return "LeftCram"
-	case LeftEventSeq:
-		return "LeftEventSeq"
 	case LeftParen:
 		return "LeftParen"
 	case Marker:
@@ -147,10 +151,6 @@ func (tt TokenType) ToString() string {
 		return "Repeat"
 	case RestLetter:
 		return "RestLetter"
-	case RightCram:
-		return "RightCram"
-	case RightEventSeq:
-		return "RightEventSeq"
 	case RightParen:
 		return "RightParen"
 	case Separator:
@@ -650,13 +650,13 @@ func (s *scanner) scanToken() error {
 
 	switch c {
 	case '{':
-		s.addToken(LeftCram, nil)
+		s.addToken(CramOpen, nil)
 	case '}':
-		s.addToken(RightCram, nil)
+		s.addToken(CramClose, nil)
 	case '[':
-		s.addToken(LeftEventSeq, nil)
+		s.addToken(EventSeqOpen, nil)
 	case ']':
-		s.addToken(RightEventSeq, nil)
+		s.addToken(EventSeqClose, nil)
 	case '.':
 		s.addToken(Dot, nil)
 	case '-':
