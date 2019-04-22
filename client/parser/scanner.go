@@ -53,7 +53,6 @@ const (
 	Colon
 	CramClose
 	CramOpen
-	Dot
 	Endings
 	EOF
 	Equals
@@ -105,8 +104,6 @@ func (tt TokenType) ToString() string {
 		return "CramClose"
 	case CramOpen:
 		return "CramOpen"
-	case Dot:
-		return "Dot"
 	case Endings:
 		return "Endings"
 	case EOF:
@@ -174,7 +171,7 @@ func (tt TokenType) ToString() string {
 
 func (t Token) ToString() string {
 	return fmt.Sprintf(
-		"[line %d] %s | %#q | %v", t.line, t.tokenType.ToString(), t.text, t.literal,
+		"[line %d] %s | %#q | %#v", t.line, t.tokenType.ToString(), t.text, t.literal,
 	)
 }
 
@@ -313,6 +310,11 @@ func (s *scanner) parseIntegerFrom(startIndex int) int {
 	return int(integer)
 }
 
+type noteLength struct {
+	denominator int
+	dots        int
+}
+
 func (s *scanner) parseNoteLength() {
 	// NB: This assumes that the first digit has already been consumed.
 
@@ -337,7 +339,14 @@ func (s *scanner) parseNoteLength() {
 		return
 	}
 
-	s.addToken(NoteLength, integer)
+	dots := 0
+
+	for c := s.peek(); c == '.'; c = s.peek() {
+		dots++
+		s.advance()
+	}
+
+	s.addToken(NoteLength, noteLength{denominator: integer, dots: dots})
 }
 
 func (s *scanner) parseInteger() {
@@ -499,7 +508,7 @@ func isValidNameChar(c rune) bool {
 	}
 
 	switch c {
-	case '_', '-', '+', '\'', '(', ')':
+	case '_', '-', '+', '\'', '(', ')', '.':
 		return true
 	}
 
@@ -657,8 +666,6 @@ func (s *scanner) scanToken() error {
 		s.addToken(EventSeqOpen, nil)
 	case ']':
 		s.addToken(EventSeqClose, nil)
-	case '.':
-		s.addToken(Dot, nil)
 	case '-':
 		s.addToken(Flat, nil)
 	case '+':
