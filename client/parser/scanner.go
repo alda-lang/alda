@@ -41,7 +41,7 @@ func (s *scanner) unexpectedCharError(
 	if context != "" {
 		context = " in " + context
 	}
-	msg := fmt.Sprintf("Unexpected '%c'%s.", c, context)
+	msg := fmt.Sprintf("Unexpected '%c'%s", c, context)
 	return s.errorAtPosition(line, column, msg)
 }
 
@@ -275,7 +275,7 @@ func (s *scanner) parseString() error {
 	}
 
 	if s.reachedEOF() {
-		return s.errorAtPosition(s.line, s.column, "Unterminated string.")
+		return s.errorAtPosition(s.line, s.column, "Unterminated string")
 	}
 
 	// Consume the closing ".
@@ -526,7 +526,7 @@ func (s *scanner) parseNickname() error {
 	s.consumeWhile(isValidNameChar)
 
 	if s.reachedEOF() {
-		return s.errorAtPosition(s.line, s.column, "Unterminated nickname.")
+		return s.errorAtPosition(s.line, s.column, "Unterminated nickname")
 	}
 
 	if c := s.peek(); c != '"' {
