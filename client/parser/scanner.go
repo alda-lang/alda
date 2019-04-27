@@ -15,20 +15,20 @@ func isLetter(c rune) bool {
 	return ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z')
 }
 
-type parseError struct {
+type scanError struct {
 	filename string
 	line     int
 	column   int
 	msg      string
 }
 
-func (e *parseError) Error() string {
+func (e *scanError) Error() string {
 	return fmt.Sprintf("%s:%d:%d %s", e.filename, e.line, e.column, e.msg)
 }
 
 func (s *scanner) errorAtPosition(
-	line int, column int, msg string) *parseError {
-	return &parseError{
+	line int, column int, msg string) *scanError {
+	return &scanError{
 		filename: s.filename,
 		line:     line,
 		column:   column,
@@ -37,7 +37,7 @@ func (s *scanner) errorAtPosition(
 }
 
 func (s *scanner) unexpectedCharError(
-	c rune, context string, line int, column int) *parseError {
+	c rune, context string, line int, column int) *scanError {
 	if context != "" {
 		context = " in " + context
 	}
