@@ -305,14 +305,14 @@ func (s *scanner) consumeSpaces() {
 // This function is meant to be called after consuming a bunch of digits. It
 // reads from the start index up until the current index and parses the result
 // as an integer.
-func (s *scanner) parseIntegerFrom(startIndex int) int {
-	integer, _ := strconv.ParseInt(string(s.input[startIndex:s.current]), 10, 64)
-	return int(integer)
+func (s *scanner) parseIntegerFrom(startIndex int) int32 {
+	integer, _ := strconv.ParseInt(string(s.input[startIndex:s.current]), 10, 32)
+	return int32(integer)
 }
 
 type noteLength struct {
-	denominator int
-	dots        int
+	denominator int32
+	dots        int32
 }
 
 func (s *scanner) parseNoteLength() {
@@ -346,7 +346,7 @@ func (s *scanner) parseNoteLength() {
 		s.advance()
 	}
 
-	s.addToken(NoteLength, noteLength{denominator: integer, dots: dots})
+	s.addToken(NoteLength, noteLength{denominator: integer, dots: int32(dots)})
 }
 
 func (s *scanner) parseInteger() {
@@ -364,13 +364,13 @@ func (s *scanner) parseNumber() {
 
 	s.consumeDigits()
 
-	number, _ := strconv.ParseFloat(string(s.input[s.start:s.current]), 64)
+	number, _ := strconv.ParseFloat(string(s.input[s.start:s.current]), 32)
 	s.addToken(Number, number)
 }
 
 type endingRange struct {
-	first int
-	last  int
+	first int32
+	last  int32
 }
 
 func (s *scanner) parseEndings() error {
@@ -445,7 +445,7 @@ func (s *scanner) parseRepeat() error {
 	}
 
 	digits := s.input[startDigits:s.current]
-	times, _ := strconv.ParseInt(string(digits), 10, 64)
+	times, _ := strconv.ParseInt(string(digits), 10, 32)
 	s.addToken(Repeat, times)
 
 	return nil
@@ -462,8 +462,8 @@ func (s *scanner) parseOctaveSet() error {
 
 	// Trim the initial 'o'
 	digits := s.input[s.start+1 : s.current]
-	octaveNumber, _ := strconv.ParseInt(string(digits), 10, 64)
-	s.addToken(OctaveSet, octaveNumber)
+	octaveNumber, _ := strconv.ParseInt(string(digits), 10, 32)
+	s.addToken(OctaveSet, int32(octaveNumber))
 
 	return nil
 }
@@ -482,7 +482,7 @@ func (s *scanner) parseVoiceMarker() error {
 
 	// Trim the surrounding 'V' and ':'.
 	digits := s.input[s.start+1 : s.current-1]
-	voiceNumber, _ := strconv.ParseInt(string(digits), 10, 64)
+	voiceNumber, _ := strconv.ParseInt(string(digits), 10, 32)
 	s.addToken(VoiceMarker, voiceNumber)
 
 	return nil
