@@ -1,6 +1,7 @@
 package logging
 
 import (
+	"fmt"
 	"github.com/rs/zerolog"
 	"os"
 	"time"
@@ -28,3 +29,23 @@ var Fatal = log.Fatal
 
 // Panic logs at the PANIC level.
 var Panic = log.Panic
+
+// SetGlobalLevel sets the global logging level.
+func SetGlobalLevel(level string) {
+	switch level {
+	case "debug":
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	case "info":
+		zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	case "warn":
+		zerolog.SetGlobalLevel(zerolog.WarnLevel)
+	case "error":
+		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
+	case "fatal":
+		zerolog.SetGlobalLevel(zerolog.FatalLevel)
+	case "panic":
+		zerolog.SetGlobalLevel(zerolog.PanicLevel)
+	default:
+		panic(fmt.Sprintf("Unrecognized log level: %s", level))
+	}
+}

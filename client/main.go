@@ -144,9 +144,8 @@ func printUsage() {
 
 // TODO:
 // * Command/arg parsing via cobra or similar
-// * Top-level -v / --verbose flag that sets the log level:
-//   zerolog.SetGlobalLevel(zerolog.WarnLevel)
-//   zerolog.SetGlobalLevel(zerolog.DebugLevel)
+// * Top-level -v / --verbose flag that sets the log level via
+//   log.SetGlobalLevel
 
 func main() {
 	rand.Seed(time.Now().Unix())
