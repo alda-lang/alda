@@ -1,6 +1,7 @@
 package parser
 
 import (
+	_ "alda.io/client/testing"
 	"os"
 	"path/filepath"
 	"testing"
