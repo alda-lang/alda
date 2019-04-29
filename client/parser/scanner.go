@@ -554,7 +554,7 @@ func (s *scanner) parsePrefixedName(
 	s.consumeWhile(isValidNameChar)
 
 	// Trim the initial prefix character
-	s.addToken(tokenType, s.input[s.start+1:s.current])
+	s.addToken(tokenType, string(s.input[s.start+1:s.current]))
 
 	return nil
 }
