@@ -365,7 +365,7 @@ func (s *scanner) parseNumber() {
 	s.consumeDigits()
 
 	number, _ := strconv.ParseFloat(string(s.input[s.start:s.current]), 32)
-	s.addToken(Number, number)
+	s.addToken(Number, float32(number))
 }
 
 type endingRange struct {
@@ -446,7 +446,7 @@ func (s *scanner) parseRepeat() error {
 
 	digits := s.input[startDigits:s.current]
 	times, _ := strconv.ParseInt(string(digits), 10, 32)
-	s.addToken(Repeat, times)
+	s.addToken(Repeat, int32(times))
 
 	return nil
 }
@@ -483,7 +483,7 @@ func (s *scanner) parseVoiceMarker() error {
 	// Trim the surrounding 'V' and ':'.
 	digits := s.input[s.start+1 : s.current-1]
 	voiceNumber, _ := strconv.ParseInt(string(digits), 10, 32)
-	s.addToken(VoiceMarker, voiceNumber)
+	s.addToken(VoiceMarker, int32(voiceNumber))
 
 	return nil
 }
