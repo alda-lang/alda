@@ -26,7 +26,11 @@ func TestExamples(t *testing.T) {
 				return nil
 			}
 
-			return ParseFile(path)
+			if _, err := ParseFile(path); err != nil {
+				return err
+			}
+
+			return nil
 		})
 	if err != nil {
 		t.Errorf("%v\n", err)
