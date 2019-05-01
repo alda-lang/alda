@@ -39,7 +39,7 @@ func (s *scanner) errorAtPosition(
 func (s *scanner) unexpectedCharError(
 	c rune, context string, line int, column int) *scanError {
 	if context != "" {
-		context = " in " + context
+		context = " " + context
 	}
 	msg := fmt.Sprintf("Unexpected '%c'%s", c, context)
 	return s.errorAtPosition(line, column, msg)
@@ -399,7 +399,7 @@ func (s *scanner) parseEndings() error {
 
 				// Make sure a number comes next.
 				if c := s.peek(); !isDigit(c) {
-					return s.unexpectedCharError(c, "endings", s.line, s.column)
+					return s.unexpectedCharError(c, "in endings", s.line, s.column)
 				}
 
 				startNumber := s.current
@@ -422,7 +422,7 @@ func (s *scanner) parseEndings() error {
 			// At this point, there could be a comma, indicating there are more ranges
 			// to parse. If so, we continue to loop. Any other character is invalid.
 			if c != ',' {
-				return s.unexpectedCharError(c, "endings", s.line, s.column)
+				return s.unexpectedCharError(c, "in endings", s.line, s.column)
 			}
 		}
 	}
@@ -434,14 +434,14 @@ func (s *scanner) parseRepeat() error {
 	s.consumeSpaces()
 
 	if c := s.peek(); !isDigit(c) {
-		return s.unexpectedCharError(c, "repeat", s.line, s.column)
+		return s.unexpectedCharError(c, "in repeat", s.line, s.column)
 	}
 
 	startDigits := s.current
 	s.consumeDigits()
 
 	if c := s.peek(); c != ' ' && c != '\n' && !s.reachedEOF() {
-		return s.unexpectedCharError(c, "repeat", s.line, s.column)
+		return s.unexpectedCharError(c, "in repeat", s.line, s.column)
 	}
 
 	digits := s.input[startDigits:s.current]
@@ -457,7 +457,7 @@ func (s *scanner) parseOctaveSet() error {
 	s.consumeDigits()
 
 	if c := s.peek(); c != ' ' && c != '\n' && !s.reachedEOF() {
-		return s.unexpectedCharError(c, "octave set", s.line, s.column)
+		return s.unexpectedCharError(c, "in octave set", s.line, s.column)
 	}
 
 	// Trim the initial 'o'
@@ -474,7 +474,7 @@ func (s *scanner) parseVoiceMarker() error {
 	s.consumeDigits()
 
 	if c := s.peek(); c != ':' {
-		return s.unexpectedCharError(c, "voice marker", s.line, s.column)
+		return s.unexpectedCharError(c, "in voice marker", s.line, s.column)
 	}
 
 	// Consume the final ':'
@@ -530,7 +530,7 @@ func (s *scanner) parseNickname() error {
 	}
 
 	if c := s.peek(); c != '"' {
-		s.unexpectedCharError(c, "nickname", s.line, s.column)
+		s.unexpectedCharError(c, "in nickname", s.line, s.column)
 	}
 
 	// Consume the closing ".
@@ -560,11 +560,11 @@ func (s *scanner) parsePrefixedName(
 }
 
 func (s *scanner) parseMarker() error {
-	return s.parsePrefixedName(Marker, "marker name")
+	return s.parsePrefixedName(Marker, "in marker name")
 }
 
 func (s *scanner) parseAtMarker() error {
-	return s.parsePrefixedName(AtMarker, "marker name")
+	return s.parsePrefixedName(AtMarker, "in marker name")
 }
 
 func isNoteLetter(c rune) bool {
@@ -649,7 +649,7 @@ func (s *scanner) scanToken() error {
 			case isValidSymbolChar(c):
 				s.parseSymbol()
 			default:
-				return s.unexpectedCharError(c, "S-expression", prevLine, prevColumn)
+				return s.unexpectedCharError(c, "in S-expression", prevLine, prevColumn)
 			}
 		}
 		return err
@@ -714,10 +714,10 @@ func (s *scanner) scanToken() error {
 			case isVoiceLetter(c) && isDigit(n):
 				err = s.parseVoiceMarker()
 			default:
-				return s.unexpectedCharError(n, "note/rest/name", s.line, s.column)
+				return s.unexpectedCharError(n, "in note/rest/name", s.line, s.column)
 			}
 		default:
-			return s.unexpectedCharError(c, "", prevLine, prevColumn)
+			return s.unexpectedCharError(c, "at top level", prevLine, prevColumn)
 		}
 	}
 
