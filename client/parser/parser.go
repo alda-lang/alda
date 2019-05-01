@@ -456,7 +456,7 @@ func (p *parser) noteRestOrChord() ([]model.ScoreUpdate, error) {
 	}
 
 	if notesCount > 1 {
-		allUpdates = []model.ScoreUpdate{model.Chord{Updates: allUpdates}}
+		allUpdates = []model.ScoreUpdate{model.Chord{Events: allUpdates}}
 	}
 
 	if repeats > 0 {
