@@ -616,7 +616,7 @@ func (s *scanner) scanToken() error {
 	c := s.advance()
 
 	switch c {
-	case ' ', '\r', '\n':
+	case ' ', '\r', '\n', '\t':
 		// skip whitespace
 		return nil
 	case '#':
