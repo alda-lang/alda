@@ -114,59 +114,50 @@ func (p *parser) lispForm(context string) (model.LispForm, error) {
 	case p.match(String):
 		return model.LispString{Value: p.previous().literal.(string)}, nil
 	case p.match(LeftParen):
-		return p.lispSexp()
+		return p.lispList()
 	default:
 		return nil, p.unexpectedTokenError(p.peek(), context)
 	}
 }
 
-func (p *parser) lispSexp() (model.LispSexp, error) {
+func (p *parser) lispList() (model.LispList, error) {
 	// NB: This assumes the initial LeftParen token was already consumed.
-	forms := []model.LispForm{}
-	sexp := model.LispSexp{}
+	list := model.LispList{}
 
 	for token := p.peek(); token.tokenType != RightParen; token = p.peek() {
 		if p.match(EOF) {
-			return sexp, p.errorAtToken(token, "Unterminated S-expression.")
+			return list, p.errorAtToken(token, "Unterminated S-expression.")
 		}
 
 		quoted := p.match(SingleQuote)
 
 		form, err := p.lispForm("in S-expression")
 		if err != nil {
-			return sexp, err
+			return list, err
 		}
 
 		if quoted {
 			form = model.LispQuotedForm{Form: form}
 		}
 
-		forms = append(forms, form)
+		list.Elements = append(list.Elements, form)
 	}
 
 	if _, err := p.consume(RightParen, "in S-expression"); err != nil {
-		return sexp, err
+		return list, err
 	}
 
-	for i, form := range forms {
-		if i == 0 {
-			sexp.Operator = form
-		} else {
-			sexp.Arguments = append(sexp.Arguments, form)
-		}
-	}
-
-	return sexp, nil
+	return list, nil
 }
 
 func (p *parser) sexp() ([]model.ScoreUpdate, error) {
 	// NB: This assumes the initial LeftParen token was already consumed.
-	sexp, err := p.lispSexp()
+	list, err := p.lispList()
 	if err != nil {
 		return nil, err
 	}
 
-	return []model.ScoreUpdate{p.singleOrRepeated(sexp)}, nil
+	return []model.ScoreUpdate{p.singleOrRepeated(list)}, nil
 }
 
 func (p *parser) part() ([]model.ScoreUpdate, error) {
@@ -385,7 +376,7 @@ func (p *parser) updatesBetweenNotesInChord() ([]model.ScoreUpdate, error) {
 			}
 			updates = append(updates, octaveSetUpdates)
 		case p.match(LeftParen):
-			sexp, err := p.lispSexp()
+			sexp, err := p.lispList()
 			if err != nil {
 				return nil, err
 			}
