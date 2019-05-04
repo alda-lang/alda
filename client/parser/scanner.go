@@ -324,6 +324,10 @@ type noteLength struct {
 	dots        int32
 }
 
+func terminatesNoteLength(c rune) bool {
+	return c == ' ' || c == '\n' || c == '/' || c == '~'
+}
+
 func (s *scanner) parseNoteLength() {
 	// NB: This assumes that the first digit has already been consumed.
 
@@ -342,7 +346,7 @@ func (s *scanner) parseNoteLength() {
 
 	c := s.peek()
 	n := s.peekNext()
-	if c == 's' && (n == ' ' || n == '/' || s.eofIsNext()) {
+	if c == 's' && (terminatesNoteLength(n) || s.eofIsNext()) {
 		// consume 's'
 		s.advance()
 		s.addToken(NoteLengthMs, number*1000)
