@@ -67,7 +67,6 @@ const (
 	Nickname
 	NoteLength
 	NoteLengthMs
-	NoteLengthS
 	NoteLetter
 	Number
 	OctaveDown
@@ -132,8 +131,6 @@ func (tt TokenType) ToString() string {
 		return "NoteLength"
 	case NoteLengthMs:
 		return "NoteLengthMs"
-	case NoteLengthS:
-		return "NoteLengthS"
 	case NoteLetter:
 		return "NoteLetter"
 	case Number:
@@ -310,8 +307,16 @@ func (s *scanner) parseIntegerFrom(startIndex int) int32 {
 	return int32(integer)
 }
 
+// This function is meant to be called after consuming a bunch of digits, then
+// optionally a period and a bunch more digits. It reads from the start index up
+// until the current index and parses the result as a float.
+func (s *scanner) parseFloatFrom(startIndex int) float32 {
+	number, _ := strconv.ParseFloat(string(s.input[s.start:s.current]), 32)
+	return float32(number)
+}
+
 type noteLength struct {
-	denominator int32
+	denominator float32
 	dots        int32
 }
 
@@ -320,14 +325,23 @@ func (s *scanner) parseNoteLength() {
 
 	// Consume the rest of the digits.
 	s.consumeDigits()
-	integer := s.parseIntegerFrom(s.start)
+
+	// Look for a fractional part.
+	if s.peek() == '.' && isDigit(s.peekNext()) {
+		// Consume the decimal.
+		s.advance()
+		// Consume digits to the right of the decimal.
+		s.consumeDigits()
+	}
+
+	number := s.parseFloatFrom(s.start)
 
 	c := s.peek()
 	n := s.peekNext()
 	if c == 's' && (n == ' ' || n == '/' || s.reachedEOF()) {
 		// consume 's'
 		s.advance()
-		s.addToken(NoteLengthS, integer)
+		s.addToken(NoteLengthMs, number*1000)
 		return
 	}
 
@@ -335,7 +349,7 @@ func (s *scanner) parseNoteLength() {
 		// consume 'm' and 's'
 		s.advance()
 		s.advance()
-		s.addToken(NoteLengthMs, integer)
+		s.addToken(NoteLengthMs, number)
 		return
 	}
 
@@ -346,7 +360,7 @@ func (s *scanner) parseNoteLength() {
 		s.advance()
 	}
 
-	s.addToken(NoteLength, noteLength{denominator: integer, dots: int32(dots)})
+	s.addToken(NoteLength, noteLength{denominator: number, dots: int32(dots)})
 }
 
 func (s *scanner) parseInteger() {
@@ -355,6 +369,7 @@ func (s *scanner) parseInteger() {
 }
 
 func (s *scanner) parseNumber() {
+	// Parse numbers before the period.
 	s.consumeDigits()
 
 	// Look for a fractional part.
@@ -362,10 +377,10 @@ func (s *scanner) parseNumber() {
 		s.advance()
 	}
 
+	// Parse numbers after the period.
 	s.consumeDigits()
 
-	number, _ := strconv.ParseFloat(string(s.input[s.start:s.current]), 32)
-	s.addToken(Number, float32(number))
+	s.addToken(Number, s.parseFloatFrom(s.start))
 }
 
 type endingRange struct {

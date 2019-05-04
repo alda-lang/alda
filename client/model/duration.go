@@ -1,16 +1,12 @@
 package model
 
 type NoteLength struct {
-	Denominator int32
+	Denominator float32
 	Dots        int32
 }
 
 type NoteLengthMs struct {
-	Quantity int32
-}
-
-type NoteLengthS struct {
-	Quantity int32
+	Quantity float32
 }
 
 type DurationComponent interface{}
