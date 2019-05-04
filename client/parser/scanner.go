@@ -200,6 +200,10 @@ func (s *scanner) reachedEOF() bool {
 	return s.current >= len(s.input)
 }
 
+func (s *scanner) eofIsNext() bool {
+	return s.current+1 >= len(s.input)
+}
+
 func (s *scanner) peek() rune {
 	if s.current >= len(s.input) {
 		return 0
@@ -338,7 +342,7 @@ func (s *scanner) parseNoteLength() {
 
 	c := s.peek()
 	n := s.peekNext()
-	if c == 's' && (n == ' ' || n == '/' || s.reachedEOF()) {
+	if c == 's' && (n == ' ' || n == '/' || s.eofIsNext()) {
 		// consume 's'
 		s.advance()
 		s.addToken(NoteLengthMs, number*1000)
