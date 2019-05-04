@@ -201,11 +201,11 @@ func (p *parser) variableDefinition() ([]model.ScoreUpdate, error) {
 	}
 
 	for t := p.peek(); t.line == definitionLine; t = p.peek() {
-		event, err := p.topLevel()
+		events, err := p.topLevel()
 		if err != nil {
 			return nil, err
 		}
-		definition.Events = append(definition.Events, event)
+		definition.Events = append(definition.Events, events...)
 	}
 
 	return []model.ScoreUpdate{definition}, nil
