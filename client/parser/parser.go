@@ -174,7 +174,7 @@ func (p *parser) part() ([]model.ScoreUpdate, error) {
 	}
 
 	if p.match(Nickname) {
-		partDecl.Nickname = p.previous().text
+		partDecl.Nickname = p.previous().literal.(string)
 	}
 
 	if _, err := p.consume(Colon, "in part declaration"); err != nil {
