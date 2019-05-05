@@ -401,54 +401,44 @@ func (s *scanner) parseEndings() error {
 
 	ranges := []endingRange{}
 
-	// Parse ending ranges until we reach a space, newline, or EOF.
+	// Parse ending ranges as long as we continue to encounter them.
 	for {
-		c := s.peek()
-		switch {
-		case isDigit(c):
-			// Parse the "first" number of the range.
-			startNumber := s.current
-			s.consumeDigits()
-			first := s.parseIntegerFrom(startNumber)
-			er := endingRange{first: first}
+		if c := s.peek(); !isDigit(c) {
+			return s.unexpectedCharError(c, "in endings", s.line, s.column)
+		}
 
-			c := s.peek()
+		// Parse the "first" number of the range.
+		startNumber := s.current
+		s.consumeDigits()
+		first := s.parseIntegerFrom(startNumber)
+		er := endingRange{first: first}
 
-			// Either parse the "last" number of the range, or make the first number
-			// the last number as well, indicating a range of one number, e.g. 3-3.
-			if c == '-' {
-				// Consume the '-'
-				s.advance()
-
-				// Make sure a number comes next.
-				if c := s.peek(); !isDigit(c) {
-					return s.unexpectedCharError(c, "in endings", s.line, s.column)
-				}
-
-				startNumber := s.current
-				s.consumeDigits()
-				er.last = s.parseIntegerFrom(startNumber)
-			} else {
-				er.last = first
-			}
-
-			ranges = append(ranges, er)
-
-			c = s.peek()
-
-			// A space, newline, or EOF breaks us out of the endings-parsing loop.
-			if c == ' ' || c == '\n' || s.reachedEOF() {
-				s.addToken(Endings, ranges)
-				return nil
-			}
-
-			// At this point, there could be a comma, indicating there are more ranges
-			// to parse. If so, we continue to loop. Any other character is invalid.
-			if c != ',' {
+		// Either parse the "last" number of the range, or make the first number
+		// the last number as well, indicating a range of one number, e.g. 3-3.
+		if s.match('-') {
+			// Make sure a number comes next.
+			if c := s.peek(); !isDigit(c) {
 				return s.unexpectedCharError(c, "in endings", s.line, s.column)
 			}
+
+			startNumber := s.current
+			s.consumeDigits()
+			er.last = s.parseIntegerFrom(startNumber)
+		} else {
+			er.last = first
+		}
+
+		ranges = append(ranges, er)
+
+		// At this point, there could be a comma, indicating there are more ranges
+		// to parse. Only in that case do we continue to loop.
+		if !s.match(',') {
+			break
 		}
 	}
+
+	s.addToken(Endings, ranges)
+	return nil
 }
 
 func (s *scanner) parseRepeat() error {
