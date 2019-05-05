@@ -730,7 +730,7 @@ func (s *scanner) scanToken() error {
 				return s.unexpectedCharError(n, "in note/rest/name", s.line, s.column)
 			}
 		default:
-			return s.unexpectedCharError(c, "at top level", prevLine, prevColumn)
+			return s.unexpectedCharError(c, "at the top level", prevLine, prevColumn)
 		}
 	}
 
