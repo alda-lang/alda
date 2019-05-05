@@ -201,6 +201,10 @@ func (p *parser) variableDefinition() ([]model.ScoreUpdate, error) {
 	}
 
 	for t := p.peek(); t.line == definitionLine; t = p.peek() {
+		if t.tokenType == EOF {
+			break
+		}
+
 		events, err := p.topLevel()
 		if err != nil {
 			return nil, err
