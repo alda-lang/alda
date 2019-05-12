@@ -2,7 +2,7 @@ package io.alda.player
 
 import com.illposed.osc.OSCMessage
 import java.util.concurrent.LinkedBlockingQueue
-import java.util.concurrent.Phaser
+import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.thread
 
 val playerQueue = LinkedBlockingQueue<List<OSCMessage>>()
@@ -49,20 +49,16 @@ class Track(val trackNumber : Int) {
     }
   }
 
+  // Schedules the notes of a pattern in a "just in time" manner.
+  //
+  // Once all notes have been scheduled, returns the list of scheduled notes.
   fun schedulePattern(
     // An event that specifies a pattern, a relative offset where it should
     // begin, and a number of times to play it.
     event : PatternEvent,
     // The absolute offset to which the relative offset is added.
-    startOffset : Int,
-    // A phaser used to coordinate scheduling this pattern along with others.
-    phaser : Phaser,
-    // After we schedule all the notes in the pattern, we add them to this list
-    // as an output mechanism, and then deregister with the phaser.
-    noteEvents : MutableList<MidiNoteEvent>
-  ) {
-    phaser.register()
-
+    startOffset : Int
+  ) : List<MidiNoteEvent> {
     val patternStart = startOffset + event.offset
 
     // This value is the point in time where we schedule the metamessage that
@@ -76,183 +72,186 @@ class Track(val trackNumber : Int) {
     // the pattern metamessage is reached in the sequence.
     val latch = midi.pattern(patternSchedule, event.patternName)
 
-    thread {
-      // Wait until it's time to look up the pattern's current value and
-      // schedule the events.
-      println("awaiting latch")
-      latch.await()
+    // Wait until it's time to look up the pattern's current value and
+    // schedule the events.
+    println("awaiting latch")
+    latch.await()
 
-      println("scheduling pattern ${event.patternName}")
+    println("scheduling pattern ${event.patternName}")
 
-      val pattern = pattern(event.patternName)
+    val pattern = pattern(event.patternName)
 
-      val patternNoteEvents : MutableList<MidiNoteEvent> =
-        pattern.events.filter { it is MidiNoteEvent }
-        as MutableList<MidiNoteEvent>
+    val patternNoteEvents : MutableList<MidiNoteEvent> =
+      (pattern.events.filter { it is MidiNoteEvent }
+       as MutableList<MidiNoteEvent>)
+      .map { it.addOffset(patternStart) } as MutableList<MidiNoteEvent>
 
-      patternNoteEvents.forEach { scheduleMidiNote(it, patternStart) }
+    patternNoteEvents.forEach { scheduleMidiNote(it, 0) }
 
-      val patternEvents =
-        pattern.events.filter { it is PatternEvent } as List<PatternEvent>
+    val patternEvents =
+      pattern.events.filter { it is PatternEvent }
+      as List<PatternEvent>
 
-      // Here, we handle the case where the pattern's events include further
-      // pattern events, i.e. the pattern references another pattern.
-      //
-      // When the inner pattern event's events are scheduled, they are added to
-      // this pattern's note events (`patternNoteEvents`).
-      val innerPhaser = Phaser()
-      innerPhaser.register()
+    // Here, we handle the case where the pattern's events include further
+    // pattern events, i.e. the pattern references another pattern.
+    //
+    // When a subpattern's events are scheduled, they are added to this
+    // pattern's note events (`patternNoteEvents`).
+    //
+    // NB: Because of the "just in time" semantics of scheduling patterns, this
+    // means we block here until the pattern is about due to be played.
 
-      // FIXME: we need to preserve the original start offset somehow, otherwise
-      // the startOffset won't be correctly updated
+    patternEvents.forEach { event ->
+      patternNoteEvents.addAll(
+        schedulePattern(event as PatternEvent, patternStart)
+      )
+    }
 
-      patternEvents.forEach { event ->
-        schedulePattern(
-          event as PatternEvent, patternStart, innerPhaser, patternNoteEvents
-        )
-      }
+    // If the pattern event is to be played more than once, then we schedule the
+    // next iteration of the pattern.
+    //
+    // NB: Because of the "just in time" semantics of scheduling patterns, this
+    // means we block here until the next iteration is about due to be played.
+    //
+    // TODO: Use a loop instead of recursion? I could see this potentially
+    // causing a StackOverflow if the pattern is to be repeated enough times.
+    if (event.times > 1) {
+      val nextStartOffset =
+        (pattern.events.filter { it is MidiNoteEvent }
+         as MutableList<MidiNoteEvent>)
+        .map { it.offset + it.duration }.max()!!
 
-      innerPhaser.arriveAndDeregister()
-      innerPhaser.awaitAdvance(0)
+      println("scheduling next iteration (event.times == ${event.times})")
 
-      // If the pattern event is to played more than once, then we enter a
-      // second phase where we schedule the next iteration of the pattern.
-      if (event.times > 1) {
-        innerPhaser.register()
-
-        val nextStartOffset =
-          patternNoteEvents.map { it.offset + it.duration }.max()!!
-
+      patternNoteEvents.addAll(
         schedulePattern(
           PatternEvent(nextStartOffset, event.patternName, event.times - 1),
-          patternStart,
-          innerPhaser,
-          patternNoteEvents
+          patternStart
         )
-
-        println("awaiting schedule of next iteration")
-        innerPhaser.arriveAndDeregister()
-        innerPhaser.awaitAdvance(1)
-      }
-
-      println("adding patternNoteEvents to noteEvents")
-      noteEvents.addAll(patternNoteEvents)
-
-      println("arriveAndDeregister")
-      phaser.arriveAndDeregister()
+      )
     }
+
+    return patternNoteEvents
+  }
+
+  fun scheduleEvents(events : List<Event>, _startOffset : Int) : Int {
+    var startOffset = _startOffset
+
+    val now = Math.round(midi.currentOffset()).toInt()
+
+    // If we're not scheduling into the future, then the notes should be played
+    // ASAP.
+    if (startOffset < now) startOffset = now
+
+    // Ensure that there is time to schedule the notes before it's time to play
+    // them.
+    if (midi.isPlaying && (startOffset - now < SCHEDULE_BUFFER_TIME_MS))
+    startOffset += SCHEDULE_BUFFER_TIME_MS
+
+    events.filter { it is MidiPatchEvent }.forEach {
+      scheduleMidiPatch(it as MidiPatchEvent, startOffset)
+    }
+
+    events.filter { it is MidiPercussionEvent }.forEach {
+      midi.percussion(
+        startOffset + (it as MidiPercussionEvent).offset, trackNumber
+      )
+    }
+
+    val noteEvents =
+      (events.filter { it is MidiNoteEvent } as MutableList<MidiNoteEvent>)
+        .map { it.addOffset(startOffset) } as MutableList<MidiNoteEvent>
+
+    val patternEvents =
+      events.filter { it is PatternEvent } as MutableList<PatternEvent>
+
+    events.forEach { event ->
+      when (event) {
+        is PatternLoopEvent -> {
+          // TODO
+        }
+
+        is FinishLoopEvent -> {
+          // TODO
+        }
+      }
+    }
+
+    noteEvents.forEach { scheduleMidiNote(it, 0) }
+
+    // Patterns can include other patterns, and to support dynamically changing
+    // pattern contents on the fly, we look up each pattern's contents shortly
+    // before it is scheduled to play. This means that the total number of
+    // patterns can change at a moment's notice.
+
+    // For each pattern event, we...
+    // * wait until right before the pattern is supposed to be played
+    // * look up the pattern
+    // * schedule the pattern's events
+    // * add the pattern's events to `noteEvents`
+    patternEvents.forEach { event ->
+      noteEvents.addAll(schedulePattern(event, startOffset))
+    }
+
+    // Now that all the notes have been scheduled, we can start the sequencer
+    // (assuming it hasn't been started already, in which case this is a no-op).
+    synchronized(midi.isPlaying) {
+      if (midi.isPlaying) midi.startSequencer()
+    }
+
+    // At this point, `noteEvents` should contain all of the notes we've
+    // scheduled, including the values of patterns at the moment right before
+    // they were scheduled.
+    //
+    // We can now calculate the latest note end offset, which shall be our new
+    // `startOffset`.
+
+    if (noteEvents.isEmpty())
+      return _startOffset
+
+    return noteEvents.map { it.offset + it.duration }.max()!!
   }
 
   init {
     // This thread schedules events on this track.
     thread {
       // Before we can schedule these events, we need to know the start offset.
+      //
       // This can change dynamically, e.g. if a pattern is changed on-the-fly
       // during playback, so we defer scheduling the next buffer of events as
       // long as we can.
+      //
+      // When new events come in on the `eventsBufferQueue`, it may be the case
+      // that previous events are still lined up to be scheduled (e.g. a pattern
+      // is looping). When this is the case, the new events wait in line until
+      // the previous scheduling has completed and the offset where the next
+      // events should start is updated.
       var startOffset = 0
+      var scheduling = ReentrantLock(true) // fairness enabled
 
       while (!Thread.currentThread().isInterrupted()) {
         try {
-          println("TRACK ${trackNumber}: startOffset is ${startOffset}")
-
           val events = eventBufferQueue.take()
 
-          val now = Math.round(midi.currentOffset()).toInt()
+          // TODO: Give events like FinishLoop a chance to act without needing
+          // to wait for the lock to be released.
 
-          // If we're not scheduling into the future, then the notes should be
-          // played ASAP.
-          if (startOffset < now) startOffset = now
-
-          // Ensure that there is time to schedule the notes before it's time to
-          // play them.
-          if (midi.isPlaying && (startOffset - now < SCHEDULE_BUFFER_TIME_MS))
-            startOffset += SCHEDULE_BUFFER_TIME_MS
-
-          events.filter { it is MidiPatchEvent }.forEach {
-            scheduleMidiPatch(it as MidiPatchEvent, startOffset)
-          }
-
-          events.filter { it is MidiPercussionEvent }.forEach {
-            midi.percussion(
-              startOffset + (it as MidiPercussionEvent).offset, trackNumber
-            )
-          }
-
-          val noteEvents =
-            events.filter { it is MidiNoteEvent } as MutableList<MidiNoteEvent>
-
-          val patternEvents =
-            events.filter { it is PatternEvent } as MutableList<PatternEvent>
-
-          events.forEach { event ->
-            when (event) {
-              is PatternLoopEvent -> {
-                // TODO
-              }
-
-              is FinishLoopEvent -> {
-                // TODO
-              }
+          // We start a new thread here so that we can wait for the opportunity
+          // to schedule new events, while the parent thread continues to
+          // receive new events on the queue.
+          thread {
+            // Wait for the previous scheduling of events to finish.
+            scheduling.lock()
+            println("TRACK ${trackNumber}: startOffset is ${startOffset}")
+            try {
+              // Schedule events and update `startOffset` to be the offset at
+              // which the next events should start (after the ones we're
+              // scheduling here).
+              startOffset = scheduleEvents(events, startOffset)
+            } finally {
+              scheduling.unlock()
             }
           }
-
-          noteEvents.forEach { scheduleMidiNote(it, startOffset) }
-
-          // Patterns can include other patterns, and to support dynamically
-          // changing pattern contents on the fly, we look up each pattern's
-          // contents shortly before it is scheduled to play. This means that
-          // the total number of patterns can change at a moment's notice.
-          //
-          // We're using a Phaser here as a more flexible version of the
-          // CountDownLatch that can also count up as needed, i.e. whenever a
-          // pattern is discovered within another pattern's contents, and we
-          // must now wait on the new pattern to be scheduled as well.
-          val phaser = Phaser()
-
-          // Register the main thread with the phaser. This is necessary because
-          // unless there is at least one registered party, the call to
-          // `phaser.awaitAdvance` below will block forever.
-          phaser.register()
-
-          // For each pattern event, register with the phaser and then start a
-          // thread that:
-          //
-          // * waits until right before the pattern is supposed to be played
-          // * looks up the pattern
-          // * schedules the pattern's events
-          // * adds the pattern's events to `noteEvents`
-          // * deregisters with the phaser
-          patternEvents.forEach { event ->
-            schedulePattern(event, startOffset, phaser, noteEvents)
-          }
-
-          // Deregister the main thread. At this point, we're waiting for any
-          // pattern-scheduling threads that have registered with the phaser to
-          // finish what they're doing and deregister themselves.
-          phaser.arriveAndDeregister()
-
-          println("awaiting phaser")
-
-          // Block until all patterns' events have been scheduled.
-          phaser.awaitAdvance(0)
-
-          println("phaser done")
-
-          // Once we've finished awaiting the phaser, `noteEvents` should
-          // contain all of the notes we've scheduled, including the values of
-          // patterns at the moment right before they were scheduled.
-          //
-          // At that point, we will be able to calculate the latest note end
-          // offset, which shall be our new `startOffset`.
-
-          synchronized(midi.isPlaying) {
-            if (midi.isPlaying) midi.startSequencer()
-          }
-
-          if (!noteEvents.isEmpty())
-            startOffset =
-              noteEvents.map { startOffset + it.offset + it.duration }.max()!!
         } catch (iex : InterruptedException) {
           Thread.currentThread().interrupt()
         }

@@ -23,7 +23,13 @@ class MidiPercussionEvent(val offset : Int) : Event {}
 class MidiNoteEvent(
   val offset : Int, val noteNumber : Int, val duration : Int,
   val audibleDuration : Int, val velocity : Int
-) : Event {}
+) : Event {
+  fun addOffset(o : Int) : MidiNoteEvent {
+    return MidiNoteEvent(
+      offset + o, noteNumber, duration, audibleDuration, velocity
+    )
+  }
+}
 
 class PatternEvent(
   val offset : Int, val patternName : String, val times : Int
