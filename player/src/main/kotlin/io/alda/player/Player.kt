@@ -29,6 +29,10 @@ class Track(val trackNumber : Int) {
 
   val eventBufferQueue = LinkedBlockingQueue<List<Event>>()
 
+  // The set of patterns that are currently looping (whether that be a finite
+  // number of times or indefinitely).
+  val activePatterns = mutableSetOf<String>()
+
   fun scheduleMidiPatch (event : MidiPatchEvent, startOffset : Int) {
     midiChannel()?.also { channel ->
       // debug
@@ -39,9 +43,9 @@ class Track(val trackNumber : Int) {
     }
   }
 
-  fun scheduleMidiNote(event : MidiNoteEvent, startOffset : Int) {
+  fun scheduleMidiNote(event : MidiNoteEvent) {
     midiChannel()?.also { channel ->
-      val noteStart = startOffset + event.offset
+      val noteStart = event.offset
       val noteEnd = noteStart + event.audibleDuration
       midi.note(noteStart, noteEnd, channel, event.noteNumber, event.velocity)
     } ?: run {
@@ -49,86 +53,87 @@ class Track(val trackNumber : Int) {
     }
   }
 
-  // Schedules the notes of a pattern in a "just in time" manner.
-  //
-  // Once all notes have been scheduled, returns the list of scheduled notes.
-  fun schedulePattern(
-    // An event that specifies a pattern, a relative offset where it should
-    // begin, and a number of times to play it.
-    event : PatternEvent,
-    // The absolute offset to which the relative offset is added.
-    startOffset : Int
-  ) : List<MidiNoteEvent> {
-    val patternStart = startOffset + event.offset
+  /**
+   * Schedules the notes of a pattern, blocking until all iterations of the
+   * pattern have been scheduled.
+   *
+   * Patterns can be looped, and the pattern can be changed while it's looping.
+   * When this happens, the change is picked up upon the next iteration of the
+   * loop. We accomplish this by scheduling each iteration in a "just in time"
+   * manner, i.e. shortly before it is due to be played.
+   *
+   * @param event An event that specifies a pattern, a relative offset where it
+   * should begin, and a number of times to play it.
+   * @param _startOffset The absolute offset to which the relative offset is
+   * added.
+   * @return The list of scheduled notes across all iterations of the pattern.
+   */
+  fun schedulePattern(event : PatternEvent, _startOffset : Int)
+  : List<MidiNoteEvent> {
+    var startOffset = _startOffset
+    val patternNoteEvents = mutableListOf<MidiNoteEvent>()
 
-    // This value is the point in time where we schedule the metamessage that
-    // signals the lookup and scheduling of the pattern's events.  This
-    // scheduling happens shortly before the pattern is to be played.
-    val patternSchedule = Math.max(
-      startOffset, patternStart - SCHEDULE_BUFFER_TIME_MS
-    )
+    activePatterns.add(event.patternName)
 
-    // This returns a CountDownLatch that starts at 1 and counts down to 0 when
-    // the pattern metamessage is reached in the sequence.
-    val latch = midi.pattern(patternSchedule, event.patternName)
+    try {
+      for (iteration in 1..event.times) {
+        // A loop can be stopped externally by removing the pattern from
+        // `activePatterns`. If this happens, we stop looping.
+        if (!activePatterns.contains(event.patternName)) break
 
-    // Wait until it's time to look up the pattern's current value and
-    // schedule the events.
-    println("awaiting latch")
-    latch.await()
+        println("scheduling iteration $iteration")
 
-    println("scheduling pattern ${event.patternName}")
+        val patternStart = startOffset + event.offset
 
-    val pattern = pattern(event.patternName)
-
-    val patternNoteEvents : MutableList<MidiNoteEvent> =
-      (pattern.events.filter { it is MidiNoteEvent }
-       as MutableList<MidiNoteEvent>)
-      .map { it.addOffset(patternStart) } as MutableList<MidiNoteEvent>
-
-    patternNoteEvents.forEach { scheduleMidiNote(it, 0) }
-
-    val patternEvents =
-      pattern.events.filter { it is PatternEvent }
-      as List<PatternEvent>
-
-    // Here, we handle the case where the pattern's events include further
-    // pattern events, i.e. the pattern references another pattern.
-    //
-    // When a subpattern's events are scheduled, they are added to this
-    // pattern's note events (`patternNoteEvents`).
-    //
-    // NB: Because of the "just in time" semantics of scheduling patterns, this
-    // means we block here until the pattern is about due to be played.
-
-    patternEvents.forEach { event ->
-      patternNoteEvents.addAll(
-        schedulePattern(event as PatternEvent, patternStart)
-      )
-    }
-
-    // If the pattern event is to be played more than once, then we schedule the
-    // next iteration of the pattern.
-    //
-    // NB: Because of the "just in time" semantics of scheduling patterns, this
-    // means we block here until the next iteration is about due to be played.
-    //
-    // TODO: Use a loop instead of recursion? I could see this potentially
-    // causing a StackOverflow if the pattern is to be repeated enough times.
-    if (event.times > 1) {
-      val nextStartOffset =
-        (pattern.events.filter { it is MidiNoteEvent }
-         as MutableList<MidiNoteEvent>)
-        .map { it.offset + it.duration }.max()!!
-
-      println("scheduling next iteration (event.times == ${event.times})")
-
-      patternNoteEvents.addAll(
-        schedulePattern(
-          PatternEvent(nextStartOffset, event.patternName, event.times - 1),
-          patternStart
+        // This value is the point in time where we schedule the metamessage
+        // that signals the lookup and scheduling of the pattern's events.
+        //
+        // This scheduling happens shortly before the pattern is to be played.
+        val patternSchedule = Math.max(
+          startOffset, patternStart - SCHEDULE_BUFFER_TIME_MS
         )
-      )
+
+        // This returns a CountDownLatch that starts at 1 and counts down to 0
+        // when the pattern metamessage is reached in the sequence.
+        val latch = midi.pattern(patternSchedule, event.patternName)
+
+        // Wait until it's time to look up the pattern's current value and
+        // schedule the events.
+        println("awaiting latch")
+        latch.await()
+
+        println("scheduling pattern ${event.patternName}")
+
+        val pattern = pattern(event.patternName)
+
+        val noteEvents : MutableList<MidiNoteEvent> =
+          (pattern.events.filter { it is MidiNoteEvent }
+           as MutableList<MidiNoteEvent>)
+          .map { it.addOffset(patternStart) } as MutableList<MidiNoteEvent>
+
+        noteEvents.forEach { scheduleMidiNote(it) }
+        patternNoteEvents.addAll(noteEvents)
+
+        val patternEvents =
+          pattern.events.filter { it is PatternEvent }
+          as List<PatternEvent>
+
+        // Here, we handle the case where the pattern's events include further
+        // pattern events, i.e. the pattern references another pattern.
+        //
+        // NB: Because of the "just in time" semantics of scheduling patterns,
+        // this means we block here until the subpattern is about due to be
+        // played.
+        patternEvents.forEach { event ->
+          patternNoteEvents.addAll(
+            schedulePattern(event as PatternEvent, patternStart)
+          )
+        }
+
+        startOffset = noteEvents.map { it.offset + it.duration }.max()!!
+      }
+    } finally {
+      activePatterns.remove(event.patternName)
     }
 
     return patternNoteEvents
@@ -177,7 +182,7 @@ class Track(val trackNumber : Int) {
       }
     }
 
-    noteEvents.forEach { scheduleMidiNote(it, 0) }
+    noteEvents.forEach { scheduleMidiNote(it) }
 
     // Patterns can include other patterns, and to support dynamically changing
     // pattern contents on the fly, we look up each pattern's contents shortly
