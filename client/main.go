@@ -96,8 +96,7 @@ func sixteenFastNotes() *osc.Bundle {
 	return bundle
 }
 
-func playPattern(times int) *osc.Bundle {
-	pattern := "simple"
+func playPattern(pattern string, times int) *osc.Bundle {
 	bundle := osc.NewBundle(time.Now())
 	bundle.Append(patternClearMsg(pattern))
 	bundle.Append(patternMidiNoteMsg(pattern, 0, 57, 500, 500, 127))
@@ -111,20 +110,19 @@ func playPattern(times int) *osc.Bundle {
 	return bundle
 }
 
-func playPatternOnce() *osc.Bundle {
-	return playPattern(1)
+func playPatternOnce(pattern string) *osc.Bundle {
+	return playPattern(pattern, 1)
 }
 
-func playPatternTwice() *osc.Bundle {
-	return playPattern(2)
+func playPatternTwice(pattern string) *osc.Bundle {
+	return playPattern(pattern, 2)
 }
 
-func playPatternThrice() *osc.Bundle {
-	return playPattern(3)
+func playPatternThrice(pattern string) *osc.Bundle {
+	return playPattern(pattern, 3)
 }
 
-func changePattern() *osc.Bundle {
-	pattern := "simple"
+func changePattern(pattern string) *osc.Bundle {
 	bundle := osc.NewBundle(time.Now())
 	bundle.Append(patternClearMsg(pattern))
 
@@ -189,13 +187,13 @@ func main() {
 	case "16fast":
 		client.Send(sixteenFastNotes())
 	case "pat1":
-		client.Send(playPatternOnce())
+		client.Send(playPatternOnce("simple"))
 	case "pat2":
-		client.Send(playPatternTwice())
+		client.Send(playPatternTwice("simple"))
 	case "pat3":
-		client.Send(playPatternThrice())
+		client.Send(playPatternThrice("simple"))
 	case "patchange":
-		client.Send(changePattern())
+		client.Send(changePattern("simple"))
 	case "patx":
 		client.Send(patternClearMsg("simple"))
 	default:
