@@ -119,6 +119,10 @@ func playPatternTwice() *osc.Bundle {
 	return playPattern(2)
 }
 
+func playPatternThrice() *osc.Bundle {
+	return playPattern(3)
+}
+
 func changePattern() *osc.Bundle {
 	pattern := "simple"
 	bundle := osc.NewBundle(time.Now())
@@ -188,6 +192,8 @@ func main() {
 		client.Send(playPatternOnce())
 	case "pat2":
 		client.Send(playPatternTwice())
+	case "pat3":
+		client.Send(playPatternThrice())
 	case "patchange":
 		client.Send(changePattern())
 	case "patx":
