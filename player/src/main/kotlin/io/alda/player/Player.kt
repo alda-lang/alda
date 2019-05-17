@@ -114,6 +114,13 @@ class Track(val trackNumber : Int) {
         noteEvents.forEach { scheduleMidiNote(it) }
         patternNoteEvents.addAll(noteEvents)
 
+        // Now that we've scheduled at least one iteration, we can start
+        // playing. (Unless we've already started playing, in which case this is
+        // a no-op.)
+        synchronized(midi.isPlaying) {
+          if (midi.isPlaying) midi.startSequencer()
+        }
+
         val patternEvents =
           pattern.events.filter { it is PatternEvent }
           as List<PatternEvent>
