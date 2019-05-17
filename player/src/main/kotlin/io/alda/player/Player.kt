@@ -94,8 +94,8 @@ class Track(val trackNumber : Int) {
         )
 
         // This returns a CountDownLatch that starts at 1 and counts down to 0
-        // when the pattern metamessage is reached in the sequence.
-        val latch = midi.pattern(patternSchedule, event.patternName)
+        // when the `patternSchedule` offset is reached in the sequence.
+        val latch = midi.scheduleEvent(patternSchedule, event.patternName)
 
         // Wait until it's time to look up the pattern's current value and
         // schedule the events.

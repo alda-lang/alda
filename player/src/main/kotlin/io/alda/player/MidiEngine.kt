@@ -49,7 +49,7 @@ const val CONTINUATION_INTERVAL_MS = 1000
 enum class CustomMetaMessage(val type : Int) {
   CONTINUE(0x30),
   PERCUSSION(0x31),
-  PATTERN(0x32)
+  EVENT(0x32)
 }
 
 class MidiEngine {
@@ -58,6 +58,7 @@ class MidiEngine {
   val receiver = sequencer.getReceiver()
   val sequence = Sequence(DIVISION_TYPE, RESOLUTION)
   val track = sequence.createTrack()
+  val pendingEvents = mutableMapOf<String, CountDownLatch>()
 
   // The sequencer automatically stops running when it reaches the end of the
   // sequence. We don't want that behavior; instead, we want to maintain our own
@@ -116,14 +117,14 @@ class MidiEngine {
           track(trackNumber).useMidiPercussionChannel()
         }
 
-        CustomMetaMessage.PATTERN.type -> {
-          val pendingPattern = String(msg.getData())
+        CustomMetaMessage.EVENT.type -> {
+          val pendingEvent = String(msg.getData())
 
-          pendingPatterns.get(pendingPattern)?.also { latch ->
+          pendingEvents.get(pendingEvent)?.also { latch ->
             latch.countDown()
-            pendingPatterns.remove(pendingPattern)
+            pendingEvents.remove(pendingEvent)
           } ?: run {
-            println("ERROR: $pendingPattern latch not found!")
+            println("ERROR: $pendingEvent latch not found!")
           }
         }
 
@@ -226,27 +227,19 @@ class MidiEngine {
     )
   }
 
-  val pendingPatterns = mutableMapOf<String, CountDownLatch>()
-
-  fun pattern(scheduleOffset : Int, patternName : String) : CountDownLatch {
-    // This latch will count down to 0 when the metamessage below comes up in
-    // the sequence. This will schedule the Player to look up the events in the
-    // pattern and schedule them.
+  // Schedules an event to occur at the desired offset.
+  //
+  // Returns a CountDownLatch that will count down from 1 to 0 when the event is
+  // scheduled to occur.
+  //
+  // This will signal the Player to perform a particular action at just the
+  // right time.
+  fun scheduleEvent(offset : Int, eventName : String) : CountDownLatch {
     val latch = CountDownLatch(1)
-
-    val pendingPattern = patternName + "::" + UUID.randomUUID().toString()
-
-    pendingPatterns.put(pendingPattern, latch)
-
-    val msgData = pendingPattern.toByteArray()
-
-    scheduleMetaMsg(
-      scheduleOffset,
-      CustomMetaMessage.PATTERN,
-      msgData,
-      msgData.size
-    )
-
+    val pendingEvent = eventName + "::" + UUID.randomUUID().toString()
+    pendingEvents.put(pendingEvent, latch)
+    val msgData = pendingEvent.toByteArray()
+    scheduleMetaMsg(offset, CustomMetaMessage.EVENT, msgData, msgData.size)
     return latch
   }
 }
