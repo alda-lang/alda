@@ -137,7 +137,8 @@ class Track(val trackNumber : Int) {
           )
         }
 
-        startOffset = noteEvents.map { it.offset + it.duration }.max()!!
+        if (!noteEvents.isEmpty())
+          startOffset = noteEvents.map { it.offset + it.duration }.max()!!
       }
     } finally {
       activePatterns.remove(event.patternName)
