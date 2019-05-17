@@ -146,19 +146,25 @@ class Track(val trackNumber : Int) {
     return patternNoteEvents
   }
 
-  fun scheduleEvents(events : List<Event>, _startOffset : Int) : Int {
+  private fun adjustStartOffset(_startOffset : Int) : Int {
     var startOffset = _startOffset
 
     val now = Math.round(midi.currentOffset()).toInt()
 
-    // If we're not scheduling into the future, then the notes should be played
-    // ASAP.
+    // If we're not scheduling into the future, then whatever we're supposed to
+    // be scheduling should happen ASAP.
     if (startOffset < now) startOffset = now
 
-    // Ensure that there is time to schedule the notes before it's time to play
-    // them.
+    // Ensure that there is time to schedule the events before they're due to
+    // come up in the sequence.
     if (midi.isPlaying && (startOffset - now < SCHEDULE_BUFFER_TIME_MS))
-    startOffset += SCHEDULE_BUFFER_TIME_MS
+      startOffset += SCHEDULE_BUFFER_TIME_MS
+
+    return startOffset
+  }
+
+  fun scheduleEvents(events : List<Event>, _startOffset : Int) : Int {
+    val startOffset = adjustStartOffset(_startOffset)
 
     events.filter { it is MidiPatchEvent }.forEach {
       scheduleMidiPatch(it as MidiPatchEvent, startOffset)
@@ -174,6 +180,8 @@ class Track(val trackNumber : Int) {
       (events.filter { it is MidiNoteEvent } as MutableList<MidiNoteEvent>)
         .map { it.addOffset(startOffset) } as MutableList<MidiNoteEvent>
 
+    noteEvents.forEach { scheduleMidiNote(it) }
+
     val patternEvents =
       events.filter { it is PatternEvent } as MutableList<PatternEvent>
 
@@ -182,14 +190,8 @@ class Track(val trackNumber : Int) {
         is PatternLoopEvent -> {
           // TODO
         }
-
-        is FinishLoopEvent -> {
-          // TODO
-        }
       }
     }
-
-    noteEvents.forEach { scheduleMidiNote(it) }
 
     // Patterns can include other patterns, and to support dynamically changing
     // pattern contents on the fly, we look up each pattern's contents shortly
@@ -245,8 +247,16 @@ class Track(val trackNumber : Int) {
         try {
           val events = eventBufferQueue.take()
 
-          // TODO: Give events like FinishLoop a chance to act without needing
-          // to wait for the lock to be released.
+          events.filter { it is FinishLoopEvent }.forEach {
+            thread {
+              val event = it as FinishLoopEvent
+              val offset = adjustStartOffset(startOffset) + event.offset
+              val latch = midi.scheduleEvent(offset, "FinishLoop")
+              latch.await()
+              println("clearing active patterns")
+              activePatterns.clear()
+            }
+          }
 
           // We start a new thread here so that we can wait for the opportunity
           // to schedule new events, while the parent thread continues to

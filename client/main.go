@@ -32,6 +32,12 @@ func midiPercussionMsg(track int) *osc.Message {
 	return msg
 }
 
+func finishLoopMsg(track int) *osc.Message {
+	msg := osc.NewMessage(fmt.Sprintf("/track/%d/finish-loop", track))
+	msg.Append(int32(0))
+	return msg
+}
+
 func midiNoteMsg(
 	track int, offset int, note int, duration int, audibleDuration int,
 	velocity int) *osc.Message {
@@ -196,6 +202,8 @@ func main() {
 		client.Send(changePattern("simple"))
 	case "patx":
 		client.Send(patternClearMsg("simple"))
+	case "patfin":
+		client.Send(finishLoopMsg(1))
 	default:
 		fmt.Printf("No such example: %s\n", example)
 		os.Exit(1)
