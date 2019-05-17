@@ -183,9 +183,6 @@ class Track(val trackNumber : Int) {
 
     noteEvents.forEach { scheduleMidiNote(it) }
 
-    val patternEvents =
-      events.filter { it is PatternEvent } as MutableList<PatternEvent>
-
     events.forEach { event ->
       when (event) {
         is PatternLoopEvent -> {
@@ -204,7 +201,8 @@ class Track(val trackNumber : Int) {
     // * look up the pattern
     // * schedule the pattern's events
     // * add the pattern's events to `noteEvents`
-    patternEvents.forEach { event ->
+    events.filter { it is PatternEvent }.forEach {
+      val event = it as PatternEvent
       noteEvents.addAll(schedulePattern(event, startOffset))
     }
 
