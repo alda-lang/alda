@@ -1,6 +1,7 @@
 package io.alda.player
 
 import com.illposed.osc.OSCMessage
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.thread
@@ -185,37 +186,32 @@ class Track(val trackNumber : Int) {
 
     noteEvents.forEach { scheduleMidiNote(it) }
 
-    // Patterns can include other patterns, and to support dynamically changing
-    // pattern contents on the fly, we look up each pattern's contents shortly
-    // before it is scheduled to play. This means that the total number of
-    // patterns can change at a moment's notice.
-
     // For each pattern event, we...
     // * wait until right before the pattern is supposed to be played
     // * look up the pattern
     // * schedule the pattern's events
     // * add the pattern's events to `noteEvents`
-    events.filter { it is PatternEvent }.forEach {
-      val event = it as PatternEvent
-      noteEvents.addAll(schedulePattern(event, startOffset))
-    }
+    //
+    // Patterns can include other patterns, and to support dynamically changing
+    // pattern contents on the fly, we look up each pattern's contents shortly
+    // before it is scheduled to play.
+    //
+    // Patterns can also loop indefinitely.
+    //
+    // To support multiple patterns looping concurrently on the same track, we
+    // do the on-the-fly scheduling of each pattern on a separate thread and
+    // collect the results in a CompletableFuture.
+    events.filter { it is PatternEventBase }.map {
+      val event = it as PatternEventBase
+      val future = CompletableFuture<List<MidiNoteEvent>>()
 
-    // FIXME: We don't get here until all PatternEvents have been scheduled,
-    // which means if a bundle contains both PatternEvents and a
-    // PatternLoopEvent, the PatternLoopEvent probably won't be timed correctly
-    // because it can't possible start playing until we've scheduled the final
-    // iteration of the last PatternEvent.
-    //
-    // One idea to fix this is to start a CompletableFuture for each
-    // PatternEvent and PatternLoopEvent, and then `CompletableFuture.allOf` to
-    // wait on all of the futures before returning all the note events at the
-    // end of this function.
-    //
-    // NB: Once we've done that, we can combine this block with the one above,
-    // and use PatternEventBase.
-    events.filter { it is PatternLoopEvent }.forEach {
-      val event = it as PatternLoopEvent
-      noteEvents.addAll(schedulePattern(event, startOffset))
+      thread {
+        future.complete(schedulePattern(event, startOffset))
+      }
+
+      future
+    }.forEach { future ->
+      noteEvents.addAll(future.get())
     }
 
     // Now that all the notes have been scheduled, we can start the sequencer

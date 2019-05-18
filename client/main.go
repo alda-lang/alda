@@ -11,6 +11,12 @@ import (
 
 var port int
 
+func appendAll(bundle *osc.Bundle, msgs []*osc.Message) {
+	for _, msg := range msgs {
+		bundle.Append(msg)
+	}
+}
+
 func systemPlayMsg() *osc.Message {
 	return osc.NewMessage("/system/play")
 }
@@ -74,9 +80,8 @@ func patternClearMsg(pattern string) *osc.Message {
 	return osc.NewMessage(fmt.Sprintf("/pattern/%s/clear", pattern))
 }
 
-func patternLoopMsg(pattern string) *osc.Message {
+func patternLoopMsg(pattern string, offset int) *osc.Message {
 	track := 1
-	offset := 0
 	msg := osc.NewMessage(fmt.Sprintf("/track/%d/pattern-loop", track))
 	msg.Append(int32(offset))
 	msg.Append(pattern)
@@ -137,21 +142,67 @@ func playPatternThrice(pattern string) *osc.Bundle {
 	return playPattern(pattern, 3)
 }
 
-func changePattern(pattern string) *osc.Bundle {
-	bundle := osc.NewBundle(time.Now())
-	bundle.Append(patternClearMsg(pattern))
+func randomPatternNotes(pattern string, quantity int) []*osc.Message {
+	msgs := []*osc.Message{}
 
 	interval := 500
 	audibleDuration := 250
 
-	for offset := 0; offset <= interval*3; offset += interval {
+	for offset := 0; offset < interval*quantity; offset += interval {
 		noteNumber := 30 + rand.Intn(60)
 
-		bundle.Append(
-			patternMidiNoteMsg(
-				pattern, offset, noteNumber, interval, audibleDuration, 127))
+		msgs = append(msgs, patternMidiNoteMsg(
+			pattern, offset, noteNumber, interval, audibleDuration, 127,
+		))
 	}
 
+	return msgs
+}
+
+func changePattern(pattern string) *osc.Bundle {
+	bundle := osc.NewBundle(time.Now())
+	bundle.Append(patternClearMsg(pattern))
+	appendAll(bundle, randomPatternNotes(pattern, 4))
+	return bundle
+}
+
+// Plays two loops concurrently, four times each, on the same track.
+func twoFiniteLoops() *osc.Bundle {
+	bundle := osc.NewBundle(time.Now())
+
+	pattern1 := "pattern1"
+	bundle.Append(patternClearMsg(pattern1))
+	appendAll(bundle, randomPatternNotes(pattern1, 4))
+
+	pattern2 := "pattern2"
+	bundle.Append(patternClearMsg(pattern2))
+	appendAll(bundle, randomPatternNotes(pattern2, 4))
+
+	bundle.Append(midiPatchMsg(1, 0, 0))
+	bundle.Append(patternMsg(1, 0, pattern1, 4))
+	bundle.Append(patternMsg(1, 100, pattern2, 4))
+
+	bundle.Append(systemPlayMsg())
+	return bundle
+}
+
+// Plays two indefinite loops concurrently on the same track.
+func twoInfiniteLoops() *osc.Bundle {
+	bundle := osc.NewBundle(time.Now())
+
+	pattern1 := "pattern1"
+	bundle.Append(patternClearMsg(pattern1))
+	appendAll(bundle, randomPatternNotes(pattern1, 4))
+
+	pattern2 := "pattern2"
+	bundle.Append(patternClearMsg(pattern2))
+	appendAll(bundle, randomPatternNotes(pattern2, 4))
+
+	bundle.Append(midiPatchMsg(1, 0, 5))
+	bundle.Append(patternLoopMsg(pattern1, 0))
+	bundle.Append(patternLoopMsg(pattern2, 100))
+
+	bundle.Append(systemPlayMsg())
 	return bundle
 }
 
@@ -163,7 +214,7 @@ func loopPattern(pattern string) *osc.Bundle {
 	bundle.Append(patternMidiNoteMsg(pattern, 800, 42, 400, 400, 127))
 	bundle.Append(patternMidiNoteMsg(pattern, 1200, 43, 400, 400, 127))
 	bundle.Append(midiPatchMsg(1, 0, 10))
-	bundle.Append(patternLoopMsg(pattern))
+	bundle.Append(patternLoopMsg(pattern, 0))
 	bundle.Append(systemPlayMsg())
 	return bundle
 }
@@ -228,6 +279,10 @@ func main() {
 		client.Send(loopPattern("simple"))
 	case "patfin":
 		client.Send(finishLoopMsg(1))
+	case "2loops":
+		client.Send(twoFiniteLoops())
+	case "2infinity":
+		client.Send(twoInfiniteLoops())
 	default:
 		fmt.Printf("No such example: %s\n", example)
 		os.Exit(1)
