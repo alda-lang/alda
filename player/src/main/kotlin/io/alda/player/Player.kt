@@ -70,7 +70,7 @@ class Track(val trackNumber : Int) {
    */
   fun schedulePattern(event : PatternEventBase, _startOffset : Int)
   : List<MidiNoteEvent> {
-    var startOffset = _startOffset
+    var startOffset = _startOffset + event.offset
     val patternNoteEvents = mutableListOf<MidiNoteEvent>()
 
     // A loop can be stopped externally by removing the pattern from
@@ -82,17 +82,15 @@ class Track(val trackNumber : Int) {
 
       while (!event.isDone(iteration) &&
              activePatterns.contains(event.patternName)) {
-        println("scheduling iteration $iteration")
-
-        val patternStart = startOffset + event.offset
+        println("scheduling iteration $iteration; startOffset: $startOffset; event.offset: ${event.offset}")
 
         // This value is the point in time where we schedule the metamessage
         // that signals the lookup and scheduling of the pattern's events.
         //
         // This scheduling happens shortly before the pattern is to be played.
-        val patternSchedule = Math.max(
-          startOffset, patternStart - SCHEDULE_BUFFER_TIME_MS
-        )
+        val patternSchedule = adjustStartOffset(startOffset)
+
+        println("patternSchedule: $patternSchedule")
 
         // This returns a CountDownLatch that starts at 1 and counts down to 0
         // when the `patternSchedule` offset is reached in the sequence.
@@ -110,7 +108,7 @@ class Track(val trackNumber : Int) {
         val noteEvents : MutableList<MidiNoteEvent> =
           (pattern.events.filter { it is MidiNoteEvent }
            as MutableList<MidiNoteEvent>)
-          .map { it.addOffset(patternStart) } as MutableList<MidiNoteEvent>
+          .map { it.addOffset(startOffset) } as MutableList<MidiNoteEvent>
 
         noteEvents.forEach { scheduleMidiNote(it) }
 
@@ -133,7 +131,7 @@ class Track(val trackNumber : Int) {
         // played.
         patternEvents.forEach { event ->
           noteEvents.addAll(
-            schedulePattern(event as PatternEvent, patternStart)
+            schedulePattern(event as PatternEvent, startOffset)
           )
         }
 
