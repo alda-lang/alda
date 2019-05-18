@@ -68,19 +68,20 @@ class Track(val trackNumber : Int) {
    * added.
    * @return The list of scheduled notes across all iterations of the pattern.
    */
-  fun schedulePattern(event : PatternEvent, _startOffset : Int)
+  fun schedulePattern(event : PatternEventBase, _startOffset : Int)
   : List<MidiNoteEvent> {
     var startOffset = _startOffset
     val patternNoteEvents = mutableListOf<MidiNoteEvent>()
 
+    // A loop can be stopped externally by removing the pattern from
+    // `activePatterns`. If this happens, we stop looping.
     activePatterns.add(event.patternName)
 
     try {
-      for (iteration in 1..event.times) {
-        // A loop can be stopped externally by removing the pattern from
-        // `activePatterns`. If this happens, we stop looping.
-        if (!activePatterns.contains(event.patternName)) break
+      var iteration = 1
 
+      while (!event.isDone(iteration) &&
+             activePatterns.contains(event.patternName)) {
         println("scheduling iteration $iteration")
 
         val patternStart = startOffset + event.offset
@@ -140,6 +141,8 @@ class Track(val trackNumber : Int) {
           startOffset = noteEvents.map { it.offset + it.duration }.max()!!
 
         patternNoteEvents.addAll(noteEvents)
+
+        iteration++
       }
     } finally {
       activePatterns.remove(event.patternName)
@@ -184,14 +187,6 @@ class Track(val trackNumber : Int) {
 
     noteEvents.forEach { scheduleMidiNote(it) }
 
-    events.forEach { event ->
-      when (event) {
-        is PatternLoopEvent -> {
-          // TODO
-        }
-      }
-    }
-
     // Patterns can include other patterns, and to support dynamically changing
     // pattern contents on the fly, we look up each pattern's contents shortly
     // before it is scheduled to play. This means that the total number of
@@ -204,6 +199,24 @@ class Track(val trackNumber : Int) {
     // * add the pattern's events to `noteEvents`
     events.filter { it is PatternEvent }.forEach {
       val event = it as PatternEvent
+      noteEvents.addAll(schedulePattern(event, startOffset))
+    }
+
+    // FIXME: We don't get here until all PatternEvents have been scheduled,
+    // which means if a bundle contains both PatternEvents and a
+    // PatternLoopEvent, the PatternLoopEvent probably won't be timed correctly
+    // because it can't possible start playing until we've scheduled the final
+    // iteration of the last PatternEvent.
+    //
+    // One idea to fix this is to start a CompletableFuture for each
+    // PatternEvent and PatternLoopEvent, and then `CompletableFuture.allOf` to
+    // wait on all of the futures before returning all the note events at the
+    // end of this function.
+    //
+    // NB: Once we've done that, we can combine this block with the one above,
+    // and use PatternEventBase.
+    events.filter { it is PatternLoopEvent }.forEach {
+      val event = it as PatternLoopEvent
       noteEvents.addAll(schedulePattern(event, startOffset))
     }
 

@@ -31,11 +31,25 @@ class MidiNoteEvent(
   }
 }
 
-class PatternEvent(
-  val offset : Int, val patternName : String, val times : Int
-) : Event {}
+abstract class PatternEventBase(
+  open val offset : Int, open val patternName : String
+) {
+  abstract fun isDone(iteration : Int) : Boolean
+}
 
-class PatternLoopEvent(val offset : Int, val patternName : String) : Event {}
+class PatternEvent(
+  override val offset : Int, override val patternName : String, val times : Int
+) : Event, PatternEventBase(offset, patternName) {
+  override fun isDone(iteration : Int) : Boolean {
+    return iteration > times
+  }
+}
+
+class PatternLoopEvent(
+  override val offset : Int, override val patternName : String
+) : Event, PatternEventBase(offset, patternName) {
+  override fun isDone(iteration : Int) : Boolean = false
+}
 
 class FinishLoopEvent(val offset : Int) : Event {}
 

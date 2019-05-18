@@ -74,6 +74,15 @@ func patternClearMsg(pattern string) *osc.Message {
 	return osc.NewMessage(fmt.Sprintf("/pattern/%s/clear", pattern))
 }
 
+func patternLoopMsg(pattern string) *osc.Message {
+	track := 1
+	offset := 0
+	msg := osc.NewMessage(fmt.Sprintf("/track/%d/pattern-loop", track))
+	msg.Append(int32(offset))
+	msg.Append(pattern)
+	return msg
+}
+
 func oneNote() *osc.Bundle {
 	bundle := osc.NewBundle(time.Now())
 	bundle.Append(midiPatchMsg(1, 0, 30))
@@ -146,6 +155,19 @@ func changePattern(pattern string) *osc.Bundle {
 	return bundle
 }
 
+func loopPattern(pattern string) *osc.Bundle {
+	bundle := osc.NewBundle(time.Now())
+	bundle.Append(patternClearMsg(pattern))
+	bundle.Append(patternMidiNoteMsg(pattern, 0, 40, 400, 400, 127))
+	bundle.Append(patternMidiNoteMsg(pattern, 400, 41, 400, 400, 127))
+	bundle.Append(patternMidiNoteMsg(pattern, 800, 42, 400, 400, 127))
+	bundle.Append(patternMidiNoteMsg(pattern, 1200, 43, 400, 400, 127))
+	bundle.Append(midiPatchMsg(1, 0, 10))
+	bundle.Append(patternLoopMsg(pattern))
+	bundle.Append(systemPlayMsg())
+	return bundle
+}
+
 func printUsage() {
 	fmt.Printf("Usage: %s PORT EXAMPLE\n", os.Args[0])
 }
@@ -202,6 +224,8 @@ func main() {
 		client.Send(changePattern("simple"))
 	case "patx":
 		client.Send(patternClearMsg("simple"))
+	case "patloop":
+		client.Send(loopPattern("simple"))
 	case "patfin":
 		client.Send(finishLoopMsg(1))
 	default:
