@@ -120,11 +120,13 @@ class MidiEngine {
         CustomMetaMessage.EVENT.type -> {
           val pendingEvent = String(msg.getData())
 
-          pendingEvents.get(pendingEvent)?.also { latch ->
-            latch.countDown()
-            pendingEvents.remove(pendingEvent)
-          } ?: run {
-            println("ERROR: $pendingEvent latch not found!")
+          synchronized(pendingEvents) {
+            pendingEvents.get(pendingEvent)?.also { latch ->
+              latch.countDown()
+              pendingEvents.remove(pendingEvent)
+            } ?: run {
+              println("ERROR: $pendingEvent latch not found!")
+            }
           }
         }
 
@@ -237,7 +239,11 @@ class MidiEngine {
   fun scheduleEvent(offset : Int, eventName : String) : CountDownLatch {
     val latch = CountDownLatch(1)
     val pendingEvent = eventName + "::" + UUID.randomUUID().toString()
-    pendingEvents.put(pendingEvent, latch)
+
+    synchronized(pendingEvents){
+      pendingEvents.put(pendingEvent, latch)
+    }
+
     val msgData = pendingEvent.toByteArray()
     scheduleMetaMsg(offset, CustomMetaMessage.EVENT, msgData, msgData.size)
     return latch
