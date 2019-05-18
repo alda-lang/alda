@@ -165,7 +165,7 @@ class MidiEngine {
       while (!Thread.currentThread().isInterrupted()) {
         try {
           println("${if (isPlaying) "PLAYING; " else ""}current offset: ${currentOffset()}")
-          Thread.sleep(CONTINUATION_INTERVAL_MS.toLong())
+          Thread.sleep(500)
         } catch (iex : InterruptedException) {
           Thread.currentThread().interrupt()
         }
