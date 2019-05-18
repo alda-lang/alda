@@ -112,7 +112,6 @@ class Track(val trackNumber : Int) {
           .map { it.addOffset(patternStart) } as MutableList<MidiNoteEvent>
 
         noteEvents.forEach { scheduleMidiNote(it) }
-        patternNoteEvents.addAll(noteEvents)
 
         // Now that we've scheduled at least one iteration, we can start
         // playing. (Unless we've already started playing, in which case this is
@@ -132,13 +131,15 @@ class Track(val trackNumber : Int) {
         // this means we block here until the subpattern is about due to be
         // played.
         patternEvents.forEach { event ->
-          patternNoteEvents.addAll(
+          noteEvents.addAll(
             schedulePattern(event as PatternEvent, patternStart)
           )
         }
 
         if (!noteEvents.isEmpty())
           startOffset = noteEvents.map { it.offset + it.duration }.max()!!
+
+        patternNoteEvents.addAll(noteEvents)
       }
     } finally {
       activePatterns.remove(event.patternName)
