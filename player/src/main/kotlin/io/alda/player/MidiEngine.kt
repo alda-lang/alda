@@ -284,5 +284,17 @@ class MidiEngine {
       track.remove(it)
     }
   }
+
+  fun muteChannel(channelNumber : Int) {
+    synthesizer.getChannels()[channelNumber]?.also { channel ->
+      channel.setMute(true)
+    }
+  }
+
+  fun unmuteChannel(channelNumber : Int) {
+    synthesizer.getChannels()[channelNumber]?.also { channel ->
+      channel.setMute(false)
+    }
+  }
 }
 

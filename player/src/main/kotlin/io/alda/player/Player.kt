@@ -54,6 +54,22 @@ class Track(val trackNumber : Int) {
     }
   }
 
+  fun mute() {
+    midiChannel()?.also { channel ->
+      midi.muteChannel(channel)
+    } ?: run {
+      println("WARN: No MIDI channel available for track ${trackNumber}.")
+    }
+  }
+
+  fun unmute() {
+    midiChannel()?.also { channel ->
+      midi.unmuteChannel(channel)
+    } ?: run {
+      println("WARN: No MIDI channel available for track ${trackNumber}.")
+    }
+  }
+
   fun scheduleMidiPatch (event : MidiPatchEvent, startOffset : Int) {
     midiChannel()?.also { channel ->
       midi.patch(startOffset + event.offset, channel, event.patch)
@@ -370,7 +386,7 @@ private fun applyUpdates(updates : Updates) {
 
   updates.trackActions.forEach { (trackNumber, actions) ->
     if (actions.contains(TrackAction.MUTE)) {
-      // TODO
+      track(trackNumber).mute()
     }
 
     if (actions.contains(TrackAction.CLEAR)) {
@@ -400,7 +416,7 @@ private fun applyUpdates(updates : Updates) {
 
   updates.trackActions.forEach { (trackNumber, actions) ->
     if (actions.contains(TrackAction.UNMUTE)) {
-      // TODO
+      track(trackNumber).unmute()
     }
   }
 
