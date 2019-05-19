@@ -26,6 +26,14 @@ class Track(val trackNumber : Int) {
     return _midiChannel
   }
 
+  private fun withMidiChannel(f : (Int) -> Unit) {
+    midiChannel()?.also { channel ->
+      f(channel)
+    } ?: run {
+      println("WARN: No MIDI channel available for track ${trackNumber}.")
+    }
+  }
+
   fun useMidiPercussionChannel() { _midiChannel = 9 }
 
   val eventBufferQueue = LinkedBlockingQueue<List<Event>>()
@@ -46,45 +54,29 @@ class Track(val trackNumber : Int) {
       era++
       eventBufferQueue.clear()
       activePatterns.clear()
-      midiChannel()?.also { channel ->
-        midi.clearChannel(channel)
-      } ?: run {
-        println("WARN: No MIDI channel available for track ${trackNumber}.")
-      }
+      withMidiChannel { midi.clearChannel(it) }
     }
   }
 
   fun mute() {
-    midiChannel()?.also { channel ->
-      midi.muteChannel(channel)
-    } ?: run {
-      println("WARN: No MIDI channel available for track ${trackNumber}.")
-    }
+    withMidiChannel { midi.muteChannel(it) }
   }
 
   fun unmute() {
-    midiChannel()?.also { channel ->
-      midi.unmuteChannel(channel)
-    } ?: run {
-      println("WARN: No MIDI channel available for track ${trackNumber}.")
-    }
+    withMidiChannel { midi.unmuteChannel(it) }
   }
 
   fun scheduleMidiPatch (event : MidiPatchEvent, startOffset : Int) {
-    midiChannel()?.also { channel ->
+    withMidiChannel { channel ->
       midi.patch(startOffset + event.offset, channel, event.patch)
-    } ?: run {
-      println("WARN: No MIDI channel available for track ${trackNumber}.")
     }
   }
 
   fun scheduleMidiNote(event : MidiNoteEvent) {
-    midiChannel()?.also { channel ->
+    withMidiChannel { channel ->
       val noteStart = event.offset
       val noteEnd = noteStart + event.audibleDuration
       midi.note(noteStart, noteEnd, channel, event.noteNumber, event.velocity)
-    } ?: run {
-      println("WARN: No MIDI channel available for track ${trackNumber}.")
     }
   }
 

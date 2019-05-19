@@ -4,6 +4,7 @@ import java.util.UUID;
 import java.util.concurrent.CountDownLatch
 import javax.sound.midi.MetaEventListener
 import javax.sound.midi.MetaMessage
+import javax.sound.midi.MidiChannel
 import javax.sound.midi.MidiEvent
 import javax.sound.midi.MidiMessage
 import javax.sound.midi.MidiSystem
@@ -260,8 +261,16 @@ class MidiEngine {
     return latch
   }
 
-  fun clearChannel(channelNumber : Int) {
+  private fun withChannel(channelNumber : Int, f : (MidiChannel) -> Unit) {
     synthesizer.getChannels()[channelNumber]?.also { channel ->
+      f(channel)
+    } ?: run {
+      println("WARN: MIDI channel $channelNumber is null.")
+    }
+  }
+
+  fun clearChannel(channelNumber : Int) {
+    withChannel(channelNumber) { channel ->
       channel.allNotesOff()
       channel.allSoundOff()
     }
@@ -286,15 +295,11 @@ class MidiEngine {
   }
 
   fun muteChannel(channelNumber : Int) {
-    synthesizer.getChannels()[channelNumber]?.also { channel ->
-      channel.setMute(true)
-    }
+    withChannel(channelNumber) { it.setMute(true) }
   }
 
   fun unmuteChannel(channelNumber : Int) {
-    synthesizer.getChannels()[channelNumber]?.also { channel ->
-      channel.setMute(false)
-    }
+    withChannel(channelNumber) { it.setMute(false) }
   }
 }
 
