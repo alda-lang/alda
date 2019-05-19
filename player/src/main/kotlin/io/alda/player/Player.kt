@@ -34,10 +34,28 @@ class Track(val trackNumber : Int) {
   // number of times or indefinitely).
   val activePatterns = mutableSetOf<String>()
 
+  // A monotonically increasing integer representing all of the events we are
+  // going to schedule until the track is cleared. Event scheduling is done on
+  // multiple threads, so incrementing `era` is a way to signal to the various
+  // threads that the track has been cleared, i.e. don't proceed to schedule
+  // events.
+  var era = 0
+
+  fun clear() {
+    synchronized(era) {
+      era++
+      eventBufferQueue.clear()
+      activePatterns.clear()
+      midiChannel()?.also { channel ->
+        midi.clearChannel(channel)
+      } ?: run {
+        println("WARN: No MIDI channel available for track ${trackNumber}.")
+      }
+    }
+  }
+
   fun scheduleMidiPatch (event : MidiPatchEvent, startOffset : Int) {
     midiChannel()?.also { channel ->
-      // debug
-      println("track ${trackNumber} is channel ${channel}")
       midi.patch(startOffset + event.offset, channel, event.patch)
     } ?: run {
       println("WARN: No MIDI channel available for track ${trackNumber}.")
@@ -99,8 +117,16 @@ class Track(val trackNumber : Int) {
 
         // Wait until it's time to look up the pattern's current value and
         // schedule the events.
+        //
+        // We check the `era` now and then again when it's time to schedule, and
+        // see if the track has been cleared in the meantime. We only proceed if
+        // the track hasn't been cleared (i.e. if the `era` hasn't changed).
+        val eraBefore = synchronized(era) { era }
         println("awaiting latch")
         latch.await()
+        val eraAfter = synchronized(era) { era }
+        println("eraBefore: $eraBefore; eraAfter: $eraAfter")
+        if (eraBefore != eraAfter) break
 
         println("scheduling pattern ${event.patternName}")
 
@@ -270,13 +296,25 @@ class Track(val trackNumber : Int) {
           // receive new events on the queue.
           thread {
             // Wait for the previous scheduling of events to finish.
+            //
+            // We check the `era` now and then again when it's time to schedule,
+            // and see if the track has been cleared in the meantime. We only
+            // proceed if the track hasn't been cleared (i.e. if the `era`
+            // hasn't changed).
+            val eraBefore = synchronized(era) { era }
             scheduling.lock()
+            val eraAfter = synchronized(era) { era }
+
             println("TRACK ${trackNumber}: startOffset is ${startOffset}")
+
             try {
-              // Schedule events and update `startOffset` to be the offset at
-              // which the next events should start (after the ones we're
-              // scheduling here).
-              startOffset = scheduleEvents(events, startOffset)
+              println("eraBefore: $eraBefore; eraAfter: $eraAfter")
+              if (eraBefore == eraAfter) {
+                // Schedule events and update `startOffset` to be the offset at
+                // which the next events should start (after the ones we're
+                // scheduling here).
+                startOffset = scheduleEvents(events, startOffset)
+              }
             } finally {
               scheduling.unlock()
             }
@@ -327,7 +365,7 @@ private fun applyUpdates(updates : Updates) {
     midi.stopSequencer()
 
   if (updates.systemActions.contains(SystemAction.CLEAR)) {
-    // TODO
+    tracks.forEach { _, track -> track.clear() }
   }
 
   updates.trackActions.forEach { (trackNumber, actions) ->
@@ -336,7 +374,7 @@ private fun applyUpdates(updates : Updates) {
     }
 
     if (actions.contains(TrackAction.CLEAR)) {
-      // TODO
+      track(trackNumber).clear()
     }
   }
 

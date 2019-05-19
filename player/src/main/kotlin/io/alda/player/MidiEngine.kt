@@ -52,6 +52,17 @@ enum class CustomMetaMessage(val type : Int) {
   EVENT(0x32)
 }
 
+// Returns the channel affected by a MidiEvent. For example, a MIDI NOTE_ON
+// event affects the note on which the channel will be played.
+//
+// Returns null if the MidiEvent is the kind of event that does not affect any
+// channel in particular.
+private fun eventChannel(event : MidiEvent) : Int? {
+  val msg = event.getMessage()
+  if (msg !is ShortMessage) return null
+  return (msg as ShortMessage).getChannel()
+}
+
 class MidiEngine {
   val sequencer = MidiSystem.getSequencer(false)
   val synthesizer = MidiSystem.getSynthesizer()
@@ -247,6 +258,31 @@ class MidiEngine {
     val msgData = pendingEvent.toByteArray()
     scheduleMetaMsg(offset, CustomMetaMessage.EVENT, msgData, msgData.size)
     return latch
+  }
+
+  fun clearChannel(channelNumber : Int) {
+    synthesizer.getChannels()[channelNumber]?.also { channel ->
+      channel.allNotesOff()
+      channel.allSoundOff()
+    }
+
+    val channelEvents = mutableListOf<MidiEvent>()
+    for (i in 0..(track.size() - 1)) {
+      val event = track.get(i)
+      if (eventChannel(event) == channelNumber) {
+        channelEvents.add(event)
+      }
+    }
+
+    // To preserve the current tick position, we replace each message with a
+    // no-op CONTINUE message instead of simply removing it.
+    channelEvents.forEach {
+      track.add(MidiEvent(
+        MetaMessage(CustomMetaMessage.CONTINUE.type, null, 0),
+        it.getTick())
+      )
+      track.remove(it)
+    }
   }
 }
 

@@ -25,6 +25,14 @@ func systemStopMsg() *osc.Message {
 	return osc.NewMessage("/system/stop")
 }
 
+func systemClearMsg() *osc.Message {
+	return osc.NewMessage("/system/clear")
+}
+
+func clearMsg(track int) *osc.Message {
+	return osc.NewMessage(fmt.Sprintf("/track/%d/clear", track))
+}
+
 func midiPatchMsg(track int, offset int, patch int) *osc.Message {
 	msg := osc.NewMessage(fmt.Sprintf("/track/%d/midi/patch", track))
 	msg.Append(int32(offset))
@@ -259,6 +267,10 @@ func main() {
 		client.Send(systemPlayMsg())
 	case "stop":
 		client.Send(systemStopMsg())
+	case "clear":
+		client.Send(systemClearMsg())
+	case "clear1":
+		client.Send(clearMsg(1))
 	case "perc":
 		client.Send(midiPercussionMsg(1))
 	case "1":
