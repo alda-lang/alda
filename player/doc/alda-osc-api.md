@@ -79,6 +79,31 @@ scheduled already, and any notes being scheduled now will start once those other
 events have ended, and that point in time is "offset 0" from the client's
 perspective.
 
+## Tempo
+
+Note that offset is expressed in terms of milliseconds. We prefer to work with
+milliseconds instead of standard note lengths (quarter, eighth, etc.) because
+milliseconds are more precise, not coupled to tempo, and allow the composition
+of music with less rhythmic limits.
+
+Nonetheless, most music software (notation software, etc.) works under the
+assumption that music is measured in terms of standard musical notation and is
+necessarily coupled to tempo. We want to be able to export MIDI files that work
+in this way, which means the division type must be pulses per quarter note
+(PPQ).
+
+So that we can have our cake and eat it too, we keep track of the history of
+tempo changes during a score, and use this "tempo itinerary" to help us convert
+absolute offsets in milliseconds to PPQ offsets expressed in ticks, where the
+physical duration depends on the tempo.
+
+This conversion all happens under the hood. From the client's perspective,
+offsets are expressed in milliseconds, and tempo can be set at any point in the
+score for compatibility with any music software that needs to know about tempo.
+
+Strictly speaking, it isn't necessary to set the tempo, but it can be done, and
+it should be done if one wants to export the score to a MIDI file.
+
 ## Bundle vs. message
 
 * The top-level can be either a message or a bundle containing 1+ messages.
@@ -101,6 +126,7 @@ perspective.
     * Remembers the state of the tracks, such that when a `/system/play` is
       received again, playback will continue where it left off.
   * `/clear` - clear all tracks of upcoming events
+  * `/tempo` - sets the tempo in BPM
 
 * `/track/1`
   * `/mute` - mute this track

@@ -235,6 +235,30 @@ func loopPattern(pattern string) *osc.Bundle {
 	return bundle
 }
 
+func tempoMsg(offset int, bpm float32) *osc.Message {
+	msg := osc.NewMessage("/system/tempo")
+	msg.Append(int32(offset))
+	msg.Append(float32(bpm))
+	return msg
+}
+
+// Set a bunch of arbitrary tempos. The point of this is that the tempo event
+// should go into the sequence, and then we should be able to continue to
+// schedule events expressed in terms of milliseconds and the player should
+// convert them into ticks correctly according to whatever the tempo is at that
+// point in time.
+//
+// Tempo isn't really important for playback, but it's important that we be able
+// to set it so that we can export MIDI files that work with other software.
+func variousTempos() *osc.Bundle {
+	bundle := osc.NewBundle(time.Now())
+	bundle.Append(tempoMsg(0, 130))
+	bundle.Append(tempoMsg(500, 62))
+	bundle.Append(tempoMsg(5000, 200))
+	bundle.Append(tempoMsg(10000, 400))
+	return bundle
+}
+
 func printUsage() {
 	fmt.Printf("Usage: %s PORT EXAMPLE\n", os.Args[0])
 }
@@ -307,6 +331,8 @@ func main() {
 		client.Send(twoFiniteLoops())
 	case "2infinity":
 		client.Send(twoInfiniteLoops())
+	case "tempos":
+		client.Send(variousTempos())
 	default:
 		fmt.Printf("No such example: %s\n", example)
 		os.Exit(1)

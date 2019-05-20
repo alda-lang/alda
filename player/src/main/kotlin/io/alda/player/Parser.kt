@@ -16,6 +16,8 @@ enum class PatternAction {
 
 interface Event {}
 
+class TempoEvent(val offset : Int, val bpm : Float) : Event {}
+
 class MidiPatchEvent(val offset : Int, val patch : Int) : Event {}
 
 class MidiPercussionEvent(val offset : Int) : Event {}
@@ -58,6 +60,7 @@ class Updates() {
   var trackActions   = mutableMapOf<Int, Set<TrackAction>>()
   var patternActions = mutableMapOf<String, Set<PatternAction>>()
 
+  var systemEvents   = mutableListOf<Event>()
   var trackEvents    = mutableMapOf<Int, List<Event>>()
   var patternEvents  = mutableMapOf<String, List<Event>>()
 
@@ -119,6 +122,12 @@ class Updates() {
 
         Regex("/system/clear").matches(address) -> {
           systemActions.add(SystemAction.CLEAR)
+        }
+
+        Regex("/system/tempo").matches(address) -> {
+          val offset = args.get(0) as Int
+          val bpm = args.get(1) as Float
+          systemEvents.add(TempoEvent(offset, bpm))
         }
 
         Regex("/track/\\d+/unmute").matches(address) -> {

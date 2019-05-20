@@ -362,6 +362,7 @@ private fun applyUpdates(updates : Updates) {
   println("----")
   println(updates.systemActions)
   println(updates.trackActions)
+  println(updates.systemEvents)
   println(updates.trackEvents)
   println(updates.patternActions)
   println(updates.patternEvents)
@@ -392,7 +393,13 @@ private fun applyUpdates(updates : Updates) {
     }
   }
 
-  // PHASE 2: update patterns
+  // PHASE 2: update tempo and patterns
+
+  updates.systemEvents.forEach {
+    // NB: TempoEvent is currently the only type of system event.
+    val tempoEvent = it as TempoEvent
+    midi.setTempo(tempoEvent.offset, tempoEvent.bpm)
+  }
 
   updates.patternEvents.forEach { (patternName, events) ->
     pattern(patternName).events.addAll(events)
