@@ -55,6 +55,8 @@ class PatternLoopEvent(
 
 class FinishLoopEvent(val offset : Int) : Event {}
 
+class MidiExportEvent(val filepath : String) : Event {}
+
 class Updates() {
   var systemActions  = mutableSetOf<SystemAction>()
   var trackActions   = mutableMapOf<Int, Set<TrackAction>>()
@@ -128,6 +130,11 @@ class Updates() {
           val offset = args.get(0) as Int
           val bpm = args.get(1) as Float
           systemEvents.add(TempoEvent(offset, bpm))
+        }
+
+        Regex("/system/midi/export").matches(address) -> {
+          val filepath = args.get(0) as String
+          systemEvents.add(MidiExportEvent(filepath))
         }
 
         Regex("/track/\\d+/unmute").matches(address) -> {

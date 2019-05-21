@@ -41,6 +41,12 @@ func unmuteMsg(track int) *osc.Message {
 	return osc.NewMessage(fmt.Sprintf("/track/%d/unmute", track))
 }
 
+func exportMsg(filepath string) *osc.Message {
+	msg := osc.NewMessage("/system/midi/export")
+	msg.Append(filepath)
+	return msg
+}
+
 func midiPatchMsg(track int, offset int, patch int) *osc.Message {
 	msg := osc.NewMessage(fmt.Sprintf("/track/%d/midi/patch", track))
 	msg.Append(int32(offset))
@@ -307,6 +313,8 @@ func main() {
 		client.Send(muteMsg(1))
 	case "unmute":
 		client.Send(unmuteMsg(1))
+	case "export":
+		client.Send(exportMsg("/tmp/alda-test.mid"))
 	case "perc":
 		client.Send(midiPercussionMsg(1))
 	case "1":

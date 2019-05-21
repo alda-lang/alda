@@ -1,5 +1,6 @@
 package io.alda.player
 
+import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.UUID;
@@ -74,6 +75,11 @@ private fun eventChannel(event : MidiEvent) : Int? {
   val msg = event.getMessage()
   if (msg !is ShortMessage) return null
   return (msg as ShortMessage).getChannel()
+}
+
+private fun isNoteOnEvent(event : MidiEvent) : Boolean {
+  val msg = event.getMessage()
+  return msg is ShortMessage && msg.getCommand() == ShortMessage.NOTE_ON
 }
 
 data class TempoEntry(
@@ -413,6 +419,33 @@ class MidiEngine {
 
   fun unmuteChannel(channelNumber : Int) {
     withChannel(channelNumber) { it.setMute(false) }
+  }
+
+  fun export(filepath : String) {
+    // We make a copy of the sequence so that we can shift the tick position of
+    // each event in the sequence back such that the first event starts at tick
+    // position 0. This is to compensate for the SCHEDULE_BUFFER_TIME_MS buffer
+    // time that tends to happen at the beginning of the sequence.
+    val sequenceCopy = Sequence(DIVISION_TYPE, RESOLUTION)
+    val trackCopy = sequenceCopy.createTrack()
+
+    var earliestNoteOffset = Long.MAX_VALUE
+    val trackEvents = mutableListOf<MidiEvent>()
+    for (i in 0..(track.size() - 1)) {
+      val event = track.get(i)
+      trackEvents.add(event)
+      if (isNoteOnEvent(event))
+        earliestNoteOffset = minOf(earliestNoteOffset, event.getTick())
+    }
+
+    trackEvents.forEach { event ->
+      val msgCopy = event.getMessage().clone() as MidiMessage
+      val ticks = maxOf(0, event.getTick() - earliestNoteOffset)
+      trackCopy.add(MidiEvent(msgCopy, ticks))
+    }
+
+    val midiFileType = 0
+    MidiSystem.write(sequenceCopy, midiFileType, File(filepath))
   }
 }
 

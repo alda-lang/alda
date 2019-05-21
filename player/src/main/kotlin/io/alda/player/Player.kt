@@ -395,8 +395,7 @@ private fun applyUpdates(updates : Updates) {
 
   // PHASE 2: update tempo and patterns
 
-  updates.systemEvents.forEach {
-    // NB: TempoEvent is currently the only type of system event.
+  updates.systemEvents.filter {it is TempoEvent}.forEach {
     val tempoEvent = it as TempoEvent
     midi.setTempo(tempoEvent.offset, tempoEvent.bpm)
   }
@@ -411,7 +410,14 @@ private fun applyUpdates(updates : Updates) {
     track(trackNumber).eventBufferQueue.put(events)
   }
 
-  // PHASE 4: unmute/play
+  // PHASE 4: export
+
+  updates.systemEvents.filter { it is MidiExportEvent }.forEach {
+    val event = it as MidiExportEvent
+    midi.export(event.filepath)
+  }
+
+  // PHASE 5: unmute/play
 
   updates.trackActions.forEach { (trackNumber, actions) ->
     if (actions.contains(TrackAction.UNMUTE)) {

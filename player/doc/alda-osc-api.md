@@ -127,6 +127,7 @@ it should be done if one wants to export the score to a MIDI file.
       received again, playback will continue where it left off.
   * `/clear` - clear all tracks of upcoming events
   * `/tempo` - sets the tempo in BPM
+  * `/midi/export` - writes the current state of the sequence to a MIDI file
 
 * `/track/1`
   * `/mute` - mute this track
