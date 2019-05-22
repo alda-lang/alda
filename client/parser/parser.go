@@ -376,7 +376,7 @@ func (p *parser) updatesBetweenNotesInChord() ([]model.ScoreUpdate, error) {
 			if err != nil {
 				return nil, err
 			}
-			updates = append(updates, octaveSetUpdates)
+			updates = append(updates, octaveSetUpdates...)
 		case p.match(LeftParen):
 			sexp, err := p.lispList()
 			if err != nil {
