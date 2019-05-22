@@ -20,10 +20,10 @@ func TestParts(t *testing.T) {
 			},
 		},
 		parseTestCase{
-			label: "part with single name and a nickname",
+			label: "part with single name and an alias",
 			given: `harmonica "bob": c d e`,
 			expect: []model.ScoreUpdate{
-				model.PartDeclaration{Names: []string{"harmonica"}, Nickname: "bob"},
+				model.PartDeclaration{Names: []string{"harmonica"}, Alias: "bob"},
 				model.Note{NoteLetter: model.C},
 				model.Note{NoteLetter: model.D},
 				model.Note{NoteLetter: model.E},
@@ -40,12 +40,12 @@ func TestParts(t *testing.T) {
 			},
 		},
 		parseTestCase{
-			label: "part with multiple names and a nickname",
+			label: "part with multiple names and an alias",
 			given: `trumpet/trombone/tuba "brass": c d e`,
 			expect: []model.ScoreUpdate{
 				model.PartDeclaration{
-					Names:    []string{"trumpet", "trombone", "tuba"},
-					Nickname: "brass",
+					Names: []string{"trumpet", "trombone", "tuba"},
+					Alias: "brass",
 				},
 				model.Note{NoteLetter: model.C},
 				model.Note{NoteLetter: model.D},

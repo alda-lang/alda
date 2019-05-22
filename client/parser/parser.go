@@ -173,8 +173,8 @@ func (p *parser) part() ([]model.ScoreUpdate, error) {
 		partDecl.Names = append(partDecl.Names, name.text)
 	}
 
-	if p.match(Nickname) {
-		partDecl.Nickname = p.previous().literal.(string)
+	if p.match(Alias) {
+		partDecl.Alias = p.previous().literal.(string)
 	}
 
 	if _, err := p.consume(Colon, "in part declaration"); err != nil {
@@ -234,7 +234,7 @@ func (p *parser) partOrVariableOp() ([]model.ScoreUpdate, error) {
 	switch p.peek().tokenType {
 	case Equals:
 		return p.variableDefinition()
-	case Nickname, Separator, Colon:
+	case Alias, Separator, Colon:
 		return p.part()
 	default:
 		return p.variableReference()

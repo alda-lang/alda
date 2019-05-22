@@ -4,7 +4,8 @@
 >
 > You may want to follow that link if you aren't concerned with the gory details!
 
-There are four categories of **instrument calls** in Alda. Each category either _has a nickname_ or doesn't, and either _has multiple instances_ or doesn't.
+There are four categories of **instrument calls** in Alda. Each category either
+_has an alias_ or doesn't, and either _has multiple instances_ or doesn't.
 
 ### `foo:`
 
@@ -26,7 +27,7 @@ There are four categories of **instrument calls** in Alda. Each category either 
 
 - `foo` is expected to be a stock instrument. If it's not, an error will be thrown.
 
-- If `"bar"` was already used as the nickname of another instance, throws an error.
+- If `"bar"` was already used as the alias of another instance, throws an error.
 
 - If there is an existing, unnamed instance of `foo` in the score, throws an error. (All instances of `foo` must be named.)
 
@@ -50,7 +51,8 @@ There are four categories of **instrument calls** in Alda. Each category either 
     - (new instances will be created for any instruments that don't exist yet in the score)
 
 - If e.g. `foo` is a named instrument and `bar` is not, or vice versa (e.g. `foo/trumpet:`):
-  - ...throws an ambiguity error. (Nicknames should be used for creating new instances or grouping existing ones, not both.)
+  - ...throws an ambiguity error. (aliases should be used for creating new
+    instances or grouping existing ones, not both.)
 
 ### `foo/bar "baz":`
 

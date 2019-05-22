@@ -843,7 +843,8 @@ This release includes improvements to the system that assigns instrument parts a
 
 * Errors are now thrown in the following scenarios, which prior to this release would lead to undefined or confusing behavior:
 
-  * Calls like `foo "bar"` where `foo` is a previously defined nickname (e.g. `piano "foo"`), not a stock instrument.
+  * Calls like `foo "bar"` where `foo` is a previously defined alias (e.g.
+    `piano "foo"`), not a stock instrument.
 
   * Mixing and matching unnamed vs. named instances of the same instrument in a score.
 

@@ -48,7 +48,8 @@ func (s *scanner) unexpectedCharError(
 type TokenType int
 
 const (
-	AtMarker TokenType = iota
+	Alias TokenType = iota
+	AtMarker
 	Barline
 	Colon
 	CramClose
@@ -64,7 +65,6 @@ const (
 	Marker
 	Name
 	Natural
-	Nickname
 	NoteLength
 	NoteLengthMs
 	NoteLetter
@@ -93,6 +93,8 @@ type Token struct {
 
 func (tt TokenType) ToString() string {
 	switch tt {
+	case Alias:
+		return "Alias"
 	case AtMarker:
 		return "AtMarker"
 	case Barline:
@@ -125,8 +127,6 @@ func (tt TokenType) ToString() string {
 		return "Name"
 	case Natural:
 		return "Natural"
-	case Nickname:
-		return "Nickname"
 	case NoteLength:
 		return "NoteLength"
 	case NoteLengthMs:
@@ -533,17 +533,17 @@ func (s *scanner) parseName() {
 	s.addToken(Name, nil)
 }
 
-func (s *scanner) parseNickname() error {
+func (s *scanner) parseAlias() error {
 	// NB: This assumes the initial double quote was already consumed.
 
 	s.consumeWhile(isValidNameChar)
 
 	if s.reachedEOF() {
-		return s.errorAtPosition(s.line, s.column, "Unterminated nickname")
+		return s.errorAtPosition(s.line, s.column, "Unterminated alias")
 	}
 
 	if c := s.peek(); c != '"' {
-		s.unexpectedCharError(c, "in nickname", s.line, s.column)
+		s.unexpectedCharError(c, "in alias", s.line, s.column)
 	}
 
 	// Consume the closing ".
@@ -551,7 +551,7 @@ func (s *scanner) parseNickname() error {
 
 	// Trim the surrounding quotes.
 	contents := s.input[s.start+1 : s.current-1]
-	s.addToken(Nickname, string(contents))
+	s.addToken(Alias, string(contents))
 
 	return nil
 }
@@ -704,7 +704,7 @@ func (s *scanner) scanToken() error {
 	case '*':
 		err = s.parseRepeat()
 	case '"':
-		err = s.parseNickname()
+		err = s.parseAlias()
 	case '%':
 		err = s.parseMarker()
 	case '@':

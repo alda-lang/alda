@@ -65,11 +65,15 @@ Alda chooses not to force instrument parts to sync up when used as a group in or
 
     violin/viola/cello: e f g e f g e f g e f g e f g
 
-## Nicknames
+## Aliases
 
-So far, we've talked about using different types of instruments at the same time. But what if we want *more than one of the same instrument*? Let's say we're writing a piece of music for two oboes. We obviously can't refer to them both as "oboe"; how will we tell them apart? That's where **nicknames** come in.
+So far, we've talked about using different types of instruments at the same
+time. But what if we want *more than one of the same instrument*? Let's say
+we're writing a piece of music for two oboes. We obviously can't refer to them
+both as "oboe"; how will we tell them apart? That's where **aliases** come in.
 
-You can give a nickname to an instrument by putting it in double quotes after the name of the instrument:
+You can give an alias to an instrument by putting the alias in double quotes
+after the name of the instrument:
 
     oboe "oboe-1":
       c8 d e f g2
@@ -81,12 +85,13 @@ Now `oboe-1` refers to our first oboe. From now on, to tell oboe #1 what to do, 
     oboe "oboe-2":
       e8 f g a b2
 
-You can also nickname a group of instruments:
+You can also alias a group of instruments:
 
     oboe-1/oboe-2 "oboes":
       > c1
 
-When a nickname is given to a group of instruments, the individual instruments can then be accessed via the dot (`.`) operator.
+When an alias is given to a group of instruments, the individual instruments can
+then be accessed via the dot (`.`) operator.
 
 This can be useful when you create a group of unnamed instances, and you end up wanting to use the individual instruments later:
 
@@ -95,7 +100,7 @@ This can be useful when you create a group of unnamed instances, and you end up 
 
 ### Acceptable Names
 
-Instrument names and nicknames must adhere to the following rules:
+Instrument names and aliases must adhere to the following rules:
 
 * They must be at least 2 characters long.
 * The first two characters must be letters (either uppercase or lowercase).
@@ -108,7 +113,8 @@ Instrument names and nicknames must adhere to the following rules:
 
 The details of how Alda creates and assigns instrument instances are [complicated](instance-and-group-assignment.md), but for practical purposes, you can avoid errors by following these simple rules:
 
-- If you assign a nickname to one instance of an instrument, then any other instance of that same instrument in your score must also have a nickname.
+- If you assign an alias to one instance of an instrument, then any other
+  instance of that same instrument in your score must also have an alias.
 
   ```
   # ERROR
@@ -124,7 +130,7 @@ The details of how Alda creates and assigns instrument instances are [complicate
   piano "bar": e8 f g a b2
   ```
 
-- Once an instance is nicknamed, you cannot give it a new nickname.
+- Once an instance is aliased, you cannot give it a new alias.
 
   ```
   # ERROR
@@ -136,7 +142,7 @@ The details of how Alda creates and assigns instrument instances are [complicate
   foo: a b > c
   ```
 
-- You cannot reassign a nickname to another instance.
+- You cannot reassign an alias to another instance.
 
   ```
   # ERROR
@@ -148,7 +154,8 @@ The details of how Alda creates and assigns instrument instances are [complicate
   clarinet "bar": e8 f g a b2
   ```
 
-- When making a group, every member of the group must be either a) a new instance of an instrument, or b) an existing instrument _with a nickname_.
+- When making a group, every member of the group must be either a) a new
+  instance of an instrument, or b) an existing instrument _with an alias_.
 
   Combining the two is not allowed because it can lead to situations where it isn't clear which instrument instance should be used.
 
