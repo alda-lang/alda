@@ -462,18 +462,18 @@ func (p *parser) noteRestOrChord() ([]model.ScoreUpdate, error) {
 	return allUpdates, nil
 }
 
-func (p *parser) endings() ([]model.ScoreUpdate, error) {
-	// NB: This assumes the Endings token was already consumed.
+func (p *parser) iterations() ([]model.IterationRange, error) {
+	// NB: This assumes the Iterations token was already consumed.
 	token := p.previous()
 
-	endings := model.Endings{}
+	iterations := []model.IterationRange{}
 
-	for _, er := range token.literal.([]endingRange) {
-		endingRange := model.EndingRange{First: er.first, Last: er.last}
-		endings.Ranges = append(endings.Ranges, endingRange)
+	for _, er := range token.literal.([]iterationRange) {
+		iterationRange := model.IterationRange{First: er.first, Last: er.last}
+		iterations = append(iterations, iterationRange)
 	}
 
-	return []model.ScoreUpdate{endings}, nil
+	return iterations, nil
 }
 
 func (p *parser) eventSeq() ([]model.ScoreUpdate, error) {
@@ -485,19 +485,22 @@ func (p *parser) eventSeq() ([]model.ScoreUpdate, error) {
 			return nil, p.errorAtToken(token, "Unterminated event sequence.")
 		}
 
-		if p.match(Endings) {
-			endingsEvents, err := p.endings()
-			if err != nil {
-				return nil, err
-			}
-			allEvents = append(allEvents, endingsEvents...)
-		} else {
-			events, err := p.topLevel()
-			if err != nil {
-				return nil, err
-			}
-			allEvents = append(allEvents, events...)
+		events, err := p.topLevel()
+		if err != nil {
+			return nil, err
 		}
+
+		if p.match(Iterations) {
+			iterations, err := p.iterations()
+			if err != nil {
+				return nil, err
+			}
+
+			lastI := len(events) - 1
+			events[lastI] = model.OnIterations{Iterations: iterations, Event: events[lastI]}
+		}
+
+		allEvents = append(allEvents, events...)
 	}
 
 	if _, err := p.consume(EventSeqClose, "in event sequence"); err != nil {

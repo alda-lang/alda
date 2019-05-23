@@ -54,13 +54,13 @@ const (
 	Colon
 	CramClose
 	CramOpen
-	Endings
 	EOF
 	Equals
 	EventSeqClose
 	EventSeqOpen
 	Flat
 	Integer
+	Iterations
 	LeftParen
 	Marker
 	Name
@@ -105,8 +105,6 @@ func (tt TokenType) ToString() string {
 		return "CramClose"
 	case CramOpen:
 		return "CramOpen"
-	case Endings:
-		return "Endings"
 	case EOF:
 		return "EOF"
 	case Equals:
@@ -119,6 +117,8 @@ func (tt TokenType) ToString() string {
 		return "Flat"
 	case Integer:
 		return "Integer"
+	case Iterations:
+		return "Iterations"
 	case LeftParen:
 		return "LeftParen"
 	case Marker:
@@ -391,34 +391,34 @@ func (s *scanner) parseNumber() {
 	s.addToken(Number, s.parseFloatFrom(s.start))
 }
 
-type endingRange struct {
+type iterationRange struct {
 	first int32
 	last  int32
 }
 
-func (s *scanner) parseEndings() error {
+func (s *scanner) parseIterations() error {
 	// NB: This assumes the initial "'" was already consumed.
 
-	ranges := []endingRange{}
+	ranges := []iterationRange{}
 
-	// Parse ending ranges as long as we continue to encounter them.
+	// Parse iteration ranges as long as we continue to encounter them.
 	for {
 		if c := s.peek(); !isDigit(c) {
-			return s.unexpectedCharError(c, "in endings", s.line, s.column)
+			return s.unexpectedCharError(c, "in iterations", s.line, s.column)
 		}
 
 		// Parse the "first" number of the range.
 		startNumber := s.current
 		s.consumeDigits()
 		first := s.parseIntegerFrom(startNumber)
-		er := endingRange{first: first}
+		er := iterationRange{first: first}
 
 		// Either parse the "last" number of the range, or make the first number
 		// the last number as well, indicating a range of one number, e.g. 3-3.
 		if s.match('-') {
 			// Make sure a number comes next.
 			if c := s.peek(); !isDigit(c) {
-				return s.unexpectedCharError(c, "in endings", s.line, s.column)
+				return s.unexpectedCharError(c, "in iterations", s.line, s.column)
 			}
 
 			startNumber := s.current
@@ -437,7 +437,7 @@ func (s *scanner) parseEndings() error {
 		}
 	}
 
-	s.addToken(Endings, ranges)
+	s.addToken(Iterations, ranges)
 	return nil
 }
 
@@ -700,7 +700,7 @@ func (s *scanner) scanToken() error {
 	case '=':
 		s.addToken(Equals, nil)
 	case '\'':
-		err = s.parseEndings()
+		err = s.parseIterations()
 	case '*':
 		err = s.parseRepeat()
 	case '"':
