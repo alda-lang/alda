@@ -1,5 +1,9 @@
 package model
 
+import (
+	"errors"
+)
+
 type Note struct {
 	NoteLetter  NoteLetter
 	Accidentals []Accidental
@@ -9,6 +13,14 @@ type Note struct {
 	Slurred bool
 }
 
+func (Note) updateScore(score *Score) error {
+	return errors.New("not implemented")
+}
+
 type Rest struct {
 	Duration Duration
+}
+
+func (Rest) updateScore(score *Score) error {
+	return errors.New("not implemented")
 }

@@ -1,5 +1,9 @@
 package model
 
+import (
+	"errors"
+)
+
 // Alda includes a minimal Lisp implementation as a subset of the language, in
 // order to facilitate adding new features to the language without accumulating
 // syntax.
@@ -28,4 +32,8 @@ type LispString struct {
 
 type LispList struct {
 	Elements []LispForm
+}
+
+func (LispList) updateScore(score *Score) error {
+	return errors.New("not implemented")
 }
