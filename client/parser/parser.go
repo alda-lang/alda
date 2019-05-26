@@ -1,11 +1,12 @@
 package parser
 
 import (
-	log "alda.io/client/logging"
-	model "alda.io/client/model"
 	"fmt"
 	"io/ioutil"
 	"time"
+
+	log "alda.io/client/logging"
+	model "alda.io/client/model"
 )
 
 type parser struct {
@@ -85,7 +86,7 @@ func (p *parser) unexpectedTokenError(token Token, context string) *parseError {
 	}
 
 	msg := fmt.Sprintf(
-		"Unexpected %s `%s`%s", token.tokenType.ToString(), token.text, context,
+		"Unexpected %s `%s`%s", token.tokenType.String(), token.text, context,
 	)
 
 	return p.errorAtToken(token, msg)
@@ -608,7 +609,7 @@ func Parse(filepath string, input string) ([]model.ScoreUpdate, error) {
 	p := newParser(filepath, tokens)
 
 	for t := p.peek(); t.tokenType != EOF; t = p.peek() {
-		// log.Debug().Str("token", t.ToString()).Msg("Parsing token.")
+		// log.Debug().Str("token", t.String()).Msg("Parsing token.")
 
 		updates, err := p.topLevel()
 		if err != nil {

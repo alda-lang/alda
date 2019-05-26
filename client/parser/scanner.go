@@ -1,10 +1,11 @@
 package parser
 
 import (
-	log "alda.io/client/logging"
 	"fmt"
 	"io/ioutil"
 	"strconv"
+
+	log "alda.io/client/logging"
 )
 
 func isDigit(c rune) bool {
@@ -91,7 +92,7 @@ type Token struct {
 	line      int
 }
 
-func (tt TokenType) ToString() string {
+func (tt TokenType) String() string {
 	switch tt {
 	case Alias:
 		return "Alias"
@@ -162,13 +163,13 @@ func (tt TokenType) ToString() string {
 	case VoiceMarker:
 		return "VoiceMarker"
 	default:
-		return fmt.Sprintf("%d (ToString not implemented)", tt)
+		return fmt.Sprintf("%d (String not implemented)", tt)
 	}
 }
 
-func (t Token) ToString() string {
+func (t Token) String() string {
 	return fmt.Sprintf(
-		"[line %d] %s | %#q | %#v", t.line, t.tokenType.ToString(), t.text, t.literal,
+		"[line %d] %s | %#q | %#v", t.line, t.tokenType.String(), t.text, t.literal,
 	)
 }
 
@@ -258,7 +259,7 @@ func (s *scanner) addToken(tokenType TokenType, literal interface{}) {
 		line:      s.line,
 	}
 
-	log.Debug().Str("token", token.ToString()).Msg("Adding token.")
+	log.Debug().Str("token", token.String()).Msg("Adding token.")
 	s.tokens = append(s.tokens, token)
 }
 
