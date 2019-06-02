@@ -13,8 +13,15 @@ type Note struct {
 	Slurred bool
 }
 
-func (Note) updateScore(score *Score) error {
-	return errors.New("not implemented")
+// FIXME: just doing the bare minimum for now to support parts tests i'm writing
+func (note Note) updateScore(score *Score) error {
+	for _, part := range score.CurrentParts {
+		for _, component := range note.Duration.Components {
+			part.CurrentOffset += component.(NoteLengthMs).Quantity
+		}
+	}
+
+	return nil
 }
 
 type Rest struct {
