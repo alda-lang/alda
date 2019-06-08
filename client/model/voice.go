@@ -7,7 +7,7 @@ import (
 type VoiceGroupEndMarker struct{}
 
 func (VoiceGroupEndMarker) updateScore(score *Score) error {
-	return errors.New("not implemented")
+	return errors.New("VoiceGroupEndMarker.updateScore not implemented")
 }
 
 type VoiceMarker struct {
@@ -15,5 +15,5 @@ type VoiceMarker struct {
 }
 
 func (VoiceMarker) updateScore(score *Score) error {
-	return errors.New("not implemented")
+	return errors.New("VoiceMarker.updateScore not implemented")
 }

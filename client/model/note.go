@@ -29,5 +29,5 @@ type Rest struct {
 }
 
 func (Rest) updateScore(score *Score) error {
-	return errors.New("not implemented")
+	return errors.New("Rest.updateScore not implemented")
 }

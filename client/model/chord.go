@@ -14,5 +14,5 @@ type Chord struct {
 }
 
 func (Chord) updateScore(score *Score) error {
-	return errors.New("not implemented")
+	return errors.New("Chord.updateScore not implemented")
 }

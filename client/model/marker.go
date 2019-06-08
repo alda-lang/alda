@@ -13,7 +13,7 @@ type Marker struct {
 }
 
 func (Marker) updateScore(score *Score) error {
-	return errors.New("not implemented")
+	return errors.New("Marker.updateScore not implemented")
 }
 
 type AtMarker struct {
@@ -21,5 +21,5 @@ type AtMarker struct {
 }
 
 func (AtMarker) updateScore(score *Score) error {
-	return errors.New("not implemented")
+	return errors.New("AtMarker.updateScore not implemented")
 }

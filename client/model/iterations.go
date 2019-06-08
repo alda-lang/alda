@@ -21,5 +21,5 @@ type OnIterations struct {
 }
 
 func (OnIterations) updateScore(score *Score) error {
-	return errors.New("not implemented")
+	return errors.New("OnIterations.updateScore not implemented")
 }

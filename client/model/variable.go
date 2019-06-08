@@ -10,7 +10,7 @@ type VariableDefinition struct {
 }
 
 func (VariableDefinition) updateScore(score *Score) error {
-	return errors.New("not implemented")
+	return errors.New("VariableDefinition.updateScore not implemented")
 }
 
 type VariableReference struct {
@@ -18,5 +18,5 @@ type VariableReference struct {
 }
 
 func (VariableReference) updateScore(score *Score) error {
-	return errors.New("not implemented")
+	return errors.New("VariableReference.updateScore not implemented")
 }

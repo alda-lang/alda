@@ -35,5 +35,5 @@ type LispList struct {
 }
 
 func (LispList) updateScore(score *Score) error {
-	return errors.New("not implemented")
+	return errors.New("LispList.updateScore not implemented")
 }

@@ -10,5 +10,5 @@ type Cram struct {
 }
 
 func (Cram) updateScore(score *Score) error {
-	return errors.New("not implemented")
+	return errors.New("Cram.updateScore not implemented")
 }

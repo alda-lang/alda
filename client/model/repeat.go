@@ -10,5 +10,5 @@ type Repeat struct {
 }
 
 func (Repeat) updateScore(score *Score) error {
-	return errors.New("not implemented")
+	return errors.New("Repeat.updateScore not implemented")
 }
