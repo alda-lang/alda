@@ -45,7 +45,7 @@ func (score *Score) UnnamedParts(name string) []*Part {
 			}
 		}
 
-		if !isNamedPart && part.StockInstrument.Name == stock {
+		if !isNamedPart && part.StockInstrument.Name() == stock {
 			results = append(results, part)
 		}
 	}
@@ -67,7 +67,7 @@ func (score *Score) AliasedStockInstruments(name string) []*Part {
 	for _, namedParts := range score.Aliases {
 		if len(namedParts) == 1 {
 			part := namedParts[0]
-			if part.StockInstrument.Name == stock {
+			if part.StockInstrument.Name() == stock {
 				results = append(results, part)
 			}
 		}
