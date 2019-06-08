@@ -1,12 +1,21 @@
 package parser
 
 import (
-	_ "alda.io/client/testing"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"alda.io/client/model"
+	_ "alda.io/client/testing"
 )
 
+// TestExamples parses and compiles each of the example scores in the `examples`
+// directory.
+//
+// Strictly speaking, this is not testing just the parser. Perhaps these tests
+// should live in another package that consumes both the `parser` and `model`
+// packages, but I'm not sure yet which package that should be.
 func TestExamples(t *testing.T) {
 	dir, err := os.Getwd()
 	if err != nil {
@@ -26,11 +35,15 @@ func TestExamples(t *testing.T) {
 				return nil
 			}
 
-			if _, err := ParseFile(path); err != nil {
+			fmt.Printf("● %s\n", path)
+
+			scoreUpdates, err := ParseFile(path)
+			if err != nil {
 				return err
 			}
 
-			return nil
+			score := model.NewScore()
+			return score.Update(scoreUpdates...)
 		})
 	if err != nil {
 		t.Errorf("%v\n", err)
