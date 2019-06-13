@@ -1,9 +1,10 @@
 package parser
 
 import (
+	"testing"
+
 	"alda.io/client/model"
 	_ "alda.io/client/testing"
-	"testing"
 )
 
 func TestChords(t *testing.T) {
@@ -36,7 +37,7 @@ func TestChords(t *testing.T) {
 								},
 							},
 						},
-						model.OctaveUp{},
+						model.AttributeUpdate{PartUpdate: model.OctaveUp{}},
 						model.Note{
 							NoteLetter: model.E,
 							Duration: model.Duration{
@@ -71,7 +72,7 @@ func TestChords(t *testing.T) {
 				model.Chord{
 					Events: []model.ScoreUpdate{
 						model.Note{NoteLetter: model.B},
-						model.OctaveUp{},
+						model.AttributeUpdate{PartUpdate: model.OctaveUp{}},
 						model.Note{NoteLetter: model.D},
 						model.Note{
 							NoteLetter: model.F,

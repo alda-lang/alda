@@ -1,9 +1,10 @@
 package parser
 
 import (
+	"testing"
+
 	"alda.io/client/model"
 	_ "alda.io/client/testing"
-	"testing"
 )
 
 func repeat(event model.ScoreUpdate, times int32) model.Repeat {
@@ -48,7 +49,7 @@ func TestRepeats(t *testing.T) {
 				repeat(
 					eventSequence(
 						model.Note{NoteLetter: model.C},
-						model.OctaveUp{},
+						octaveUp(),
 					),
 					5,
 				),
@@ -61,7 +62,7 @@ func TestRepeats(t *testing.T) {
 				repeat(
 					eventSequence(
 						model.Note{NoteLetter: model.C},
-						model.OctaveUp{},
+						octaveUp(),
 					),
 					5,
 				),
@@ -200,7 +201,7 @@ func TestRepeats(t *testing.T) {
 										},
 									},
 								},
-								model.OctaveUp{},
+								octaveUp(),
 								model.Note{NoteLetter: model.G},
 							),
 							forIterationRange(2, 4),

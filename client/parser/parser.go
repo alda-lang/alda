@@ -245,7 +245,9 @@ func (p *parser) partOrVariableOp() ([]model.ScoreUpdate, error) {
 func (p *parser) octaveSet() ([]model.ScoreUpdate, error) {
 	// NB: This assumes the OctaveSet token was already consumed.
 	return []model.ScoreUpdate{
-		model.OctaveSet{OctaveNumber: p.previous().literal.(int32)},
+		model.AttributeUpdate{
+			PartUpdate: model.OctaveSet{OctaveNumber: p.previous().literal.(int32)},
+		},
 	}, nil
 }
 
@@ -369,9 +371,13 @@ func (p *parser) updatesBetweenNotesInChord() ([]model.ScoreUpdate, error) {
 	for {
 		switch {
 		case p.match(OctaveUp):
-			updates = append(updates, model.OctaveUp{})
+			updates = append(updates, model.AttributeUpdate{
+				PartUpdate: model.OctaveUp{},
+			})
 		case p.match(OctaveDown):
-			updates = append(updates, model.OctaveDown{})
+			updates = append(updates, model.AttributeUpdate{
+				PartUpdate: model.OctaveDown{},
+			})
 		case p.match(OctaveSet):
 			octaveSetUpdates, err := p.octaveSet()
 			if err != nil {
@@ -562,9 +568,13 @@ func (p *parser) topLevel() ([]model.ScoreUpdate, error) {
 	case p.match(OctaveSet):
 		return p.octaveSet()
 	case p.match(OctaveUp):
-		return []model.ScoreUpdate{model.OctaveUp{}}, nil
+		return []model.ScoreUpdate{
+			model.AttributeUpdate{PartUpdate: model.OctaveUp{}},
+		}, nil
 	case p.match(OctaveDown):
-		return []model.ScoreUpdate{model.OctaveDown{}}, nil
+		return []model.ScoreUpdate{
+			model.AttributeUpdate{PartUpdate: model.OctaveDown{}},
+		}, nil
 	case p.match(NoteLetter, RestLetter):
 		return p.noteRestOrChord()
 	case p.match(Barline):

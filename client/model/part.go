@@ -21,6 +21,8 @@ type Part struct {
 	TempoRole       TempoRole
 	CurrentOffset   float32
 	CurrentMarker   string
+	Octave          int32
+	Tempo           float32
 }
 
 func newPart(name string) (*Part, error) {
@@ -47,6 +49,17 @@ func newPart(name string) (*Part, error) {
 		CurrentOffset:   0,
 		CurrentMarker:   StartOfScore,
 	}, nil
+}
+
+// The PartUpdate interface defines how something updates a part.
+type PartUpdate interface {
+	updatePart(*Part)
+}
+
+func (s *Score) updateParts(partUpdate PartUpdate) {
+	for _, part := range s.Parts {
+		partUpdate.updatePart(part)
+	}
 }
 
 // Once an alias is defined for a group, its individual parts can be accessed by
