@@ -100,7 +100,7 @@ Expected:
 
 Got:
 %s`,
-		f.Name,
+		"`"+f.Name+"`",
 		signatureLines(f.Signatures),
 		argumentTypesLine(arguments),
 	)
