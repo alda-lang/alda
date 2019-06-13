@@ -17,7 +17,7 @@ import (
 // language like Clojure. (See: https://github.com/daveyarwood/alda-clj)
 
 type LispForm interface {
-	String() string
+	TypeString() string
 	Eval() (LispForm, error)
 }
 
@@ -35,7 +35,7 @@ type LispFunction struct {
 	Signatures []FunctionSignature
 }
 
-func (LispFunction) String() string {
+func (LispFunction) TypeString() string {
 	return "function"
 }
 
@@ -68,7 +68,7 @@ func argumentTypesLine(argumentTypes []LispForm) string {
 	result := []string{}
 
 	for _, argumentType := range argumentTypes {
-		result = append(result, argumentType.String())
+		result = append(result, argumentType.TypeString())
 	}
 
 	return strings.Join(result, ", ")
@@ -209,7 +209,7 @@ func init() {
 
 type LispNil struct{}
 
-func (LispNil) String() string {
+func (LispNil) TypeString() string {
 	return "nil"
 }
 
@@ -221,7 +221,7 @@ type LispQuotedForm struct {
 	Form LispForm
 }
 
-func (LispQuotedForm) String() string {
+func (LispQuotedForm) TypeString() string {
 	return "quoted form"
 }
 
@@ -233,7 +233,7 @@ type LispSymbol struct {
 	Name string
 }
 
-func (LispSymbol) String() string {
+func (LispSymbol) TypeString() string {
 	return "symbol"
 }
 
@@ -251,7 +251,7 @@ type LispNumber struct {
 	Value float32
 }
 
-func (LispNumber) String() string {
+func (LispNumber) TypeString() string {
 	return "number"
 }
 
@@ -263,7 +263,7 @@ type LispString struct {
 	Value string
 }
 
-func (LispString) String() string {
+func (LispString) TypeString() string {
 	return "string"
 }
 
@@ -275,7 +275,7 @@ type LispScoreUpdate struct {
 	ScoreUpdate ScoreUpdate
 }
 
-func (su LispScoreUpdate) String() string {
+func (su LispScoreUpdate) TypeString() string {
 	return "score update"
 }
 
@@ -287,7 +287,7 @@ type LispList struct {
 	Elements []LispForm
 }
 
-func (LispList) String() string {
+func (LispList) TypeString() string {
 	return "list"
 }
 
