@@ -136,7 +136,13 @@ func defattribute(names []string, signatures ...attributeFunctionSignature) {
 		} {
 			functionSignatures := []FunctionSignature{}
 
-			for _, signature := range signatures {
+			for _, _signature := range signatures {
+				// We have to do this in order to close over `signature` in the function
+				// below. This is because closures don't work properly in Go.
+				//
+				// ref: https://www.calhoun.io/gotchas-and-common-mistakes-with-closures-in-go/
+				signature := _signature
+
 				functionSignatures = append(functionSignatures, FunctionSignature{
 					ArgumentTypes: signature.argumentTypes,
 					Implementation: func(args ...LispForm) (LispForm, error) {
