@@ -154,5 +154,55 @@ func TestAttributes(t *testing.T) {
 				}),
 			},
 		},
+		scoreUpdateTestCase{
+			label: "initial volume",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPart("piano", func(part *Part) error {
+					if part.Volume != 1.0 {
+						return fmt.Errorf("initial volume is %f, not 1.0", part.Volume)
+					}
+
+					return nil
+				}),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "set volume",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				AttributeUpdate{PartUpdate: VolumeSet{Volume: 0.85}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPart("piano", func(part *Part) error {
+					if part.Volume != 0.85 {
+						return fmt.Errorf("volume is %f, not 0.85", part.Volume)
+					}
+
+					return nil
+				}),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "set volume using lisp",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "volume"},
+					LispNumber{Value: 82},
+				}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPart("piano", func(part *Part) error {
+					if part.Volume != 0.82 {
+						return fmt.Errorf("volume is %f, not 0.82", part.Volume)
+					}
+
+					return nil
+				}),
+			},
+		},
 	)
 }

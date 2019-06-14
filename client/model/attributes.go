@@ -61,3 +61,12 @@ type OctaveDown struct{}
 func (OctaveDown) updatePart(part *Part) {
 	part.Octave--
 }
+
+// VolumeSet sets the octave of all active parts.
+type VolumeSet struct {
+	Volume float32
+}
+
+func (os VolumeSet) updatePart(part *Part) {
+	part.Volume = os.Volume
+}

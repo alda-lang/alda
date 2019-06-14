@@ -184,6 +184,16 @@ func wholeNumber(form LispForm) (int32, error) {
 	return int32(value), nil
 }
 
+func percentage(form LispForm) (float32, error) {
+	value := form.(LispNumber).Value
+
+	if value < 0 || value > 100 {
+		return 0, fmt.Errorf("Value not between 0 and 100: %f", value)
+	}
+
+	return value / 100, nil
+}
+
 func init() {
 	// Current octave. Used to calculate the pitch of notes.
 	defattribute([]string{"octave"},
@@ -242,12 +252,29 @@ func init() {
 	// e.g. with a quantization value of 90%, a note that would otherwise last 500
 	// ms will be quantized to last 450 ms. The resulting note event will have a
 	// duration of 450 ms, and the next event will be set to occur in 500 ms.
-	defattribute([]string{"quantization", "quantize", "quant"},
+	// defattribute([]string{"quantization", "quantize", "quant"},
+	// 	attributeFunctionSignature{
+	// 		argumentTypes: []LispForm{LispNumber{}},
+	// 		implementation: func(args ...LispForm) (PartUpdate, error) {
+	// 			percentage, err := percentage(args[0])
+	// 			if err != nil {
+	// 				return nil, err
+	// 			}
+	// 			return QuantizationSet{Quantization: percentage}, nil
+	// 		},
+	// 	},
+	// )
+
+	// Current volume. For MIDI purposes, the velocity of individual notes.
+	defattribute([]string{"volume", "vol"},
 		attributeFunctionSignature{
 			argumentTypes: []LispForm{LispNumber{}},
 			implementation: func(args ...LispForm) (PartUpdate, error) {
-				bpm := args[0].(LispNumber).Value
-				return TempoSet{Tempo: bpm}, nil
+				percentage, err := percentage(args[0])
+				if err != nil {
+					return nil, err
+				}
+				return VolumeSet{Volume: percentage}, nil
 			},
 		},
 	)

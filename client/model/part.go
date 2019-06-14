@@ -23,6 +23,7 @@ type Part struct {
 	CurrentMarker   string
 	Octave          int32
 	Tempo           float32
+	Volume          float32
 }
 
 func newPart(name string) (*Part, error) {
@@ -49,6 +50,7 @@ func newPart(name string) (*Part, error) {
 		CurrentOffset:   0,
 		CurrentMarker:   StartOfScore,
 		Octave:          4,
+		Volume:          1.0,
 	}, nil
 }
 
