@@ -16,18 +16,13 @@ func TestAttributes(t *testing.T) {
 				PartDeclaration{Names: []string{"piano"}},
 			},
 			expectations: []scoreUpdateExpectation{
-				func(s *Score) error {
-					part, err := getPart(s, "piano")
-					if err != nil {
-						return err
-					}
-
+				expectPart("piano", func(part *Part) error {
 					if part.Octave != 4 {
 						return fmt.Errorf("initial octave is %d, not 4", part.Octave)
 					}
 
 					return nil
-				},
+				}),
 			},
 		},
 		scoreUpdateTestCase{
@@ -37,18 +32,13 @@ func TestAttributes(t *testing.T) {
 				AttributeUpdate{PartUpdate: OctaveSet{OctaveNumber: 2}},
 			},
 			expectations: []scoreUpdateExpectation{
-				func(s *Score) error {
-					part, err := getPart(s, "piano")
-					if err != nil {
-						return err
-					}
-
+				expectPart("piano", func(part *Part) error {
 					if part.Octave != 2 {
 						return fmt.Errorf("octave is %d, not 2", part.Octave)
 					}
 
 					return nil
-				},
+				}),
 			},
 		},
 		scoreUpdateTestCase{
@@ -61,18 +51,13 @@ func TestAttributes(t *testing.T) {
 				}},
 			},
 			expectations: []scoreUpdateExpectation{
-				func(s *Score) error {
-					part, err := getPart(s, "piano")
-					if err != nil {
-						return err
-					}
-
+				expectPart("piano", func(part *Part) error {
 					if part.Octave != 5 {
 						return fmt.Errorf("octave is %d, not 5", part.Octave)
 					}
 
 					return nil
-				},
+				}),
 			},
 		},
 		scoreUpdateTestCase{
@@ -83,18 +68,13 @@ func TestAttributes(t *testing.T) {
 				AttributeUpdate{PartUpdate: OctaveDown{}},
 			},
 			expectations: []scoreUpdateExpectation{
-				func(s *Score) error {
-					part, err := getPart(s, "piano")
-					if err != nil {
-						return err
-					}
-
+				expectPart("piano", func(part *Part) error {
 					if part.Octave != 1 {
 						return fmt.Errorf("octave is %d, not 1", part.Octave)
 					}
 
 					return nil
-				},
+				}),
 			},
 		},
 		scoreUpdateTestCase{
@@ -108,18 +88,13 @@ func TestAttributes(t *testing.T) {
 				}},
 			},
 			expectations: []scoreUpdateExpectation{
-				func(s *Score) error {
-					part, err := getPart(s, "piano")
-					if err != nil {
-						return err
-					}
-
+				expectPart("piano", func(part *Part) error {
 					if part.Octave != 1 {
 						return fmt.Errorf("octave is %d, not 1", part.Octave)
 					}
 
 					return nil
-				},
+				}),
 			},
 		},
 		scoreUpdateTestCase{
@@ -130,18 +105,13 @@ func TestAttributes(t *testing.T) {
 				AttributeUpdate{PartUpdate: OctaveUp{}},
 			},
 			expectations: []scoreUpdateExpectation{
-				func(s *Score) error {
-					part, err := getPart(s, "piano")
-					if err != nil {
-						return err
-					}
-
+				expectPart("piano", func(part *Part) error {
 					if part.Octave != 3 {
 						return fmt.Errorf("octave is %d, not 3", part.Octave)
 					}
 
 					return nil
-				},
+				}),
 			},
 		},
 		scoreUpdateTestCase{
@@ -155,18 +125,13 @@ func TestAttributes(t *testing.T) {
 				}},
 			},
 			expectations: []scoreUpdateExpectation{
-				func(s *Score) error {
-					part, err := getPart(s, "piano")
-					if err != nil {
-						return err
-					}
-
+				expectPart("piano", func(part *Part) error {
 					if part.Octave != 3 {
 						return fmt.Errorf("octave is %d, not 3", part.Octave)
 					}
 
 					return nil
-				},
+				}),
 			},
 		},
 		scoreUpdateTestCase{
@@ -180,18 +145,13 @@ func TestAttributes(t *testing.T) {
 				AttributeUpdate{PartUpdate: OctaveDown{}},
 			},
 			expectations: []scoreUpdateExpectation{
-				func(s *Score) error {
-					part, err := getPart(s, "piano")
-					if err != nil {
-						return err
-					}
-
+				expectPart("piano", func(part *Part) error {
 					if part.Octave != 6 {
 						return fmt.Errorf("octave is %d, not 6", part.Octave)
 					}
 
 					return nil
-				},
+				}),
 			},
 		},
 	)
