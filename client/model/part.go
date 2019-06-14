@@ -48,6 +48,7 @@ func newPart(name string) (*Part, error) {
 		StockInstrument: stock,
 		CurrentOffset:   0,
 		CurrentMarker:   StartOfScore,
+		Octave:          4,
 	}, nil
 }
 

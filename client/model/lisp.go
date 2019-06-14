@@ -174,7 +174,47 @@ func positiveNumber(form LispForm) (float32, error) {
 	return value, nil
 }
 
+func wholeNumber(form LispForm) (int32, error) {
+	value := form.(LispNumber).Value
+
+	if value != float32(int32(value)) {
+		return 0, fmt.Errorf("Expected a whole number: %f", value)
+	}
+
+	return int32(value), nil
+}
+
 func init() {
+	// Current octave. Used to calculate the pitch of notes.
+	defattribute([]string{"octave"},
+		attributeFunctionSignature{
+			argumentTypes: []LispForm{LispNumber{}},
+			implementation: func(args ...LispForm) (PartUpdate, error) {
+				octaveNumber, err := wholeNumber(args[0])
+				if err != nil {
+					return nil, err
+				}
+
+				return OctaveSet{OctaveNumber: octaveNumber}, nil
+			},
+		},
+		attributeFunctionSignature{
+			argumentTypes: []LispForm{LispSymbol{}},
+			implementation: func(args ...LispForm) (PartUpdate, error) {
+				symbol := args[0].(LispSymbol)
+
+				switch symbol.Name {
+				case "up":
+					return OctaveUp{}, nil
+				case "down":
+					return OctaveDown{}, nil
+				default:
+					return nil, fmt.Errorf("Invalid argument to `octave`: %s", symbol.String())
+				}
+			},
+		},
+	)
+
 	// Current tempo. Used to calculate the duration of notes.
 	defattribute([]string{"tempo"},
 		attributeFunctionSignature{
@@ -241,6 +281,10 @@ type LispSymbol struct {
 
 func (LispSymbol) TypeString() string {
 	return "symbol"
+}
+
+func (sym LispSymbol) String() string {
+	return "'" + sym.Name
 }
 
 func (sym LispSymbol) Eval() (LispForm, error) {
