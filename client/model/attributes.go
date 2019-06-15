@@ -70,3 +70,30 @@ type VolumeSet struct {
 func (os VolumeSet) updatePart(part *Part) {
 	part.Volume = os.Volume
 }
+
+// TrackVolumeSet sets the track volume of all active parts.
+type TrackVolumeSet struct {
+	TrackVolume float32
+}
+
+func (os TrackVolumeSet) updatePart(part *Part) {
+	part.TrackVolume = os.TrackVolume
+}
+
+// PanningSet sets the panning of all active parts.
+type PanningSet struct {
+	Panning float32
+}
+
+func (os PanningSet) updatePart(part *Part) {
+	part.Panning = os.Panning
+}
+
+// QuantizationSet sets the quantization of all active parts.
+type QuantizationSet struct {
+	Quantization float32
+}
+
+func (os QuantizationSet) updatePart(part *Part) {
+	part.Quantization = os.Quantization
+}

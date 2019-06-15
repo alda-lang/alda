@@ -194,6 +194,16 @@ func percentage(form LispForm) (float32, error) {
 	return value / 100, nil
 }
 
+func unboundPercentage(form LispForm) (float32, error) {
+	value := form.(LispNumber).Value
+
+	if value < 0 {
+		return 0, fmt.Errorf("Value < 0: %f", value)
+	}
+
+	return value / 100, nil
+}
+
 func init() {
 	// Current octave. Used to calculate the pitch of notes.
 	defattribute([]string{"octave"},
@@ -252,18 +262,18 @@ func init() {
 	// e.g. with a quantization value of 90%, a note that would otherwise last 500
 	// ms will be quantized to last 450 ms. The resulting note event will have a
 	// duration of 450 ms, and the next event will be set to occur in 500 ms.
-	// defattribute([]string{"quantization", "quantize", "quant"},
-	// 	attributeFunctionSignature{
-	// 		argumentTypes: []LispForm{LispNumber{}},
-	// 		implementation: func(args ...LispForm) (PartUpdate, error) {
-	// 			percentage, err := percentage(args[0])
-	// 			if err != nil {
-	// 				return nil, err
-	// 			}
-	// 			return QuantizationSet{Quantization: percentage}, nil
-	// 		},
-	// 	},
-	// )
+	defattribute([]string{"quantization", "quantize", "quant"},
+		attributeFunctionSignature{
+			argumentTypes: []LispForm{LispNumber{}},
+			implementation: func(args ...LispForm) (PartUpdate, error) {
+				percentage, err := unboundPercentage(args[0])
+				if err != nil {
+					return nil, err
+				}
+				return QuantizationSet{Quantization: percentage}, nil
+			},
+		},
+	)
 
 	// Current volume. For MIDI purposes, the velocity of individual notes.
 	defattribute([]string{"volume", "vol"},
@@ -275,6 +285,36 @@ func init() {
 					return nil, err
 				}
 				return VolumeSet{Volume: percentage}, nil
+			},
+		},
+	)
+
+	// More general volume for the track as a whole. Although this can be changed
+	// just as often as volume, to do so is not idiomatic. For MIDI purposes, this
+	// corresponds to the volume of a channel."
+	defattribute([]string{"track-volume", "track-vol"},
+		attributeFunctionSignature{
+			argumentTypes: []LispForm{LispNumber{}},
+			implementation: func(args ...LispForm) (PartUpdate, error) {
+				percentage, err := percentage(args[0])
+				if err != nil {
+					return nil, err
+				}
+				return TrackVolumeSet{TrackVolume: percentage}, nil
+			},
+		},
+	)
+
+	// Current panning. 0 = hard left, 100 = hard right.
+	defattribute([]string{"panning", "pan"},
+		attributeFunctionSignature{
+			argumentTypes: []LispForm{LispNumber{}},
+			implementation: func(args ...LispForm) (PartUpdate, error) {
+				percentage, err := percentage(args[0])
+				if err != nil {
+					return nil, err
+				}
+				return PanningSet{Panning: percentage}, nil
 			},
 		},
 	)

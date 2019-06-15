@@ -24,6 +24,9 @@ type Part struct {
 	Octave          int32
 	Tempo           float32
 	Volume          float32
+	TrackVolume     float32
+	Panning         float32
+	Quantization    float32
 }
 
 func newPart(name string) (*Part, error) {
@@ -42,8 +45,6 @@ func newPart(name string) (*Part, error) {
 	// I'm not sure how much of this actually needs to be ported. I think I might
 	// be able to get some mileage out of using a part's pointer as its ID, for
 	// example.
-	//
-	// TODO: set initial attribute values in the correct way (whatever that is)
 	return &Part{
 		Name:            name,
 		StockInstrument: stock,
@@ -51,6 +52,9 @@ func newPart(name string) (*Part, error) {
 		CurrentMarker:   StartOfScore,
 		Octave:          4,
 		Volume:          1.0,
+		TrackVolume:     100.0 / 127,
+		Panning:         0.5,
+		Quantization:    0.9,
 	}, nil
 }
 
