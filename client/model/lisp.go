@@ -358,7 +358,7 @@ func (sym LispSymbol) Eval() (LispForm, error) {
 	value, hit := environment[sym.Name]
 
 	if !hit {
-		return nil, fmt.Errorf("Unresolved symbol: %s", sym.Name)
+		return nil, fmt.Errorf("Unresolvable symbol: %s", sym.Name)
 	}
 
 	return value, nil
