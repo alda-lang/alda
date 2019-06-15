@@ -168,17 +168,27 @@ func positiveNumber(form LispForm) (float32, error) {
 	value := form.(LispNumber).Value
 
 	if value < 1 {
-		return 0, fmt.Errorf("Expected value to be positive: %f", value)
+		return 0, fmt.Errorf("Expected positive number, got %f", value)
 	}
 
 	return value, nil
+}
+
+func nonNegativeNumber(form LispForm) (float32, error) {
+	value := form.(LispNumber).Value
+
+	if value < 0 {
+		return 0, fmt.Errorf("Expected non-negative number, got %f", value)
+	}
+
+	return value / 100, nil
 }
 
 func wholeNumber(form LispForm) (int32, error) {
 	value := form.(LispNumber).Value
 
 	if value != float32(int32(value)) {
-		return 0, fmt.Errorf("Expected a whole number: %f", value)
+		return 0, fmt.Errorf("Expected whole number, got %f", value)
 	}
 
 	return int32(value), nil
@@ -189,16 +199,6 @@ func percentage(form LispForm) (float32, error) {
 
 	if value < 0 || value > 100 {
 		return 0, fmt.Errorf("Value not between 0 and 100: %f", value)
-	}
-
-	return value / 100, nil
-}
-
-func unboundPercentage(form LispForm) (float32, error) {
-	value := form.(LispNumber).Value
-
-	if value < 0 {
-		return 0, fmt.Errorf("Value < 0: %f", value)
 	}
 
 	return value / 100, nil
@@ -266,7 +266,7 @@ func init() {
 		attributeFunctionSignature{
 			argumentTypes: []LispForm{LispNumber{}},
 			implementation: func(args ...LispForm) (PartUpdate, error) {
-				percentage, err := unboundPercentage(args[0])
+				percentage, err := nonNegativeNumber(args[0])
 				if err != nil {
 					return nil, err
 				}
