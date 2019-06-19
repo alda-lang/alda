@@ -378,5 +378,164 @@ func TestAttributes(t *testing.T) {
 				}),
 			},
 		},
+		scoreUpdateTestCase{
+			label: "initial duration",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPart("piano", func(part *Part) error {
+					beats, err := part.Duration.Beats()
+					if err != nil {
+						return err
+					}
+
+					// Default note length is a quarter note (1 beat).
+					if beats != 1 {
+						return fmt.Errorf(
+							"expected initial duration of 1 beat, got %#v", part.Duration,
+						)
+					}
+
+					return nil
+				}),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "set duration via lisp (`set-duration`)",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "set-duration"},
+					LispNumber{Value: 3.7},
+				}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPart("piano", func(part *Part) error {
+					beats, err := part.Duration.Beats()
+					if err != nil {
+						return err
+					}
+
+					if beats != 3.7 {
+						return fmt.Errorf(
+							"expected duration of 3.7 beats, got %#v (%f beats)",
+							part.Duration, beats,
+						)
+					}
+
+					return nil
+				}),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "set duration via lisp (`set-duration-ms`)",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "set-duration-ms"},
+					LispNumber{Value: 2345},
+				}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPart("piano", func(part *Part) error {
+					ms := part.Duration.Ms(part.Tempo)
+
+					if ms != 2345 {
+						return fmt.Errorf(
+							"expected duration of 2345ms, got %#v (%fms)", part.Duration, ms,
+						)
+					}
+
+					return nil
+				}),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "set duration via lisp (`set-note-length`, number)",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "set-note-length"},
+					LispNumber{Value: 1},
+				}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPart("piano", func(part *Part) error {
+					beats, err := part.Duration.Beats()
+					if err != nil {
+						return err
+					}
+
+					if beats != 4 {
+						return fmt.Errorf(
+							"expected duration of 4 beats, got %#v (%f beats)",
+							part.Duration, beats,
+						)
+					}
+
+					return nil
+				}),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "set duration via lisp (`set-note-length`, string)",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "set-note-length"},
+					LispString{Value: "2.."},
+				}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPart("piano", func(part *Part) error {
+					beats, err := part.Duration.Beats()
+					if err != nil {
+						return err
+					}
+
+					if beats != 3.5 {
+						return fmt.Errorf(
+							"expected duration of 3.5 beats, got %#v (%f beats)",
+							part.Duration, beats,
+						)
+					}
+
+					return nil
+				}),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "a note's duration implicitly changes the part's duration",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				Note{
+					NoteLetter: C,
+					Duration: Duration{
+						Components: []DurationComponent{
+							NoteLength{Denominator: 1},
+							NoteLength{Denominator: 1},
+						},
+					},
+				},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPart("piano", func(part *Part) error {
+					beats, err := part.Duration.Beats()
+					if err != nil {
+						return err
+					}
+
+					if beats != 8 {
+						return fmt.Errorf(
+							"expected duration of 8 beats, got %#v (%f beats)",
+							part.Duration, beats,
+						)
+					}
+
+					return nil
+				}),
+			},
+		},
 	)
 }

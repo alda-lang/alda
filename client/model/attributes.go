@@ -97,3 +97,12 @@ type QuantizationSet struct {
 func (os QuantizationSet) updatePart(part *Part) {
 	part.Quantization = os.Quantization
 }
+
+// DurationSet sets the quantization of all active parts.
+type DurationSet struct {
+	Duration Duration
+}
+
+func (os DurationSet) updatePart(part *Part) {
+	part.Duration = os.Duration
+}

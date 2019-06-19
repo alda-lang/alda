@@ -3,6 +3,7 @@ package model
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 
 	log "alda.io/client/logging"
@@ -204,6 +205,43 @@ func percentage(form LispForm) (float32, error) {
 	return value / 100, nil
 }
 
+func isDigit(c rune) bool {
+	return '0' <= c && c <= '9'
+}
+
+func noteLength(form LispForm) (NoteLength, error) {
+	str := form.(LispString).Value
+	chars := []rune(str)
+
+	if len(str) == 0 || !isDigit(chars[0]) {
+		return NoteLength{}, fmt.Errorf("Invalid note length: %q", str)
+	}
+
+	i := 0
+
+	digits := []rune{}
+	for i < len(chars) && isDigit(chars[i]) {
+		digits = append(digits, chars[i])
+		i++
+	}
+
+	denominator, _ := strconv.ParseInt(string(digits), 10, 32)
+
+	dots := 0
+	for i < len(chars) && chars[i] == '.' {
+		dots++
+		i++
+	}
+
+	// At this point, we should be at the end of the string. If there's anything
+	// left over, consider the string invalid.
+	if i < len(chars)-1 {
+		return NoteLength{}, fmt.Errorf("Invalid note length: %q", str)
+	}
+
+	return NoteLength{Denominator: float32(denominator), Dots: int32(dots)}, nil
+}
+
 func init() {
 	// Current octave. Used to calculate the pitch of notes.
 	defattribute([]string{"octave"},
@@ -318,6 +356,68 @@ func init() {
 			},
 		},
 	)
+
+	// Default note duration in beats.
+	defattribute([]string{"set-duration"},
+		attributeFunctionSignature{
+			argumentTypes: []LispForm{LispNumber{}},
+			implementation: func(args ...LispForm) (PartUpdate, error) {
+				beats, err := positiveNumber(args[0])
+				if err != nil {
+					return nil, err
+				}
+				return DurationSet{Duration: Duration{
+					Components: []DurationComponent{NoteLengthBeats{Quantity: beats}},
+				}}, nil
+			},
+		},
+	)
+
+	// Default note duration in milliseconds.
+	defattribute([]string{"set-duration-ms"},
+		attributeFunctionSignature{
+			argumentTypes: []LispForm{LispNumber{}},
+			implementation: func(args ...LispForm) (PartUpdate, error) {
+				ms, err := positiveNumber(args[0])
+				if err != nil {
+					return nil, err
+				}
+				return DurationSet{Duration: Duration{
+					Components: []DurationComponent{NoteLengthMs{Quantity: ms}},
+				}}, nil
+			},
+		},
+	)
+
+	// Default note duration, expressed as a note length.
+	// e.g. 4 = quarter note, "2.." = dotted half note
+	defattribute([]string{"set-note-length"},
+		attributeFunctionSignature{
+			argumentTypes: []LispForm{LispNumber{}},
+			implementation: func(args ...LispForm) (PartUpdate, error) {
+				denominator, err := positiveNumber(args[0])
+				if err != nil {
+					return nil, err
+				}
+				return DurationSet{Duration: Duration{
+					Components: []DurationComponent{NoteLength{Denominator: denominator}},
+				}}, nil
+			},
+		},
+		attributeFunctionSignature{
+			argumentTypes: []LispForm{LispString{}},
+			implementation: func(args ...LispForm) (PartUpdate, error) {
+				noteLength, err := noteLength(args[0])
+				if err != nil {
+					return nil, err
+				}
+				return DurationSet{Duration: Duration{
+					Components: []DurationComponent{noteLength},
+				}}, nil
+			},
+		},
+	)
+
 }
 
 type LispNil struct{}

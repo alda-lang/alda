@@ -27,6 +27,7 @@ type Part struct {
 	TrackVolume     float32
 	Panning         float32
 	Quantization    float32
+	Duration        Duration
 }
 
 func newPart(name string) (*Part, error) {
@@ -55,6 +56,9 @@ func newPart(name string) (*Part, error) {
 		TrackVolume:     100.0 / 127,
 		Panning:         0.5,
 		Quantization:    0.9,
+		Duration: Duration{
+			Components: []DurationComponent{NoteLength{Denominator: 4}},
+		},
 	}, nil
 }
 

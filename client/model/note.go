@@ -4,6 +4,7 @@ import (
 	"errors"
 )
 
+// A Note represents a single pitch being sustained for a period of time.
 type Note struct {
 	NoteLetter  NoteLetter
 	Accidentals []Accidental
@@ -13,17 +14,24 @@ type Note struct {
 	Slurred bool
 }
 
-// FIXME: just doing the bare minimum for now to support parts tests i'm writing
 func (note Note) updateScore(score *Score) error {
 	for _, part := range score.CurrentParts {
-		for _, component := range note.Duration.Components {
-			part.CurrentOffset += component.(NoteLengthMs).Quantity
+		part.CurrentOffset += note.Duration.Ms(part.Tempo)
+
+		// Note duration is "sticky." Any subsequent notes without a specified
+		// duration will take on the duration of the part's last note.
+		if note.Duration.Components != nil {
+			part.Duration = note.Duration
 		}
 	}
 
 	return nil
 }
 
+// A Rest represents a period of time spent waiting.
+//
+// The function of a rest is to synchronize the following note so that it starts
+// at a particular point in time.
 type Rest struct {
 	Duration Duration
 }
