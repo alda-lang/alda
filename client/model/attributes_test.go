@@ -7,6 +7,117 @@ import (
 	_ "alda.io/client/testing"
 )
 
+func expectPartIntValue(
+	instrument string, valueName string, method func(p *Part) int32,
+	expected int32) func(s *Score) error {
+	return expectPart(instrument, func(part *Part) error {
+		actual := method(part)
+
+		if actual != expected {
+			return fmt.Errorf("%s is %d, not %d", valueName, actual, expected)
+		}
+
+		return nil
+	})
+}
+
+func expectPartFloatValue(
+	instrument string, valueName string, method func(p *Part) float32,
+	expected float32) func(s *Score) error {
+	return expectPart(instrument, func(part *Part) error {
+		actual := method(part)
+
+		if actual != expected {
+			return fmt.Errorf("%s is %f, not %f", valueName, actual, expected)
+		}
+
+		return nil
+	})
+}
+
+func expectPartOctave(instrument string, octave int32) func(s *Score) error {
+	return expectPartIntValue(
+		instrument, "octave", func(part *Part) int32 { return part.Octave }, octave,
+	)
+}
+
+func expectPartVolume(instrument string, volume float32) func(s *Score) error {
+	return expectPartFloatValue(
+		instrument, "volume", func(part *Part) float32 { return part.Volume },
+		volume,
+	)
+}
+
+func expectPartTrackVolume(
+	instrument string, trackVolume float32,
+) func(s *Score) error {
+	return expectPartFloatValue(
+		instrument, "track volume",
+		func(part *Part) float32 { return part.TrackVolume }, trackVolume,
+	)
+}
+
+func expectPartPanning(
+	instrument string, panning float32,
+) func(s *Score) error {
+	return expectPartFloatValue(
+		instrument, "panning", func(part *Part) float32 { return part.Panning },
+		panning,
+	)
+}
+
+func expectPartQuantization(
+	instrument string, quantization float32,
+) func(s *Score) error {
+	return expectPartFloatValue(
+		instrument, "quantization",
+		func(part *Part) float32 { return part.Quantization }, quantization,
+	)
+}
+
+func expectPartTempo(instrument string, tempo float32) func(s *Score) error {
+	return expectPartFloatValue(
+		instrument, "tempo", func(part *Part) float32 { return part.Tempo }, tempo,
+	)
+}
+
+func expectPartDurationBeats(
+	instrument string, expected float32,
+) func(s *Score) error {
+	return expectPart(instrument, func(part *Part) error {
+		actual, err := part.Duration.Beats()
+		if err != nil {
+			return err
+		}
+
+		if actual != expected {
+			return fmt.Errorf(
+				"expected duration to be %f beat(s), got %f beats (%#v)",
+				expected, actual, part.Duration,
+			)
+		}
+
+		return nil
+	})
+}
+
+func expectPartDurationMs(
+	instrument string, expected float32,
+) func(s *Score) error {
+	return expectPart(instrument, func(part *Part) error {
+		actual := part.Duration.Ms(part.Tempo)
+
+		if actual != expected {
+			return fmt.Errorf(
+				"expected duration to be %f ms, got %f ms (%#v)",
+				expected, actual, part.Duration,
+			)
+		}
+
+		return nil
+	})
+}
+
 func TestAttributes(t *testing.T) {
 	executeScoreUpdateTestCases(
 		t,
@@ -16,13 +127,7 @@ func TestAttributes(t *testing.T) {
 				PartDeclaration{Names: []string{"piano"}},
 			},
 			expectations: []scoreUpdateExpectation{
-				expectPart("piano", func(part *Part) error {
-					if part.Octave != 4 {
-						return fmt.Errorf("initial octave is %d, not 4", part.Octave)
-					}
-
-					return nil
-				}),
+				expectPartOctave("piano", 4),
 			},
 		},
 		scoreUpdateTestCase{
@@ -32,13 +137,7 @@ func TestAttributes(t *testing.T) {
 				AttributeUpdate{PartUpdate: OctaveSet{OctaveNumber: 2}},
 			},
 			expectations: []scoreUpdateExpectation{
-				expectPart("piano", func(part *Part) error {
-					if part.Octave != 2 {
-						return fmt.Errorf("octave is %d, not 2", part.Octave)
-					}
-
-					return nil
-				}),
+				expectPartOctave("piano", 2),
 			},
 		},
 		scoreUpdateTestCase{
@@ -51,13 +150,7 @@ func TestAttributes(t *testing.T) {
 				}},
 			},
 			expectations: []scoreUpdateExpectation{
-				expectPart("piano", func(part *Part) error {
-					if part.Octave != 5 {
-						return fmt.Errorf("octave is %d, not 5", part.Octave)
-					}
-
-					return nil
-				}),
+				expectPartOctave("piano", 5),
 			},
 		},
 		scoreUpdateTestCase{
@@ -68,13 +161,7 @@ func TestAttributes(t *testing.T) {
 				AttributeUpdate{PartUpdate: OctaveDown{}},
 			},
 			expectations: []scoreUpdateExpectation{
-				expectPart("piano", func(part *Part) error {
-					if part.Octave != 1 {
-						return fmt.Errorf("octave is %d, not 1", part.Octave)
-					}
-
-					return nil
-				}),
+				expectPartOctave("piano", 1),
 			},
 		},
 		scoreUpdateTestCase{
@@ -88,13 +175,7 @@ func TestAttributes(t *testing.T) {
 				}},
 			},
 			expectations: []scoreUpdateExpectation{
-				expectPart("piano", func(part *Part) error {
-					if part.Octave != 1 {
-						return fmt.Errorf("octave is %d, not 1", part.Octave)
-					}
-
-					return nil
-				}),
+				expectPartOctave("piano", 1),
 			},
 		},
 		scoreUpdateTestCase{
@@ -105,13 +186,7 @@ func TestAttributes(t *testing.T) {
 				AttributeUpdate{PartUpdate: OctaveUp{}},
 			},
 			expectations: []scoreUpdateExpectation{
-				expectPart("piano", func(part *Part) error {
-					if part.Octave != 3 {
-						return fmt.Errorf("octave is %d, not 3", part.Octave)
-					}
-
-					return nil
-				}),
+				expectPartOctave("piano", 3),
 			},
 		},
 		scoreUpdateTestCase{
@@ -125,13 +200,7 @@ func TestAttributes(t *testing.T) {
 				}},
 			},
 			expectations: []scoreUpdateExpectation{
-				expectPart("piano", func(part *Part) error {
-					if part.Octave != 3 {
-						return fmt.Errorf("octave is %d, not 3", part.Octave)
-					}
-
-					return nil
-				}),
+				expectPartOctave("piano", 3),
 			},
 		},
 		scoreUpdateTestCase{
@@ -145,13 +214,7 @@ func TestAttributes(t *testing.T) {
 				AttributeUpdate{PartUpdate: OctaveDown{}},
 			},
 			expectations: []scoreUpdateExpectation{
-				expectPart("piano", func(part *Part) error {
-					if part.Octave != 6 {
-						return fmt.Errorf("octave is %d, not 6", part.Octave)
-					}
-
-					return nil
-				}),
+				expectPartOctave("piano", 6),
 			},
 		},
 		scoreUpdateTestCase{
@@ -160,13 +223,7 @@ func TestAttributes(t *testing.T) {
 				PartDeclaration{Names: []string{"piano"}},
 			},
 			expectations: []scoreUpdateExpectation{
-				expectPart("piano", func(part *Part) error {
-					if part.Volume != 1.0 {
-						return fmt.Errorf("initial volume is %f, not 1.0", part.Volume)
-					}
-
-					return nil
-				}),
+				expectPartVolume("piano", 1.0),
 			},
 		},
 		scoreUpdateTestCase{
@@ -176,13 +233,7 @@ func TestAttributes(t *testing.T) {
 				AttributeUpdate{PartUpdate: VolumeSet{Volume: 0.85}},
 			},
 			expectations: []scoreUpdateExpectation{
-				expectPart("piano", func(part *Part) error {
-					if part.Volume != 0.85 {
-						return fmt.Errorf("volume is %f, not 0.85", part.Volume)
-					}
-
-					return nil
-				}),
+				expectPartVolume("piano", 0.85),
 			},
 		},
 		scoreUpdateTestCase{
@@ -195,13 +246,7 @@ func TestAttributes(t *testing.T) {
 				}},
 			},
 			expectations: []scoreUpdateExpectation{
-				expectPart("piano", func(part *Part) error {
-					if part.Volume != 0.82 {
-						return fmt.Errorf("volume is %f, not 0.82", part.Volume)
-					}
-
-					return nil
-				}),
+				expectPartVolume("piano", 0.82),
 			},
 		},
 		scoreUpdateTestCase{
@@ -210,16 +255,7 @@ func TestAttributes(t *testing.T) {
 				PartDeclaration{Names: []string{"piano"}},
 			},
 			expectations: []scoreUpdateExpectation{
-				expectPart("piano", func(part *Part) error {
-					expected := float32(100.0 / 127)
-					if part.TrackVolume != expected {
-						return fmt.Errorf(
-							"initial track volume is %f, not %f", part.TrackVolume, expected,
-						)
-					}
-
-					return nil
-				}),
+				expectPartTrackVolume("piano", float32(100.0/127)),
 			},
 		},
 		scoreUpdateTestCase{
@@ -229,13 +265,7 @@ func TestAttributes(t *testing.T) {
 				AttributeUpdate{PartUpdate: TrackVolumeSet{TrackVolume: 0.85}},
 			},
 			expectations: []scoreUpdateExpectation{
-				expectPart("piano", func(part *Part) error {
-					if part.TrackVolume != 0.85 {
-						return fmt.Errorf("track volume is %f, not 0.85", part.TrackVolume)
-					}
-
-					return nil
-				}),
+				expectPartTrackVolume("piano", 0.85),
 			},
 		},
 		scoreUpdateTestCase{
@@ -248,13 +278,7 @@ func TestAttributes(t *testing.T) {
 				}},
 			},
 			expectations: []scoreUpdateExpectation{
-				expectPart("piano", func(part *Part) error {
-					if part.TrackVolume != 0.82 {
-						return fmt.Errorf("track volume is %f, not 0.82", part.TrackVolume)
-					}
-
-					return nil
-				}),
+				expectPartTrackVolume("piano", 0.82),
 			},
 		},
 		scoreUpdateTestCase{
@@ -263,13 +287,7 @@ func TestAttributes(t *testing.T) {
 				PartDeclaration{Names: []string{"piano"}},
 			},
 			expectations: []scoreUpdateExpectation{
-				expectPart("piano", func(part *Part) error {
-					if part.Panning != 0.5 {
-						return fmt.Errorf("initial volume is %f, not 0.5", part.Panning)
-					}
-
-					return nil
-				}),
+				expectPartPanning("piano", 0.5),
 			},
 		},
 		scoreUpdateTestCase{
@@ -279,13 +297,7 @@ func TestAttributes(t *testing.T) {
 				AttributeUpdate{PartUpdate: PanningSet{Panning: 0.85}},
 			},
 			expectations: []scoreUpdateExpectation{
-				expectPart("piano", func(part *Part) error {
-					if part.Panning != 0.85 {
-						return fmt.Errorf("panning is %f, not 0.85", part.Panning)
-					}
-
-					return nil
-				}),
+				expectPartPanning("piano", 0.85),
 			},
 		},
 		scoreUpdateTestCase{
@@ -298,13 +310,7 @@ func TestAttributes(t *testing.T) {
 				}},
 			},
 			expectations: []scoreUpdateExpectation{
-				expectPart("piano", func(part *Part) error {
-					if part.Panning != 0.82 {
-						return fmt.Errorf("panning is %f, not 0.82", part.Panning)
-					}
-
-					return nil
-				}),
+				expectPartPanning("piano", 0.82),
 			},
 		},
 		scoreUpdateTestCase{
@@ -313,15 +319,7 @@ func TestAttributes(t *testing.T) {
 				PartDeclaration{Names: []string{"piano"}},
 			},
 			expectations: []scoreUpdateExpectation{
-				expectPart("piano", func(part *Part) error {
-					if part.Quantization != 0.9 {
-						return fmt.Errorf(
-							"initial quantization is %f, not 0.9", part.Quantization,
-						)
-					}
-
-					return nil
-				}),
+				expectPartQuantization("piano", 0.9),
 			},
 		},
 		scoreUpdateTestCase{
@@ -331,13 +329,7 @@ func TestAttributes(t *testing.T) {
 				AttributeUpdate{PartUpdate: QuantizationSet{Quantization: 0.85}},
 			},
 			expectations: []scoreUpdateExpectation{
-				expectPart("piano", func(part *Part) error {
-					if part.Quantization != 0.85 {
-						return fmt.Errorf("quantization is %f, not 0.85", part.Quantization)
-					}
-
-					return nil
-				}),
+				expectPartQuantization("piano", 0.85),
 			},
 		},
 		scoreUpdateTestCase{
@@ -350,13 +342,7 @@ func TestAttributes(t *testing.T) {
 				}},
 			},
 			expectations: []scoreUpdateExpectation{
-				expectPart("piano", func(part *Part) error {
-					if part.Quantization != 0.82 {
-						return fmt.Errorf("quantization is %f, not 0.82", part.Quantization)
-					}
-
-					return nil
-				}),
+				expectPartQuantization("piano", 0.82),
 			},
 		},
 		scoreUpdateTestCase{
@@ -369,13 +355,7 @@ func TestAttributes(t *testing.T) {
 				}},
 			},
 			expectations: []scoreUpdateExpectation{
-				expectPart("piano", func(part *Part) error {
-					if part.Quantization != 90.01 {
-						return fmt.Errorf("quantization is %f, not 90.01", part.Quantization)
-					}
-
-					return nil
-				}),
+				expectPartQuantization("piano", 90.01),
 			},
 		},
 		scoreUpdateTestCase{
@@ -384,21 +364,8 @@ func TestAttributes(t *testing.T) {
 				PartDeclaration{Names: []string{"piano"}},
 			},
 			expectations: []scoreUpdateExpectation{
-				expectPart("piano", func(part *Part) error {
-					beats, err := part.Duration.Beats()
-					if err != nil {
-						return err
-					}
-
-					// Default note length is a quarter note (1 beat).
-					if beats != 1 {
-						return fmt.Errorf(
-							"expected initial duration of 1 beat, got %#v", part.Duration,
-						)
-					}
-
-					return nil
-				}),
+				// Default note length is a quarter note (1 beat).
+				expectPartDurationBeats("piano", 1),
 			},
 		},
 		scoreUpdateTestCase{
@@ -411,21 +378,7 @@ func TestAttributes(t *testing.T) {
 				}},
 			},
 			expectations: []scoreUpdateExpectation{
-				expectPart("piano", func(part *Part) error {
-					beats, err := part.Duration.Beats()
-					if err != nil {
-						return err
-					}
-
-					if beats != 3.7 {
-						return fmt.Errorf(
-							"expected duration of 3.7 beats, got %#v (%f beats)",
-							part.Duration, beats,
-						)
-					}
-
-					return nil
-				}),
+				expectPartDurationBeats("piano", 3.7),
 			},
 		},
 		scoreUpdateTestCase{
@@ -438,17 +391,7 @@ func TestAttributes(t *testing.T) {
 				}},
 			},
 			expectations: []scoreUpdateExpectation{
-				expectPart("piano", func(part *Part) error {
-					ms := part.Duration.Ms(part.Tempo)
-
-					if ms != 2345 {
-						return fmt.Errorf(
-							"expected duration of 2345ms, got %#v (%fms)", part.Duration, ms,
-						)
-					}
-
-					return nil
-				}),
+				expectPartDurationMs("piano", 2345),
 			},
 		},
 		scoreUpdateTestCase{
@@ -461,21 +404,7 @@ func TestAttributes(t *testing.T) {
 				}},
 			},
 			expectations: []scoreUpdateExpectation{
-				expectPart("piano", func(part *Part) error {
-					beats, err := part.Duration.Beats()
-					if err != nil {
-						return err
-					}
-
-					if beats != 4 {
-						return fmt.Errorf(
-							"expected duration of 4 beats, got %#v (%f beats)",
-							part.Duration, beats,
-						)
-					}
-
-					return nil
-				}),
+				expectPartDurationBeats("piano", 4),
 			},
 		},
 		scoreUpdateTestCase{
@@ -488,21 +417,7 @@ func TestAttributes(t *testing.T) {
 				}},
 			},
 			expectations: []scoreUpdateExpectation{
-				expectPart("piano", func(part *Part) error {
-					beats, err := part.Duration.Beats()
-					if err != nil {
-						return err
-					}
-
-					if beats != 3.5 {
-						return fmt.Errorf(
-							"expected duration of 3.5 beats, got %#v (%f beats)",
-							part.Duration, beats,
-						)
-					}
-
-					return nil
-				}),
+				expectPartDurationBeats("piano", 3.5),
 			},
 		},
 		scoreUpdateTestCase{
@@ -515,21 +430,7 @@ func TestAttributes(t *testing.T) {
 				}},
 			},
 			expectations: []scoreUpdateExpectation{
-				expectPart("piano", func(part *Part) error {
-					beats, err := part.Duration.Beats()
-					if err != nil {
-						return err
-					}
-
-					if beats != 14 {
-						return fmt.Errorf(
-							"expected duration of 14 beats, got %#v (%f beats)",
-							part.Duration, beats,
-						)
-					}
-
-					return nil
-				}),
+				expectPartDurationBeats("piano", 14),
 			},
 		},
 		scoreUpdateTestCase{
@@ -542,21 +443,7 @@ func TestAttributes(t *testing.T) {
 				}},
 			},
 			expectations: []scoreUpdateExpectation{
-				expectPart("piano", func(part *Part) error {
-					beats, err := part.Duration.Beats()
-					if err != nil {
-						return err
-					}
-
-					if beats != 8 {
-						return fmt.Errorf(
-							"expected duration of 8 beats, got %#v (%f beats)",
-							part.Duration, beats,
-						)
-					}
-
-					return nil
-				}),
+				expectPartDurationBeats("piano", 8),
 			},
 		},
 		scoreUpdateTestCase{
@@ -574,21 +461,7 @@ func TestAttributes(t *testing.T) {
 				},
 			},
 			expectations: []scoreUpdateExpectation{
-				expectPart("piano", func(part *Part) error {
-					beats, err := part.Duration.Beats()
-					if err != nil {
-						return err
-					}
-
-					if beats != 8 {
-						return fmt.Errorf(
-							"expected duration of 8 beats, got %#v (%f beats)",
-							part.Duration, beats,
-						)
-					}
-
-					return nil
-				}),
+				expectPartDurationBeats("piano", 8),
 			},
 		},
 		scoreUpdateTestCase{
@@ -597,15 +470,7 @@ func TestAttributes(t *testing.T) {
 				PartDeclaration{Names: []string{"piano"}},
 			},
 			expectations: []scoreUpdateExpectation{
-				expectPart("piano", func(part *Part) error {
-					if part.Tempo != 120 {
-						return fmt.Errorf(
-							"initial tempo is %f, not 120", part.Tempo,
-						)
-					}
-
-					return nil
-				}),
+				expectPartTempo("piano", 120),
 			},
 		},
 		scoreUpdateTestCase{
@@ -615,15 +480,7 @@ func TestAttributes(t *testing.T) {
 				AttributeUpdate{PartUpdate: TempoSet{Tempo: 60}},
 			},
 			expectations: []scoreUpdateExpectation{
-				expectPart("piano", func(part *Part) error {
-					if part.Tempo != 60 {
-						return fmt.Errorf(
-							"tempo is %f, not 60", part.Tempo,
-						)
-					}
-
-					return nil
-				}),
+				expectPartTempo("piano", 60),
 			},
 		},
 		scoreUpdateTestCase{
@@ -636,15 +493,7 @@ func TestAttributes(t *testing.T) {
 				}},
 			},
 			expectations: []scoreUpdateExpectation{
-				expectPart("piano", func(part *Part) error {
-					if part.Tempo != 60 {
-						return fmt.Errorf(
-							"tempo is %f, not 60", part.Tempo,
-						)
-					}
-
-					return nil
-				}),
+				expectPartTempo("piano", 60),
 			},
 		},
 		scoreUpdateTestCase{
@@ -658,15 +507,7 @@ func TestAttributes(t *testing.T) {
 				}},
 			},
 			expectations: []scoreUpdateExpectation{
-				expectPart("piano", func(part *Part) error {
-					if part.Tempo != 60 {
-						return fmt.Errorf(
-							"tempo is %f, not 60", part.Tempo,
-						)
-					}
-
-					return nil
-				}),
+				expectPartTempo("piano", 60),
 			},
 		},
 		scoreUpdateTestCase{
@@ -680,15 +521,7 @@ func TestAttributes(t *testing.T) {
 				}},
 			},
 			expectations: []scoreUpdateExpectation{
-				expectPart("piano", func(part *Part) error {
-					if part.Tempo != 60 {
-						return fmt.Errorf(
-							"tempo is %f, not 60", part.Tempo,
-						)
-					}
-
-					return nil
-				}),
+				expectPartTempo("piano", 60),
 			},
 		},
 		scoreUpdateTestCase{
@@ -702,15 +535,7 @@ func TestAttributes(t *testing.T) {
 				}},
 			},
 			expectations: []scoreUpdateExpectation{
-				expectPart("piano", func(part *Part) error {
-					if part.Tempo != 60 {
-						return fmt.Errorf(
-							"tempo is %f, not 60", part.Tempo,
-						)
-					}
-
-					return nil
-				}),
+				expectPartTempo("piano", 60),
 			},
 		},
 		scoreUpdateTestCase{
@@ -724,15 +549,7 @@ func TestAttributes(t *testing.T) {
 				}},
 			},
 			expectations: []scoreUpdateExpectation{
-				expectPart("piano", func(part *Part) error {
-					if part.Tempo != 60 {
-						return fmt.Errorf(
-							"tempo is %f, not 60", part.Tempo,
-						)
-					}
-
-					return nil
-				}),
+				expectPartTempo("piano", 60),
 			},
 		},
 		scoreUpdateTestCase{
@@ -746,15 +563,7 @@ func TestAttributes(t *testing.T) {
 				}},
 			},
 			expectations: []scoreUpdateExpectation{
-				expectPart("piano", func(part *Part) error {
-					if part.Tempo != 60 {
-						return fmt.Errorf(
-							"tempo is %f, not 60", part.Tempo,
-						)
-					}
-
-					return nil
-				}),
+				expectPartTempo("piano", 60),
 			},
 		},
 		scoreUpdateTestCase{
@@ -772,15 +581,7 @@ func TestAttributes(t *testing.T) {
 				}},
 			},
 			expectations: []scoreUpdateExpectation{
-				expectPart("piano", func(part *Part) error {
-					if part.Tempo != 160 {
-						return fmt.Errorf(
-							"tempo is %f, not 160", part.Tempo,
-						)
-					}
-
-					return nil
-				}),
+				expectPartTempo("piano", 160),
 			},
 		},
 		scoreUpdateTestCase{
@@ -798,15 +599,7 @@ func TestAttributes(t *testing.T) {
 				}},
 			},
 			expectations: []scoreUpdateExpectation{
-				expectPart("piano", func(part *Part) error {
-					if part.Tempo != 120 {
-						return fmt.Errorf(
-							"tempo is %f, not 120", part.Tempo,
-						)
-					}
-
-					return nil
-				}),
+				expectPartTempo("piano", 120),
 			},
 		},
 		scoreUpdateTestCase{
@@ -824,15 +617,7 @@ func TestAttributes(t *testing.T) {
 				}},
 			},
 			expectations: []scoreUpdateExpectation{
-				expectPart("piano", func(part *Part) error {
-					if part.Tempo != 120 {
-						return fmt.Errorf(
-							"tempo is %f, not 120", part.Tempo,
-						)
-					}
-
-					return nil
-				}),
+				expectPartTempo("piano", 120),
 			},
 		},
 		scoreUpdateTestCase{
@@ -850,15 +635,7 @@ func TestAttributes(t *testing.T) {
 				}},
 			},
 			expectations: []scoreUpdateExpectation{
-				expectPart("piano", func(part *Part) error {
-					if part.Tempo != 30 {
-						return fmt.Errorf(
-							"tempo is %f, not 30", part.Tempo,
-						)
-					}
-
-					return nil
-				}),
+				expectPartTempo("piano", 30),
 			},
 		},
 	)
