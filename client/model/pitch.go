@@ -4,18 +4,30 @@ import (
 	"fmt"
 )
 
+// NoteLetter represents a note letter in Western standard musical notation.
 type NoteLetter int
 
 const (
+	// A is the note "A" in Western standard musical notation.
 	A NoteLetter = iota
+	// B is the note "B" in Western standard musical notation.
 	B
+	// C is the note "C" in Western standard musical notation.
 	C
+	// D is the note "D" in Western standard musical notation.
 	D
+	// E is the note "E" in Western standard musical notation.
 	E
+	// F is the note "F" in Western standard musical notation.
 	F
+	// G is the note "G" in Western standard musical notation.
 	G
 )
 
+// NewNoteLetter returns the NoteLetter that corresponds to the provided
+// character. e.g. 'a' => A
+//
+// Returns an error if there is no corresponding NoteLetter.
 func NewNoteLetter(letter rune) (NoteLetter, error) {
 	switch letter {
 	case 'a':
@@ -37,10 +49,15 @@ func NewNoteLetter(letter rune) (NoteLetter, error) {
 	}
 }
 
+// An Accidental is an accidental (flat, sharp, or natural) from Western
+// standard musical notation.
 type Accidental int
 
 const (
+	// Flat is the "flat" accidental.
 	Flat Accidental = iota
+	// Natural is the "natural" accidental.
 	Natural
+	// Sharp is the "sharp" accidental.
 	Sharp
 )
