@@ -39,6 +39,16 @@ func (ts TempoSet) updatePart(part *Part) {
 	part.Tempo = ts.Tempo
 }
 
+// MetricModulation sets the tempo of all active parts, defining the tempo as a
+// ratio of new tempo : old tempo.
+type MetricModulation struct {
+	Ratio float32
+}
+
+func (mm MetricModulation) updatePart(part *Part) {
+	part.Tempo *= mm.Ratio
+}
+
 // OctaveSet sets the octave of all active parts.
 type OctaveSet struct {
 	OctaveNumber int32

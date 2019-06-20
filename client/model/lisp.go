@@ -209,8 +209,7 @@ func isDigit(c rune) bool {
 	return '0' <= c && c <= '9'
 }
 
-func noteLength(form LispForm) (NoteLength, error) {
-	str := form.(LispString).Value
+func noteLength(str string) (NoteLength, error) {
 	chars := []rune(str)
 
 	if len(str) == 0 || !isDigit(chars[0]) {
@@ -219,14 +218,31 @@ func noteLength(form LispForm) (NoteLength, error) {
 
 	i := 0
 
-	digits := []rune{}
+	denominatorChars := []rune{}
+
+	// Consume the digits of an integer.
 	for i < len(chars) && isDigit(chars[i]) {
-		digits = append(digits, chars[i])
+		denominatorChars = append(denominatorChars, chars[i])
 		i++
 	}
 
-	denominator, _ := strconv.ParseInt(string(digits), 10, 32)
+	// If there is a period followed by more digits, treat the period as a decimal
+	// and consume the digits on the right-hand side of the decimal.
+	if i < len(chars) && chars[i] == '.' &&
+		i+1 < len(chars) && isDigit(chars[i+1]) {
+		// Consume the decimal.
+		denominatorChars = append(denominatorChars, chars[i])
+		i++
+		// Consume digits.
+		for i < len(chars) && isDigit(chars[i]) {
+			denominatorChars = append(denominatorChars, chars[i])
+			i++
+		}
+	}
 
+	denominator, _ := strconv.ParseFloat(string(denominatorChars), 32)
+
+	// Any periods remaining are treated as dots.
 	dots := 0
 	for i < len(chars) && chars[i] == '.' {
 		dots++
@@ -240,6 +256,23 @@ func noteLength(form LispForm) (NoteLength, error) {
 	}
 
 	return NoteLength{Denominator: float32(denominator), Dots: int32(dots)}, nil
+}
+
+func duration(form LispForm) (Duration, error) {
+	strs := strings.Split(form.(LispString).Value, "~")
+
+	duration := Duration{}
+
+	for _, str := range strs {
+		noteLength, err := noteLength(str)
+		if err != nil {
+			return Duration{}, err
+		}
+
+		duration.Components = append(duration.Components, noteLength)
+	}
+
+	return duration, nil
 }
 
 func init() {
@@ -285,13 +318,160 @@ func init() {
 				return TempoSet{Tempo: bpm}, nil
 			},
 		},
-		// TODO: implement 2-arity that allows expressing tempo in terms of a note
-		// length other than quarter note
-		//
-		// https://github.com/alda-lang/alda-core/blob/e27b1d07224b5951fca63277374e957ed399c8f5/src/alda/lisp/attributes.clj#L92-L93
-		//
-		// May need to make two versions of this, one that takes a number like 2
-		// (half) and one that takes a string like "4." (dotted quarter)
+		attributeFunctionSignature{
+			argumentTypes: []LispForm{LispNumber{}, LispNumber{}},
+			implementation: func(args ...LispForm) (PartUpdate, error) {
+				noteLength, err := positiveNumber(args[0])
+				if err != nil {
+					return nil, err
+				}
+
+				pseudoBpm, err := positiveNumber(args[1])
+				if err != nil {
+					return nil, err
+				}
+
+				beats, err := NoteLength{Denominator: noteLength}.Beats()
+				if err != nil {
+					return nil, err
+				}
+
+				return TempoSet{Tempo: beats * pseudoBpm}, nil
+			},
+		},
+		attributeFunctionSignature{
+			argumentTypes: []LispForm{LispString{}, LispNumber{}},
+			implementation: func(args ...LispForm) (PartUpdate, error) {
+				duration, err := duration(args[0])
+				if err != nil {
+					return nil, err
+				}
+
+				pseudoBpm, err := positiveNumber(args[1])
+				if err != nil {
+					return nil, err
+				}
+
+				beats, err := duration.Beats()
+				if err != nil {
+					return nil, err
+				}
+
+				return TempoSet{Tempo: beats * pseudoBpm}, nil
+			},
+		},
+	)
+
+	// Express tempo in terms of metric modulation, where the new note takes the
+	// same amount of time (one beat) as the old note.
+	//
+	// (e.g. (metric-modulation "4." 2) means that the new length of a half note
+	// equals the length of a dotted quarter note in the previous measure)
+	defattribute([]string{"metric-modulation"},
+		attributeFunctionSignature{
+			argumentTypes: []LispForm{LispNumber{}, LispNumber{}},
+			implementation: func(args ...LispForm) (PartUpdate, error) {
+				oldValue, err := positiveNumber(args[0])
+				if err != nil {
+					return nil, err
+				}
+
+				newValue, err := positiveNumber(args[1])
+				if err != nil {
+					return nil, err
+				}
+
+				oldBeats, err := NoteLength{Denominator: oldValue}.Beats()
+				if err != nil {
+					return nil, err
+				}
+
+				newBeats, err := NoteLength{Denominator: newValue}.Beats()
+				if err != nil {
+					return nil, err
+				}
+
+				return MetricModulation{Ratio: newBeats / oldBeats}, nil
+			},
+		},
+		attributeFunctionSignature{
+			argumentTypes: []LispForm{LispNumber{}, LispString{}},
+			implementation: func(args ...LispForm) (PartUpdate, error) {
+				oldValue, err := positiveNumber(args[0])
+				if err != nil {
+					return nil, err
+				}
+
+				newValue, err := duration(args[1])
+				if err != nil {
+					return nil, err
+				}
+
+				oldBeats, err := NoteLength{Denominator: oldValue}.Beats()
+				if err != nil {
+					return nil, err
+				}
+
+				newBeats, err := newValue.Beats()
+				if err != nil {
+					return nil, err
+				}
+
+				return MetricModulation{Ratio: newBeats / oldBeats}, nil
+			},
+		},
+		attributeFunctionSignature{
+			argumentTypes: []LispForm{LispString{}, LispNumber{}},
+			implementation: func(args ...LispForm) (PartUpdate, error) {
+				oldValue, err := duration(args[0])
+				if err != nil {
+					return nil, err
+				}
+
+				newValue, err := positiveNumber(args[1])
+				if err != nil {
+					return nil, err
+				}
+
+				oldBeats, err := oldValue.Beats()
+				if err != nil {
+					return nil, err
+				}
+
+				newBeats, err := NoteLength{Denominator: newValue}.Beats()
+				if err != nil {
+					return nil, err
+				}
+
+				return MetricModulation{Ratio: newBeats / oldBeats}, nil
+			},
+		},
+		attributeFunctionSignature{
+			argumentTypes: []LispForm{LispString{}, LispString{}},
+			implementation: func(args ...LispForm) (PartUpdate, error) {
+				oldValue, err := duration(args[0])
+				if err != nil {
+					return nil, err
+				}
+
+				newValue, err := duration(args[1])
+				if err != nil {
+					return nil, err
+				}
+
+				oldBeats, err := oldValue.Beats()
+				if err != nil {
+					return nil, err
+				}
+
+				newBeats, err := newValue.Beats()
+				if err != nil {
+					return nil, err
+				}
+
+				return MetricModulation{Ratio: newBeats / oldBeats}, nil
+			},
+		},
 	)
 
 	// The percentage of a note that is heard. Used to put a little space between
@@ -391,6 +571,9 @@ func init() {
 
 	// Default note duration, expressed as a note length.
 	// e.g. 4 = quarter note, "2.." = dotted half note
+	//
+	// Can also be expressed as multiple note lengths, tied together.
+	// e.g. "1~1" = the length of two whole notes
 	defattribute([]string{"set-note-length"},
 		attributeFunctionSignature{
 			argumentTypes: []LispForm{LispNumber{}},
@@ -407,13 +590,11 @@ func init() {
 		attributeFunctionSignature{
 			argumentTypes: []LispForm{LispString{}},
 			implementation: func(args ...LispForm) (PartUpdate, error) {
-				noteLength, err := noteLength(args[0])
+				duration, err := duration(args[0])
 				if err != nil {
 					return nil, err
 				}
-				return DurationSet{Duration: Duration{
-					Components: []DurationComponent{noteLength},
-				}}, nil
+				return DurationSet{Duration: duration}, nil
 			},
 		},
 	)

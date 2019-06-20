@@ -52,6 +52,7 @@ func newPart(name string) (*Part, error) {
 		CurrentOffset:   0,
 		CurrentMarker:   StartOfScore,
 		Octave:          4,
+		Tempo:           120,
 		Volume:          1.0,
 		TrackVolume:     100.0 / 127,
 		Panning:         0.5,

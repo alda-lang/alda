@@ -479,7 +479,7 @@ func TestAttributes(t *testing.T) {
 			},
 		},
 		scoreUpdateTestCase{
-			label: "set duration via lisp (`set-note-length`, string)",
+			label: "set duration via lisp (`set-note-length`, string 1)",
 			updates: []ScoreUpdate{
 				PartDeclaration{Names: []string{"piano"}},
 				LispList{Elements: []LispForm{
@@ -497,6 +497,60 @@ func TestAttributes(t *testing.T) {
 					if beats != 3.5 {
 						return fmt.Errorf(
 							"expected duration of 3.5 beats, got %#v (%f beats)",
+							part.Duration, beats,
+						)
+					}
+
+					return nil
+				}),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "set duration via lisp (`set-note-length`, string 2)",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "set-note-length"},
+					LispString{Value: "0.5.."},
+				}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPart("piano", func(part *Part) error {
+					beats, err := part.Duration.Beats()
+					if err != nil {
+						return err
+					}
+
+					if beats != 14 {
+						return fmt.Errorf(
+							"expected duration of 14 beats, got %#v (%f beats)",
+							part.Duration, beats,
+						)
+					}
+
+					return nil
+				}),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "set duration via lisp (`set-note-length`, string 3)",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "set-note-length"},
+					LispString{Value: "1~1"},
+				}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPart("piano", func(part *Part) error {
+					beats, err := part.Duration.Beats()
+					if err != nil {
+						return err
+					}
+
+					if beats != 8 {
+						return fmt.Errorf(
+							"expected duration of 8 beats, got %#v (%f beats)",
 							part.Duration, beats,
 						)
 					}
@@ -530,6 +584,276 @@ func TestAttributes(t *testing.T) {
 						return fmt.Errorf(
 							"expected duration of 8 beats, got %#v (%f beats)",
 							part.Duration, beats,
+						)
+					}
+
+					return nil
+				}),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "initial tempo",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPart("piano", func(part *Part) error {
+					if part.Tempo != 120 {
+						return fmt.Errorf(
+							"initial tempo is %f, not 120", part.Tempo,
+						)
+					}
+
+					return nil
+				}),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "set tempo",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				AttributeUpdate{PartUpdate: TempoSet{Tempo: 60}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPart("piano", func(part *Part) error {
+					if part.Tempo != 60 {
+						return fmt.Errorf(
+							"tempo is %f, not 60", part.Tempo,
+						)
+					}
+
+					return nil
+				}),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "set tempo via lisp",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "tempo"},
+					LispNumber{Value: 60},
+				}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPart("piano", func(part *Part) error {
+					if part.Tempo != 60 {
+						return fmt.Errorf(
+							"tempo is %f, not 60", part.Tempo,
+						)
+					}
+
+					return nil
+				}),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "set tempo via lisp: half note = 30",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "tempo"},
+					LispNumber{Value: 2},
+					LispNumber{Value: 30},
+				}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPart("piano", func(part *Part) error {
+					if part.Tempo != 60 {
+						return fmt.Errorf(
+							"tempo is %f, not 60", part.Tempo,
+						)
+					}
+
+					return nil
+				}),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "set tempo via lisp: dotted quarter note = 40",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "tempo"},
+					LispString{Value: "4."},
+					LispNumber{Value: 40},
+				}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPart("piano", func(part *Part) error {
+					if part.Tempo != 60 {
+						return fmt.Errorf(
+							"tempo is %f, not 60", part.Tempo,
+						)
+					}
+
+					return nil
+				}),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "set tempo via lisp: (complicated way to say a half note) = 30",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "tempo"},
+					LispString{Value: "8.~16~4"},
+					LispNumber{Value: 30},
+				}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPart("piano", func(part *Part) error {
+					if part.Tempo != 60 {
+						return fmt.Errorf(
+							"tempo is %f, not 60", part.Tempo,
+						)
+					}
+
+					return nil
+				}),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "set tempo via lisp: whole note = 15",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "tempo"},
+					LispString{Value: "1"},
+					LispNumber{Value: 15},
+				}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPart("piano", func(part *Part) error {
+					if part.Tempo != 60 {
+						return fmt.Errorf(
+							"tempo is %f, not 60", part.Tempo,
+						)
+					}
+
+					return nil
+				}),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "set tempo via lisp: breve = 7.5",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "tempo"},
+					LispString{Value: "0.5"},
+					LispNumber{Value: 7.5},
+				}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPart("piano", func(part *Part) error {
+					if part.Tempo != 60 {
+						return fmt.Errorf(
+							"tempo is %f, not 60", part.Tempo,
+						)
+					}
+
+					return nil
+				}),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "metric modulation: dotted quarter = half",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "tempo"},
+					LispNumber{Value: 120},
+				}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "metric-modulation"},
+					LispString{Value: "4."},
+					LispNumber{Value: 2},
+				}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPart("piano", func(part *Part) error {
+					if part.Tempo != 160 {
+						return fmt.Errorf(
+							"tempo is %f, not 160", part.Tempo,
+						)
+					}
+
+					return nil
+				}),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "metric modulation: half = dotted quarter",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "tempo"},
+					LispNumber{Value: 160},
+				}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "metric-modulation"},
+					LispNumber{Value: 2},
+					LispString{Value: "4."},
+				}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPart("piano", func(part *Part) error {
+					if part.Tempo != 120 {
+						return fmt.Errorf(
+							"tempo is %f, not 120", part.Tempo,
+						)
+					}
+
+					return nil
+				}),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "metric modulation: half = dotted quarter (both strings)",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "tempo"},
+					LispNumber{Value: 160},
+				}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "metric-modulation"},
+					LispString{Value: "2"},
+					LispString{Value: "4."},
+				}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPart("piano", func(part *Part) error {
+					if part.Tempo != 120 {
+						return fmt.Errorf(
+							"tempo is %f, not 120", part.Tempo,
+						)
+					}
+
+					return nil
+				}),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "metric modulation: quarter = eighth",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "tempo"},
+					LispNumber{Value: 60},
+				}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "metric-modulation"},
+					LispNumber{Value: 4},
+					LispNumber{Value: 8},
+				}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPart("piano", func(part *Part) error {
+					if part.Tempo != 30 {
+						return fmt.Errorf(
+							"tempo is %f, not 30", part.Tempo,
 						)
 					}
 
