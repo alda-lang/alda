@@ -2,14 +2,14 @@
   :dependencies '[; build / release
                   [adzerk/boot-jar2bin   "1.1.1" :scope "test"]
                   [io.djy/boot-github    "0.1.4" :scope "test"]
-                  [org.clojure/clojure   "1.10.1-beta2"]
                   [alda/client-java      "0.7.0"]
+                  [org.clojure/clojure   "1.10.1"]
                   [alda/server-clj       "0.5.0"]
                   [alda/core             "0.5.4"]
                   [alda/sound-engine-clj "1.2.3"]
 
                   ; silence slf4j logging dammit
-                  [org.slf4j/slf4j-nop "1.8.0-beta4"]])
+                  [org.slf4j/slf4j-nop "2.0.0-alpha0"]])
 
 (require '[adzerk.boot-jar2bin :refer :all]
          '[io.djy.boot-github  :refer (push-version-tag create-release
