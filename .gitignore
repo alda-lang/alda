@@ -10,6 +10,7 @@ pom.xml.asc
 /.nrepl-port
 .DS_Store
 .nrepl-history
+.lsp/
 .scores/
 .workbench/
 *~
