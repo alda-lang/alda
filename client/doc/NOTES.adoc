@@ -1,0 +1,84 @@
+= Interaction modes
+
+Depending on the semantics of what the user wants to do, there are different
+"modes" in which Alda can operate.
+
+The big difference between them is what we do with the data representation of
+the score that is built up in memory on the client, after initially using the
+data representation to play the score.
+
+== Direct mode
+
+* Input is parsed, eval'd, and played.
+
+* There is no intention to "continue" a score, so the client simply exits,
+  discarding the score data in memory.
+
+== REPL mode
+
+* Serves a couple of use cases:
+** Experimentation/development of a score interactively in a REPL session.
+** Live coding with one or more people interacting with the same score.
+
+* The initial score is parsed, eval'd, and played.
+
+* The result is kept in memory and the client process does NOT exit right away.
+
+* Users can "continue" the score by providing more input, which is parsed,
+  eval'd and played using the existing score as a starting point.
+
+=== For interactive development
+
+* The REPL client and REPL server are the same process.
+** `alda repl` by default starts both server and client
+
+* The user can interact with the server interactively in the terminal, just like
+  e.g. a Clojure REPL or an Alda v1 REPL (although messages wouldn't need to go
+  over the wire, they could just be handled in memory.)
+
+* The server could also listen for messages and handle them the same way. This
+  would be convenient for scenarios where you start to tinker in a REPL session,
+  and then want to switch to your editor and continue from there. Or if you want
+  to give a friend the port number and start to collaborate.
+** Open question about what transport protocol to use.
+*** I wonder if the nREPL protocol would work?
+
+=== For live coding
+
+* The REPL client and REPL server are separate processes.
+** `alda repl --client --port 12345` starts client only
+** `alda repl --server --port 12345` starts server only
+
+* The Alda client could be started in "server mode," where it just listens for
+  messages and processes them.
+** In Alda v1, there is an `alda up` command which starts the server in the
+background.
+** For Alda v2, I think I would like the server to be something you run in the
+foreground, instead, since it will be possible to play scores in direct mode
+without having a server running.
+** Starting a server should be something you only need to do for interactive
+development and live coding.
+
+* The client is likely to be driven by a text editor.
+
+* It should be possible to have multiple clients interact with the same server,
+  enabling collaborative live coding.
+
+* One use case is for each collaborator to work on a separate part.
+** It might be useful for the REPL client session (or text editor plugin, etc.)
+to keep track of which instrument the collaborator used last, and explicitly
+prepend that part declaration (e.g. `bass:`) to the beginning of every message
+to the server.
+*** In an interactive Alda REPL client session, we could actually make the part
+declaration an editable part of the message, so that the user could see that the
+part declaration is there and, if desired, backspace or ^W to delete it and
+write a different part declaration.
+*** A text editor plugin could display the part somewhere where it's easily
+visible, so that it's clear to the user that a part declaration will be
+prepended.
+*** (Unless the message already begins with a part declaration, of course.)
+*** This might help avoid race conditions where collabarators are simultaneously
+adding to different parts, so the part could unexpectedly change from message to
+message.
+*** If each collabarator starts each message with the part he/she is working
+with, then that should keep collabarators from stepping on each other's toes.
