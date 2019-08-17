@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 1.3.3 (2019-08-16)
+
+* New alda.lisp function, `midi-note`, is available as an alternative to
+  `pitch` that is occasionally useful for algorithmic compositions, etc. For
+  example, instead of `(note (pitch :c :sharp))`, you can specify the MIDI note
+  number, `(note (midi-note 61))`.
+
 ## 1.3.2 (2019-06-26)
 
 * To help debug [alda-client-java issue
