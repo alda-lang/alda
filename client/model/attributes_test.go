@@ -105,6 +105,24 @@ func expectPartKeySignature(
 	)
 }
 
+func expectPartTransposition(
+	instrument string, transposition int32,
+) func(s *Score) error {
+	return expectPartIntValue(
+		instrument, "transposition",
+		func(part *Part) int32 { return part.Transposition }, transposition,
+	)
+}
+
+func expectPartReferencePitch(
+	instrument string, frequency float32,
+) func(s *Score) error {
+	return expectPartFloatValue(
+		instrument, "reference pitch",
+		func(part *Part) float32 { return part.ReferencePitch }, frequency,
+	)
+}
+
 func expectPartDurationBeats(
 	instrument string, expected float32,
 ) func(s *Score) error {
@@ -761,6 +779,70 @@ func TestAttributes(t *testing.T) {
 				expectPartKeySignature(
 					"piano", KeySignature{B: {Flat, Flat}, E: {Flat}},
 				),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "initial transposition",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPartTransposition("piano", 0),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "set transposition",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				AttributeUpdate{PartUpdate: TranspositionSet{Semitones: 8}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPartTransposition("piano", 8),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "set transposition using lisp",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "transpose"},
+					LispNumber{Value: 82},
+				}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPartTransposition("piano", 82),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "initial reference pitch",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPartReferencePitch("piano", 440.0),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "set reference pitch",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				AttributeUpdate{PartUpdate: ReferencePitchSet{Frequency: 432.1}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPartReferencePitch("piano", 432.1),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "set reference pitch using lisp",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "reference-pitch"},
+					LispNumber{Value: 550.0},
+				}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPartReferencePitch("piano", 550.0),
 			},
 		},
 	)

@@ -125,4 +125,22 @@ type KeySignatureSet struct {
 func (kss KeySignatureSet) updatePart(part *Part) {
 	part.KeySignature = kss.KeySignature
 }
+
+// TranspositionSet sets the transposition of all active parts.
+type TranspositionSet struct {
+	Semitones int32
+}
+
+func (ts TranspositionSet) updatePart(part *Part) {
+	part.Transposition = ts.Semitones
+}
+
+// ReferencePitchSet sets the reference pitch of all active parts. The reference
+// pitch is represented as the frequency of A4.
+type ReferencePitchSet struct {
+	Frequency float32
+}
+
+func (rps ReferencePitchSet) updatePart(part *Part) {
+	part.ReferencePitch = rps.Frequency
 }

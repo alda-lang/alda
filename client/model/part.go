@@ -21,6 +21,8 @@ type Part struct {
 	TempoRole       TempoRole
 	Tempo           float32
 	KeySignature    KeySignature
+	Transposition   int32
+	ReferencePitch  float32
 	CurrentOffset   float32
 	CurrentMarker   string
 	Octave          int32
@@ -61,7 +63,9 @@ func newPart(name string) (*Part, error) {
 		Duration: Duration{
 			Components: []DurationComponent{NoteLength{Denominator: 4}},
 		},
-		KeySignature: KeySignature{},
+		KeySignature:   KeySignature{},
+		Transposition:  0,
+		ReferencePitch: 440.0,
 	}, nil
 }
 

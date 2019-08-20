@@ -835,6 +835,35 @@ func init() {
 			},
 		},
 	)
+
+	// The number of semitones to transpose. A negative number means transpose
+	// down, a positive number means transpose up.
+	defattribute([]string{"transposition", "transpose"},
+		attributeFunctionSignature{
+			argumentTypes: []LispForm{LispNumber{}},
+			implementation: func(args ...LispForm) (PartUpdate, error) {
+				semitones, err := wholeNumber(args[0])
+				if err != nil {
+					return nil, err
+				}
+				return TranspositionSet{Semitones: semitones}, nil
+			},
+		},
+	)
+
+	// The reference pitch, expressed as the frequency of A4 in Hz.
+	defattribute([]string{"reference-pitch", "tuning-constant"},
+		attributeFunctionSignature{
+			argumentTypes: []LispForm{LispNumber{}},
+			implementation: func(args ...LispForm) (PartUpdate, error) {
+				frequency, err := positiveNumber(args[0])
+				if err != nil {
+					return nil, err
+				}
+				return ReferencePitchSet{Frequency: frequency}, nil
+			},
+		},
+	)
 }
 
 type LispNil struct{}
