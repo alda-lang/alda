@@ -4,10 +4,6 @@ import (
 	"errors"
 )
 
-// StartOfScore is a special marker that represents the start of the score.  All
-// parts start at this marker implicitly.
-const StartOfScore string = "alda-start-of-score"
-
 type Marker struct {
 	Name string
 }

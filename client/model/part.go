@@ -24,7 +24,6 @@ type Part struct {
 	Transposition   int32
 	ReferencePitch  float32
 	CurrentOffset   float32
-	CurrentMarker   string
 	Octave          int32
 	Volume          float32
 	TrackVolume     float32
@@ -53,7 +52,6 @@ func newPart(name string) (*Part, error) {
 		Name:            name,
 		StockInstrument: stock,
 		CurrentOffset:   0,
-		CurrentMarker:   StartOfScore,
 		Octave:          4,
 		Tempo:           120,
 		Volume:          1.0,

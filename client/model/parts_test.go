@@ -215,15 +215,6 @@ func TestParts(t *testing.T) {
 								part.CurrentOffset,
 							)
 						}
-
-						if part.CurrentMarker != StartOfScore {
-							return fmt.Errorf(
-								"%s part's marker is %q, not %q",
-								instrument,
-								part.CurrentMarker,
-								StartOfScore,
-							)
-						}
 					}
 
 					return nil
