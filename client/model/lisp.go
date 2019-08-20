@@ -275,6 +275,220 @@ func duration(form LispForm) (Duration, error) {
 	return duration, nil
 }
 
+func isNoteLetter(c rune) bool {
+	return 'a' <= c && c <= 'f'
+}
+
+func letterAndAccidentals(str string) (NoteLetter, []Accidental, error) {
+	validityError := fmt.Errorf(
+		"Invalid \"letter and accidentals\" component: %q", str,
+	)
+
+	chars := []rune(str)
+
+	if len(str) < 2 || !isNoteLetter(chars[0]) {
+		return 0, nil, validityError
+	}
+
+	letter, err := NewNoteLetter(chars[0])
+	if err != nil {
+		return 0, nil, err
+	}
+
+	accidentals := []Accidental{}
+
+	for _, c := range chars[1:] {
+		switch c {
+		case '+':
+			accidentals = append(accidentals, Sharp)
+		case '-':
+			accidentals = append(accidentals, Flat)
+		default:
+			return 0, []Accidental{}, validityError
+		}
+	}
+
+	return letter, accidentals, nil
+}
+
+func keySignatureFromString(form LispForm) (KeySignature, error) {
+	strs := strings.Fields(form.(LispString).Value)
+
+	keySig := KeySignature{}
+
+	for _, str := range strs {
+		letter, accidentals, err := letterAndAccidentals(str)
+		if err != nil {
+			return KeySignature{}, err
+		}
+
+		keySig[letter] = accidentals
+	}
+
+	return keySig, nil
+}
+
+func scaleType(forms []LispForm) (ScaleType, error) {
+	validityError := fmt.Errorf("Invalid scale type: %#v", forms)
+
+	// All of the currently supported scale types are a single word. If/when we
+	// add more that are multiple words, we'll need to adjust this function
+	// accordingly.
+	if len(forms) != 1 {
+		return 0, validityError
+	}
+
+	switch form := forms[0]; form.(type) {
+	case LispSymbol:
+		switch form.(LispSymbol).Name {
+		case "major", "ionian":
+			return Ionian, nil
+		case "dorian":
+			return Dorian, nil
+		case "phrygian":
+			return Phrygian, nil
+		case "lydian":
+			return Lydian, nil
+		case "mixolydian":
+			return Mixolydian, nil
+		case "minor", "aeolian":
+			return Aeolian, nil
+		case "locrian":
+			return Locrian, nil
+		default:
+			return 0, validityError
+		}
+	default:
+		return 0, validityError
+	}
+}
+
+func keySignatureFromScaleName(forms []LispForm) (KeySignature, error) {
+	validityError := fmt.Errorf("Invalid scale name: %#v", forms)
+
+	letter := NoteLetter(0)
+	switch form := forms[0]; form.(type) {
+	case LispSymbol:
+		chars := []rune(form.(LispSymbol).Name)
+		if len(chars) > 1 {
+			return KeySignature{}, validityError
+		}
+
+		ltr, err := NewNoteLetter(chars[0])
+		if err != nil {
+			return KeySignature{}, err
+		}
+
+		letter = ltr
+	default:
+		return KeySignature{}, validityError
+	}
+
+	tonic := Note{NoteLetter: letter}
+	passedAccidentals := false
+	remainingForms := []LispForm{}
+
+	for _, form := range forms[1:] {
+		switch form.(type) {
+		case LispSymbol:
+			if accidental, err := NewAccidental(form.(LispSymbol).Name); err == nil {
+				if passedAccidentals {
+					return KeySignature{}, validityError
+				}
+
+				tonic.Accidentals = append(tonic.Accidentals, accidental)
+				continue
+			}
+
+			passedAccidentals = true
+			remainingForms = append(remainingForms, form)
+		default:
+			return KeySignature{}, validityError
+		}
+	}
+
+	scaleType, err := scaleType(remainingForms)
+	if err != nil {
+		return KeySignature{}, err
+	}
+
+	return KeySignatureFromScale(tonic, scaleType), nil
+}
+
+func keySignatureFromAccidentals(forms []LispForm) (KeySignature, error) {
+	validityError := fmt.Errorf(
+		"Expected pairs of note letter and accidentals, got %#v", forms,
+	)
+
+	// We expect to be provided with a list of pairs of letters and accidentals,
+	// e.g. (key-signature '(b (flat) e (flat)))
+	if len(forms)%2 != 0 {
+		return KeySignature{}, validityError
+	}
+
+	keySig := KeySignature{}
+
+	for i := 0; i < len(forms); i += 2 {
+		letter := NoteLetter(0)
+		switch form := forms[i]; form.(type) {
+		case LispSymbol:
+			chars := []rune(form.(LispSymbol).Name)
+			ltr, err := NewNoteLetter(chars[0])
+			if err != nil {
+				return KeySignature{}, err
+			}
+
+			letter = ltr
+		default:
+			return KeySignature{}, validityError
+		}
+
+		accidentals := []Accidental{}
+		switch form := forms[i+1]; form.(type) {
+		case LispList:
+			for _, form := range form.(LispList).Elements {
+				switch form.(type) {
+				case LispSymbol:
+					switch form.(LispSymbol).Name {
+					case "flat":
+						accidentals = append(accidentals, Flat)
+					case "sharp":
+						accidentals = append(accidentals, Sharp)
+					default:
+						return KeySignature{}, validityError
+					}
+				default:
+					return KeySignature{}, validityError
+				}
+			}
+		default:
+			return KeySignature{}, validityError
+		}
+
+		keySig[letter] = accidentals
+	}
+
+	return keySig, nil
+}
+
+func keySignatureFromList(form LispForm) (KeySignature, error) {
+	forms := form.(LispList).Elements
+	validityError := fmt.Errorf("Invalid key signature: %#v", forms)
+
+	if len(forms) < 2 {
+		return KeySignature{}, validityError
+	}
+
+	switch forms[1].(type) {
+	case LispSymbol:
+		return keySignatureFromScaleName(forms)
+	case LispList:
+		return keySignatureFromAccidentals(forms)
+	default:
+		return KeySignature{}, validityError
+	}
+}
+
 func init() {
 	// Current octave. Used to calculate the pitch of notes.
 	defattribute([]string{"octave"},
@@ -599,6 +813,28 @@ func init() {
 		},
 	)
 
+	defattribute([]string{"key-signature"},
+		attributeFunctionSignature{
+			argumentTypes: []LispForm{LispString{}},
+			implementation: func(args ...LispForm) (PartUpdate, error) {
+				keySig, err := keySignatureFromString(args[0])
+				if err != nil {
+					return nil, err
+				}
+				return KeySignatureSet{KeySignature: keySig}, nil
+			},
+		},
+		attributeFunctionSignature{
+			argumentTypes: []LispForm{LispList{}},
+			implementation: func(args ...LispForm) (PartUpdate, error) {
+				keySig, err := keySignatureFromList(args[0])
+				if err != nil {
+					return nil, err
+				}
+				return KeySignatureSet{KeySignature: keySig}, nil
+			},
+		},
+	)
 }
 
 type LispNil struct{}

@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 
 	_ "alda.io/client/testing"
@@ -29,6 +30,20 @@ func expectPartFloatValue(
 
 		if actual != expected {
 			return fmt.Errorf("%s is %f, not %f", valueName, actual, expected)
+		}
+
+		return nil
+	})
+}
+
+func expectPartValueDeepEquals(
+	instrument string, valueName string, method func(p *Part) interface{},
+	expected interface{}) func(s *Score) error {
+	return expectPart(instrument, func(part *Part) error {
+		actual := method(part)
+
+		if !reflect.DeepEqual(actual, expected) {
+			return fmt.Errorf("%s is %#v, not %#v", valueName, actual, expected)
 		}
 
 		return nil
@@ -78,6 +93,15 @@ func expectPartQuantization(
 func expectPartTempo(instrument string, tempo float32) func(s *Score) error {
 	return expectPartFloatValue(
 		instrument, "tempo", func(part *Part) float32 { return part.Tempo }, tempo,
+	)
+}
+
+func expectPartKeySignature(
+	instrument string, keySignature KeySignature,
+) func(s *Score) error {
+	return expectPartValueDeepEquals(
+		instrument, "key signature",
+		func(part *Part) interface{} { return part.KeySignature }, keySignature,
 	)
 }
 
@@ -636,6 +660,107 @@ func TestAttributes(t *testing.T) {
 			},
 			expectations: []scoreUpdateExpectation{
 				expectPartTempo("piano", 30),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "initial key signature",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+			},
+			expectations: []scoreUpdateExpectation{
+				// The default key signature is empty, i.e. no NoteLetters have any
+				// Accidentals. (i.e. C major / A minor)
+				expectPartKeySignature("piano", map[NoteLetter][]Accidental{}),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "set key signature",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				AttributeUpdate{PartUpdate: KeySignatureSet{
+					KeySignature: KeySignature{F: {Sharp}, C: {Sharp}, G: {Sharp}}},
+				},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPartKeySignature(
+					"piano", KeySignature{F: {Sharp}, C: {Sharp}, G: {Sharp}},
+				),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "set key signature via lisp (string shorthand)",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "key-signature"},
+					LispString{Value: "b- e- a- d-"},
+				}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPartKeySignature(
+					"piano", KeySignature{B: {Flat}, E: {Flat}, A: {Flat}, D: {Flat}},
+				),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "set key signature via lisp (name of scale 1)",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "key-signature"},
+					LispQuotedForm{Form: LispList{Elements: []LispForm{
+						LispSymbol{Name: "g"}, LispSymbol{Name: "major"},
+					},
+					}},
+				}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPartKeySignature(
+					"piano", KeySignature{F: {Sharp}},
+				),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "set key signature via lisp (name of scale 2)",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "key-signature"},
+					LispQuotedForm{Form: LispList{Elements: []LispForm{
+						LispSymbol{Name: "b"},
+						LispSymbol{Name: "flat"},
+						LispSymbol{Name: "major"},
+					},
+					}},
+				}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPartKeySignature(
+					"piano", KeySignature{B: {Flat}, E: {Flat}},
+				),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "set key signature via lisp (list of letter/accidentals pairs)",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "key-signature"},
+					LispQuotedForm{Form: LispList{Elements: []LispForm{
+						LispSymbol{Name: "e"},
+						LispList{Elements: []LispForm{LispSymbol{Name: "flat"}}},
+						LispSymbol{Name: "b"},
+						LispList{Elements: []LispForm{
+							LispSymbol{Name: "flat"}, LispSymbol{Name: "flat"},
+						}},
+					},
+					}},
+				}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPartKeySignature(
+					"piano", KeySignature{B: {Flat, Flat}, E: {Flat}},
+				),
 			},
 		},
 	)

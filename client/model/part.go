@@ -19,10 +19,11 @@ type Part struct {
 	Name            string
 	StockInstrument Instrument
 	TempoRole       TempoRole
+	Tempo           float32
+	KeySignature    KeySignature
 	CurrentOffset   float32
 	CurrentMarker   string
 	Octave          int32
-	Tempo           float32
 	Volume          float32
 	TrackVolume     float32
 	Panning         float32
@@ -60,6 +61,7 @@ func newPart(name string) (*Part, error) {
 		Duration: Duration{
 			Components: []DurationComponent{NoteLength{Denominator: 4}},
 		},
+		KeySignature: KeySignature{},
 	}, nil
 }
 

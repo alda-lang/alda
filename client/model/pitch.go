@@ -61,3 +61,20 @@ const (
 	// Sharp is the "sharp" accidental.
 	Sharp
 )
+
+// NewAccidental returns the Accidental that corresponds to the provided string.
+// e.g. "flat" => Flat
+//
+// Returns an error if there is no corresponding Accidental.
+func NewAccidental(accidental string) (Accidental, error) {
+	switch accidental {
+	case "flat":
+		return Flat, nil
+	case "natural":
+		return Natural, nil
+	case "sharp":
+		return Sharp, nil
+	default:
+		return -1, fmt.Errorf("Invalid accidental: %s", accidental)
+	}
+}

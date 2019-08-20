@@ -116,3 +116,12 @@ type DurationSet struct {
 func (os DurationSet) updatePart(part *Part) {
 	part.Duration = os.Duration
 }
+
+// KeySignatureSet sets the key signature of all active parts.
+type KeySignatureSet struct {
+	KeySignature KeySignature
+}
+
+func (os KeySignatureSet) updatePart(part *Part) {
+	part.KeySignature = os.KeySignature
+}
