@@ -1,13 +1,27 @@
 package model
 
+// The ScoreUpdate interface defines how something updates a score.
+type ScoreUpdate interface {
+	updateScore(score *Score) error
+}
+
+// The ScoreEvent interface is implemented by events that occur at moments of
+// time in a score.
+type ScoreEvent interface{}
+
 // A Score is a data structure representing a musical score.
 //
 // Scores are built up via events (structs which implement ScoreUpdate) that
 // update aspects of the score data.
+//
+// chordMode: When true, notes/rests added to the score are placed at the same
+// offset. Otherwise, they are appended sequentially.
 type Score struct {
 	Parts        []*Part
 	CurrentParts []*Part
 	Aliases      map[string][]*Part
+	Events       []ScoreEvent
+	chordMode    bool
 }
 
 // NewScore returns an initialized score.
@@ -102,9 +116,4 @@ func (score *Score) Update(updates ...ScoreUpdate) error {
 	}
 
 	return nil
-}
-
-// The ScoreUpdate interface defines how something updates a score.
-type ScoreUpdate interface {
-	updateScore(score *Score) error
 }
