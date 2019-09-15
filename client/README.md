@@ -10,15 +10,15 @@ In the meantime, for development purposes, the program here just sends example
 OSC messages to be handled by the player. Each example has a short identifier so
 that you can select it from the command-line.
 
-> **TODO**: Turn the demo below into proper tests.
-
 ## OSC API
 
 See [Alda OSC API](../player/doc/alda-osc-api.md).
 
-## Demo
+### Demo
 
-### Setup
+> **TODO**: Turn this into proper tests.
+
+#### Setup
 
 * Go is needed in order to run the client. I'm using version 1.11.4.
 
@@ -28,7 +28,7 @@ See [Alda OSC API](../player/doc/alda-osc-api.md).
 Now you should be able to use the client to send messages on the same port:
 
 ```bash
-go run main.go 27278 EXAMPLE_NAME
+go run osc_api_demo/main.go 27278 EXAMPLE_NAME
 ```
 
 The client takes two arguments: the port on which to send messages, and the name
@@ -36,7 +36,7 @@ of the example to send.
 
 If the example name is omitted, example `1` is used.
 
-### Examples
+#### Examples
 
 > Unless otherwise specified, examples are played on track 1.
 
@@ -58,10 +58,10 @@ Queue up four single notes in time:
 
 ```bash
 # send these in rapid succession
-go run main.go 27278 1
-go run main.go 27278 1
-go run main.go 27278 1
-go run main.go 27278 1
+go run osc_api_demo/main.go 27278 1
+go run osc_api_demo/main.go 27278 1
+go run osc_api_demo/main.go 27278 1
+go run osc_api_demo/main.go 27278 1
 ```
 
 Queue up a four measures, each containing one randomly chosen note played as
@@ -70,10 +70,10 @@ sixteen fast 16th notes:
 
 ```bash
 # send these in rapid succession
-go run main.go 27278 16fast
-go run main.go 27278 16fast
-go run main.go 27278 16fast
-go run main.go 27278 16fast
+go run osc_api_demo/main.go 27278 16fast
+go run osc_api_demo/main.go 27278 16fast
+go run osc_api_demo/main.go 27278 16fast
+go run osc_api_demo/main.go 27278 16fast
 ```
 
 Queue up interspersed single notes, 16th note bars, and instances of the
@@ -81,12 +81,12 @@ Queue up interspersed single notes, 16th note bars, and instances of the
 
 ```bash
 # send these in rapid succession
-go run main.go 27278 1
-go run main.go 27278 16fast
-go run main.go 27278 pat1
-go run main.go 27278 1
-go run main.go 27278 16fast
-go run main.go 27278 pat1
+go run osc_api_demo/main.go 27278 1
+go run osc_api_demo/main.go 27278 16fast
+go run osc_api_demo/main.go 27278 pat1
+go run osc_api_demo/main.go 27278 1
+go run osc_api_demo/main.go 27278 16fast
+go run osc_api_demo/main.go 27278 pat1
 ```
 
 Queue up the `simple` pattern to be played several times, and change the pattern
@@ -94,20 +94,20 @@ while it's playing:
 
 ```bash
 # send these in rapid succession
-go run main.go 27278 pat1
-go run main.go 27278 pat1
-go run main.go 27278 pat1
-go run main.go 27278 pat1
-go run main.go 27278 pat1
-go run main.go 27278 pat1
-go run main.go 27278 pat1
-go run main.go 27278 pat1
+go run osc_api_demo/main.go 27278 pat1
+go run osc_api_demo/main.go 27278 pat1
+go run osc_api_demo/main.go 27278 pat1
+go run osc_api_demo/main.go 27278 pat1
+go run osc_api_demo/main.go 27278 pat1
+go run osc_api_demo/main.go 27278 pat1
+go run osc_api_demo/main.go 27278 pat1
+go run osc_api_demo/main.go 27278 pat1
 
 # send while the pattern is playing
-go run main.go 27278 patchange
+go run osc_api_demo/main.go 27278 patchange
 
 # send while the new pattern is playing
-go run main.go 27278 patchange
+go run osc_api_demo/main.go 27278 patchange
 ```
 
 ## License
