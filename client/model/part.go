@@ -24,6 +24,7 @@ type Part struct {
 	Transposition   int32
 	ReferencePitch  float32
 	CurrentOffset   float32
+	LastOffset      float32
 	Octave          int32
 	Volume          float32
 	TrackVolume     float32
