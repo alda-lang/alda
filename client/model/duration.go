@@ -57,8 +57,11 @@ func (nl NoteLength) Beats() (float32, error) {
 // Ms implements DurationComponent.Ms by calculating the duration in
 // milliseconds within the context of a tempo.
 func (nl NoteLength) Ms(tempo float32) float32 {
-	// TODO
-	return 42
+	beats := float32(
+		float64(4/nl.Denominator) * (2 - math.Pow(2.0, float64(-nl.Dots))),
+	)
+
+	return NoteLengthBeats{Quantity: beats}.Ms(tempo)
 }
 
 // NoteLengthBeats expresses a duration as a specific number of beats.
@@ -75,8 +78,7 @@ func (nl NoteLengthBeats) Beats() (float32, error) {
 // Ms implements DurationComponent.Ms by calculating the duration in
 // milliseconds within the context of a tempo.
 func (nl NoteLengthBeats) Ms(tempo float32) float32 {
-	// TODO
-	return 42
+	return nl.Quantity * (60000 / tempo)
 }
 
 // NoteLengthMs expresses a duration as a specific number of milliseconds.
