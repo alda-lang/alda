@@ -63,6 +63,7 @@ func main() {
 	var port int
 	var file string
 	var cmd *exec.Cmd
+	startPlayerProcess := false
 
 	if numArgs == 1 {
 		openPort, err := findOpenPort()
@@ -71,9 +72,37 @@ func main() {
 			os.Exit(1)
 		}
 
+		startPlayerProcess = true
 		port = openPort
 		file = os.Args[1]
+	} else {
+		specifiedPort, err := strconv.ParseInt(os.Args[1], 10, 32)
+		if err != nil {
+			fmt.Println(err)
+			printUsage()
+			os.Exit(1)
+		}
 
+		port = int(specifiedPort)
+		file = os.Args[2]
+	}
+
+	var score *model.Score
+
+	if scoreUpdates, err := parser.ParseFile(file); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	} else {
+		score = model.NewScore()
+		if err := score.Update(scoreUpdates...); err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+	}
+
+	fmt.Printf("%#v\n", score)
+
+	if startPlayerProcess {
 		fmt.Printf("Starting player process on port %d...\n", port)
 
 		cmd = exec.Command("./gradlew", "run", "--args", strconv.Itoa(port))
@@ -87,27 +116,7 @@ func main() {
 
 		fmt.Println("Waiting a bit for the player process to start...")
 		time.Sleep(5 * time.Second)
-	} else {
-		specifiedPort, err := strconv.ParseInt(os.Args[1], 10, 32)
-		if err != nil {
-			fmt.Println(err)
-			printUsage()
-			os.Exit(1)
-		}
-
-		port = int(specifiedPort)
-		file = os.Args[2]
 	}
-
-	scoreUpdates, err := parser.ParseFile(file)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	score := model.NewScore()
-	score.Update(scoreUpdates...)
-	fmt.Printf("%#v\n", score)
 
 	sigChan := make(chan os.Signal)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
