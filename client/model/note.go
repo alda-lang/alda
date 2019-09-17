@@ -21,6 +21,11 @@ type NoteEvent struct {
 
 func addNoteOrRest(score *Score, duration Duration, midiNote int32) {
 	for _, part := range score.CurrentParts {
+		// If no duration is specified, use the part's default duration.
+		if duration.Components == nil {
+			duration = part.Duration
+		}
+
 		durationMs := duration.Ms(part.Tempo)
 
 		if midiNote != 0 {
