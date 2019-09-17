@@ -13,6 +13,7 @@ type Note struct {
 // A NoteEvent is a Note expressed in absolute terms with the goal of performing
 // the note e.g. on a MIDI sequencer/synthesizer.
 type NoteEvent struct {
+	Part            *Part
 	MidiNote        int32
 	Offset          float32
 	Duration        float32
@@ -30,6 +31,7 @@ func addNoteOrRest(score *Score, duration Duration, midiNote int32) {
 
 		if midiNote != 0 {
 			noteEvent := NoteEvent{
+				Part:            part,
 				MidiNote:        midiNote,
 				Offset:          part.CurrentOffset,
 				Duration:        durationMs,
