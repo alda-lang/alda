@@ -35,6 +35,7 @@ func addNoteOrRest(score *Score, duration Duration, midiNote int32) {
 		}
 
 		if !score.chordMode {
+			part.LastOffset = part.CurrentOffset
 			part.CurrentOffset += durationMs
 		}
 
