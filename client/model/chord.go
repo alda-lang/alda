@@ -25,18 +25,25 @@ func (chord Chord) updateScore(score *Score) error {
 		// next note/rest is placed after the shortest note/rest in the chord.
 		shortestDurationMs := math.MaxFloat64
 		for _, event := range chord.Events {
-			var duration Duration
+			var specifiedDuration Duration
 			switch event.(type) {
 			case Note:
-				duration = event.(Note).Duration
+				specifiedDuration = event.(Note).Duration
 			case Rest:
-				duration = event.(Rest).Duration
+				specifiedDuration = event.(Rest).Duration
 			}
 
-			if duration.Components != nil {
-				durationMs := float64(duration.Ms(part.Tempo))
-				shortestDurationMs = math.Min(shortestDurationMs, durationMs)
+			var duration Duration
+
+			// If no duration is specified, use the part's default duration.
+			if specifiedDuration.Components == nil {
+				duration = part.Duration
+			} else {
+				duration = specifiedDuration
 			}
+
+			durationMs := float64(duration.Ms(part.Tempo))
+			shortestDurationMs = math.Min(shortestDurationMs, durationMs)
 		}
 
 		part.LastOffset = part.CurrentOffset
