@@ -114,6 +114,9 @@ func main() {
 		cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 		cmd.Start()
 
+		// This is a hacky way to make sure that the player process is ready before
+		// we start sending it messages. When we do this for real, it would be
+		// better for the client to actually confirm that the player is up somehow.
 		fmt.Println("Waiting a bit for the player process to start...")
 		time.Sleep(5 * time.Second)
 	}
