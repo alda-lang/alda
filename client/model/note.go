@@ -20,11 +20,15 @@ type NoteEvent struct {
 	AudibleDuration float32
 }
 
-func addNoteOrRest(score *Score, duration Duration, midiNote int32) {
+func addNoteOrRest(score *Score, specifiedDuration Duration, midiNote int32) {
 	for _, part := range score.CurrentParts {
+		var duration Duration
+
 		// If no duration is specified, use the part's default duration.
-		if duration.Components == nil {
+		if specifiedDuration.Components == nil {
 			duration = part.Duration
+		} else {
+			duration = specifiedDuration
 		}
 
 		durationMs := duration.Ms(part.Tempo)
