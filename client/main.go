@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"alda.io/client/emitter"
 	log "alda.io/client/logging"
 	"alda.io/client/model"
 	"alda.io/client/parser"
@@ -112,6 +113,8 @@ func main() {
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 
 	fmt.Printf("\nSending OSC messages to player on port: %d\n", port)
+	emitter.OSCEmitter{Port: port}.EmitScore(score)
+
 	fmt.Println("-- Press Ctrl-C to interrupt --")
 
 	select {
