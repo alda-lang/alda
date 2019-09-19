@@ -10,6 +10,34 @@ type Note struct {
 	Slurred bool
 }
 
+// MidiNote returns the MIDI note number of a note, given contextual information
+// about the part playing the note (e.g. octave, key signature, transposition).
+func (note Note) MidiNote(part *Part) int32 {
+	intervals := map[NoteLetter]int32{
+		C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11,
+	}
+
+	baseMidiNoteNumber := ((part.Octave + 1) * 12) + intervals[note.NoteLetter]
+
+	var accidentals []Accidental
+	if note.Accidentals == nil {
+		accidentals = part.KeySignature[note.NoteLetter]
+	} else {
+		accidentals = note.Accidentals
+	}
+
+	for _, accidental := range accidentals {
+		switch accidental {
+		case Flat:
+			baseMidiNoteNumber--
+		case Sharp:
+			baseMidiNoteNumber++
+		}
+	}
+
+	return baseMidiNoteNumber + part.Transposition
+}
+
 // A NoteEvent is a Note expressed in absolute terms with the goal of performing
 // the note e.g. on a MIDI sequencer/synthesizer.
 type NoteEvent struct {
@@ -20,7 +48,15 @@ type NoteEvent struct {
 	AudibleDuration float32
 }
 
-func addNoteOrRest(score *Score, specifiedDuration Duration, midiNote int32) {
+func addNoteOrRest(score *Score, noteOrRest ScoreUpdate) {
+	var specifiedDuration Duration
+	switch noteOrRest.(type) {
+	case Note:
+		specifiedDuration = noteOrRest.(Note).Duration
+	case Rest:
+		specifiedDuration = noteOrRest.(Rest).Duration
+	}
+
 	for _, part := range score.CurrentParts {
 		var duration Duration
 
@@ -33,7 +69,10 @@ func addNoteOrRest(score *Score, specifiedDuration Duration, midiNote int32) {
 
 		durationMs := duration.Ms(part.Tempo)
 
-		if midiNote != 0 {
+		switch noteOrRest.(type) {
+		case Note:
+			midiNote := noteOrRest.(Note).MidiNote(part)
+
 			noteEvent := NoteEvent{
 				Part:            part,
 				MidiNote:        midiNote,
@@ -60,8 +99,7 @@ func addNoteOrRest(score *Score, specifiedDuration Duration, midiNote int32) {
 }
 
 func (note Note) updateScore(score *Score) error {
-	midiNote := int32(42) // FIXME
-	addNoteOrRest(score, note.Duration, midiNote)
+	addNoteOrRest(score, note)
 	return nil
 }
 
@@ -74,6 +112,6 @@ type Rest struct {
 }
 
 func (rest Rest) updateScore(score *Score) error {
-	addNoteOrRest(score, rest.Duration, 0)
+	addNoteOrRest(score, rest)
 	return nil
 }
