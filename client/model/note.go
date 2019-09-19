@@ -46,6 +46,7 @@ type NoteEvent struct {
 	Offset          float32
 	Duration        float32
 	AudibleDuration float32
+	Volume          float32
 }
 
 func addNoteOrRest(score *Score, noteOrRest ScoreUpdate) {
@@ -79,6 +80,7 @@ func addNoteOrRest(score *Score, noteOrRest ScoreUpdate) {
 				Offset:          part.CurrentOffset,
 				Duration:        durationMs,
 				AudibleDuration: durationMs * part.Quantization,
+				Volume:          part.Volume,
 			}
 
 			score.Events = append(score.Events, noteEvent)

@@ -64,7 +64,7 @@ func (oe OSCEmitter) EmitScore(score *model.Score) error {
 				noteEvent.MidiNote,
 				int32(math.Round(float64(noteEvent.Duration))),
 				int32(math.Round(float64(noteEvent.AudibleDuration))),
-				127, // FIXME: include velocity on note events and use it here
+				int32(math.Round(float64(noteEvent.Volume*127))),
 			))
 		default:
 			return fmt.Errorf("unsupported event: %#v", event)
