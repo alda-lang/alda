@@ -47,6 +47,8 @@ type NoteEvent struct {
 	Duration        float32
 	AudibleDuration float32
 	Volume          float32
+	TrackVolume     float32
+	Panning         float32
 }
 
 func addNoteOrRest(score *Score, noteOrRest ScoreUpdate) {
@@ -81,6 +83,8 @@ func addNoteOrRest(score *Score, noteOrRest ScoreUpdate) {
 				Duration:        durationMs,
 				AudibleDuration: durationMs * part.Quantization,
 				Volume:          part.Volume,
+				TrackVolume:     part.TrackVolume,
+				Panning:         part.Panning,
 			}
 
 			score.Events = append(score.Events, noteEvent)
