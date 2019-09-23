@@ -276,7 +276,7 @@ func duration(form LispForm) (Duration, error) {
 }
 
 func isNoteLetter(c rune) bool {
-	return 'a' <= c && c <= 'f'
+	return 'a' <= c && c <= 'g'
 }
 
 func letterAndAccidentals(str string) (NoteLetter, []Accidental, error) {
@@ -813,7 +813,7 @@ func init() {
 		},
 	)
 
-	defattribute([]string{"key-signature"},
+	defattribute([]string{"key-signature", "key-sig"},
 		attributeFunctionSignature{
 			argumentTypes: []LispForm{LispString{}},
 			implementation: func(args ...LispForm) (PartUpdate, error) {
