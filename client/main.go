@@ -127,25 +127,27 @@ func main() {
 	fmt.Printf("\nSending OSC messages to player on port: %d\n", port)
 	emitter.OSCEmitter{Port: port}.EmitScore(score)
 
-	fmt.Println("-- Press Ctrl-C to interrupt --")
+	if startPlayerProcess {
+		fmt.Println("-- Press Ctrl-C to interrupt --")
 
-	select {
-	case <-sigChan:
-		if cmd != nil {
-			fmt.Println("Killing player process...")
+		select {
+		case <-sigChan:
+			if cmd != nil {
+				fmt.Println("Killing player process...")
 
-			// Black magic to try and kill the subprocess once the main process ends.
-			// I have no idea how robust this is. Probably a better approach would be
-			// to add a lifetime to all player processes, such that they kill
-			// themselves after being idle for a while. Could make this configurable
-			// and set a short lifetime for the purposes of testing.
-			pgid, err := syscall.Getpgid(cmd.Process.Pid)
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
+				// Black magic to try and kill the subprocess once the main process ends.
+				// I have no idea how robust this is. Probably a better approach would be
+				// to add a lifetime to all player processes, such that they kill
+				// themselves after being idle for a while. Could make this configurable
+				// and set a short lifetime for the purposes of testing.
+				pgid, err := syscall.Getpgid(cmd.Process.Pid)
+				if err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
+
+				syscall.Kill(-pgid, 15)
 			}
-
-			syscall.Kill(-pgid, 15)
 		}
 	}
 }
