@@ -47,7 +47,7 @@ func (chord Chord) updateScore(score *Score) error {
 		}
 
 		part.LastOffset = part.CurrentOffset
-		part.CurrentOffset += float32(shortestDurationMs)
+		part.CurrentOffset += shortestDurationMs
 	}
 
 	return nil

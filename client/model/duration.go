@@ -5,6 +5,13 @@ import (
 	"math"
 )
 
+// An OffsetMs describes a point in time a specific number of milliseconds into
+// a score.
+//
+// NB: This is a float64 instead of a float32 so that we can use `sort.Float64s`
+// to maintain the GlobalAttributes data structure.
+type OffsetMs = float64
+
 // DurationComponent instances are added together and the sum is the total
 // duration of the Duration.
 type DurationComponent interface {

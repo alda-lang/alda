@@ -43,7 +43,7 @@ func (note Note) MidiNote(part *Part) int32 {
 type NoteEvent struct {
 	Part            *Part
 	MidiNote        int32
-	Offset          float32
+	Offset          OffsetMs
 	Duration        float32
 	AudibleDuration float32
 	Volume          float32
@@ -92,7 +92,7 @@ func addNoteOrRest(score *Score, noteOrRest ScoreUpdate) {
 
 		if !score.chordMode {
 			part.LastOffset = part.CurrentOffset
-			part.CurrentOffset += durationMs
+			part.CurrentOffset += float64(durationMs)
 		}
 
 		// Note/rest duration is "sticky." Any subsequent notes/rests without a

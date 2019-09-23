@@ -82,7 +82,7 @@ func TestChords(t *testing.T) {
 					// duration in the chord (the 8th note rest == 250 ms)
 					expectedCurrentOffset := 1250.0
 
-					if piano.CurrentOffset != float32(expectedCurrentOffset) {
+					if piano.CurrentOffset != expectedCurrentOffset {
 						return fmt.Errorf(
 							"piano part's current offset is %f, not %f",
 							piano.CurrentOffset,
@@ -92,7 +92,7 @@ func TestChords(t *testing.T) {
 
 					expectedLastOffset := 1000.0
 
-					if piano.LastOffset != float32(expectedLastOffset) {
+					if piano.LastOffset != expectedLastOffset {
 						return fmt.Errorf(
 							"piano part's last offset is %f, not %f",
 							piano.LastOffset,
@@ -101,7 +101,7 @@ func TestChords(t *testing.T) {
 					}
 
 					for i, event := range s.Events {
-						expectedOffset := float32(0)
+						expectedOffset := 0.0
 						if i != 0 {
 							expectedOffset = 1000
 						}

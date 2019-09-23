@@ -23,8 +23,8 @@ type Part struct {
 	KeySignature    KeySignature
 	Transposition   int32
 	ReferencePitch  float32
-	CurrentOffset   float32
-	LastOffset      float32
+	CurrentOffset   OffsetMs
+	LastOffset      OffsetMs
 	Octave          int32
 	Volume          float32
 	TrackVolume     float32
