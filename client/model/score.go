@@ -17,18 +17,20 @@ type ScoreEvent interface{}
 // chordMode: When true, notes/rests added to the score are placed at the same
 // offset. Otherwise, they are appended sequentially.
 type Score struct {
-	Parts        []*Part
-	CurrentParts []*Part
-	Aliases      map[string][]*Part
-	Events       []ScoreEvent
-	chordMode    bool
+	Parts            []*Part
+	CurrentParts     []*Part
+	Aliases          map[string][]*Part
+	Events           []ScoreEvent
+	GlobalAttributes *GlobalAttributes
+	chordMode        bool
 }
 
 // NewScore returns an initialized score.
 func NewScore() *Score {
 	return &Score{
-		Parts:   []*Part{},
-		Aliases: map[string][]*Part{},
+		Parts:            []*Part{},
+		Aliases:          map[string][]*Part{},
+		GlobalAttributes: NewGlobalAttributes(),
 	}
 }
 

@@ -53,6 +53,7 @@ func newPart(name string) (*Part, error) {
 		Name:            name,
 		StockInstrument: stock,
 		CurrentOffset:   0,
+		LastOffset:      -1,
 		Octave:          4,
 		Tempo:           120,
 		Volume:          1.0,
@@ -283,6 +284,8 @@ func (decl PartDeclaration) updateScore(score *Score) error {
 	}
 
 	score.CurrentParts = parts
+
+	score.ApplyGlobalAttributes()
 
 	return nil
 }

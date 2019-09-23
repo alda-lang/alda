@@ -1,5 +1,10 @@
 package model
 
+import (
+	"fmt"
+	"sort"
+)
+
 // AttributeUpdate updates the value of an attribute for all active parts.
 type AttributeUpdate struct {
 	PartUpdate PartUpdate
@@ -13,17 +18,110 @@ func (au AttributeUpdate) updateScore(score *Score) error {
 	return nil
 }
 
+// GlobalAttributes are attribute updates to be applied at specific points of
+// time in a score.
+//
+// A common example is a global tempo change, e.g. at 5000ms into the score, the
+// tempo should be set to 127 bpm for all parts.
+type GlobalAttributes struct {
+	// We store both the map of offset => updates and an ordered list of offsets,
+	// so that we can easily traverse the map in order.
+	itinerary map[OffsetMs][]PartUpdate
+	offsets   []OffsetMs
+}
+
+// NewGlobalAttributes returns an initialized GlobalAttributes structure.
+func NewGlobalAttributes() *GlobalAttributes {
+	return &GlobalAttributes{
+		itinerary: map[OffsetMs][]PartUpdate{},
+		offsets:   []OffsetMs{},
+	}
+}
+
+// Record adds attribute changes at a particular offset to the itinerary of
+// global attribute changes.
+func (ga *GlobalAttributes) Record(offset OffsetMs, update PartUpdate) {
+	_, hit := ga.itinerary[offset]
+	if !hit {
+		ga.itinerary[offset] = []PartUpdate{}
+	}
+
+	ga.itinerary[offset] = append(ga.itinerary[offset], update)
+
+	if !hit {
+		ga.offsets = append(ga.offsets, offset)
+		sort.Float64s(ga.offsets)
+	}
+}
+
+// InWindow returns the list of global attribute updates that fall within the
+// window between `startOffset` and `endOffset`.
+func (ga GlobalAttributes) InWindow(
+	startOffset OffsetMs, endOffset OffsetMs,
+) []PartUpdate {
+	updates := []PartUpdate{}
+
+	for _, offset := range ga.offsets {
+		if offset > endOffset {
+			return updates
+		}
+
+		if offset > startOffset {
+			updates = append(updates, ga.itinerary[offset]...)
+		}
+	}
+
+	return updates
+}
+
+// ApplyGlobalAttributes uses a score's itinerary of global attribute updates to
+// update the attributes of all current parts.
+//
+// Any global attribute updates registered at an offset that is between a part's
+// LastOffset and CurrentOffset are applied.
+func (score *Score) ApplyGlobalAttributes() {
+	for _, part := range score.CurrentParts {
+		for _, update := range score.GlobalAttributes.InWindow(
+			part.LastOffset, part.CurrentOffset,
+		) {
+			for _, part := range score.CurrentParts {
+				update.updatePart(part)
+			}
+		}
+	}
+}
+
 // GlobalAttributeUpdate updates the value of an attribute for all parts.
 type GlobalAttributeUpdate struct {
 	PartUpdate PartUpdate
 }
 
 func (gau GlobalAttributeUpdate) updateScore(score *Score) error {
-	// TODO: keep a record of global attribute changes, like alda v1 does
-	// This is necessary so that new parts can pick up on global attribute changes
-	// as they cross the offsets where the global attribute changes occur.
+	// Record this attribute update in the record of global attributes.
+	var offset OffsetMs
+	switch len(score.CurrentParts) {
+	case 0:
+		offset = 0
+	case 1:
+		offset = score.CurrentParts[0].CurrentOffset
+	default:
+		offset = score.CurrentParts[0].CurrentOffset
+		for _, part := range score.CurrentParts[1:] {
+			if part.CurrentOffset != offset {
+				return fmt.Errorf(
+					"can't set global attribute %#v; offset unclear. There are "+
+						"multiple current parts with different offsets: %#v",
+					gau,
+					score.CurrentParts,
+				)
+			}
+		}
+	}
 
-	for _, part := range score.Parts {
+	score.GlobalAttributes.Record(offset, gau.PartUpdate)
+
+	// Immediately apply the attribute update to the current parts.
+	for _, part := range score.CurrentParts {
 		gau.PartUpdate.updatePart(part)
 	}
 

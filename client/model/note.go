@@ -102,6 +102,8 @@ func addNoteOrRest(score *Score, noteOrRest ScoreUpdate) {
 			part.Duration = duration
 		}
 	}
+
+	score.ApplyGlobalAttributes()
 }
 
 func (note Note) updateScore(score *Score) error {
