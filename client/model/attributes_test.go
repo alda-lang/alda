@@ -36,6 +36,20 @@ func expectPartFloatValue(
 	})
 }
 
+func expectPartOffsetMsValue(
+	instrument string, valueName string, method func(p *Part) OffsetMs,
+	expected OffsetMs) func(s *Score) error {
+	return expectPart(instrument, func(part *Part) error {
+		actual := method(part)
+
+		if actual != expected {
+			return fmt.Errorf("%s is %f, not %f", valueName, actual, expected)
+		}
+
+		return nil
+	})
+}
+
 func expectPartValueDeepEquals(
 	instrument string, valueName string, method func(p *Part) interface{},
 	expected interface{}) func(s *Score) error {
@@ -120,6 +134,24 @@ func expectPartReferencePitch(
 	return expectPartFloatValue(
 		instrument, "reference pitch",
 		func(part *Part) float32 { return part.ReferencePitch }, frequency,
+	)
+}
+
+func expectPartCurrentOffset(
+	instrument string, expected OffsetMs,
+) func(s *Score) error {
+	return expectPartOffsetMsValue(
+		instrument, "current offset",
+		func(part *Part) OffsetMs { return part.CurrentOffset }, expected,
+	)
+}
+
+func expectPartLastOffset(
+	instrument string, expected OffsetMs,
+) func(s *Score) error {
+	return expectPartOffsetMsValue(
+		instrument, "current offset",
+		func(part *Part) OffsetMs { return part.LastOffset }, expected,
 	)
 }
 
