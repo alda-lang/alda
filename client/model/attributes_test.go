@@ -150,7 +150,7 @@ func expectPartLastOffset(
 	instrument string, expected OffsetMs,
 ) func(s *Score) error {
 	return expectPartOffsetMsValue(
-		instrument, "current offset",
+		instrument, "last offset",
 		func(part *Part) OffsetMs { return part.LastOffset }, expected,
 	)
 }
