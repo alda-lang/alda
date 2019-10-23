@@ -28,7 +28,7 @@ func expectPartFloatValue(
 	return expectPart(instrument, func(part *Part) error {
 		actual := method(part)
 
-		if actual != expected {
+		if !equalish32(actual, expected) {
 			return fmt.Errorf("%s is %f, not %f", valueName, actual, expected)
 		}
 
@@ -42,7 +42,7 @@ func expectPartOffsetMsValue(
 	return expectPart(instrument, func(part *Part) error {
 		actual := method(part)
 
-		if actual != expected {
+		if !equalish(actual, expected) {
 			return fmt.Errorf("%s is %f, not %f", valueName, actual, expected)
 		}
 

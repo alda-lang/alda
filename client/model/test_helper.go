@@ -64,3 +64,28 @@ func executeScoreUpdateTestCases(
 		}
 	}
 }
+
+// Floating point equality gets weird, so we consider two floating point numbers
+// to be equal-ish if they are within a small threshold of one another.
+
+// Without this, we get errors like "expected note #2 to have offset 333.333333,
+// but it was 333.333344"
+func equalish(float1 float64, float2 float64) bool {
+	threshold := 0.001
+
+	var lower, upper float64
+	if float1 <= float2 {
+		lower = float1
+		upper = float2
+	} else {
+		lower = float2
+		upper = float1
+	}
+
+	return (lower + threshold) > upper
+}
+
+// The float32 variation of equalish.
+func equalish32(float1 float32, float2 float32) bool {
+	return equalish(float64(float1), float64(float2))
+}

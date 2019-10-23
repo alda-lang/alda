@@ -19,7 +19,7 @@ func expectNoteOffsets(expectedOffsets ...OffsetMs) func(*Score) error {
 		for i := 0; i < len(expectedOffsets); i++ {
 			expectedOffset := expectedOffsets[i]
 			actualOffset := s.Events[i].(NoteEvent).Offset
-			if expectedOffset != actualOffset {
+			if !equalish(expectedOffset, actualOffset) {
 				return fmt.Errorf(
 					"expected note #%d to have offset %f, but it was %f",
 					i+1,
