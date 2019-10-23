@@ -11,44 +11,65 @@ type Chord struct {
 	Events []ScoreUpdate
 }
 
-func (chord Chord) updateScore(score *Score) error {
+// UpdateScore implements ScoreUpdate.UpdateScore by adding multiple notes to
+// all active parts, and updating each part's CurrentOffset, LastOffset, and
+// Duration accordingly.
+func (chord Chord) UpdateScore(score *Score) error {
+	shortestDurationMs := map[*Part]float64{}
+	for _, part := range score.CurrentParts {
+		shortestDurationMs[part] = math.MaxFloat64
+	}
+
 	score.chordMode = true
 	for _, event := range chord.Events {
-		if err := event.updateScore(score); err != nil {
+		// Notes/rests in a chord can have different durations. Following a chord, the
+		// next note/rest is placed after the shortest note/rest in the chord.
+		//
+		// Here, we take note of the event's duration so that we can keep track of
+		// which one is the shortest.
+		var specifiedDuration Duration
+		switch event.(type) {
+		case Note:
+			specifiedDuration = event.(Note).Duration
+		case Rest:
+			specifiedDuration = event.(Rest).Duration
+		}
+
+		for _, part := range score.CurrentParts {
+			duration := effectiveDuration(specifiedDuration, part)
+			durationMs := float64(duration.Ms(part.Tempo))
+			shortestDurationMs[part] = math.Min(shortestDurationMs[part], durationMs)
+		}
+
+		// Now, we update the score with the event, in "chord mode," which means
+		// that notes all start at the same offset.
+		if err := event.UpdateScore(score); err != nil {
 			return err
 		}
 	}
 	score.chordMode = false
 
 	for _, part := range score.CurrentParts {
-		// Notes/rests in a chord can have different durations. Following a chord, the
-		// next note/rest is placed after the shortest note/rest in the chord.
-		shortestDurationMs := math.MaxFloat64
-		for _, event := range chord.Events {
-			var specifiedDuration Duration
-			switch event.(type) {
-			case Note:
-				specifiedDuration = event.(Note).Duration
-			case Rest:
-				specifiedDuration = event.(Rest).Duration
-			}
-
-			var duration Duration
-
-			// If no duration is specified, use the part's default duration.
-			if specifiedDuration.Components == nil {
-				duration = part.Duration
-			} else {
-				duration = specifiedDuration
-			}
-
-			durationMs := float64(duration.Ms(part.Tempo))
-			shortestDurationMs = math.Min(shortestDurationMs, durationMs)
-		}
-
 		part.LastOffset = part.CurrentOffset
-		part.CurrentOffset += shortestDurationMs
+		part.CurrentOffset += shortestDurationMs[part]
 	}
 
 	return nil
+}
+
+// DurationMs implements ScoreUpdate.DurationMs by returning the shortest
+// note/rest duration in the chord, within the context of the part's current
+// tempo.
+//
+// Also updates the part's default duration, so that it can be correctly
+// considered when tallying the duration of subsequent events.
+func (chord Chord) DurationMs(part *Part) float32 {
+	shortestDurationMs := math.MaxFloat64
+
+	for _, event := range chord.Events {
+		durationMs := float64(event.DurationMs(part))
+		shortestDurationMs = math.Min(shortestDurationMs, durationMs)
+	}
+
+	return float32(shortestDurationMs)
 }

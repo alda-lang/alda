@@ -977,7 +977,9 @@ func (l LispList) Eval() (LispForm, error) {
 	}
 }
 
-func (l LispList) updateScore(score *Score) error {
+// UpdateScore implements ScoreUpdate.UpdateScore by evaluating the S-expression
+// and using the resulting value to update the score.
+func (l LispList) UpdateScore(score *Score) error {
 	result, err := l.Eval()
 	if err != nil {
 		return err
@@ -985,13 +987,39 @@ func (l LispList) updateScore(score *Score) error {
 
 	switch result.(type) {
 	case LispScoreUpdate:
-		return result.(LispScoreUpdate).ScoreUpdate.updateScore(score)
-	case ScoreUpdate:
-		return result.(ScoreUpdate).updateScore(score)
+		return result.(LispScoreUpdate).ScoreUpdate.UpdateScore(score)
 	default:
 		log.Warn().
 			Interface("result", result).
 			Msg("S-expression result is not a ScoreUpdate.")
 		return nil
+	}
+}
+
+// DurationMs implements ScoreUpdate.DurationMs by evaluating the S-expression
+// and returning the duration of the resulting value.
+func (l LispList) DurationMs(part *Part) float32 {
+	// FIXME: We end up evaluating this a second time when UpdateScore is called.
+	// This will be problematic if/when we add functions that have side effects.
+	//
+	// At that point, we should probably memoize the evaluation result (and error)
+	// so that they are simply returned on successive evaluations.
+	result, err := l.Eval()
+
+	// If there is an error during evaluation, it will be propagated through when
+	// we evaluate again for UpdateScore. So we can safely ignore it here and fall
+	// back to a duration of 0.
+	if err != nil {
+		return 0
+	}
+
+	switch result.(type) {
+	case LispScoreUpdate:
+		return result.(LispScoreUpdate).ScoreUpdate.DurationMs(part)
+	default:
+		log.Warn().
+			Interface("result", result).
+			Msg("S-expression result is not a ScoreUpdate.")
+		return 0
 	}
 }

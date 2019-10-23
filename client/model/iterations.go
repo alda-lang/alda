@@ -20,6 +20,15 @@ type OnIterations struct {
 	Event      ScoreUpdate
 }
 
-func (OnIterations) updateScore(score *Score) error {
-	return errors.New("OnIterations.updateScore not implemented")
+// UpdateScore implements ScoreUpdate.UpdateScore by either updating the score
+// with the event or doing nothing, depending on whether or not we are currently
+// on a relevant iteration.
+func (OnIterations) UpdateScore(score *Score) error {
+	return errors.New("OnIterations.UpdateScore not implemented")
+}
+
+// DurationMs implements ScoreUpdate.DurationMs by returning the duration of the
+// event on the current iteration.
+func (oi OnIterations) DurationMs(part *Part) float32 {
+	return 0 // TODO
 }

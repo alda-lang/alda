@@ -1,8 +1,17 @@
 package model
 
-// The ScoreUpdate interface defines how something updates a score.
+// The ScoreUpdate interface is implemented by events that update a score.
 type ScoreUpdate interface {
-	updateScore(score *Score) error
+	// UpdateScore modifies a score and returns nil, or returns an error if
+	// something went wrong.
+	UpdateScore(score *Score) error
+	// DurationMs returns a number of milliseconds representing how long an event
+	// takes. For events where duration is not relevant (e.g. an octave change
+	// event), this can return 0.
+	//
+	// The context for this is the Cram event, which involves summing the duration
+	// of a number of events and then time-scaling them into a fixed duration.
+	DurationMs(part *Part) float32
 }
 
 // The ScoreEvent interface is implemented by events that occur at moments of
@@ -112,7 +121,7 @@ func (score *Score) AliasesFor(part *Part) []string {
 // Returns nil if no error occurs.
 func (score *Score) Update(updates ...ScoreUpdate) error {
 	for _, update := range updates {
-		if err := update.updateScore(score); err != nil {
+		if err := update.UpdateScore(score); err != nil {
 			return err
 		}
 	}

@@ -5,17 +5,25 @@ import (
 	"sort"
 )
 
-// AttributeUpdate updates the value of an attribute for all active parts.
+// AttributeUpdate updates the value of an attribute for all current parts.
 type AttributeUpdate struct {
 	PartUpdate PartUpdate
 }
 
-func (au AttributeUpdate) updateScore(score *Score) error {
+// UpdateScore implements ScoreUpdate.UpdateScore by updating an attribute value
+// for all current parts.
+func (au AttributeUpdate) UpdateScore(score *Score) error {
 	for _, part := range score.CurrentParts {
 		au.PartUpdate.updatePart(part)
 	}
 
 	return nil
+}
+
+// DurationMs implements ScoreUpdate.DurationMs by returning 0, since an
+// attribute update is conceptually instantaneous.
+func (au AttributeUpdate) DurationMs(part *Part) float32 {
+	return 0
 }
 
 // GlobalAttributes are attribute updates to be applied at specific points of
@@ -96,7 +104,11 @@ type GlobalAttributeUpdate struct {
 	PartUpdate PartUpdate
 }
 
-func (gau GlobalAttributeUpdate) updateScore(score *Score) error {
+// UpdateScore implements ScoreUpdate.UpdateScore by recording that at a point
+// in time, an attribute update should be applied for all parts.
+//
+// The attribute is also immediately applied to all parts.
+func (gau GlobalAttributeUpdate) UpdateScore(score *Score) error {
 	// Record this attribute update in the record of global attributes.
 	var offset OffsetMs
 	switch len(score.CurrentParts) {
@@ -126,6 +138,12 @@ func (gau GlobalAttributeUpdate) updateScore(score *Score) error {
 	}
 
 	return nil
+}
+
+// DurationMs implements ScoreUpdate.DurationMs by returning 0, since an
+// attribute update is conceptually instantaneous.
+func (gau GlobalAttributeUpdate) DurationMs(part *Part) float32 {
+	return 0
 }
 
 // TempoSet sets the tempo of all active parts.

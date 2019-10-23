@@ -51,6 +51,23 @@ type NoteEvent struct {
 	Panning         float32
 }
 
+func effectiveDuration(specifiedDuration Duration, part *Part) Duration {
+	// If no duration is specified, use the part's default duration.
+	if specifiedDuration.Components == nil {
+		return part.Duration
+	}
+
+	return specifiedDuration
+}
+
+// Note/rest duration is "sticky." Any subsequent notes/rests without a
+// specified duration will take on the duration of the part's last note/rest.
+func updateDefaultDuration(part *Part, duration Duration) {
+	if duration.Components != nil {
+		part.Duration = duration
+	}
+}
+
 func addNoteOrRest(score *Score, noteOrRest ScoreUpdate) {
 	var specifiedDuration Duration
 	switch noteOrRest.(type) {
@@ -61,16 +78,8 @@ func addNoteOrRest(score *Score, noteOrRest ScoreUpdate) {
 	}
 
 	for _, part := range score.CurrentParts {
-		var duration Duration
-
-		// If no duration is specified, use the part's default duration.
-		if specifiedDuration.Components == nil {
-			duration = part.Duration
-		} else {
-			duration = specifiedDuration
-		}
-
-		durationMs := duration.Ms(part.Tempo)
+		duration := effectiveDuration(specifiedDuration, part)
+		durationMs := duration.Ms(part.Tempo) * part.TimeScale
 
 		switch noteOrRest.(type) {
 		case Note:
@@ -95,20 +104,30 @@ func addNoteOrRest(score *Score, noteOrRest ScoreUpdate) {
 			part.CurrentOffset += float64(durationMs)
 		}
 
-		// Note/rest duration is "sticky." Any subsequent notes/rests without a
-		// specified duration will take on the duration of the part's last
-		// note/rest.
-		if duration.Components != nil {
-			part.Duration = duration
-		}
+		updateDefaultDuration(part, duration)
 	}
 
 	score.ApplyGlobalAttributes()
 }
 
-func (note Note) updateScore(score *Score) error {
+// UpdateScore implements ScoreUpdate.UpdateScore by adding a note to the score
+// for all current parts and adjusting the parts' CurrentOffset, LastOffset, and
+// Duration accordingly.
+func (note Note) UpdateScore(score *Score) error {
 	addNoteOrRest(score, note)
 	return nil
+}
+
+// DurationMs implements ScoreUpdate.DurationMs by returning the duration of the
+// note (if specified) or the current duration of the part, within the context
+// of the part's current tempo.
+//
+// Also updates the part's default duration, so that it can be correctly
+// considered when tallying the duration of subsequent events.
+func (note Note) DurationMs(part *Part) float32 {
+	durationMs := effectiveDuration(note.Duration, part).Ms(part.Tempo)
+	updateDefaultDuration(part, note.Duration)
+	return durationMs
 }
 
 // A Rest represents a period of time spent waiting.
@@ -119,7 +138,21 @@ type Rest struct {
 	Duration Duration
 }
 
-func (rest Rest) updateScore(score *Score) error {
+// DurationMs implements ScoreUpdate.DurationMs by returning the duration of the
+// rest (if specified) or the current duration of the part, within the context
+// of the part's current tempo.
+//
+// Also updates the part's default duration, so that it can be correctly
+// considered when tallying the duration of subsequent events.
+func (rest Rest) DurationMs(part *Part) float32 {
+	durationMs := effectiveDuration(rest.Duration, part).Ms(part.Tempo)
+	updateDefaultDuration(part, rest.Duration)
+	return durationMs
+}
+
+// UpdateScore implements ScoreUpdate.UpdateScore by adjusting the
+// CurrentOffset, LastOffset, and Duration of all current parts.
+func (rest Rest) UpdateScore(score *Score) error {
 	addNoteOrRest(score, rest)
 	return nil
 }

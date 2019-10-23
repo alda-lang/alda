@@ -12,7 +12,7 @@ func (Barline) Beats() (float32, error) {
 	return 0, nil
 }
 
-// Beats implement DurationComponent.Ms by returning 0.
+// Ms implements DurationComponent.Ms by returning 0.
 //
 // A barline is considered a DurationComponent purely for syntactic reasons, for
 // better or for worse.
@@ -20,6 +20,14 @@ func (Barline) Ms(tempo float32) float32 {
 	return 0
 }
 
-func (Barline) updateScore(score *Score) error {
+// UpdateScore implements ScoreUpdate.UpdateScore by doing nothing. The purpose
+// of a barline is to visually separate elements in an Alda source file.
+func (Barline) UpdateScore(score *Score) error {
 	return nil
+}
+
+// DurationMs implements ScoreUpdate.DurationMs by returning 0, since a barline
+// is conceptually instantaneous.
+func (Barline) DurationMs(part *Part) float32 {
+	return 0
 }

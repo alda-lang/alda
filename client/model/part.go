@@ -31,6 +31,7 @@ type Part struct {
 	Panning         float32
 	Quantization    float32
 	Duration        Duration
+	TimeScale       float32
 }
 
 func newPart(name string) (*Part, error) {
@@ -63,6 +64,7 @@ func newPart(name string) (*Part, error) {
 		Duration: Duration{
 			Components: []DurationComponent{NoteLength{Denominator: 4}},
 		},
+		TimeScale:      1.0,
 		KeySignature:   KeySignature{},
 		Transposition:  0,
 		ReferencePitch: 440.0,
@@ -240,6 +242,9 @@ func determineParts(decl PartDeclaration, score *Score) ([]*Part, error) {
 	return result, nil
 }
 
+// UpdateScore implements ScoreUpdate.UpdateScore by setting the current
+// ("active") parts.
+//
 // When a part is declared, the associated instruments become active, meaning
 // that subsequent events (notes, etc.) will be applied to those instruments. A
 // part can consist of multiple instruments, can refer to instruments using
@@ -247,7 +252,7 @@ func determineParts(decl PartDeclaration, score *Score) ([]*Part, error) {
 //
 // When a reference is made to instrument instances that don't exist yet, the
 // appropriate instances are initialized and added to the score.
-func (decl PartDeclaration) updateScore(score *Score) error {
+func (decl PartDeclaration) UpdateScore(score *Score) error {
 	parts, err := determineParts(decl, score)
 	if err != nil {
 		return err
@@ -288,4 +293,10 @@ func (decl PartDeclaration) updateScore(score *Score) error {
 	score.ApplyGlobalAttributes()
 
 	return nil
+}
+
+// DurationMs implements ScoreUpdate.DurationMs by returning 0, since a part
+// declaration is conceptually instantaneous.
+func (decl PartDeclaration) DurationMs(part *Part) float32 {
+	return 0
 }
