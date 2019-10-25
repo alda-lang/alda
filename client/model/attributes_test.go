@@ -15,7 +15,9 @@ func expectPartIntValue(
 		actual := method(part)
 
 		if actual != expected {
-			return fmt.Errorf("%s is %d, not %d", valueName, actual, expected)
+			return fmt.Errorf(
+				"%s %s is %d, not %d", instrument, valueName, actual, expected,
+			)
 		}
 
 		return nil
@@ -29,7 +31,9 @@ func expectPartFloatValue(
 		actual := method(part)
 
 		if !equalish32(actual, expected) {
-			return fmt.Errorf("%s is %f, not %f", valueName, actual, expected)
+			return fmt.Errorf(
+				"%s %s is %f, not %f", instrument, valueName, actual, expected,
+			)
 		}
 
 		return nil
@@ -43,7 +47,9 @@ func expectPartOffsetMsValue(
 		actual := method(part)
 
 		if !equalish(actual, expected) {
-			return fmt.Errorf("%s is %f, not %f", valueName, actual, expected)
+			return fmt.Errorf(
+				"%s %s is %f, not %f", instrument, valueName, actual, expected,
+			)
 		}
 
 		return nil
@@ -57,7 +63,9 @@ func expectPartValueDeepEquals(
 		actual := method(part)
 
 		if !reflect.DeepEqual(actual, expected) {
-			return fmt.Errorf("%s is %#v, not %#v", valueName, actual, expected)
+			return fmt.Errorf(
+				"%s %s is %#v, not %#v", instrument, valueName, actual, expected,
+			)
 		}
 
 		return nil
