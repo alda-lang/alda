@@ -160,7 +160,7 @@ func TestCram(t *testing.T) {
 			expectations: []scoreUpdateExpectation{
 				expectNoteOffsets(0, 500, 750, 1000, 1500, 1750),
 				expectPartCurrentOffset("piano", 2000),
-				expectPartLastOffset("piano", 0),
+				expectPartLastOffset("piano", 1750),
 			},
 		},
 	)

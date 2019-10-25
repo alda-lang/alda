@@ -16,22 +16,23 @@ type PartDeclaration struct {
 //
 // A score can include multiple instances of the same type of instrument.
 type Part struct {
-	Name            string
-	StockInstrument Instrument
-	TempoRole       TempoRole
-	Tempo           float32
-	KeySignature    KeySignature
-	Transposition   int32
-	ReferencePitch  float32
-	CurrentOffset   OffsetMs
-	LastOffset      OffsetMs
-	Octave          int32
-	Volume          float32
-	TrackVolume     float32
-	Panning         float32
-	Quantization    float32
-	Duration        Duration
-	TimeScale       float32
+	Name             string
+	StockInstrument  Instrument
+	TempoRole        TempoRole
+	Tempo            float32
+	KeySignature     KeySignature
+	Transposition    int32
+	ReferencePitch   float32
+	CurrentOffset    OffsetMs
+	LastOffset       OffsetMs
+	Octave           int32
+	Volume           float32
+	TrackVolume      float32
+	Panning          float32
+	Quantization     float32
+	Duration         Duration
+	TimeScale        float32
+	CurrentIteration int32
 }
 
 func newPart(name string) (*Part, error) {
