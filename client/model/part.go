@@ -76,12 +76,6 @@ type PartUpdate interface {
 	updatePart(*Part)
 }
 
-func (s *Score) updateParts(partUpdate PartUpdate) {
-	for _, part := range s.Parts {
-		partUpdate.updatePart(part)
-	}
-}
-
 // Once an alias is defined for a group, its individual parts can be accessed by
 // using the "." (dot) operator.
 func dotAccess(name string) bool {
