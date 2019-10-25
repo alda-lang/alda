@@ -270,11 +270,6 @@ func printUsage() {
 	fmt.Printf("Usage: %s PORT EXAMPLE\n", os.Args[0])
 }
 
-// TODO:
-// * Command/arg parsing via cobra or similar
-// * Top-level -v / --verbose flag that sets the log level via
-//   log.SetGlobalLevel
-
 func main() {
 	rand.Seed(time.Now().Unix())
 
