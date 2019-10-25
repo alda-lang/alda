@@ -885,5 +885,34 @@ func TestAttributes(t *testing.T) {
 				expectPartReferencePitch("piano", 550.0),
 			},
 		},
+		scoreUpdateTestCase{
+			label: "part-specific attribute updates aren't interpreted as global",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "set-duration"},
+					LispNumber{Value: 4},
+				}},
+
+				PartDeclaration{Names: []string{"harp"}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "set-duration"},
+					LispNumber{Value: 2},
+				}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "octave"},
+					LispNumber{Value: 3},
+				}},
+
+				PartDeclaration{Names: []string{"piano", "harp"}},
+				Note{NoteLetter: C},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPartOctave("piano", 4),
+				expectPartDurationBeats("piano", 4),
+				expectPartOctave("harp", 3),
+				expectPartDurationBeats("harp", 2),
+			},
+		},
 	)
 }

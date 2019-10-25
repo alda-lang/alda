@@ -121,7 +121,7 @@ func defattribute(names []string, signatures ...attributeFunctionSignature) {
 	}
 
 	for _, name := range names {
-		for _, impl := range []defattributeImpl{
+		for _, _impl := range []defattributeImpl{
 			{
 				name: name,
 				scoreUpdate: func(partUpdate PartUpdate) ScoreUpdate {
@@ -135,6 +135,12 @@ func defattribute(names []string, signatures ...attributeFunctionSignature) {
 				},
 			},
 		} {
+			// We have to do this in order to close over `impl` in the function below.
+			// This is because closures don't work properly in Go.
+			//
+			// ref: https://www.calhoun.io/gotchas-and-common-mistakes-with-closures-in-go/
+			impl := _impl
+
 			functionSignatures := []FunctionSignature{}
 
 			for _, _signature := range signatures {
