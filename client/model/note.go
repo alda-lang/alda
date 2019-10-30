@@ -85,18 +85,22 @@ func addNoteOrRest(score *Score, noteOrRest ScoreUpdate) {
 		case Note:
 			midiNote := noteOrRest.(Note).MidiNote(part)
 
-			noteEvent := NoteEvent{
-				Part:            part,
-				MidiNote:        midiNote,
-				Offset:          part.CurrentOffset,
-				Duration:        durationMs,
-				AudibleDuration: durationMs * part.Quantization,
-				Volume:          part.Volume,
-				TrackVolume:     part.TrackVolume,
-				Panning:         part.Panning,
-			}
+			audibleDurationMs := durationMs * part.Quantization
 
-			score.Events = append(score.Events, noteEvent)
+			if audibleDurationMs > 0 {
+				noteEvent := NoteEvent{
+					Part:            part,
+					MidiNote:        midiNote,
+					Offset:          part.CurrentOffset,
+					Duration:        durationMs,
+					AudibleDuration: audibleDurationMs,
+					Volume:          part.Volume,
+					TrackVolume:     part.TrackVolume,
+					Panning:         part.Panning,
+				}
+
+				score.Events = append(score.Events, noteEvent)
+			}
 		}
 
 		if !score.chordMode {
