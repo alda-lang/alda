@@ -275,7 +275,7 @@ func (p *parser) durationComponent() model.DurationComponent {
 }
 
 func (p *parser) duration() model.Duration {
-	// NB: This assumes the initial duration component was already consumed.
+	// NB: This assumes the initial duration component token was already consumed.
 	duration := model.Duration{
 		Components: []model.DurationComponent{p.durationComponent()},
 	}
