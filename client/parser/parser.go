@@ -291,12 +291,23 @@ func (p *parser) duration() model.Duration {
 			duration.Components = append(duration.Components, model.Barline{})
 		}
 
+		// Take note of the current position. If we encounter a tie that ends up
+		// actually being a slur (i.e. it isn't followed by a note length), we can
+		// backtrack to this position, return the duration, and let the parser
+		// consume the slur as part of e.g. a note.
+		beforeTies := p.current
+
+		// We'll stash any barlines that we encounter here temporarily. We'll add
+		// them to the duration components iff we aren't going to backtrack and
+		// consume them outside of the duration.
+		barlines := []model.DurationComponent{}
+
 		if !p.match(Tie) {
 			return duration
 		}
 
 		for p.match(Barline) {
-			duration.Components = append(duration.Components, model.Barline{})
+			barlines = append(barlines, model.Barline{})
 		}
 
 		for p.match(Tie) {
@@ -306,10 +317,11 @@ func (p *parser) duration() model.Duration {
 		}
 
 		if !p.matchDurationComponent() {
-			duration.Slurred = true
+			p.current = beforeTies
 			return duration
 		}
 
+		duration.Components = append(duration.Components, barlines...)
 		duration.Components = append(duration.Components, p.durationComponent())
 	}
 }
@@ -337,10 +349,11 @@ AccidentalsLoop:
 		}
 	}
 
-	switch {
-	case p.matchDurationComponent():
+	if p.matchDurationComponent() {
 		note.Duration = p.duration()
-	case p.match(Tie):
+	}
+
+	if p.match(Tie) {
 		note.Slurred = true
 	}
 

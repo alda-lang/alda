@@ -112,9 +112,6 @@ func (nl NoteLengthMs) Ms(tempo float32) float32 {
 // Duration describes the length of time occupied by a note or other event.
 type Duration struct {
 	Components []DurationComponent
-	// When the duration of a note is slurred, it means there is minimal space
-	// between that note and the next.
-	Slurred bool
 }
 
 // Beats implements DurationComponent.Beats by summing the beats of the

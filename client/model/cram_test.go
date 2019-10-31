@@ -70,8 +70,8 @@ func TestCram(t *testing.T) {
 								Components: []DurationComponent{
 									NoteLength{Denominator: 2},
 								},
-								Slurred: true,
 							},
+							Slurred: true,
 						},
 						// quarter note, 250 ms
 						Note{
@@ -80,8 +80,8 @@ func TestCram(t *testing.T) {
 								Components: []DurationComponent{
 									NoteLength{Denominator: 4},
 								},
-								Slurred: true,
 							},
+							Slurred: true,
 						},
 					},
 					Duration: Duration{

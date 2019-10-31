@@ -1,9 +1,10 @@
 package parser
 
 import (
+	"testing"
+
 	"alda.io/client/model"
 	_ "alda.io/client/testing"
-	"testing"
 )
 
 func cNoteWithDuration(components ...model.DurationComponent) model.Note {
@@ -122,8 +123,8 @@ func TestDurations(t *testing.T) {
 						Components: []model.DurationComponent{
 							model.NoteLength{Denominator: 4},
 						},
-						Slurred: true,
 					},
+					Slurred: true,
 				},
 			},
 		},
@@ -137,8 +138,8 @@ func TestDurations(t *testing.T) {
 						Components: []model.DurationComponent{
 							model.NoteLengthMs{Quantity: 420},
 						},
-						Slurred: true,
 					},
+					Slurred: true,
 				},
 			},
 		},
