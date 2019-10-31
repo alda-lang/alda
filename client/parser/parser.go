@@ -258,7 +258,7 @@ func (p *parser) octaveSet() ([]model.ScoreUpdate, error) {
 }
 
 func (p *parser) matchDurationComponent() bool {
-	return p.match(NoteLength) || p.match(NoteLengthMs)
+	return p.match(NoteLength, NoteLengthMs)
 }
 
 func (p *parser) durationComponent() model.DurationComponent {
