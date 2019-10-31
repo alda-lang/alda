@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	_ "alda.io/client/testing"
+	"github.com/go-test/deep"
 )
 
 func expectPartIntValue(
@@ -198,6 +199,34 @@ func expectPartDurationMs(
 
 		return nil
 	})
+}
+
+func expectGlobalAttributeUpdates(
+	offset OffsetMs, updates []PartUpdate,
+) func(s *Score) error {
+	return func(s *Score) error {
+		updatesAtOffset, hit := s.GlobalAttributes.itinerary[offset]
+		if !hit {
+			return fmt.Errorf(
+				"no global attribute updates recorded at offset %f", offset,
+			)
+		}
+
+		if diff := deep.Equal(updates, updatesAtOffset); diff != nil {
+			errStr := fmt.Sprintf(
+				"global attributes at offset %f are not what we expected",
+				offset,
+			)
+
+			for _, diffItem := range diff {
+				errStr += fmt.Sprintf("\n%v", diffItem)
+			}
+
+			return fmt.Errorf(errStr)
+		}
+
+		return nil
+	}
 }
 
 func TestAttributes(t *testing.T) {
@@ -912,6 +941,114 @@ func TestAttributes(t *testing.T) {
 				expectPartDurationBeats("piano", 4),
 				expectPartOctave("harp", 3),
 				expectPartDurationBeats("harp", 2),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "a global tempo attribute update",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				// A whole note rest at 120 bpm = 2000 ms
+				Rest{
+					Duration: Duration{
+						Components: []DurationComponent{
+							NoteLength{Denominator: 1},
+						},
+					},
+				},
+				// Globally set tempo to 60 bpm, 2000 ms into the score.
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "tempo!"},
+					LispNumber{Value: 60},
+				}},
+
+				// The viola part should start off having a tempo of 120, not 60
+				PartDeclaration{Names: []string{"viola"}},
+				// After resting for 3 beats (still before the global tempo update), the
+				// viola's tempo should still be 120 bpm.
+				Rest{
+					Duration: Duration{
+						Components: []DurationComponent{
+							NoteLength{Denominator: 2, Dots: 1},
+						},
+					},
+				},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectGlobalAttributeUpdates(2000, []PartUpdate{TempoSet{Tempo: 60}}),
+				expectPartTempo("piano", 60),
+				expectPartTempo("viola", 120),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "global updates are applied once you cross the offset",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				// A whole note rest at 120 bpm = 2000 ms
+				Rest{
+					Duration: Duration{
+						Components: []DurationComponent{
+							NoteLength{Denominator: 1},
+						},
+					},
+				},
+				// Globally set tempo to 60 bpm, 2000 ms into the score.
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "tempo!"},
+					LispNumber{Value: 60},
+				}},
+
+				// The viola part should start off having a tempo of 120, not 60
+				PartDeclaration{Names: []string{"viola"}},
+				// After resting for 3 beats (still before the global tempo update), the
+				// viola's tempo should still be 120 bpm.
+				Rest{
+					Duration: Duration{
+						Components: []DurationComponent{
+							NoteLength{Denominator: 2, Dots: 1},
+						},
+					},
+				},
+				// After resting for 1 more beat, we've arrived at the 2000ms mark, so
+				// the viola's tempo should now be 60 bpm.
+				Rest{
+					Duration: Duration{
+						Components: []DurationComponent{
+							NoteLength{Denominator: 4},
+						},
+					},
+				},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPartTempo("viola", 60),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "global updates are applied once you cross the offset via @marker",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				// A whole note rest at 120 bpm = 2000 ms
+				Rest{
+					Duration: Duration{
+						Components: []DurationComponent{
+							NoteLength{Denominator: 1},
+						},
+					},
+				},
+				Marker{Name: "two-thousand"},
+				// Globally set tempo to 60 bpm, 2000 ms into the score.
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "tempo!"},
+					LispNumber{Value: 60},
+				}},
+
+				// The viola part should start off having a tempo of 120, not 60
+				PartDeclaration{Names: []string{"viola"}},
+				// After jumping to the marker, we've passed the 2000ms mark, so the
+				// viola's tempo should now be 60 bpm.
+				AtMarker{Name: "two-thousand"},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPartTempo("viola", 60),
 			},
 		},
 	)

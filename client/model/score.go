@@ -31,6 +31,7 @@ type Score struct {
 	Aliases          map[string][]*Part
 	Events           []ScoreEvent
 	GlobalAttributes *GlobalAttributes
+	Markers          map[string]OffsetMs
 	chordMode        bool
 }
 
@@ -40,6 +41,7 @@ func NewScore() *Score {
 		Parts:            []*Part{},
 		Aliases:          map[string][]*Part{},
 		GlobalAttributes: NewGlobalAttributes(),
+		Markers:          map[string]OffsetMs{},
 	}
 }
 

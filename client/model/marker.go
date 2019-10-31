@@ -1,7 +1,7 @@
 package model
 
 import (
-	"errors"
+	"fmt"
 )
 
 // A Marker gives a name to a point in time in a score.
@@ -13,10 +13,21 @@ type Marker struct {
 // in time as a named marker.
 //
 // The assumption is that all current parts have the same current offset. In the
-// rare event that this is not the case, an error is thrown because we don't
+// rare event that this is not the case, an error is returned because we don't
 // have a single current offset to store under the marker.
-func (Marker) UpdateScore(score *Score) error {
-	return errors.New("Marker.UpdateScore not implemented")
+func (marker Marker) UpdateScore(score *Score) error {
+	if len(score.CurrentParts) == 0 {
+		return fmt.Errorf(
+			"can't define marker \"%s\" outside the context of a part", marker.Name,
+		)
+	}
+
+	// TODO: throw an error if all current parts aren't at the same current offset
+	offset := score.CurrentParts[0].CurrentOffset
+
+	score.Markers[marker.Name] = offset
+
+	return nil
 }
 
 // DurationMs implements ScoreUpdate.DurationMs by returning 0, since defining a
@@ -35,9 +46,21 @@ type AtMarker struct {
 // of all active parts to the offset stored in the marker with the provided
 // name.
 //
-// If no such marker was previously defined, an error is thrown.
-func (AtMarker) UpdateScore(score *Score) error {
-	return errors.New("AtMarker.UpdateScore not implemented")
+// If no such marker was previously defined, an error is returned.
+func (atMarker AtMarker) UpdateScore(score *Score) error {
+	offset, hit := score.Markers[atMarker.Name]
+	if !hit {
+		return fmt.Errorf("Marker undefined: %s", atMarker.Name)
+	}
+
+	for _, part := range score.CurrentParts {
+		part.LastOffset = part.CurrentOffset
+		part.CurrentOffset = offset
+	}
+
+	score.ApplyGlobalAttributes()
+
+	return nil
 }
 
 // DurationMs implements ScoreUpdate.DurationMs by returning 0 because jumping
