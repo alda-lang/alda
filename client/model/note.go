@@ -83,14 +83,17 @@ func addNoteOrRest(score *Score, noteOrRest ScoreUpdate) {
 
 		switch noteOrRest.(type) {
 		case Note:
-			midiNote := noteOrRest.(Note).MidiNote(part)
+			note := noteOrRest.(Note)
 
-			audibleDurationMs := durationMs * part.Quantization
+			audibleDurationMs := durationMs
+			if !note.Slurred {
+				audibleDurationMs *= part.Quantization
+			}
 
 			if audibleDurationMs > 0 {
 				noteEvent := NoteEvent{
 					Part:            part,
-					MidiNote:        midiNote,
+					MidiNote:        note.MidiNote(part),
 					Offset:          part.CurrentOffset,
 					Duration:        durationMs,
 					AudibleDuration: audibleDurationMs,
