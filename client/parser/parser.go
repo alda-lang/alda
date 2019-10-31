@@ -33,8 +33,14 @@ func (p *parser) previous() Token {
 	return p.input[p.current-1]
 }
 
-func (p *parser) check(tokenType TokenType) bool {
-	return p.peek().tokenType == tokenType
+func (p *parser) check(types ...TokenType) bool {
+	for _, tokenType := range types {
+		if p.peek().tokenType == tokenType {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (p *parser) advance() Token {
