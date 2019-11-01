@@ -22,8 +22,15 @@ func (marker Marker) UpdateScore(score *Score) error {
 		)
 	}
 
-	// TODO: throw an error if all current parts aren't at the same current offset
 	offset := score.CurrentParts[0].CurrentOffset
+
+	if len(score.CurrentParts) > 1 {
+		for _, part := range score.CurrentParts[1:len(score.CurrentParts)] {
+			if part.CurrentOffset != offset {
+				return fmt.Errorf("offset of marker \"%s\" unclear", marker.Name)
+			}
+		}
+	}
 
 	score.Markers[marker.Name] = offset
 
