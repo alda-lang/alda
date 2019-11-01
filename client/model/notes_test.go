@@ -34,27 +34,70 @@ func expectNoteOffsets(expectedOffsets ...OffsetMs) func(*Score) error {
 	}
 }
 
-func expectNoteAudibleDurations(
-	expectedAudibleDurations ...float32,
+func expectNoteFloatValues(
+	valueName string, method func(NoteEvent) float32, expectedValues []float32,
 ) func(*Score) error {
 	return func(s *Score) error {
-		if len(s.Events) != len(expectedAudibleDurations) {
+		if len(s.Events) != len(expectedValues) {
 			return fmt.Errorf(
 				"expected %d events, got %d",
-				len(expectedAudibleDurations),
+				len(expectedValues),
 				len(s.Events),
 			)
 		}
 
-		for i := 0; i < len(expectedAudibleDurations); i++ {
-			expectedAudibleDuration := expectedAudibleDurations[i]
-			actualAudibleDuration := s.Events[i].(NoteEvent).AudibleDuration
-			if !equalish32(expectedAudibleDuration, actualAudibleDuration) {
+		for i := 0; i < len(expectedValues); i++ {
+			expectedValue := expectedValues[i]
+			actualValue := method(s.Events[i].(NoteEvent))
+			if !equalish32(expectedValue, actualValue) {
 				return fmt.Errorf(
-					"expected note #%d to have audible duration %f, but it was %f",
+					"expected note #%d to have %s %f, but it was %f",
+					i+1, valueName, expectedValue, actualValue,
+				)
+			}
+		}
+
+		return nil
+	}
+}
+
+func expectNoteDurations(expectedDurations ...float32) func(*Score) error {
+	return expectNoteFloatValues(
+		"audible duration",
+		func(note NoteEvent) float32 { return note.Duration },
+		expectedDurations,
+	)
+}
+
+func expectNoteAudibleDurations(
+	expectedAudibleDurations ...float32,
+) func(*Score) error {
+	return expectNoteFloatValues(
+		"audible duration",
+		func(note NoteEvent) float32 { return note.AudibleDuration },
+		expectedAudibleDurations,
+	)
+}
+
+func expectMidiNoteNumbers(expectedNoteNumbers ...int32) func(*Score) error {
+	return func(s *Score) error {
+		if len(s.Events) != len(expectedNoteNumbers) {
+			return fmt.Errorf(
+				"expected %d events, got %d",
+				len(expectedNoteNumbers),
+				len(s.Events),
+			)
+		}
+
+		for i := 0; i < len(expectedNoteNumbers); i++ {
+			expectedNoteNumber := expectedNoteNumbers[i]
+			actualNoteNumber := s.Events[i].(NoteEvent).MidiNote
+			if expectedNoteNumber != actualNoteNumber {
+				return fmt.Errorf(
+					"expected note #%d to be MIDI note %d, but it was MIDI note %d",
 					i+1,
-					expectedAudibleDuration,
-					actualAudibleDuration,
+					expectedNoteNumber,
+					actualNoteNumber,
 				)
 			}
 		}
@@ -66,6 +109,80 @@ func expectNoteAudibleDurations(
 func TestNotes(t *testing.T) {
 	executeScoreUpdateTestCases(
 		t,
+		scoreUpdateTestCase{
+			label: "notes with provided durations",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				Note{
+					NoteLetter: C,
+					Duration: Duration{
+						Components: []DurationComponent{
+							NoteLength{Denominator: 2, Dots: 1},
+						},
+					},
+				},
+				Note{
+					NoteLetter: D,
+					Duration: Duration{
+						Components: []DurationComponent{
+							NoteLength{Denominator: 8},
+						},
+					},
+				},
+				Note{
+					NoteLetter: E,
+					Duration: Duration{
+						Components: []DurationComponent{
+							NoteLengthMs{Quantity: 2222},
+						},
+					},
+				},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectNoteOffsets(0, 1500, 1750),
+				expectNoteDurations(1500, 250, 2222),
+				expectMidiNoteNumbers(60, 62, 64),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "implicit note duration",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				Note{
+					NoteLetter: C,
+					Duration: Duration{
+						Components: []DurationComponent{
+							NoteLength{Denominator: 2, Dots: 1},
+						},
+					},
+				},
+				Note{NoteLetter: D},
+				Note{
+					NoteLetter:  D,
+					Accidentals: []Accidental{Sharp},
+					Duration: Duration{
+						Components: []DurationComponent{
+							NoteLengthMs{Quantity: 50},
+						},
+					},
+				},
+				Note{NoteLetter: E},
+				Note{
+					NoteLetter: F,
+					Duration: Duration{
+						Components: []DurationComponent{
+							NoteLength{Denominator: 8},
+						},
+					},
+				},
+				Note{NoteLetter: G},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectNoteOffsets(0, 1500, 3000, 3050, 3100, 3350),
+				expectNoteDurations(1500, 1500, 50, 50, 250, 250),
+				expectMidiNoteNumbers(60, 62, 63, 64, 65, 67),
+			},
+		},
 		scoreUpdateTestCase{
 			label: "note with 100% quantization",
 			updates: []ScoreUpdate{
