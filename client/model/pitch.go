@@ -85,25 +85,31 @@ func NewAccidental(accidental string) (Accidental, error) {
 func CalculateMidiNote(
 	note Note, octave int32, keySignature KeySignature, transposition int32,
 ) int32 {
-	intervals := map[NoteLetter]int32{
-		C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11,
-	}
+	var baseMidiNoteNumber int32
 
-	baseMidiNoteNumber := ((octave + 1) * 12) + intervals[note.NoteLetter]
-
-	var accidentals []Accidental
-	if note.Accidentals == nil {
-		accidentals = keySignature[note.NoteLetter]
+	if note.MidiNote != 0 {
+		baseMidiNoteNumber = note.MidiNote
 	} else {
-		accidentals = note.Accidentals
-	}
+		intervals := map[NoteLetter]int32{
+			C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11,
+		}
 
-	for _, accidental := range accidentals {
-		switch accidental {
-		case Flat:
-			baseMidiNoteNumber--
-		case Sharp:
-			baseMidiNoteNumber++
+		baseMidiNoteNumber = ((octave + 1) * 12) + intervals[note.NoteLetter]
+
+		var accidentals []Accidental
+		if note.Accidentals == nil {
+			accidentals = keySignature[note.NoteLetter]
+		} else {
+			accidentals = note.Accidentals
+		}
+
+		for _, accidental := range accidentals {
+			switch accidental {
+			case Flat:
+				baseMidiNoteNumber--
+			case Sharp:
+				baseMidiNoteNumber++
+			}
 		}
 	}
 

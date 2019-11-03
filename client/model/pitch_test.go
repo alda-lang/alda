@@ -159,6 +159,24 @@ func TestPitch(t *testing.T) {
 			transposition:          -1,
 			expectedMidiNoteNumber: 60,
 		},
+		{
+			note: Note{
+				MidiNote: 42,
+			},
+			octave:                 4,
+			keySignature:           KeySignature{},
+			transposition:          0,
+			expectedMidiNoteNumber: 42,
+		},
+		{
+			note: Note{
+				MidiNote: 42,
+			},
+			octave:                 4,
+			keySignature:           KeySignature{},
+			transposition:          10,
+			expectedMidiNoteNumber: 52,
+		},
 	} {
 		label := "Note => MIDI note number conversion"
 

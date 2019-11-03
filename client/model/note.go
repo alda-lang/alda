@@ -4,7 +4,10 @@ package model
 type Note struct {
 	NoteLetter  NoteLetter
 	Accidentals []Accidental
-	Duration    Duration
+	// A MidiNote number can optionally be provided instead of a NoteLetter and
+	// Accidentals.
+	MidiNote int32
+	Duration Duration
 	// When a note is slurred, it means there is minimal space between that note
 	// and the next.
 	Slurred bool
