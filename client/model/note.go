@@ -10,34 +10,6 @@ type Note struct {
 	Slurred bool
 }
 
-// MidiNote returns the MIDI note number of a note, given contextual information
-// about the part playing the note (e.g. octave, key signature, transposition).
-func (note Note) MidiNote(part *Part) int32 {
-	intervals := map[NoteLetter]int32{
-		C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11,
-	}
-
-	baseMidiNoteNumber := ((part.Octave + 1) * 12) + intervals[note.NoteLetter]
-
-	var accidentals []Accidental
-	if note.Accidentals == nil {
-		accidentals = part.KeySignature[note.NoteLetter]
-	} else {
-		accidentals = note.Accidentals
-	}
-
-	for _, accidental := range accidentals {
-		switch accidental {
-		case Flat:
-			baseMidiNoteNumber--
-		case Sharp:
-			baseMidiNoteNumber++
-		}
-	}
-
-	return baseMidiNoteNumber + part.Transposition
-}
-
 // A NoteEvent is a Note expressed in absolute terms with the goal of performing
 // the note e.g. on a MIDI sequencer/synthesizer.
 type NoteEvent struct {
@@ -91,9 +63,13 @@ func addNoteOrRest(score *Score, noteOrRest ScoreUpdate) {
 			}
 
 			if audibleDurationMs > 0 {
+				midiNote := CalculateMidiNote(
+					note, part.Octave, part.KeySignature, part.Transposition,
+				)
+
 				noteEvent := NoteEvent{
 					Part:            part,
-					MidiNote:        note.MidiNote(part),
+					MidiNote:        midiNote,
 					Offset:          part.CurrentOffset,
 					Duration:        durationMs,
 					AudibleDuration: audibleDurationMs,

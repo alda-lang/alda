@@ -775,7 +775,7 @@ func TestAttributes(t *testing.T) {
 			},
 		},
 		scoreUpdateTestCase{
-			label: "set key signature via lisp (string shorthand)",
+			label: "set key signature via lisp (string shorthand 1)",
 			updates: []ScoreUpdate{
 				PartDeclaration{Names: []string{"piano"}},
 				LispList{Elements: []LispForm{
@@ -786,6 +786,21 @@ func TestAttributes(t *testing.T) {
 			expectations: []scoreUpdateExpectation{
 				expectPartKeySignature(
 					"piano", KeySignature{B: {Flat}, E: {Flat}, A: {Flat}, D: {Flat}},
+				),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "set key signature via lisp (string shorthand 2)",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "key-signature"},
+					LispString{Value: "f+ c+ g+"},
+				}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPartKeySignature(
+					"piano", KeySignature{F: {Sharp}, C: {Sharp}, G: {Sharp}},
 				),
 			},
 		},
@@ -824,6 +839,140 @@ func TestAttributes(t *testing.T) {
 			expectations: []scoreUpdateExpectation{
 				expectPartKeySignature(
 					"piano", KeySignature{B: {Flat}, E: {Flat}},
+				),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "set key signature via lisp (name of scale 3)",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "key-signature"},
+					LispQuotedForm{Form: LispList{Elements: []LispForm{
+						LispSymbol{Name: "c"},
+						LispSymbol{Name: "ionian"},
+					},
+					}},
+				}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPartKeySignature(
+					"piano", KeySignature{},
+				),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "set key signature via lisp (name of scale 4)",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "key-signature"},
+					LispQuotedForm{Form: LispList{Elements: []LispForm{
+						LispSymbol{Name: "c"},
+						LispSymbol{Name: "dorian"},
+					},
+					}},
+				}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPartKeySignature(
+					"piano", KeySignature{B: {Flat}, E: {Flat}},
+				),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "set key signature via lisp (name of scale 5)",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "key-signature"},
+					LispQuotedForm{Form: LispList{Elements: []LispForm{
+						LispSymbol{Name: "c"},
+						LispSymbol{Name: "phrygian"},
+					},
+					}},
+				}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPartKeySignature(
+					"piano", KeySignature{B: {Flat}, E: {Flat}, A: {Flat}, D: {Flat}},
+				),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "set key signature via lisp (name of scale 6)",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "key-signature"},
+					LispQuotedForm{Form: LispList{Elements: []LispForm{
+						LispSymbol{Name: "c"},
+						LispSymbol{Name: "lydian"},
+					},
+					}},
+				}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPartKeySignature(
+					"piano", KeySignature{F: {Sharp}},
+				),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "set key signature via lisp (name of scale 7)",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "key-signature"},
+					LispQuotedForm{Form: LispList{Elements: []LispForm{
+						LispSymbol{Name: "c"},
+						LispSymbol{Name: "mixolydian"},
+					},
+					}},
+				}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPartKeySignature(
+					"piano", KeySignature{B: {Flat}},
+				),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "set key signature via lisp (name of scale 8)",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "key-signature"},
+					LispQuotedForm{Form: LispList{Elements: []LispForm{
+						LispSymbol{Name: "c"},
+						LispSymbol{Name: "aeolian"},
+					},
+					}},
+				}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPartKeySignature(
+					"piano", KeySignature{B: {Flat}, E: {Flat}, A: {Flat}},
+				),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "set key signature via lisp (name of scale 9)",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "key-signature"},
+					LispQuotedForm{Form: LispList{Elements: []LispForm{
+						LispSymbol{Name: "c"},
+						LispSymbol{Name: "locrian"},
+					},
+					}},
+				}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPartKeySignature(
+					"piano",
+					KeySignature{B: {Flat}, E: {Flat}, A: {Flat}, D: {Flat}, G: {Flat}},
 				),
 			},
 		},

@@ -78,3 +78,34 @@ func NewAccidental(accidental string) (Accidental, error) {
 		return -1, fmt.Errorf("Invalid accidental: %s", accidental)
 	}
 }
+
+// CalculateMidiNote returns the MIDI note number of a note, given contextual
+// information about the part playing the note (e.g. octave, key signature,
+// transposition).
+func CalculateMidiNote(
+	note Note, octave int32, keySignature KeySignature, transposition int32,
+) int32 {
+	intervals := map[NoteLetter]int32{
+		C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11,
+	}
+
+	baseMidiNoteNumber := ((octave + 1) * 12) + intervals[note.NoteLetter]
+
+	var accidentals []Accidental
+	if note.Accidentals == nil {
+		accidentals = keySignature[note.NoteLetter]
+	} else {
+		accidentals = note.Accidentals
+	}
+
+	for _, accidental := range accidentals {
+		switch accidental {
+		case Flat:
+			baseMidiNoteNumber--
+		case Sharp:
+			baseMidiNoteNumber++
+		}
+	}
+
+	return baseMidiNoteNumber + transposition
+}
