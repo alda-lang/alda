@@ -211,11 +211,11 @@ func nonNegativeNumber(form LispForm) (float32, error) {
 	return value / 100, nil
 }
 
-func wholeNumber(form LispForm) (int32, error) {
+func integer(form LispForm) (int32, error) {
 	value := form.(LispNumber).Value
 
 	if value != float32(int32(value)) {
-		return 0, fmt.Errorf("Expected whole number, got %f", value)
+		return 0, fmt.Errorf("Expected integer, got %f", value)
 	}
 
 	return int32(value), nil
@@ -521,7 +521,7 @@ func init() {
 		attributeFunctionSignature{
 			argumentTypes: []LispForm{LispNumber{}},
 			implementation: func(args ...LispForm) (PartUpdate, error) {
-				octaveNumber, err := wholeNumber(args[0])
+				octaveNumber, err := integer(args[0])
 				if err != nil {
 					return nil, err
 				}
@@ -868,7 +868,7 @@ func init() {
 		attributeFunctionSignature{
 			argumentTypes: []LispForm{LispNumber{}},
 			implementation: func(args ...LispForm) (PartUpdate, error) {
-				semitones, err := wholeNumber(args[0])
+				semitones, err := integer(args[0])
 				if err != nil {
 					return nil, err
 				}
