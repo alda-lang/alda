@@ -562,7 +562,7 @@ func TestAttributes(t *testing.T) {
 			updates: []ScoreUpdate{
 				PartDeclaration{Names: []string{"piano"}},
 				Note{
-					NoteLetter: C,
+					Pitch: LetterAndAccidentals{NoteLetter: C},
 					Duration: Duration{
 						Components: []DurationComponent{
 							NoteLength{Denominator: 1},
@@ -1083,7 +1083,7 @@ func TestAttributes(t *testing.T) {
 				}},
 
 				PartDeclaration{Names: []string{"piano", "harp"}},
-				Note{NoteLetter: C},
+				Note{Pitch: LetterAndAccidentals{NoteLetter: C}},
 			},
 			expectations: []scoreUpdateExpectation{
 				expectPartOctave("piano", 4),

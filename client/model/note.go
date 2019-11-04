@@ -2,11 +2,7 @@ package model
 
 // A Note represents a single pitch being sustained for a period of time.
 type Note struct {
-	NoteLetter  NoteLetter
-	Accidentals []Accidental
-	// A MidiNote number can optionally be provided instead of a NoteLetter and
-	// Accidentals.
-	MidiNote int32
+	Pitch    PitchIdentifier
 	Duration Duration
 	// When a note is slurred, it means there is minimal space between that note
 	// and the next.
@@ -66,8 +62,8 @@ func addNoteOrRest(score *Score, noteOrRest ScoreUpdate) {
 			}
 
 			if audibleDurationMs > 0 {
-				midiNote := CalculateMidiNote(
-					note, part.Octave, part.KeySignature, part.Transposition,
+				midiNote := note.Pitch.CalculateMidiNote(
+					part.Octave, part.KeySignature, part.Transposition,
 				)
 
 				noteEvent := NoteEvent{

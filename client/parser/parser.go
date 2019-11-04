@@ -333,21 +333,23 @@ func (p *parser) note() (model.Note, error) {
 		return model.Note{}, err
 	}
 
-	note := model.Note{NoteLetter: noteLetter}
+	pitch := model.LetterAndAccidentals{NoteLetter: noteLetter}
 
 AccidentalsLoop:
 	for {
 		switch {
 		case p.match(Flat):
-			note.Accidentals = append(note.Accidentals, model.Flat)
+			pitch.Accidentals = append(pitch.Accidentals, model.Flat)
 		case p.match(Natural):
-			note.Accidentals = append(note.Accidentals, model.Natural)
+			pitch.Accidentals = append(pitch.Accidentals, model.Natural)
 		case p.match(Sharp):
-			note.Accidentals = append(note.Accidentals, model.Sharp)
+			pitch.Accidentals = append(pitch.Accidentals, model.Sharp)
 		default:
 			break AccidentalsLoop
 		}
 	}
+
+	note := model.Note{Pitch: pitch}
 
 	if p.matchDurationComponent() {
 		note.Duration = p.duration()

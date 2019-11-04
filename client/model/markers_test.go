@@ -45,7 +45,7 @@ func TestMarkers(t *testing.T) {
 				},
 				AtMarker{Name: "test-marker"},
 				Note{
-					NoteLetter: D,
+					Pitch: LetterAndAccidentals{NoteLetter: D},
 					Duration: Duration{
 						Components: []DurationComponent{
 							NoteLength{Denominator: 4},
@@ -79,7 +79,7 @@ func TestMarkers(t *testing.T) {
 				PartDeclaration{Names: []string{"bassoon"}},
 				AtMarker{Name: "test-marker"},
 				Note{
-					NoteLetter: D,
+					Pitch: LetterAndAccidentals{NoteLetter: D},
 					Duration: Duration{
 						Components: []DurationComponent{
 							NoteLength{Denominator: 4},

@@ -1,9 +1,10 @@
 package parser
 
 import (
+	"testing"
+
 	"alda.io/client/model"
 	_ "alda.io/client/testing"
-	"testing"
 )
 
 func TestComments(t *testing.T) {
@@ -16,8 +17,8 @@ func TestComments(t *testing.T) {
 			e`,
 			expect: []model.ScoreUpdate{
 				model.PartDeclaration{Names: []string{"piano"}},
-				model.Note{NoteLetter: model.C},
-				model.Note{NoteLetter: model.E},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.E}},
 			},
 		},
 		parseTestCase{
@@ -26,8 +27,8 @@ func TestComments(t *testing.T) {
 			e`,
 			expect: []model.ScoreUpdate{
 				model.PartDeclaration{Names: []string{"piano"}},
-				model.Note{NoteLetter: model.C},
-				model.Note{NoteLetter: model.E},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.E}},
 			},
 		},
 		parseTestCase{
@@ -36,8 +37,8 @@ func TestComments(t *testing.T) {
 			e`,
 			expect: []model.ScoreUpdate{
 				model.PartDeclaration{Names: []string{"piano"}},
-				model.Note{NoteLetter: model.C},
-				model.Note{NoteLetter: model.E},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.E}},
 			},
 		},
 	)

@@ -16,7 +16,7 @@ func TestChords(t *testing.T) {
 				// Add 1000ms to the initial offset of the chord in order to eliminate
 				// false positives from offset initializing to 0
 				Note{
-					NoteLetter: C,
+					Pitch: LetterAndAccidentals{NoteLetter: C},
 					Duration: Duration{
 						Components: []DurationComponent{
 							NoteLength{Denominator: 2},
@@ -26,7 +26,7 @@ func TestChords(t *testing.T) {
 				Chord{
 					Events: []ScoreUpdate{
 						Note{
-							NoteLetter: E,
+							Pitch: LetterAndAccidentals{NoteLetter: E},
 							Duration: Duration{
 								Components: []DurationComponent{
 									NoteLength{Denominator: 1},
@@ -34,7 +34,7 @@ func TestChords(t *testing.T) {
 							},
 						},
 						Note{
-							NoteLetter: G,
+							Pitch: LetterAndAccidentals{NoteLetter: G},
 							Duration: Duration{
 								Components: []DurationComponent{
 									NoteLength{Denominator: 4},
@@ -50,7 +50,7 @@ func TestChords(t *testing.T) {
 						},
 						AttributeUpdate{PartUpdate: OctaveUp{}},
 						Note{
-							NoteLetter: G,
+							Pitch: LetterAndAccidentals{NoteLetter: G},
 							Duration: Duration{
 								Components: []DurationComponent{
 									NoteLength{Denominator: 2},

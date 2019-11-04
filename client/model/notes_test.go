@@ -114,7 +114,7 @@ func TestNotes(t *testing.T) {
 			updates: []ScoreUpdate{
 				PartDeclaration{Names: []string{"piano"}},
 				Note{
-					NoteLetter: C,
+					Pitch: LetterAndAccidentals{NoteLetter: C},
 					Duration: Duration{
 						Components: []DurationComponent{
 							NoteLength{Denominator: 2, Dots: 1},
@@ -122,7 +122,7 @@ func TestNotes(t *testing.T) {
 					},
 				},
 				Note{
-					NoteLetter: D,
+					Pitch: LetterAndAccidentals{NoteLetter: D},
 					Duration: Duration{
 						Components: []DurationComponent{
 							NoteLength{Denominator: 8},
@@ -130,7 +130,7 @@ func TestNotes(t *testing.T) {
 					},
 				},
 				Note{
-					NoteLetter: E,
+					Pitch: LetterAndAccidentals{NoteLetter: E},
 					Duration: Duration{
 						Components: []DurationComponent{
 							NoteLengthMs{Quantity: 2222},
@@ -149,33 +149,40 @@ func TestNotes(t *testing.T) {
 			updates: []ScoreUpdate{
 				PartDeclaration{Names: []string{"piano"}},
 				Note{
-					NoteLetter: C,
+					Pitch: LetterAndAccidentals{NoteLetter: C},
 					Duration: Duration{
 						Components: []DurationComponent{
 							NoteLength{Denominator: 2, Dots: 1},
 						},
 					},
 				},
-				Note{NoteLetter: D},
 				Note{
-					NoteLetter:  D,
-					Accidentals: []Accidental{Sharp},
+					Pitch: LetterAndAccidentals{
+						NoteLetter: D,
+					},
+				},
+				Note{
+					Pitch: LetterAndAccidentals{
+						NoteLetter: D, Accidentals: []Accidental{Sharp},
+					},
 					Duration: Duration{
 						Components: []DurationComponent{
 							NoteLengthMs{Quantity: 50},
 						},
 					},
 				},
-				Note{NoteLetter: E},
 				Note{
-					NoteLetter: F,
+					Pitch: LetterAndAccidentals{NoteLetter: E},
+				},
+				Note{
+					Pitch: LetterAndAccidentals{NoteLetter: F},
 					Duration: Duration{
 						Components: []DurationComponent{
 							NoteLength{Denominator: 8},
 						},
 					},
 				},
-				Note{NoteLetter: G},
+				Note{Pitch: LetterAndAccidentals{NoteLetter: G}},
 			},
 			expectations: []scoreUpdateExpectation{
 				expectNoteOffsets(0, 1500, 3000, 3050, 3100, 3350),
@@ -196,7 +203,7 @@ func TestNotes(t *testing.T) {
 					LispNumber{Value: 100},
 				}},
 				Note{
-					NoteLetter: C,
+					Pitch: LetterAndAccidentals{NoteLetter: C},
 					Duration: Duration{
 						Components: []DurationComponent{
 							NoteLength{Denominator: 4},
@@ -221,7 +228,7 @@ func TestNotes(t *testing.T) {
 					LispNumber{Value: 90},
 				}},
 				Note{
-					NoteLetter: C,
+					Pitch: LetterAndAccidentals{NoteLetter: C},
 					Duration: Duration{
 						Components: []DurationComponent{
 							NoteLength{Denominator: 4},
@@ -246,7 +253,7 @@ func TestNotes(t *testing.T) {
 					LispNumber{Value: 0},
 				}},
 				Note{
-					NoteLetter: C,
+					Pitch: LetterAndAccidentals{NoteLetter: C},
 					Duration: Duration{
 						Components: []DurationComponent{
 							NoteLength{Denominator: 4},
@@ -271,7 +278,7 @@ func TestNotes(t *testing.T) {
 					LispNumber{Value: 90},
 				}},
 				Note{
-					NoteLetter: C,
+					Pitch: LetterAndAccidentals{NoteLetter: C},
 					Duration: Duration{
 						Components: []DurationComponent{
 							NoteLength{Denominator: 4},
@@ -297,7 +304,7 @@ func TestNotes(t *testing.T) {
 					LispNumber{Value: 90},
 				}},
 				Note{
-					NoteLetter: C,
+					Pitch: LetterAndAccidentals{NoteLetter: C},
 					Duration: Duration{
 						Components: []DurationComponent{
 							NoteLength{Denominator: 2},

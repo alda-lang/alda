@@ -16,9 +16,9 @@ func TestChords(t *testing.T) {
 			expect: []model.ScoreUpdate{
 				model.Chord{
 					Events: []model.ScoreUpdate{
-						model.Note{NoteLetter: model.C},
-						model.Note{NoteLetter: model.E},
-						model.Note{NoteLetter: model.G},
+						model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
+						model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.E}},
+						model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.G}},
 					},
 				},
 			},
@@ -30,7 +30,7 @@ func TestChords(t *testing.T) {
 				model.Chord{
 					Events: []model.ScoreUpdate{
 						model.Note{
-							NoteLetter: model.C,
+							Pitch: model.LetterAndAccidentals{NoteLetter: model.C},
 							Duration: model.Duration{
 								Components: []model.DurationComponent{
 									model.NoteLength{Denominator: 1},
@@ -39,7 +39,7 @@ func TestChords(t *testing.T) {
 						},
 						model.AttributeUpdate{PartUpdate: model.OctaveUp{}},
 						model.Note{
-							NoteLetter: model.E,
+							Pitch: model.LetterAndAccidentals{NoteLetter: model.E},
 							Duration: model.Duration{
 								Components: []model.DurationComponent{
 									model.NoteLength{Denominator: 2},
@@ -47,7 +47,7 @@ func TestChords(t *testing.T) {
 							},
 						},
 						model.Note{
-							NoteLetter: model.G,
+							Pitch: model.LetterAndAccidentals{NoteLetter: model.G},
 							Duration: model.Duration{
 								Components: []model.DurationComponent{
 									model.NoteLength{Denominator: 4},
@@ -71,11 +71,11 @@ func TestChords(t *testing.T) {
 			expect: []model.ScoreUpdate{
 				model.Chord{
 					Events: []model.ScoreUpdate{
-						model.Note{NoteLetter: model.B},
+						model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.B}},
 						model.AttributeUpdate{PartUpdate: model.OctaveUp{}},
-						model.Note{NoteLetter: model.D},
+						model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.D}},
 						model.Note{
-							NoteLetter: model.F,
+							Pitch: model.LetterAndAccidentals{NoteLetter: model.F},
 							Duration: model.Duration{
 								Components: []model.DurationComponent{
 									model.NoteLength{Denominator: 2, Dots: 1},

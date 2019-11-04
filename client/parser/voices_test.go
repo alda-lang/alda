@@ -1,9 +1,10 @@
 package parser
 
 import (
+	"testing"
+
 	"alda.io/client/model"
 	_ "alda.io/client/testing"
-	"testing"
 )
 
 func TestVoices(t *testing.T) {
@@ -15,9 +16,9 @@ func TestVoices(t *testing.T) {
 			expect: []model.ScoreUpdate{
 				model.PartDeclaration{Names: []string{"piano"}},
 				model.VoiceMarker{VoiceNumber: 1},
-				model.Note{NoteLetter: model.A},
-				model.Note{NoteLetter: model.B},
-				model.Note{NoteLetter: model.C},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.A}},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.B}},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
 			},
 		},
 		parseTestCase{
@@ -28,13 +29,13 @@ func TestVoices(t *testing.T) {
 			expect: []model.ScoreUpdate{
 				model.PartDeclaration{Names: []string{"piano"}},
 				model.VoiceMarker{VoiceNumber: 1},
-				model.Note{NoteLetter: model.A},
-				model.Note{NoteLetter: model.B},
-				model.Note{NoteLetter: model.C},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.A}},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.B}},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
 				model.VoiceMarker{VoiceNumber: 2},
-				model.Note{NoteLetter: model.D},
-				model.Note{NoteLetter: model.E},
-				model.Note{NoteLetter: model.F},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.D}},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.E}},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.F}},
 			},
 		},
 		parseTestCase{
@@ -44,14 +45,14 @@ func TestVoices(t *testing.T) {
 			expect: []model.ScoreUpdate{
 				model.PartDeclaration{Names: []string{"piano"}},
 				model.VoiceMarker{VoiceNumber: 1},
-				model.Note{NoteLetter: model.A},
-				model.Note{NoteLetter: model.B},
-				model.Note{NoteLetter: model.C},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.A}},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.B}},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
 				model.Barline{},
 				model.VoiceMarker{VoiceNumber: 2},
-				model.Note{NoteLetter: model.D},
-				model.Note{NoteLetter: model.E},
-				model.Note{NoteLetter: model.F},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.D}},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.E}},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.F}},
 			},
 		},
 		parseTestCase{
@@ -64,18 +65,18 @@ func TestVoices(t *testing.T) {
 				model.VoiceMarker{VoiceNumber: 1},
 				repeat(
 					eventSequence(
-						model.Note{NoteLetter: model.A},
-						model.Note{NoteLetter: model.B},
-						model.Note{NoteLetter: model.C},
+						model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.A}},
+						model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.B}},
+						model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
 					),
 					8,
 				),
 				model.VoiceMarker{VoiceNumber: 2},
 				repeat(
 					eventSequence(
-						model.Note{NoteLetter: model.D},
-						model.Note{NoteLetter: model.E},
-						model.Note{NoteLetter: model.F},
+						model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.D}},
+						model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.E}},
+						model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.F}},
 					),
 					8,
 				),

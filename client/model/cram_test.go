@@ -15,9 +15,9 @@ func TestCram(t *testing.T) {
 				PartDeclaration{Names: []string{"piano"}},
 				Cram{
 					Events: []ScoreUpdate{
-						Note{NoteLetter: C, Slurred: true},
-						Note{NoteLetter: D, Slurred: true},
-						Note{NoteLetter: E, Slurred: true},
+						Note{Pitch: LetterAndAccidentals{NoteLetter: C}, Slurred: true},
+						Note{Pitch: LetterAndAccidentals{NoteLetter: D}, Slurred: true},
+						Note{Pitch: LetterAndAccidentals{NoteLetter: E}, Slurred: true},
 					},
 					Duration: Duration{
 						Components: []DurationComponent{
@@ -44,8 +44,8 @@ func TestCram(t *testing.T) {
 				}},
 				Cram{
 					Events: []ScoreUpdate{
-						Note{NoteLetter: C, Slurred: true},
-						Note{NoteLetter: G, Slurred: true},
+						Note{Pitch: LetterAndAccidentals{NoteLetter: C}, Slurred: true},
+						Note{Pitch: LetterAndAccidentals{NoteLetter: G}, Slurred: true},
 					},
 				},
 			},
@@ -62,10 +62,10 @@ func TestCram(t *testing.T) {
 				Cram{
 					Events: []ScoreUpdate{
 						// Implicit quarter note, 250 ms
-						Note{NoteLetter: C, Slurred: true},
+						Note{Pitch: LetterAndAccidentals{NoteLetter: C}, Slurred: true},
 						// half note, 500 ms
 						Note{
-							NoteLetter: D,
+							Pitch: LetterAndAccidentals{NoteLetter: D},
 							Duration: Duration{
 								Components: []DurationComponent{
 									NoteLength{Denominator: 2},
@@ -75,7 +75,7 @@ func TestCram(t *testing.T) {
 						},
 						// quarter note, 250 ms
 						Note{
-							NoteLetter: E,
+							Pitch: LetterAndAccidentals{NoteLetter: E},
 							Duration: Duration{
 								Components: []DurationComponent{
 									NoteLength{Denominator: 4},
@@ -105,13 +105,13 @@ func TestCram(t *testing.T) {
 				Cram{
 					Events: []ScoreUpdate{
 						// 500 ms
-						Note{NoteLetter: C, Slurred: true},
+						Note{Pitch: LetterAndAccidentals{NoteLetter: C}, Slurred: true},
 						Cram{
 							Events: []ScoreUpdate{
 								// 250 ms
-								Note{NoteLetter: E, Slurred: true},
+								Note{Pitch: LetterAndAccidentals{NoteLetter: E}, Slurred: true},
 								// 250 ms
-								Note{NoteLetter: G, Slurred: true},
+								Note{Pitch: LetterAndAccidentals{NoteLetter: G}, Slurred: true},
 							},
 						},
 					},
@@ -138,13 +138,13 @@ func TestCram(t *testing.T) {
 					Event: Cram{
 						Events: []ScoreUpdate{
 							// 500 ms
-							Note{NoteLetter: C, Slurred: true},
+							Note{Pitch: LetterAndAccidentals{NoteLetter: C}, Slurred: true},
 							Cram{
 								Events: []ScoreUpdate{
 									// 250 ms
-									Note{NoteLetter: E, Slurred: true},
+									Note{Pitch: LetterAndAccidentals{NoteLetter: E}, Slurred: true},
 									// 250 ms
-									Note{NoteLetter: G, Slurred: true},
+									Note{Pitch: LetterAndAccidentals{NoteLetter: G}, Slurred: true},
 								},
 							},
 						},

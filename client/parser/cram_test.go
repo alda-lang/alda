@@ -1,9 +1,10 @@
 package parser
 
 import (
+	"testing"
+
 	"alda.io/client/model"
 	_ "alda.io/client/testing"
-	"testing"
 )
 
 func TestCRAM(t *testing.T) {
@@ -15,9 +16,9 @@ func TestCRAM(t *testing.T) {
 			expect: []model.ScoreUpdate{
 				model.Cram{
 					Events: []model.ScoreUpdate{
-						model.Note{NoteLetter: model.C},
-						model.Note{NoteLetter: model.D},
-						model.Note{NoteLetter: model.E},
+						model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
+						model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.D}},
+						model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.E}},
 					},
 				},
 			},
@@ -28,9 +29,9 @@ func TestCRAM(t *testing.T) {
 			expect: []model.ScoreUpdate{
 				model.Cram{
 					Events: []model.ScoreUpdate{
-						model.Note{NoteLetter: model.C},
-						model.Note{NoteLetter: model.D},
-						model.Note{NoteLetter: model.E},
+						model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
+						model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.D}},
+						model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.E}},
 					},
 					Duration: model.Duration{
 						Components: []model.DurationComponent{

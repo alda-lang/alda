@@ -1,9 +1,10 @@
 package parser
 
 import (
+	"testing"
+
 	"alda.io/client/model"
 	_ "alda.io/client/testing"
-	"testing"
 )
 
 func TestBarlines(t *testing.T) {
@@ -14,14 +15,14 @@ func TestBarlines(t *testing.T) {
 			given: "violin: c d | e f | g a",
 			expect: []model.ScoreUpdate{
 				model.PartDeclaration{Names: []string{"violin"}},
-				model.Note{NoteLetter: model.C},
-				model.Note{NoteLetter: model.D},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.D}},
 				model.Barline{},
-				model.Note{NoteLetter: model.E},
-				model.Note{NoteLetter: model.F},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.E}},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.F}},
 				model.Barline{},
-				model.Note{NoteLetter: model.G},
-				model.Note{NoteLetter: model.A},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.G}},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.A}},
 			},
 		},
 		parseTestCase{
@@ -30,7 +31,7 @@ func TestBarlines(t *testing.T) {
 			expect: []model.ScoreUpdate{
 				model.PartDeclaration{Names: []string{"marimba"}},
 				model.Note{
-					NoteLetter: model.C,
+					Pitch: model.LetterAndAccidentals{NoteLetter: model.C},
 					Duration: model.Duration{
 						Components: []model.DurationComponent{
 							model.NoteLength{Denominator: 1},

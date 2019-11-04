@@ -6,8 +6,8 @@ import (
 	_ "alda.io/client/testing"
 )
 
-type noteToMidiNoteNumberTestCase struct {
-	note                   Note
+type midiNoteNumberTestCase struct {
+	pitch                  PitchIdentifier
 	octave                 int32
 	keySignature           KeySignature
 	transposition          int32
@@ -15,36 +15,30 @@ type noteToMidiNoteNumberTestCase struct {
 }
 
 func TestPitch(t *testing.T) {
-	for _, testCase := range []noteToMidiNoteNumberTestCase{
+	for _, testCase := range []midiNoteNumberTestCase{
 		{
-			note: Note{
-				NoteLetter: A,
-			},
+			pitch:                  LetterAndAccidentals{NoteLetter: A},
 			octave:                 4,
 			keySignature:           KeySignature{},
 			transposition:          0,
 			expectedMidiNoteNumber: 69,
 		},
 		{
-			note: Note{
-				NoteLetter: A,
-			},
+			pitch:                  LetterAndAccidentals{NoteLetter: A},
 			octave:                 5,
 			keySignature:           KeySignature{},
 			transposition:          0,
 			expectedMidiNoteNumber: 81,
 		},
 		{
-			note: Note{
-				NoteLetter: C,
-			},
+			pitch:                  LetterAndAccidentals{NoteLetter: C},
 			octave:                 4,
 			keySignature:           KeySignature{},
 			transposition:          0,
 			expectedMidiNoteNumber: 60,
 		},
 		{
-			note: Note{
+			pitch: LetterAndAccidentals{
 				NoteLetter:  C,
 				Accidentals: []Accidental{Sharp},
 			},
@@ -54,7 +48,7 @@ func TestPitch(t *testing.T) {
 			expectedMidiNoteNumber: 61,
 		},
 		{
-			note: Note{
+			pitch: LetterAndAccidentals{
 				NoteLetter:  D,
 				Accidentals: []Accidental{Flat},
 			},
@@ -64,7 +58,7 @@ func TestPitch(t *testing.T) {
 			expectedMidiNoteNumber: 61,
 		},
 		{
-			note: Note{
+			pitch: LetterAndAccidentals{
 				NoteLetter:  B,
 				Accidentals: []Accidental{Flat},
 			},
@@ -74,16 +68,14 @@ func TestPitch(t *testing.T) {
 			expectedMidiNoteNumber: 70,
 		},
 		{
-			note: Note{
-				NoteLetter: B,
-			},
+			pitch:                  LetterAndAccidentals{NoteLetter: B},
 			octave:                 4,
 			keySignature:           KeySignature{B: {Flat}},
 			transposition:          0,
 			expectedMidiNoteNumber: 70,
 		},
 		{
-			note: Note{
+			pitch: LetterAndAccidentals{
 				NoteLetter:  B,
 				Accidentals: []Accidental{Natural},
 			},
@@ -93,7 +85,7 @@ func TestPitch(t *testing.T) {
 			expectedMidiNoteNumber: 71,
 		},
 		{
-			note: Note{
+			pitch: LetterAndAccidentals{
 				NoteLetter:  C,
 				Accidentals: []Accidental{Sharp, Sharp},
 			},
@@ -103,7 +95,7 @@ func TestPitch(t *testing.T) {
 			expectedMidiNoteNumber: 62,
 		},
 		{
-			note: Note{
+			pitch: LetterAndAccidentals{
 				NoteLetter:  A,
 				Accidentals: []Accidental{Flat, Flat},
 			},
@@ -113,7 +105,7 @@ func TestPitch(t *testing.T) {
 			expectedMidiNoteNumber: 67,
 		},
 		{
-			note: Note{
+			pitch: LetterAndAccidentals{
 				NoteLetter:  C,
 				Accidentals: []Accidental{Sharp, Flat, Flat, Sharp},
 			},
@@ -123,25 +115,21 @@ func TestPitch(t *testing.T) {
 			expectedMidiNoteNumber: 60,
 		},
 		{
-			note: Note{
-				NoteLetter: G,
-			},
+			pitch:                  LetterAndAccidentals{NoteLetter: G},
 			octave:                 4,
 			keySignature:           KeySignature{},
 			transposition:          2,
 			expectedMidiNoteNumber: 69,
 		},
 		{
-			note: Note{
-				NoteLetter: C,
-			},
+			pitch:                  LetterAndAccidentals{NoteLetter: C},
 			octave:                 5,
 			keySignature:           KeySignature{},
 			transposition:          -3,
 			expectedMidiNoteNumber: 69,
 		},
 		{
-			note: Note{
+			pitch: LetterAndAccidentals{
 				NoteLetter:  C,
 				Accidentals: []Accidental{Sharp},
 			},
@@ -151,27 +139,21 @@ func TestPitch(t *testing.T) {
 			expectedMidiNoteNumber: 60,
 		},
 		{
-			note: Note{
-				NoteLetter: C,
-			},
+			pitch:                  LetterAndAccidentals{NoteLetter: C},
 			octave:                 4,
 			keySignature:           KeySignature{C: {Sharp}},
 			transposition:          -1,
 			expectedMidiNoteNumber: 60,
 		},
 		{
-			note: Note{
-				MidiNote: 42,
-			},
+			pitch:                  MidiNoteNumber{MidiNote: 42},
 			octave:                 4,
 			keySignature:           KeySignature{},
 			transposition:          0,
 			expectedMidiNoteNumber: 42,
 		},
 		{
-			note: Note{
-				MidiNote: 42,
-			},
+			pitch:                  MidiNoteNumber{MidiNote: 42},
 			octave:                 4,
 			keySignature:           KeySignature{},
 			transposition:          10,
@@ -180,8 +162,7 @@ func TestPitch(t *testing.T) {
 	} {
 		label := "Note => MIDI note number conversion"
 
-		actualMidiNoteNumber := CalculateMidiNote(
-			testCase.note,
+		actualMidiNoteNumber := testCase.pitch.CalculateMidiNote(
 			testCase.octave,
 			testCase.keySignature,
 			testCase.transposition,
@@ -190,9 +171,9 @@ func TestPitch(t *testing.T) {
 		if actualMidiNoteNumber != testCase.expectedMidiNoteNumber {
 			t.Error(label)
 			t.Errorf(
-				"Expected note %#v (octave %d, %#v, transposition %d) "+
+				"Expected pitch %#v (octave %d, %#v, transposition %d) "+
 					"to be MIDI note %d, but it was MIDI note %d",
-				testCase.note,
+				testCase.pitch,
 				testCase.octave,
 				testCase.keySignature,
 				testCase.transposition,

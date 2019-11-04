@@ -142,7 +142,9 @@ func partialCircleOfFifths(scaleType ScaleType) map[NoteLetter]int {
 
 // KeySignatureFromScale returns a key signature given a tonic note and a scale
 // type.
-func KeySignatureFromScale(tonic Note, scaleType ScaleType) KeySignature {
+func KeySignatureFromScale(
+	tonic LetterAndAccidentals, scaleType ScaleType,
+) KeySignature {
 	n := partialCircleOfFifths(scaleType)[tonic.NoteLetter]
 
 	var order []NoteLetter

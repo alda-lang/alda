@@ -79,39 +79,70 @@ func NewAccidental(accidental string) (Accidental, error) {
 	}
 }
 
-// CalculateMidiNote returns the MIDI note number of a note, given contextual
-// information about the part playing the note (e.g. octave, key signature,
-// transposition).
-func CalculateMidiNote(
-	note Note, octave int32, keySignature KeySignature, transposition int32,
+// The PitchIdentifier interface defines how a pitch is specified and
+// determined.
+//
+// This is a multi-step process. The first step is syntax, which provides only
+// partial information, e.g. a note letter like C. Then we gain additional
+// information (e.g. octave, key signature) as we build up the score from the
+// AST, and the methods of this interface are used to determine the precise
+// pitch of the note.
+type PitchIdentifier interface {
+	// CalculateMidiNote returns the MIDI note number of a note, given contextual
+	// information about the part playing the note (e.g. octave, key signature,
+	// transposition).
+	CalculateMidiNote(
+		octave int32, keySignature KeySignature, transposition int32,
+	) int32
+}
+
+// LetterAndAccidentals specifies a pitch as a note letter and (optional)
+// accidentals.
+type LetterAndAccidentals struct {
+	NoteLetter  NoteLetter
+	Accidentals []Accidental
+}
+
+// CalculateMidiNote implements PitchIdentifier.CalculateMidiNote by placing the
+// note in the given octave, applying the key signature, and applying the
+// transposition.
+func (laa LetterAndAccidentals) CalculateMidiNote(
+	octave int32, keySignature KeySignature, transposition int32,
 ) int32 {
-	var baseMidiNoteNumber int32
+	intervals := map[NoteLetter]int32{
+		C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11,
+	}
 
-	if note.MidiNote != 0 {
-		baseMidiNoteNumber = note.MidiNote
+	baseMidiNoteNumber := ((octave + 1) * 12) + intervals[laa.NoteLetter]
+
+	var accidentals []Accidental
+	if laa.Accidentals == nil {
+		accidentals = keySignature[laa.NoteLetter]
 	} else {
-		intervals := map[NoteLetter]int32{
-			C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11,
-		}
+		accidentals = laa.Accidentals
+	}
 
-		baseMidiNoteNumber = ((octave + 1) * 12) + intervals[note.NoteLetter]
-
-		var accidentals []Accidental
-		if note.Accidentals == nil {
-			accidentals = keySignature[note.NoteLetter]
-		} else {
-			accidentals = note.Accidentals
-		}
-
-		for _, accidental := range accidentals {
-			switch accidental {
-			case Flat:
-				baseMidiNoteNumber--
-			case Sharp:
-				baseMidiNoteNumber++
-			}
+	for _, accidental := range accidentals {
+		switch accidental {
+		case Flat:
+			baseMidiNoteNumber--
+		case Sharp:
+			baseMidiNoteNumber++
 		}
 	}
 
 	return baseMidiNoteNumber + transposition
+}
+
+// MidiNoteNumber specifies a pitch as a MIDI note number.
+type MidiNoteNumber struct {
+	MidiNote int32
+}
+
+// CalculateMidiNote implements PitchIdentifier.CalculateMidiNote by returning
+// an explicit MIDI note number and applying the transposition.
+func (mnn MidiNoteNumber) CalculateMidiNote(
+	octave int32, keySignature KeySignature, transposition int32,
+) int32 {
+	return mnn.MidiNote + transposition
 }

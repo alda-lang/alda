@@ -1,9 +1,10 @@
 package parser
 
 import (
+	"testing"
+
 	"alda.io/client/model"
 	_ "alda.io/client/testing"
-	"testing"
 )
 
 func TestParts(t *testing.T) {
@@ -14,9 +15,9 @@ func TestParts(t *testing.T) {
 			given: "theremin: c d e",
 			expect: []model.ScoreUpdate{
 				model.PartDeclaration{Names: []string{"theremin"}},
-				model.Note{NoteLetter: model.C},
-				model.Note{NoteLetter: model.D},
-				model.Note{NoteLetter: model.E},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.D}},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.E}},
 			},
 		},
 		parseTestCase{
@@ -24,9 +25,9 @@ func TestParts(t *testing.T) {
 			given: `harmonica "bob": c d e`,
 			expect: []model.ScoreUpdate{
 				model.PartDeclaration{Names: []string{"harmonica"}, Alias: "bob"},
-				model.Note{NoteLetter: model.C},
-				model.Note{NoteLetter: model.D},
-				model.Note{NoteLetter: model.E},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.D}},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.E}},
 			},
 		},
 		parseTestCase{
@@ -34,9 +35,9 @@ func TestParts(t *testing.T) {
 			given: "violin/viola: c d e",
 			expect: []model.ScoreUpdate{
 				model.PartDeclaration{Names: []string{"violin", "viola"}},
-				model.Note{NoteLetter: model.C},
-				model.Note{NoteLetter: model.D},
-				model.Note{NoteLetter: model.E},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.D}},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.E}},
 			},
 		},
 		parseTestCase{
@@ -47,9 +48,9 @@ func TestParts(t *testing.T) {
 					Names: []string{"trumpet", "trombone", "tuba"},
 					Alias: "brass",
 				},
-				model.Note{NoteLetter: model.C},
-				model.Note{NoteLetter: model.D},
-				model.Note{NoteLetter: model.E},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.D}},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.E}},
 			},
 		},
 		parseTestCase{
@@ -58,9 +59,9 @@ func TestParts(t *testing.T) {
 			bass: e`,
 			expect: []model.ScoreUpdate{
 				model.PartDeclaration{Names: []string{"guitar"}},
-				model.Note{NoteLetter: model.E},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.E}},
 				model.PartDeclaration{Names: []string{"bass"}},
-				model.Note{NoteLetter: model.E},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.E}},
 			},
 		},
 	)

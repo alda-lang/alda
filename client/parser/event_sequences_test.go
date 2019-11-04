@@ -1,9 +1,10 @@
 package parser
 
 import (
+	"testing"
+
 	"alda.io/client/model"
 	_ "alda.io/client/testing"
-	"testing"
 )
 
 func eventSequence(events ...model.ScoreUpdate) model.EventSequence {
@@ -35,9 +36,9 @@ func TestEventSequences(t *testing.T) {
 			given: "[c d c r]",
 			expect: []model.ScoreUpdate{
 				eventSequence(
-					model.Note{NoteLetter: model.C},
-					model.Note{NoteLetter: model.D},
-					model.Note{NoteLetter: model.C},
+					model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
+					model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.D}},
+					model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
 					model.Rest{},
 				),
 			},
@@ -47,9 +48,9 @@ func TestEventSequences(t *testing.T) {
 			given: "[c d c r ]",
 			expect: []model.ScoreUpdate{
 				eventSequence(
-					model.Note{NoteLetter: model.C},
-					model.Note{NoteLetter: model.D},
-					model.Note{NoteLetter: model.C},
+					model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
+					model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.D}},
+					model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
 					model.Rest{},
 				),
 			},
@@ -59,15 +60,15 @@ func TestEventSequences(t *testing.T) {
 			given: "[ c d e f c/e/g ]",
 			expect: []model.ScoreUpdate{
 				eventSequence(
-					model.Note{NoteLetter: model.C},
-					model.Note{NoteLetter: model.D},
-					model.Note{NoteLetter: model.E},
-					model.Note{NoteLetter: model.F},
+					model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
+					model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.D}},
+					model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.E}},
+					model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.F}},
 					model.Chord{
 						Events: []model.ScoreUpdate{
-							model.Note{NoteLetter: model.C},
-							model.Note{NoteLetter: model.E},
-							model.Note{NoteLetter: model.G},
+							model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
+							model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.E}},
+							model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.G}},
 						},
 					},
 				),
@@ -78,13 +79,13 @@ func TestEventSequences(t *testing.T) {
 			given: "[c d [e f] g]",
 			expect: []model.ScoreUpdate{
 				eventSequence(
-					model.Note{NoteLetter: model.C},
-					model.Note{NoteLetter: model.D},
+					model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
+					model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.D}},
 					eventSequence(
-						model.Note{NoteLetter: model.E},
-						model.Note{NoteLetter: model.F},
+						model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.E}},
+						model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.F}},
 					),
-					model.Note{NoteLetter: model.G},
+					model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.G}},
 				),
 			},
 		},
@@ -94,13 +95,13 @@ func TestEventSequences(t *testing.T) {
 			expect: []model.ScoreUpdate{
 				eventSequence(
 					model.VoiceMarker{VoiceNumber: 1},
-					model.Note{NoteLetter: model.E},
-					model.Note{NoteLetter: model.B},
-					model.Note{NoteLetter: model.D},
+					model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.E}},
+					model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.B}},
+					model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.D}},
 					model.VoiceMarker{VoiceNumber: 2},
-					model.Note{NoteLetter: model.A},
-					model.Note{NoteLetter: model.C},
-					model.Note{NoteLetter: model.F},
+					model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.A}},
+					model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
+					model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.F}},
 				),
 			},
 		},

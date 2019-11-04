@@ -410,7 +410,7 @@ func keySignatureFromScaleName(forms []LispForm) (KeySignature, error) {
 		return KeySignature{}, validityError
 	}
 
-	tonic := Note{NoteLetter: letter}
+	tonic := LetterAndAccidentals{NoteLetter: letter}
 	passedAccidentals := false
 	remainingForms := []LispForm{}
 

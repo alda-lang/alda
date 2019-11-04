@@ -34,9 +34,9 @@ func TestRepeats(t *testing.T) {
 			expect: []model.ScoreUpdate{
 				repeat(
 					eventSequence(
-						model.Note{NoteLetter: model.C},
-						model.Note{NoteLetter: model.D},
-						model.Note{NoteLetter: model.E},
+						model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
+						model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.D}},
+						model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.E}},
 					),
 					4,
 				),
@@ -48,7 +48,7 @@ func TestRepeats(t *testing.T) {
 			expect: []model.ScoreUpdate{
 				repeat(
 					eventSequence(
-						model.Note{NoteLetter: model.C},
+						model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
 						octaveUp(),
 					),
 					5,
@@ -61,7 +61,7 @@ func TestRepeats(t *testing.T) {
 			expect: []model.ScoreUpdate{
 				repeat(
 					eventSequence(
-						model.Note{NoteLetter: model.C},
+						model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
 						octaveUp(),
 					),
 					5,
@@ -74,7 +74,7 @@ func TestRepeats(t *testing.T) {
 			expect: []model.ScoreUpdate{
 				repeat(
 					model.Note{
-						NoteLetter: model.C,
+						Pitch: model.LetterAndAccidentals{NoteLetter: model.C},
 						Duration: model.Duration{
 							Components: []model.DurationComponent{
 								model.NoteLength{Denominator: 8},
@@ -91,7 +91,7 @@ func TestRepeats(t *testing.T) {
 			expect: []model.ScoreUpdate{
 				repeat(
 					model.Note{
-						NoteLetter: model.C,
+						Pitch: model.LetterAndAccidentals{NoteLetter: model.C},
 						Duration: model.Duration{
 							Components: []model.DurationComponent{
 								model.NoteLength{Denominator: 8},
@@ -108,7 +108,7 @@ func TestRepeats(t *testing.T) {
 			expect: []model.ScoreUpdate{
 				repeat(
 					model.Note{
-						NoteLetter: model.C,
+						Pitch: model.LetterAndAccidentals{NoteLetter: model.C},
 						Duration: model.Duration{
 							Components: []model.DurationComponent{
 								model.NoteLength{Denominator: 8},
@@ -126,7 +126,7 @@ func TestRepeats(t *testing.T) {
 				repeat(
 					eventSequence(
 						eventOnIterations(
-							model.Note{NoteLetter: model.C},
+							model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
 							onIteration(1), onIteration(3),
 						),
 					),
@@ -140,9 +140,19 @@ func TestRepeats(t *testing.T) {
 			expect: []model.ScoreUpdate{
 				repeat(
 					eventSequence(
-						model.Note{NoteLetter: model.C},
-						eventOnIterations(model.Note{NoteLetter: model.D}, onIteration(1)),
-						eventOnIterations(model.Note{NoteLetter: model.E}, onIteration(2)),
+						model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
+						eventOnIterations(
+							model.Note{
+								Pitch: model.LetterAndAccidentals{NoteLetter: model.D},
+							},
+							onIteration(1),
+						),
+						eventOnIterations(
+							model.Note{
+								Pitch: model.LetterAndAccidentals{NoteLetter: model.E},
+							},
+							onIteration(2),
+						),
 					),
 					2,
 				),
@@ -155,13 +165,19 @@ func TestRepeats(t *testing.T) {
 				repeat(
 					eventSequence(
 						eventOnIterations(
-							model.Note{NoteLetter: model.C},
+							model.Note{
+								Pitch: model.LetterAndAccidentals{NoteLetter: model.C},
+							},
 							forIterationRange(1, 2), onIteration(4),
 						),
 						eventOnIterations(
 							eventSequence(
-								model.Note{NoteLetter: model.D},
-								model.Note{NoteLetter: model.E},
+								model.Note{
+									Pitch: model.LetterAndAccidentals{NoteLetter: model.D},
+								},
+								model.Note{
+									Pitch: model.LetterAndAccidentals{NoteLetter: model.E},
+								},
 							),
 							forIterationRange(2, 3),
 						),
@@ -179,9 +195,15 @@ func TestRepeats(t *testing.T) {
 						eventOnIterations(
 							model.Cram{
 								Events: []model.ScoreUpdate{
-									model.Note{NoteLetter: model.C},
-									model.Note{NoteLetter: model.D},
-									model.Note{NoteLetter: model.E},
+									model.Note{
+										Pitch: model.LetterAndAccidentals{NoteLetter: model.C},
+									},
+									model.Note{
+										Pitch: model.LetterAndAccidentals{NoteLetter: model.D},
+									},
+									model.Note{
+										Pitch: model.LetterAndAccidentals{NoteLetter: model.E},
+									},
 								},
 								Duration: model.Duration{
 									Components: []model.DurationComponent{
@@ -193,7 +215,9 @@ func TestRepeats(t *testing.T) {
 						),
 						eventOnIterations(
 							eventSequence(
-								model.Note{NoteLetter: model.F},
+								model.Note{
+									Pitch: model.LetterAndAccidentals{NoteLetter: model.F},
+								},
 								model.Rest{
 									Duration: model.Duration{
 										Components: []model.DurationComponent{
@@ -202,7 +226,9 @@ func TestRepeats(t *testing.T) {
 									},
 								},
 								octaveUp(),
-								model.Note{NoteLetter: model.G},
+								model.Note{
+									Pitch: model.LetterAndAccidentals{NoteLetter: model.G},
+								},
 							),
 							forIterationRange(2, 4),
 						),

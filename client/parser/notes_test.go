@@ -1,9 +1,10 @@
 package parser
 
 import (
+	"testing"
+
 	"alda.io/client/model"
 	_ "alda.io/client/testing"
-	"testing"
 )
 
 func TestNotes(t *testing.T) {
@@ -13,7 +14,7 @@ func TestNotes(t *testing.T) {
 			label: "note with implicit duration",
 			given: "c",
 			expect: []model.ScoreUpdate{
-				model.Note{NoteLetter: model.C},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
 			},
 		},
 		parseTestCase{
@@ -21,7 +22,7 @@ func TestNotes(t *testing.T) {
 			given: "c4",
 			expect: []model.ScoreUpdate{
 				model.Note{
-					NoteLetter: model.C,
+					Pitch: model.LetterAndAccidentals{NoteLetter: model.C},
 					Duration: model.Duration{
 						Components: []model.DurationComponent{
 							model.NoteLength{Denominator: 4},
@@ -35,8 +36,10 @@ func TestNotes(t *testing.T) {
 			given: "c+",
 			expect: []model.ScoreUpdate{
 				model.Note{
-					NoteLetter:  model.C,
-					Accidentals: []model.Accidental{model.Sharp},
+					Pitch: model.LetterAndAccidentals{
+						NoteLetter:  model.C,
+						Accidentals: []model.Accidental{model.Sharp},
+					},
 				},
 			},
 		},
@@ -45,8 +48,10 @@ func TestNotes(t *testing.T) {
 			given: "b-",
 			expect: []model.ScoreUpdate{
 				model.Note{
-					NoteLetter:  model.B,
-					Accidentals: []model.Accidental{model.Flat},
+					Pitch: model.LetterAndAccidentals{
+						NoteLetter:  model.B,
+						Accidentals: []model.Accidental{model.Flat},
+					},
 				},
 			},
 		},
@@ -55,8 +60,10 @@ func TestNotes(t *testing.T) {
 			given: "c++",
 			expect: []model.ScoreUpdate{
 				model.Note{
-					NoteLetter:  model.C,
-					Accidentals: []model.Accidental{model.Sharp, model.Sharp},
+					Pitch: model.LetterAndAccidentals{
+						NoteLetter:  model.C,
+						Accidentals: []model.Accidental{model.Sharp, model.Sharp},
+					},
 				},
 			},
 		},
@@ -65,8 +72,10 @@ func TestNotes(t *testing.T) {
 			given: "b--",
 			expect: []model.ScoreUpdate{
 				model.Note{
-					NoteLetter:  model.B,
-					Accidentals: []model.Accidental{model.Flat, model.Flat},
+					Pitch: model.LetterAndAccidentals{
+						NoteLetter:  model.B,
+						Accidentals: []model.Accidental{model.Flat, model.Flat},
+					},
 				},
 			},
 		},

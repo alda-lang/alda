@@ -229,7 +229,7 @@ func TestParts(t *testing.T) {
 					Alias: "trumpiano",
 				},
 				Note{
-					NoteLetter: C,
+					Pitch: LetterAndAccidentals{NoteLetter: C},
 					Duration: Duration{
 						Components: []DurationComponent{
 							NoteLengthMs{Quantity: 1234},
@@ -238,7 +238,7 @@ func TestParts(t *testing.T) {
 				},
 				PartDeclaration{Names: []string{"trumpiano.trumpet"}},
 				Note{
-					NoteLetter: C,
+					Pitch: LetterAndAccidentals{NoteLetter: C},
 					Duration: Duration{
 						Components: []DurationComponent{
 							NoteLengthMs{Quantity: 1000},
@@ -269,7 +269,7 @@ func TestParts(t *testing.T) {
 					Alias: "trumpiano",
 				},
 				Note{
-					NoteLetter: C,
+					Pitch: LetterAndAccidentals{NoteLetter: C},
 					Duration: Duration{
 						Components: []DurationComponent{
 							NoteLengthMs{Quantity: 1234},
@@ -278,7 +278,7 @@ func TestParts(t *testing.T) {
 				},
 				PartDeclaration{Names: []string{"bassoon"}},
 				Note{
-					NoteLetter: C,
+					Pitch: LetterAndAccidentals{NoteLetter: C},
 					Duration: Duration{
 						Components: []DurationComponent{
 							NoteLengthMs{Quantity: 1234},

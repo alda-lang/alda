@@ -9,8 +9,8 @@ import (
 
 func cNoteWithDuration(components ...model.DurationComponent) model.Note {
 	return model.Note{
-		NoteLetter: model.C,
-		Duration:   model.Duration{Components: components},
+		Pitch:    model.LetterAndAccidentals{NoteLetter: model.C},
+		Duration: model.Duration{Components: components},
 	}
 }
 
@@ -108,8 +108,8 @@ func TestDurations(t *testing.T) {
 			given: "c~",
 			expect: []model.ScoreUpdate{
 				model.Note{
-					NoteLetter: model.C,
-					Slurred:    true,
+					Pitch:   model.LetterAndAccidentals{NoteLetter: model.C},
+					Slurred: true,
 				},
 			},
 		},
@@ -118,7 +118,7 @@ func TestDurations(t *testing.T) {
 			given: "c4~",
 			expect: []model.ScoreUpdate{
 				model.Note{
-					NoteLetter: model.C,
+					Pitch: model.LetterAndAccidentals{NoteLetter: model.C},
 					Duration: model.Duration{
 						Components: []model.DurationComponent{
 							model.NoteLength{Denominator: 4},
@@ -133,7 +133,7 @@ func TestDurations(t *testing.T) {
 			given: "c420ms~",
 			expect: []model.ScoreUpdate{
 				model.Note{
-					NoteLetter: model.C,
+					Pitch: model.LetterAndAccidentals{NoteLetter: model.C},
 					Duration: model.Duration{
 						Components: []model.DurationComponent{
 							model.NoteLengthMs{Quantity: 420},

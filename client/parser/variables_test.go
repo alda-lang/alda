@@ -1,9 +1,10 @@
 package parser
 
 import (
+	"testing"
+
 	"alda.io/client/model"
 	_ "alda.io/client/testing"
-	"testing"
 )
 
 func variableDefinition(name string, events ...model.ScoreUpdate,
@@ -63,9 +64,9 @@ func TestVariables(t *testing.T) {
 			given: "flute: c flan f",
 			expect: []model.ScoreUpdate{
 				model.PartDeclaration{Names: []string{"flute"}},
-				model.Note{NoteLetter: model.C},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
 				variableReference("flan"),
-				model.Note{NoteLetter: model.F},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.F}},
 			},
 		},
 		parseTestCase{
@@ -86,8 +87,12 @@ func TestVariables(t *testing.T) {
 						Events: []model.ScoreUpdate{
 							model.Chord{
 								Events: []model.ScoreUpdate{
-									model.Note{NoteLetter: model.C},
-									model.Note{NoteLetter: model.E},
+									model.Note{
+										Pitch: model.LetterAndAccidentals{NoteLetter: model.C},
+									},
+									model.Note{
+										Pitch: model.LetterAndAccidentals{NoteLetter: model.E},
+									},
 								},
 							},
 						},
@@ -108,12 +113,16 @@ func TestVariables(t *testing.T) {
 				model.PartDeclaration{Names: []string{"harpsichord"}},
 				variableDefinition(
 					"custard_",
-					model.Note{NoteLetter: model.C},
-					model.Note{NoteLetter: model.D},
+					model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
+					model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.D}},
 					model.Chord{
 						Events: []model.ScoreUpdate{
-							model.Note{NoteLetter: model.E},
-							model.Note{NoteLetter: model.G},
+							model.Note{
+								Pitch: model.LetterAndAccidentals{NoteLetter: model.E},
+							},
+							model.Note{
+								Pitch: model.LetterAndAccidentals{NoteLetter: model.G},
+							},
 						},
 					},
 				),
@@ -129,16 +138,20 @@ func TestVariables(t *testing.T) {
 				model.PartDeclaration{Names: []string{"glockenspiel"}},
 				variableDefinition(
 					"sorbet",
-					model.Note{NoteLetter: model.C},
-					model.Note{NoteLetter: model.D},
+					model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
+					model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.D}},
 					model.Chord{
 						Events: []model.ScoreUpdate{
-							model.Note{NoteLetter: model.E},
-							model.Note{NoteLetter: model.G},
+							model.Note{
+								Pitch: model.LetterAndAccidentals{NoteLetter: model.E},
+							},
+							model.Note{
+								Pitch: model.LetterAndAccidentals{NoteLetter: model.G},
+							},
 						},
 					},
 				),
-				model.Note{NoteLetter: model.C},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
 			},
 		},
 		parseTestCase{
@@ -149,14 +162,14 @@ func TestVariables(t *testing.T) {
 			expect: []model.ScoreUpdate{
 				variableDefinition(
 					"GELATO",
-					model.Note{NoteLetter: model.D},
-					model.Note{NoteLetter: model.E},
+					model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.D}},
+					model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.E}},
 				),
 				model.PartDeclaration{Names: []string{"clavinet"}},
 				model.Chord{
 					Events: []model.ScoreUpdate{
-						model.Note{NoteLetter: model.C},
-						model.Note{NoteLetter: model.F},
+						model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
+						model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.F}},
 					},
 				},
 			},
@@ -171,15 +184,15 @@ func TestVariables(t *testing.T) {
 				variableDefinition(
 					"foo",
 					model.Note{
-						NoteLetter: model.C,
+						Pitch: model.LetterAndAccidentals{NoteLetter: model.C},
 						Duration: model.Duration{
 							Components: []model.DurationComponent{
 								model.NoteLength{Denominator: 8},
 							},
 						},
 					},
-					model.Note{NoteLetter: model.D},
-					model.Note{NoteLetter: model.C},
+					model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.D}},
+					model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
 					model.Rest{},
 				),
 				model.PartDeclaration{Names: []string{"piano"}},
