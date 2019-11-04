@@ -17,29 +17,44 @@ import (
 // preferred approach is to drive Alda from a Turing-complete programming
 // language like Clojure. (See: https://github.com/daveyarwood/alda-clj)
 
+// The LispForm interface is implemented by the various types available in
+// alda-lisp.
 type LispForm interface {
+	// TypeString returns a human-readable name of a form's type.
 	TypeString() string
+	// Eval returns the value of a form when evaluated, or an error if
+	// evaluation is unsuccessful.
 	Eval() (LispForm, error)
 }
 
+// An Operator is something that takes 0 or more forms and returns a form or an
+// error..
 type Operator interface {
+	// Operate takes 0 or more forms and returns a form.
+	//
+	// Returns an error if the operation was unsuccessful.
 	Operate([]LispForm) (LispForm, error)
 }
 
+// A FunctionSignature defines what a function does when called with arguments
+// that are a certain combination of types.
 type FunctionSignature struct {
 	ArgumentTypes  []LispForm
 	Implementation func(...LispForm) (LispForm, error)
 }
 
+// A LispFunction is a function.
 type LispFunction struct {
 	Name       string
 	Signatures []FunctionSignature
 }
 
+// TypeString implements LispForm.TypeString.
 func (LispFunction) TypeString() string {
 	return "function"
 }
 
+// Eval implements LispForm.Eval by returning the function.
 func (f LispFunction) Eval() (LispForm, error) {
 	return f, nil
 }
@@ -86,6 +101,11 @@ func signatureLines(signatures []FunctionSignature) string {
 	return strings.Join(lines, "    OR\n")
 }
 
+// Operate determines which function signature to use based on the types of the
+// arguments and calls the appropriate function on the arguments.
+//
+// Returns an error if the arguments do not match any of the function's
+// signatures.
 func (f LispFunction) Operate(arguments []LispForm) (LispForm, error) {
 	for _, signature := range f.Signatures {
 		if argumentsMatchSignature(arguments, signature) {
@@ -872,32 +892,40 @@ func init() {
 	)
 }
 
+// LispNil is the value nil.
 type LispNil struct{}
 
+// TypeString implements LispForm.TypeString.
 func (LispNil) TypeString() string {
 	return "nil"
 }
 
-func (LispNil) Eval() (LispForm, error) {
-	return LispNil{}, nil
+// Eval implements LispForm.Eval by returning the LispNil.
+func (n LispNil) Eval() (LispForm, error) {
+	return n, nil
 }
 
+// LispQuotedForm wraps a form by quoting it.
 type LispQuotedForm struct {
 	Form LispForm
 }
 
+// TypeString implements LispForm.TypeString.
 func (LispQuotedForm) TypeString() string {
 	return "quoted form"
 }
 
+// Eval implements LispForm.Eval by returning the unquoted form.
 func (qf LispQuotedForm) Eval() (LispForm, error) {
 	return qf.Form, nil
 }
 
+// LispSymbol is a Lisp symbol.
 type LispSymbol struct {
 	Name string
 }
 
+// TypeString implements LispForm.TypeString.
 func (LispSymbol) TypeString() string {
 	return "symbol"
 }
@@ -906,6 +934,10 @@ func (sym LispSymbol) String() string {
 	return "'" + sym.Name
 }
 
+// Eval implements LispForm.Eval by resolving the symbol and returning the
+// corresponding value.
+//
+// Returns an error if the symbol cannot be resolved.
 func (sym LispSymbol) Eval() (LispForm, error) {
 	value, hit := environment[sym.Name]
 
@@ -916,50 +948,64 @@ func (sym LispSymbol) Eval() (LispForm, error) {
 	return value, nil
 }
 
+// LispNumber is a floating point number.
 type LispNumber struct {
 	Value float32
 }
 
+// TypeString implements LispForm.TypeString.
 func (LispNumber) TypeString() string {
 	return "number"
 }
 
+// Eval implements LispForm.Eval by returning the number.
 func (n LispNumber) Eval() (LispForm, error) {
 	return n, nil
 }
 
+// LispString is a string value.
 type LispString struct {
 	Value string
 }
 
+// TypeString implements LispForm.TypeString.
 func (LispString) TypeString() string {
 	return "string"
 }
 
+// Eval implements LispForm.Eval by returning the string.
 func (s LispString) Eval() (LispForm, error) {
 	return s, nil
 }
 
+// LispScoreUpdate is a ScoreUpdate value.
 type LispScoreUpdate struct {
 	ScoreUpdate ScoreUpdate
 }
 
+// TypeString implements LispForm.TypeString.
 func (su LispScoreUpdate) TypeString() string {
 	return "score update"
 }
 
+// Eval implements LispForm.Eval by returning the score update.
 func (su LispScoreUpdate) Eval() (LispForm, error) {
 	return su, nil
 }
 
+// LispList is a list of forms.
 type LispList struct {
 	Elements []LispForm
 }
 
+// TypeString implements LispForm.TypeString.
 func (LispList) TypeString() string {
 	return "list"
 }
 
+// Eval implements LispForm.Eval by treating the (unquoted) list as an
+// S-expression. All forms in the list are evaluated. The first form is treated
+// as an operator and the remaining forms are treated as arguments.
 func (l LispList) Eval() (LispForm, error) {
 	operator, err := l.Elements[0].Eval()
 	if err != nil {
