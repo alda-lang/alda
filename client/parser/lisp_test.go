@@ -1,9 +1,10 @@
 package parser
 
 import (
+	"testing"
+
 	"alda.io/client/model"
 	_ "alda.io/client/testing"
-	"testing"
 )
 
 func lispSymbol(name string) model.LispSymbol {
@@ -81,5 +82,3 @@ func TestLisp(t *testing.T) {
 		},
 	)
 }
-
-// (key-signature "f+ c+ g+")
