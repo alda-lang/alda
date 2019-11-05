@@ -976,6 +976,174 @@ func init() {
 			},
 		},
 	)
+
+	defn("ms",
+		FunctionSignature{
+			ArgumentTypes: []LispForm{LispNumber{}},
+			Implementation: func(args ...LispForm) (LispForm, error) {
+				quantity, err := positiveNumber(args[0])
+				if err != nil {
+					return nil, err
+				}
+				return LispDuration{NoteLengthMs{Quantity: quantity}}, nil
+			},
+		},
+	)
+
+	defn("note-length",
+		FunctionSignature{
+			ArgumentTypes: []LispForm{LispNumber{}},
+			Implementation: func(args ...LispForm) (LispForm, error) {
+				denominator, err := positiveNumber(args[0])
+				if err != nil {
+					return nil, err
+				}
+
+				noteLength := NoteLength{Denominator: denominator}
+				return LispDuration{DurationComponent: noteLength}, nil
+			},
+		},
+		FunctionSignature{
+			ArgumentTypes: []LispForm{LispString{}},
+			Implementation: func(args ...LispForm) (LispForm, error) {
+				noteLength, err := noteLength(args[0].(LispString).Value)
+				if err != nil {
+					return nil, err
+				}
+
+				return LispDuration{DurationComponent: noteLength}, nil
+			},
+		},
+	)
+
+	defn("duration",
+		FunctionSignature{
+			ArgumentTypes: []LispForm{LispVariadic{LispDuration{}}},
+			Implementation: func(args ...LispForm) (LispForm, error) {
+				duration := Duration{}
+
+				for _, arg := range args {
+					component := arg.(LispDuration).DurationComponent
+					duration.Components = append(duration.Components, component)
+				}
+
+				return LispDuration{DurationComponent: duration}, nil
+			},
+		},
+	)
+
+	defn("midi-note",
+		FunctionSignature{
+			ArgumentTypes: []LispForm{LispNumber{}},
+			Implementation: func(args ...LispForm) (LispForm, error) {
+				noteNumber, err := integer(args[0])
+				if err != nil {
+					return nil, err
+				}
+				return LispPitch{MidiNoteNumber{MidiNote: noteNumber}}, nil
+			},
+		},
+	)
+
+	defn("pitch",
+		FunctionSignature{
+			ArgumentTypes: []LispForm{LispList{}},
+			Implementation: func(args ...LispForm) (LispForm, error) {
+				forms := args[0].(LispList).Elements
+				validityError := fmt.Errorf("Invalid letter/accidentals: %#v", forms)
+
+				if len(forms) == 0 {
+					return nil, validityError
+				}
+
+				pitch := LetterAndAccidentals{}
+
+				switch forms[0].(type) {
+				case LispSymbol:
+					symbol := forms[0].(LispSymbol).Name
+					chars := []rune(symbol)
+
+					if len(chars) != 1 {
+						return nil, validityError
+					}
+
+					noteLetter, err := NewNoteLetter(chars[0])
+					if err != nil {
+						return nil, err
+					}
+
+					pitch.NoteLetter = noteLetter
+				default:
+					return nil, validityError
+				}
+
+				if len(forms) > 1 {
+					accidentals := []Accidental{}
+
+					for _, form := range forms[1:len(forms)] {
+						switch form.(type) {
+						case LispSymbol:
+							accidental, err := NewAccidental(form.(LispSymbol).Name)
+							if err != nil {
+								return nil, err
+							}
+
+							accidentals = append(accidentals, accidental)
+						default:
+							return nil, validityError
+						}
+					}
+
+					pitch.Accidentals = accidentals
+				}
+
+				return LispPitch{PitchIdentifier: pitch}, nil
+			},
+		},
+	)
+
+	defn("note",
+		FunctionSignature{
+			ArgumentTypes: []LispForm{LispPitch{}},
+			Implementation: func(args ...LispForm) (LispForm, error) {
+				pitch := args[0].(LispPitch).PitchIdentifier
+				note := Note{Pitch: pitch}
+				return LispScoreUpdate{ScoreUpdate: note}, nil
+			},
+		},
+		FunctionSignature{
+			ArgumentTypes: []LispForm{LispPitch{}, LispDuration{}},
+			Implementation: func(args ...LispForm) (LispForm, error) {
+				pitch := args[0].(LispPitch).PitchIdentifier
+				duration := args[1].(LispDuration).DurationComponent
+				note := Note{
+					Pitch:    pitch,
+					Duration: Duration{Components: []DurationComponent{duration}},
+				}
+				return LispScoreUpdate{ScoreUpdate: note}, nil
+			},
+		},
+	)
+
+	defn("slur",
+		FunctionSignature{
+			ArgumentTypes: []LispForm{LispScoreUpdate{}},
+			Implementation: func(args ...LispForm) (LispForm, error) {
+				scoreUpdate := args[0].(LispScoreUpdate).ScoreUpdate
+
+				switch scoreUpdate.(type) {
+				case Note:
+					note := scoreUpdate.(Note)
+					note.Slurred = true
+					return LispScoreUpdate{ScoreUpdate: note}, nil
+				default:
+					return nil, fmt.Errorf(
+						"only notes can be slurred. Expected Note, got: %#v", scoreUpdate,
+					)
+				}
+			},
+		},
+	)
 }
 
 // LispNil is the value nil.
@@ -1077,6 +1245,36 @@ func (su LispScoreUpdate) TypeString() string {
 // Eval implements LispForm.Eval by returning the score update.
 func (su LispScoreUpdate) Eval() (LispForm, error) {
 	return su, nil
+}
+
+// LispPitch is a PitchIdentifier value.
+type LispPitch struct {
+	PitchIdentifier PitchIdentifier
+}
+
+// TypeString implements LispForm.TypeString.
+func (p LispPitch) TypeString() string {
+	return "pitch"
+}
+
+// Eval implements LispForm.Eval by returning the pitch.
+func (p LispPitch) Eval() (LispForm, error) {
+	return p, nil
+}
+
+// LispDuration is a DurationComponent value.
+type LispDuration struct {
+	DurationComponent DurationComponent
+}
+
+// TypeString implements LispForm.TypeString.
+func (d LispDuration) TypeString() string {
+	return "duration"
+}
+
+// Eval implements LispForm.Eval by returning the pitch.
+func (d LispDuration) Eval() (LispForm, error) {
+	return d, nil
 }
 
 // LispList is a list of forms.

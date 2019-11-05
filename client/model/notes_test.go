@@ -317,5 +317,173 @@ func TestNotes(t *testing.T) {
 				expectNoteAudibleDurations(1000),
 			},
 		},
+		scoreUpdateTestCase{
+			label: "lisp note: pitch, note-length",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "tempo"},
+					LispNumber{Value: 120},
+				}},
+				// (note (pitch '(d)) (note-length 1))
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "note"},
+					LispList{Elements: []LispForm{
+						LispSymbol{Name: "pitch"},
+						LispQuotedForm{Form: LispList{
+							Elements: []LispForm{
+								LispSymbol{Name: "d"},
+							},
+						}},
+					}},
+					LispList{Elements: []LispForm{
+						LispSymbol{Name: "note-length"},
+						LispNumber{Value: 1},
+					}},
+				}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectNoteDurations(2000),
+				expectMidiNoteNumbers(62),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "lisp note: pitch w/ accidental, dotted note-length",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "tempo"},
+					LispNumber{Value: 120},
+				}},
+				// (note (pitch '(f sharp)) (note-length "1.."))
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "note"},
+					LispList{Elements: []LispForm{
+						LispSymbol{Name: "pitch"},
+						LispQuotedForm{Form: LispList{
+							Elements: []LispForm{
+								LispSymbol{Name: "f"},
+								LispSymbol{Name: "sharp"},
+							},
+						}},
+					}},
+					LispList{Elements: []LispForm{
+						LispSymbol{Name: "note-length"},
+						LispString{Value: "1.."},
+					}},
+				}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectNoteDurations(3500),
+				expectMidiNoteNumbers(66),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "lisp note: midi-note, ms",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "tempo"},
+					LispNumber{Value: 120},
+				}},
+				// (note (midi-note 42) (ms 1234))
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "note"},
+					LispList{Elements: []LispForm{
+						LispSymbol{Name: "midi-note"},
+						LispNumber{Value: 42},
+					}},
+					LispList{Elements: []LispForm{
+						LispSymbol{Name: "ms"},
+						LispNumber{Value: 1234},
+					}},
+				}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectNoteDurations(1234),
+				expectMidiNoteNumbers(42),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "lisp note: pitch, multiple duration components",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "tempo"},
+					LispNumber{Value: 120},
+				}},
+				// (note (pitch '(c))
+				//       (duration (note-length 4)
+				//                 (ms 2222)
+				//                 (note-length 8)))
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "note"},
+					LispList{Elements: []LispForm{
+						LispSymbol{Name: "pitch"},
+						LispQuotedForm{Form: LispList{
+							Elements: []LispForm{
+								LispSymbol{Name: "c"},
+							},
+						}},
+					}},
+					LispList{Elements: []LispForm{
+						LispSymbol{Name: "duration"},
+						LispList{Elements: []LispForm{
+							LispSymbol{Name: "note-length"},
+							LispNumber{Value: 4},
+						}},
+						LispList{Elements: []LispForm{
+							LispSymbol{Name: "ms"},
+							LispNumber{Value: 2222},
+						}},
+						LispList{Elements: []LispForm{
+							LispSymbol{Name: "note-length"},
+							LispNumber{Value: 8},
+						}},
+					}},
+				}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectNoteDurations(2972),
+				expectMidiNoteNumbers(60),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "slurred note",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "tempo"},
+					LispNumber{Value: 120},
+				}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "quant"},
+					LispNumber{Value: 90},
+				}},
+				// (slur (note (pitch '(g)) (note-length 4)))
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "slur"},
+					LispList{Elements: []LispForm{
+						LispSymbol{Name: "note"},
+						LispList{Elements: []LispForm{
+							LispSymbol{Name: "pitch"},
+							LispQuotedForm{Form: LispList{
+								Elements: []LispForm{
+									LispSymbol{Name: "g"},
+								},
+							}},
+						}},
+						LispList{Elements: []LispForm{
+							LispSymbol{Name: "note-length"},
+							LispNumber{Value: 4},
+						}},
+					}},
+				}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectNoteAudibleDurations(500),
+				expectMidiNoteNumbers(67),
+			},
+		},
 	)
 }
