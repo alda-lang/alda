@@ -202,6 +202,26 @@ type attributeFunctionSignature struct {
 	implementation func(...LispForm) (PartUpdate, error)
 }
 
+func def(name string, value LispForm) {
+	environment[name] = value
+}
+
+func defn(name string, signatures ...FunctionSignature) {
+	fn := LispFunction{Name: name, Signatures: signatures}
+
+	// This `defn` is only used for defining built-in functions as part of the
+	// runtime. `panic` makes sense here because we want the whole system to fall
+	// over if any of the built-in functions we've defined are invalid.
+	//
+	// If/when we implement `defn` in user-space, we should handle the validation
+	// error instead.
+	if err := fn.Validate(); err != nil {
+		panic(err)
+	}
+
+	def(name, fn)
+}
+
 func defattribute(names []string, signatures ...attributeFunctionSignature) {
 	type defattributeImpl struct {
 		name        string
@@ -252,9 +272,7 @@ func defattribute(names []string, signatures ...attributeFunctionSignature) {
 				})
 			}
 
-			environment[impl.name] = LispFunction{
-				Name: impl.name, Signatures: functionSignatures,
-			}
+			defn(impl.name, functionSignatures...)
 		}
 	}
 }
