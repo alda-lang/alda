@@ -43,6 +43,26 @@ type FunctionSignature struct {
 	Implementation func(...LispForm) (LispForm, error)
 }
 
+// LispVariadic wraps a LispForm as a way of representing that it appears 0 or
+// more times in a list of arguments.
+//
+// LispVariadic is not meant to be an argument or return type itself. It should
+// never occur as a value in alda-lisp.
+type LispVariadic struct {
+	Type LispForm
+}
+
+// TypeString implements LispForm.TypeString.
+func (v LispVariadic) TypeString() string {
+	return v.Type.TypeString() + "*"
+}
+
+// Eval implements LispForm.Eval by returning an error, because LispVariadic is
+// not meant to be used as an argument or return type.
+func (v LispVariadic) Eval() (LispForm, error) {
+	return nil, fmt.Errorf("LispVariadic is not a valid value type")
+}
+
 // A LispFunction is a function.
 type LispFunction struct {
 	Name       string
@@ -59,17 +79,65 @@ func (f LispFunction) Eval() (LispForm, error) {
 	return f, nil
 }
 
+// Validate returns an error if the function is invalid.
+func (f LispFunction) Validate() error {
+	for _, signature := range f.Signatures {
+		// Check that the argument list doesn't have a LispVariadic type somewhere
+		// other than at the end.
+		for i, argType := range signature.ArgumentTypes {
+			switch argType.(type) {
+			case LispVariadic:
+				if i != len(signature.ArgumentTypes)-1 {
+					return fmt.Errorf(
+						"Varargs not at the end of the argument list: %#v",
+						signature.ArgumentTypes,
+					)
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
 func argumentsMatchSignature(
 	arguments []LispForm, signature FunctionSignature,
 ) bool {
-	if len(signature.ArgumentTypes) != len(arguments) {
+	totalArgs := len(signature.ArgumentTypes)
+
+	variadic := false
+	switch signature.ArgumentTypes[totalArgs-1].(type) {
+	case LispVariadic:
+		variadic = true
+	}
+
+	fixedArgs := totalArgs
+	if variadic {
+		fixedArgs--
+	}
+
+	if variadic && len(arguments) < fixedArgs {
 		return false
 	}
 
-	for i := 0; i < len(arguments); i++ {
+	if !variadic && len(arguments) != fixedArgs {
+		return false
+	}
+
+	for i := 0; i < fixedArgs; i++ {
 		if reflect.TypeOf(arguments[i]) !=
 			reflect.TypeOf(signature.ArgumentTypes[i]) {
 			return false
+		}
+	}
+
+	if len(arguments) > fixedArgs {
+		variadicArgType := signature.ArgumentTypes[totalArgs-1].(LispVariadic).Type
+
+		for _, argument := range arguments[fixedArgs:len(arguments)] {
+			if reflect.TypeOf(argument) != reflect.TypeOf(variadicArgType) {
+				return false
+			}
 		}
 	}
 
