@@ -16,8 +16,8 @@ type OnRepetitions struct {
 	Event       ScoreUpdate
 }
 
-// AppliesTo returns true if a particular repetition number belongs to one of the
-// specified repetition ranges.
+// AppliesTo returns true if a particular repetition number belongs to one of
+// the specified repetition ranges.
 func (or OnRepetitions) AppliesTo(repetition int32) bool {
 	for _, r := range or.Repetitions {
 		if r.First <= repetition && repetition <= r.Last {

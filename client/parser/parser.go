@@ -525,7 +525,9 @@ func (p *parser) eventSeq() ([]model.ScoreUpdate, error) {
 			}
 
 			lastI := len(events) - 1
-			events[lastI] = model.OnRepetitions{Repetitions: repetitions, Event: events[lastI]}
+			events[lastI] = model.OnRepetitions{
+				Repetitions: repetitions, Event: events[lastI],
+			}
 		}
 
 		allEvents = append(allEvents, events...)
