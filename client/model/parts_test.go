@@ -831,5 +831,24 @@ func TestParts(t *testing.T) {
 				},
 			},
 		},
+		scoreUpdateTestCase{
+			label: "parts with notes",
+			updates: []ScoreUpdate{
+				PartDeclaration{
+					Names: []string{"piano", "violin", "cello"},
+				},
+				Note{Pitch: LetterAndAccidentals{NoteLetter: C}},
+				Note{Pitch: LetterAndAccidentals{NoteLetter: D}},
+				Note{Pitch: LetterAndAccidentals{NoteLetter: E}},
+				Note{Pitch: LetterAndAccidentals{NoteLetter: F}},
+				Note{Pitch: LetterAndAccidentals{NoteLetter: G}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectParts("piano", "violin", "cello"),
+				expectMidiNoteNumbers(
+					60, 60, 60, 62, 62, 62, 64, 64, 64, 65, 65, 65, 67, 67, 67,
+				),
+			},
+		},
 	)
 }
