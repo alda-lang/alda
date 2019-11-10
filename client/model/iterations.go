@@ -1,8 +1,5 @@
 package model
 
-import (
-	"errors"
-)
 
 // IterationRange represents a single, inclusive range of iteration numbers,
 // e.g. 1-4.
@@ -20,11 +17,31 @@ type OnIterations struct {
 	Event      ScoreUpdate
 }
 
+// AppliesTo returns true if a particular iteration number belongs to one of the
+// specified iteration ranges.
+func (oi OnIterations) AppliesTo(iteration int32) bool {
+	for _, r := range oi.Iterations {
+		if r.First <= iteration && iteration <= r.Last {
+			return true
+		}
+	}
+
+	return false
+}
+
 // UpdateScore implements ScoreUpdate.UpdateScore by either updating the score
 // with the event or doing nothing, depending on whether or not we are currently
 // on a relevant iteration.
-func (OnIterations) UpdateScore(score *Score) error {
-	return errors.New("OnIterations.UpdateScore not implemented")
+func (oi OnIterations) UpdateScore(score *Score) error {
+	for _, part := range score.CurrentParts {
+		if oi.AppliesTo(part.CurrentIteration) {
+			if err := oi.Event.UpdateScore(score); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 // DurationMs implements ScoreUpdate.DurationMs by returning the duration of the
