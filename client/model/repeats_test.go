@@ -98,7 +98,7 @@ func TestRepeats(t *testing.T) {
 			},
 		},
 		scoreUpdateTestCase{
-			label: "OnIterations 1",
+			label: "OnRepetitions 1",
 			updates: []ScoreUpdate{
 				PartDeclaration{Names: []string{"piano"}},
 				Repeat{
@@ -113,17 +113,17 @@ func TestRepeats(t *testing.T) {
 									},
 								},
 							},
-							OnIterations{
-								Iterations: []IterationRange{
-									IterationRange{First: 1, Last: 1},
+							OnRepetitions{
+								Repetitions: []RepetitionRange{
+									RepetitionRange{First: 1, Last: 1},
 								},
 								Event: Note{
 									Pitch: LetterAndAccidentals{NoteLetter: D},
 								},
 							},
-							OnIterations{
-								Iterations: []IterationRange{
-									IterationRange{First: 2, Last: 2},
+							OnRepetitions{
+								Repetitions: []RepetitionRange{
+									RepetitionRange{First: 2, Last: 2},
 								},
 								Event: Note{
 									Pitch: LetterAndAccidentals{NoteLetter: E},
@@ -139,17 +139,17 @@ func TestRepeats(t *testing.T) {
 			},
 		},
 		scoreUpdateTestCase{
-			label: "OnIterations 2",
+			label: "OnRepetitions 2",
 			updates: []ScoreUpdate{
 				PartDeclaration{Names: []string{"piano"}},
 				Repeat{
 					Times: 4,
 					Event: EventSequence{
 						Events: []ScoreUpdate{
-							OnIterations{
-								Iterations: []IterationRange{
-									IterationRange{First: 1, Last: 2},
-									IterationRange{First: 4, Last: 4},
+							OnRepetitions{
+								Repetitions: []RepetitionRange{
+									RepetitionRange{First: 1, Last: 2},
+									RepetitionRange{First: 4, Last: 4},
 								},
 								Event: Note{
 									Pitch: LetterAndAccidentals{NoteLetter: C},
@@ -160,9 +160,9 @@ func TestRepeats(t *testing.T) {
 									},
 								},
 							},
-							OnIterations{
-								Iterations: []IterationRange{
-									IterationRange{First: 2, Last: 3},
+							OnRepetitions{
+								Repetitions: []RepetitionRange{
+									RepetitionRange{First: 2, Last: 3},
 								},
 								Event: EventSequence{
 									Events: []ScoreUpdate{

@@ -9,9 +9,9 @@ type Repeat struct {
 // UpdateScore implements ScoreUpdate.UpdateScore by repeatedly updating the
 // score with an event a specified number of times.
 func (repeat Repeat) UpdateScore(score *Score) error {
-	for iteration := int32(1); iteration <= repeat.Times; iteration++ {
+	for repetition := int32(1); repetition <= repeat.Times; repetition++ {
 		for _, part := range score.CurrentParts {
-			part.CurrentIteration = iteration
+			part.CurrentRepetition = repetition
 		}
 
 		if err := repeat.Event.UpdateScore(score); err != nil {
@@ -27,8 +27,8 @@ func (repeat Repeat) UpdateScore(score *Score) error {
 func (repeat Repeat) DurationMs(part *Part) float32 {
 	durationMs := float32(0)
 
-	for iteration := int32(1); iteration <= repeat.Times; iteration++ {
-		part.CurrentIteration = iteration
+	for repetition := int32(1); repetition <= repeat.Times; repetition++ {
+		part.CurrentRepetition = repetition
 		durationMs += repeat.Event.DurationMs(part)
 	}
 

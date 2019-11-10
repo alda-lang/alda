@@ -441,7 +441,7 @@ func (p *parser) noteRestOrChord() ([]model.ScoreUpdate, error) {
 			break
 		}
 
-		// The updates for just this iteration of the loop
+		// The updates for just this repetition of the loop
 		updates := []model.ScoreUpdate{noteOrRest}
 
 		updatesBeforeSeparator, err := p.updatesBetweenNotesInChord()
@@ -490,18 +490,18 @@ func (p *parser) noteRestOrChord() ([]model.ScoreUpdate, error) {
 	return allUpdates, nil
 }
 
-func (p *parser) iterations() ([]model.IterationRange, error) {
-	// NB: This assumes the Iterations token was already consumed.
+func (p *parser) repetitions() ([]model.RepetitionRange, error) {
+	// NB: This assumes the Repetitions token was already consumed.
 	token := p.previous()
 
-	iterations := []model.IterationRange{}
+	repetitions := []model.RepetitionRange{}
 
-	for _, er := range token.literal.([]iterationRange) {
-		iterationRange := model.IterationRange{First: er.first, Last: er.last}
-		iterations = append(iterations, iterationRange)
+	for _, er := range token.literal.([]repetitionRange) {
+		repetitionRange := model.RepetitionRange{First: er.first, Last: er.last}
+		repetitions = append(repetitions, repetitionRange)
 	}
 
-	return iterations, nil
+	return repetitions, nil
 }
 
 func (p *parser) eventSeq() ([]model.ScoreUpdate, error) {
@@ -518,14 +518,14 @@ func (p *parser) eventSeq() ([]model.ScoreUpdate, error) {
 			return nil, err
 		}
 
-		if p.match(Iterations) {
-			iterations, err := p.iterations()
+		if p.match(Repetitions) {
+			repetitions, err := p.repetitions()
 			if err != nil {
 				return nil, err
 			}
 
 			lastI := len(events) - 1
-			events[lastI] = model.OnIterations{Iterations: iterations, Event: events[lastI]}
+			events[lastI] = model.OnRepetitions{Repetitions: repetitions, Event: events[lastI]}
 		}
 
 		allEvents = append(allEvents, events...)

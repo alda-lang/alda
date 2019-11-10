@@ -61,7 +61,6 @@ const (
 	EventSeqOpen
 	Flat
 	Integer
-	Iterations
 	LeftParen
 	Marker
 	Name
@@ -73,6 +72,7 @@ const (
 	OctaveDown
 	OctaveSet
 	OctaveUp
+	Repetitions
 	RestLetter
 	RightParen
 	Separator
@@ -118,8 +118,6 @@ func (tt TokenType) String() string {
 		return "Flat"
 	case Integer:
 		return "Integer"
-	case Iterations:
-		return "Iterations"
 	case LeftParen:
 		return "LeftParen"
 	case Marker:
@@ -144,6 +142,8 @@ func (tt TokenType) String() string {
 		return "OctaveUp"
 	case Repeat:
 		return "Repeat"
+	case Repetitions:
+		return "Repetitions"
 	case RestLetter:
 		return "RestLetter"
 	case RightParen:
@@ -392,34 +392,34 @@ func (s *scanner) parseNumber() {
 	s.addToken(Number, s.parseFloatFrom(s.start))
 }
 
-type iterationRange struct {
+type repetitionRange struct {
 	first int32
 	last  int32
 }
 
-func (s *scanner) parseIterations() error {
+func (s *scanner) parseRepetitions() error {
 	// NB: This assumes the initial "'" was already consumed.
 
-	ranges := []iterationRange{}
+	ranges := []repetitionRange{}
 
-	// Parse iteration ranges as long as we continue to encounter them.
+	// Parse repetition ranges as long as we continue to encounter them.
 	for {
 		if c := s.peek(); !isDigit(c) {
-			return s.unexpectedCharError(c, "in iterations", s.line, s.column)
+			return s.unexpectedCharError(c, "in repetitions", s.line, s.column)
 		}
 
 		// Parse the "first" number of the range.
 		startNumber := s.current
 		s.consumeDigits()
 		first := s.parseIntegerFrom(startNumber)
-		er := iterationRange{first: first}
+		er := repetitionRange{first: first}
 
 		// Either parse the "last" number of the range, or make the first number
 		// the last number as well, indicating a range of one number, e.g. 3-3.
 		if s.match('-') {
 			// Make sure a number comes next.
 			if c := s.peek(); !isDigit(c) {
-				return s.unexpectedCharError(c, "in iterations", s.line, s.column)
+				return s.unexpectedCharError(c, "in repetitions", s.line, s.column)
 			}
 
 			startNumber := s.current
@@ -438,7 +438,7 @@ func (s *scanner) parseIterations() error {
 		}
 	}
 
-	s.addToken(Iterations, ranges)
+	s.addToken(Repetitions, ranges)
 	return nil
 }
 
@@ -701,7 +701,7 @@ func (s *scanner) scanToken() error {
 	case '=':
 		s.addToken(Equals, nil)
 	case '\'':
-		err = s.parseIterations()
+		err = s.parseRepetitions()
 	case '*':
 		err = s.parseRepeat()
 	case '"':
