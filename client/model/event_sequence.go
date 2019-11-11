@@ -1,5 +1,7 @@
 package model
 
+import "github.com/mohae/deepcopy"
+
 // An EventSequence is an ordered sequence of events.
 type EventSequence struct {
 	Events []ScoreUpdate
@@ -21,4 +23,22 @@ func (es EventSequence) DurationMs(part *Part) float32 {
 	}
 
 	return durationMs
+}
+
+// VariableValue implements ScoreUpdate.VariableValue by returning a version of
+// the event sequence where each event is the captured value of that event.
+func (es EventSequence) VariableValue(score *Score) (ScoreUpdate, error) {
+	result := deepcopy.Copy(es).(EventSequence)
+	result.Events = []ScoreUpdate{}
+
+	for _, event := range es.Events {
+		eventValue, err := event.VariableValue(score)
+		if err != nil {
+			return nil, err
+		}
+
+		result.Events = append(result.Events, eventValue)
+	}
+
+	return result, nil
 }

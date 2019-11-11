@@ -26,6 +26,11 @@ func (au AttributeUpdate) DurationMs(part *Part) float32 {
 	return 0
 }
 
+// VariableValue implements ScoreUpdate.VariableValue.
+func (au AttributeUpdate) VariableValue(score *Score) (ScoreUpdate, error) {
+	return au, nil
+}
+
 // GlobalAttributes are attribute updates to be applied at specific points of
 // time in a score.
 //
@@ -144,6 +149,13 @@ func (gau GlobalAttributeUpdate) UpdateScore(score *Score) error {
 // attribute update is conceptually instantaneous.
 func (gau GlobalAttributeUpdate) DurationMs(part *Part) float32 {
 	return 0
+}
+
+// VariableValue implements ScoreUpdate.VariableValue.
+func (gau GlobalAttributeUpdate) VariableValue(
+	score *Score,
+) (ScoreUpdate, error) {
+	return gau, nil
 }
 
 // TempoSet sets the tempo of all active parts.

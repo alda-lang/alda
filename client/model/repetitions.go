@@ -1,5 +1,7 @@
 package model
 
+import "github.com/mohae/deepcopy"
+
 // RepetitionRange represents a single, inclusive range of repetition numbers,
 // e.g. 1-4.
 // An RepetitionRange can also represent a single ending number, e.g. 1-1.
@@ -47,4 +49,20 @@ func (or OnRepetitions) UpdateScore(score *Score) error {
 // event on the current repetition.
 func (or OnRepetitions) DurationMs(part *Part) float32 {
 	return 0 // TODO
+}
+
+// VariableValue implements ScoreUpdate.VariableValue by returning a version of
+// the OnRepetitions where the value of the event is captured.
+func (or OnRepetitions) VariableValue(score *Score) (ScoreUpdate, error) {
+	result := deepcopy.Copy(or).(OnRepetitions)
+
+	eventValue, err := or.Event.VariableValue(score)
+
+	if err != nil {
+		return nil, err
+	}
+
+	result.Event = eventValue
+
+	return result, nil
 }

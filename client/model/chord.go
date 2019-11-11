@@ -1,6 +1,10 @@
 package model
 
-import "math"
+import (
+	"math"
+
+	"github.com/mohae/deepcopy"
+)
 
 // A Chord is a collection of notes and rests starting at the same point in
 // time.
@@ -72,4 +76,22 @@ func (chord Chord) DurationMs(part *Part) float32 {
 	}
 
 	return float32(shortestDurationMs)
+}
+
+// VariableValue implements ScoreUpdate.VariableValue by returning a version of
+// the chord where each event is the captured value of that event.
+func (chord Chord) VariableValue(score *Score) (ScoreUpdate, error) {
+	result := deepcopy.Copy(chord).(Chord)
+	result.Events = []ScoreUpdate{}
+
+	for _, event := range chord.Events {
+		eventValue, err := event.VariableValue(score)
+		if err != nil {
+			return nil, err
+		}
+
+		result.Events = append(result.Events, eventValue)
+	}
+
+	return result, nil
 }

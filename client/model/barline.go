@@ -31,3 +31,8 @@ func (Barline) UpdateScore(score *Score) error {
 func (Barline) DurationMs(part *Part) float32 {
 	return 0
 }
+
+// VariableValue implements ScoreUpdate.VariableValue.
+func (barline Barline) VariableValue(score *Score) (ScoreUpdate, error) {
+	return barline, nil
+}

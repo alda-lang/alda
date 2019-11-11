@@ -112,12 +112,24 @@ func (note Note) DurationMs(part *Part) float32 {
 	return durationMs
 }
 
+// VariableValue implements ScoreUpdate.VariableValue.
+func (note Note) VariableValue(score *Score) (ScoreUpdate, error) {
+	return note, nil
+}
+
 // A Rest represents a period of time spent waiting.
 //
 // The function of a rest is to synchronize the following note so that it starts
 // at a particular point in time.
 type Rest struct {
 	Duration Duration
+}
+
+// UpdateScore implements ScoreUpdate.UpdateScore by adjusting the
+// CurrentOffset, LastOffset, and Duration of all current parts.
+func (rest Rest) UpdateScore(score *Score) error {
+	addNoteOrRest(score, rest)
+	return nil
 }
 
 // DurationMs implements ScoreUpdate.DurationMs by returning the duration of the
@@ -132,9 +144,7 @@ func (rest Rest) DurationMs(part *Part) float32 {
 	return durationMs
 }
 
-// UpdateScore implements ScoreUpdate.UpdateScore by adjusting the
-// CurrentOffset, LastOffset, and Duration of all current parts.
-func (rest Rest) UpdateScore(score *Score) error {
-	addNoteOrRest(score, rest)
-	return nil
+// VariableValue implements ScoreUpdate.VariableValue.
+func (rest Rest) VariableValue(score *Score) (ScoreUpdate, error) {
+	return rest, nil
 }

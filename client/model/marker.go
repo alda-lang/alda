@@ -43,6 +43,11 @@ func (Marker) DurationMs(part *Part) float32 {
 	return 0
 }
 
+// VariableValue implements ScoreUpdate.VariableValue.
+func (marker Marker) VariableValue(score *Score) (ScoreUpdate, error) {
+	return marker, nil
+}
+
 // AtMarker is an action where a part's offset gets set to a point in time
 // denoted previously by a Marker.
 type AtMarker struct {
@@ -77,4 +82,9 @@ func (atMarker AtMarker) UpdateScore(score *Score) error {
 // within a Cram expression. Arguably, this should result in a syntax error.
 func (AtMarker) DurationMs(part *Part) float32 {
 	return 0
+}
+
+// VariableValue implements ScoreUpdate.VariableValue.
+func (atMarker AtMarker) VariableValue(score *Score) (ScoreUpdate, error) {
+	return atMarker, nil
 }

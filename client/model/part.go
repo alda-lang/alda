@@ -295,3 +295,10 @@ func (decl PartDeclaration) UpdateScore(score *Score) error {
 func (decl PartDeclaration) DurationMs(part *Part) float32 {
 	return 0
 }
+
+// VariableValue implements ScoreUpdate.VariableValue.
+func (decl PartDeclaration) VariableValue(score *Score) (ScoreUpdate, error) {
+	return nil, fmt.Errorf(
+		"a part declaration cannot be part of a variable definition",
+	)
+}

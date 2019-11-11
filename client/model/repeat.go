@@ -1,5 +1,7 @@
 package model
 
+import "github.com/mohae/deepcopy"
+
 // A Repeat expression repeats an event a number of times.
 type Repeat struct {
 	Event ScoreUpdate
@@ -33,4 +35,20 @@ func (repeat Repeat) DurationMs(part *Part) float32 {
 	}
 
 	return durationMs
+}
+
+// VariableValue implements ScoreUpdate.VariableValue by returning a version of
+// the repeat where the value of the event to be repeated is captured.
+func (repeat Repeat) VariableValue(score *Score) (ScoreUpdate, error) {
+	result := deepcopy.Copy(repeat).(Repeat)
+
+	eventValue, err := repeat.Event.VariableValue(score)
+
+	if err != nil {
+		return nil, err
+	}
+
+	result.Event = eventValue
+
+	return result, nil
 }

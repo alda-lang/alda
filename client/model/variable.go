@@ -1,8 +1,27 @@
 package model
 
 import (
-	"errors"
+	"fmt"
+
+	"github.com/mohae/deepcopy"
 )
+
+// GetVariable returns the value of a variable, or an error if the variable in
+// undefined.
+func (score *Score) GetVariable(name string) ([]ScoreUpdate, error) {
+	events, hit := score.Variables[name]
+
+	if !hit {
+		return nil, fmt.Errorf("undefined variable: %s", name)
+	}
+
+	return events, nil
+}
+
+// SetVariable defines the value of a variable.
+func (score *Score) SetVariable(name string, value []ScoreUpdate) {
+	score.Variables[name] = value
+}
 
 // A VariableDefinition stores a sequence of ScoreUpdates, using the provided
 // variable name as a lookup key.
@@ -12,14 +31,45 @@ type VariableDefinition struct {
 }
 
 // UpdateScore implements ScoreUpdate.UpdateScore by defining a variable.
-func (VariableDefinition) UpdateScore(score *Score) error {
-	return errors.New("VariableDefinition.UpdateScore not implemented")
+func (vd VariableDefinition) UpdateScore(score *Score) error {
+	eventValues := []ScoreUpdate{}
+
+	for _, event := range vd.Events {
+		eventValue, err := event.VariableValue(score)
+		if err != nil {
+			return err
+		}
+
+		eventValues = append(eventValues, eventValue)
+	}
+
+	score.SetVariable(vd.VariableName, eventValues)
+
+	return nil
 }
 
 // DurationMs implements ScoreUpdate.DurationMs by returning 0, since a
 // variable definition is conceptually instantaneous.
 func (VariableDefinition) DurationMs(part *Part) float32 {
 	return 0
+}
+
+// VariableValue implements ScoreUpdate.VariableValue by capturing the current
+// value of each event in the definition.
+func (vd VariableDefinition) VariableValue(score *Score) (ScoreUpdate, error) {
+	result := deepcopy.Copy(vd).(VariableDefinition)
+	result.Events = []ScoreUpdate{}
+
+	for _, event := range vd.Events {
+		eventValue, err := event.VariableValue(score)
+		if err != nil {
+			return nil, err
+		}
+
+		result.Events = append(result.Events, eventValue)
+	}
+
+	return result, nil
 }
 
 // A VariableReference dereferences a stored variable. A variable with the
@@ -32,8 +82,19 @@ type VariableReference struct {
 // UpdateScore implements ScoreUpdate.UpdateScore by looking up a variable and
 // (assuming it was previously defined) using the corresponding sequence of
 // events to update the score.
-func (VariableReference) UpdateScore(score *Score) error {
-	return errors.New("VariableReference.UpdateScore not implemented")
+func (vr VariableReference) UpdateScore(score *Score) error {
+	events, err := score.GetVariable(vr.VariableName)
+	if err != nil {
+		return err
+	}
+
+	for _, event := range events {
+		if err := event.UpdateScore(score); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // DurationMs implements ScoreUpdate.DurationMs by looking up the sequence of
@@ -46,4 +107,18 @@ func (VariableReference) DurationMs(part *Part) float32 {
 	// through and look it up again for UpdateScore. So, we can safely ignore the
 	// fact that the variable is undefined here and simply return 0.
 	return 0
+
+	// FIXME: DurationMs is actually going to need to also take the score as an
+	// argument, now, so that we can look up the variable value!
+}
+
+// VariableValue implements ScoreUpdate.VariableValue by capturing the current
+// value of the referenced variable.
+func (vr VariableReference) VariableValue(score *Score) (ScoreUpdate, error) {
+	events, err := score.GetVariable(vr.VariableName)
+	if err != nil {
+		return nil, err
+	}
+
+	return EventSequence{Events: events}, nil
 }

@@ -103,3 +103,21 @@ func (cram Cram) UpdateScore(score *Score) error {
 func (cram Cram) DurationMs(part *Part) float32 {
 	return effectiveDuration(cram.Duration, part).Ms(part.Tempo)
 }
+
+// VariableValue implements ScoreUpdate.VariableValue by returning a version of
+// the Cram expression where each event is the captured value of that event.
+func (cram Cram) VariableValue(score *Score) (ScoreUpdate, error) {
+	result := deepcopy.Copy(cram).(Cram)
+	result.Events = []ScoreUpdate{}
+
+	for _, event := range cram.Events {
+		eventValue, err := event.VariableValue(score)
+		if err != nil {
+			return nil, err
+		}
+
+		result.Events = append(result.Events, eventValue)
+	}
+
+	return result, nil
+}

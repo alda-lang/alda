@@ -1159,6 +1159,21 @@ func (n LispNil) Eval() (LispForm, error) {
 	return n, nil
 }
 
+// UpdateScore implements ScoreUpdate.UpdateScore by doing nothing.
+func (n LispNil) UpdateScore(score *Score) error {
+	return nil
+}
+
+// DurationMs implements ScoreUpdate.DurationMs by returning 0.
+func (n LispNil) DurationMs(part *Part) float32 {
+	return 0
+}
+
+// VariableValue implements ScoreUpdate.VariableValue.
+func (n LispNil) VariableValue(score *Score) (ScoreUpdate, error) {
+	return n, nil
+}
+
 // LispQuotedForm wraps a form by quoting it.
 type LispQuotedForm struct {
 	Form LispForm
@@ -1313,6 +1328,18 @@ func (l LispList) Eval() (LispForm, error) {
 	}
 }
 
+func unpackScoreUpdate(form LispForm) ScoreUpdate {
+	switch form.(type) {
+	case LispScoreUpdate:
+		return form.(LispScoreUpdate).ScoreUpdate
+	default:
+		log.Warn().
+			Interface("form", form).
+			Msg("S-expression result is not a ScoreUpdate.")
+		return LispNil{}
+	}
+}
+
 // UpdateScore implements ScoreUpdate.UpdateScore by evaluating the S-expression
 // and using the resulting value to update the score.
 func (l LispList) UpdateScore(score *Score) error {
@@ -1321,15 +1348,7 @@ func (l LispList) UpdateScore(score *Score) error {
 		return err
 	}
 
-	switch result.(type) {
-	case LispScoreUpdate:
-		return result.(LispScoreUpdate).ScoreUpdate.UpdateScore(score)
-	default:
-		log.Warn().
-			Interface("result", result).
-			Msg("S-expression result is not a ScoreUpdate.")
-		return nil
-	}
+	return unpackScoreUpdate(result).UpdateScore(score)
 }
 
 // DurationMs implements ScoreUpdate.DurationMs by evaluating the S-expression
@@ -1338,7 +1357,7 @@ func (l LispList) DurationMs(part *Part) float32 {
 	// FIXME: We end up evaluating this a second time when UpdateScore is called.
 	// This will be problematic if/when we add functions that have side effects.
 	//
-	// At that point, we should probably memoize the evaluation result (and error)
+	// At that point, we should probably cache the evaluation result (and error)
 	// so that they are simply returned on successive evaluations.
 	result, err := l.Eval()
 
@@ -1349,13 +1368,22 @@ func (l LispList) DurationMs(part *Part) float32 {
 		return 0
 	}
 
-	switch result.(type) {
-	case LispScoreUpdate:
-		return result.(LispScoreUpdate).ScoreUpdate.DurationMs(part)
-	default:
-		log.Warn().
-			Interface("result", result).
-			Msg("S-expression result is not a ScoreUpdate.")
-		return 0
+	return unpackScoreUpdate(result).DurationMs(part)
+}
+
+// VariableValue implements ScoreUpdate.VariableValue by evaluating the
+// S-expression and capturing the value of the result.
+func (l LispList) VariableValue(score *Score) (ScoreUpdate, error) {
+	// FIXME: We end up evaluating this a second time when UpdateScore is called.
+	// This will be problematic if/when we add functions that have side effects.
+	//
+	// At that point, we should probably cache the evaluation result (and error)
+	// so that they are simply returned on successive evaluations.
+	result, err := l.Eval()
+
+	if err != nil {
+		return nil, err
 	}
+
+	return unpackScoreUpdate(result).VariableValue(score)
 }
