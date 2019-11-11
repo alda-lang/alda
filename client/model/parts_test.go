@@ -596,7 +596,7 @@ func TestParts(t *testing.T) {
 			},
 			errorExpectations: []scoreUpdateErrorExpectation{
 				func(err error) error {
-					if !strings.Contains(err.Error(), "Ambiguous instrument reference") {
+					if !strings.Contains(err.Error(), "ambiguous instrument reference") {
 						return err
 					}
 					return nil
@@ -615,7 +615,7 @@ func TestParts(t *testing.T) {
 			},
 			errorExpectations: []scoreUpdateErrorExpectation{
 				func(err error) error {
-					if !strings.Contains(err.Error(), "Ambiguous instrument reference") {
+					if !strings.Contains(err.Error(), "ambiguous instrument reference") {
 						return err
 					}
 					return nil
