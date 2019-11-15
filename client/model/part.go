@@ -33,6 +33,13 @@ type Part struct {
 	Duration          Duration
 	TimeScale         float32
 	CurrentRepetition int32
+	// A snapshot copy of the part at the point in time when a voice group starts.
+	// This is used as a template for each new voice.
+	voiceTemplate *Part
+	// We stash this here so that clones can retain a reference to the original.
+	origin *Part
+	// A record of the clones created, one per voice.
+	voices *Voices
 }
 
 func newPart(name string) (*Part, error) {
@@ -51,7 +58,7 @@ func newPart(name string) (*Part, error) {
 	// I'm not sure how much of this actually needs to be ported. I think I might
 	// be able to get some mileage out of using a part's pointer as its ID, for
 	// example.
-	return &Part{
+	part := &Part{
 		Name:            name,
 		StockInstrument: stock,
 		CurrentOffset:   0,
@@ -69,7 +76,12 @@ func newPart(name string) (*Part, error) {
 		KeySignature:   KeySignature{},
 		Transposition:  0,
 		ReferencePitch: 440.0,
-	}, nil
+		voices:         NewVoices(),
+	}
+
+	part.origin = part
+
+	return part, nil
 }
 
 // The PartUpdate interface defines how something updates a part.
@@ -248,6 +260,12 @@ func determineParts(decl PartDeclaration, score *Score) ([]*Part, error) {
 // When a reference is made to instrument instances that don't exist yet, the
 // appropriate instances are initialized and added to the score.
 func (decl PartDeclaration) UpdateScore(score *Score) error {
+	// The beginning of a new part (or resumption of an existing part) implicitly
+	// ends a voice group in the preceding part if there is one.
+	if err := (VoiceGroupEndMarker{}.UpdateScore(score)); err != nil {
+		return err
+	}
+
 	parts, err := determineParts(decl, score)
 	if err != nil {
 		return err

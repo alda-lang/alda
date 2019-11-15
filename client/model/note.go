@@ -67,7 +67,7 @@ func addNoteOrRest(score *Score, noteOrRest ScoreUpdate) {
 				)
 
 				noteEvent := NoteEvent{
-					Part:            part,
+					Part:            part.origin,
 					MidiNote:        midiNote,
 					Offset:          part.CurrentOffset,
 					Duration:        durationMs,

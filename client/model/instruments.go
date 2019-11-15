@@ -14,14 +14,14 @@ type Instrument interface {
 //
 // Reference: http://www.jimmenard.com/midi_ref.html#General_MIDI
 type MidiInstrument struct {
-	name         string
+	NameImpl     string
 	PatchNumber  int32
 	isPercussion bool
 }
 
 // Name implements Instrument.Name by returning the name of the instrument.
 func (mi MidiInstrument) Name() string {
-	return mi.name
+	return mi.NameImpl
 }
 
 type midiInstrumentNames struct {
@@ -220,7 +220,7 @@ var stockInstruments = map[string]Instrument{}
 func init() {
 	for i, instrumentNames := range midiNonPercussionInstruments {
 		instrument := MidiInstrument{
-			name: instrumentNames.name, PatchNumber: int32(i),
+			NameImpl: instrumentNames.name, PatchNumber: int32(i),
 		}
 		stockInstruments[instrumentNames.name] = instrument
 		for _, alias := range instrumentNames.aliases {
@@ -229,7 +229,9 @@ func init() {
 	}
 
 	for _, instrumentNames := range midiPercussionInstruments {
-		instrument := MidiInstrument{name: instrumentNames.name, isPercussion: true}
+		instrument := MidiInstrument{
+			NameImpl: instrumentNames.name, isPercussion: true,
+		}
 		stockInstruments[instrumentNames.name] = instrument
 		for _, alias := range instrumentNames.aliases {
 			stockInstruments[alias] = instrument
