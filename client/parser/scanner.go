@@ -377,6 +377,8 @@ func (s *scanner) parseInteger() {
 	s.addToken(Integer, s.parseIntegerFrom(s.start))
 }
 
+// This assumes that the initial digit (or minus sign, if it's a negative
+// number) was already consumed.
 func (s *scanner) parseNumber() {
 	// Parse numbers before the period.
 	s.consumeDigits()
@@ -658,7 +660,7 @@ func (s *scanner) scanToken() error {
 			err = s.parseString()
 		default:
 			switch {
-			case isDigit(c):
+			case c == '-' || isDigit(c):
 				s.parseNumber()
 			case isValidSymbolChar(c):
 				s.parseSymbol()
