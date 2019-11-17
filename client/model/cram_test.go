@@ -220,5 +220,42 @@ func TestCram(t *testing.T) {
 				expectMidiNoteNumbers(60, 60, 60, 60, 60, 60, 62, 60),
 			},
 		},
+		scoreUpdateTestCase{
+			label: "cram expression containing variable reference",
+			updates: []ScoreUpdate{
+				VariableDefinition{
+					VariableName: "foo",
+					Events: []ScoreUpdate{
+						Note{Pitch: LetterAndAccidentals{NoteLetter: C}},
+						Note{Pitch: LetterAndAccidentals{NoteLetter: D}},
+						Note{Pitch: LetterAndAccidentals{NoteLetter: E}},
+					},
+				},
+				PartDeclaration{Names: []string{"piano"}},
+				Cram{
+					Events: []ScoreUpdate{
+						VariableReference{VariableName: "foo"},
+						VariableReference{VariableName: "foo"},
+					},
+					Duration: Duration{
+						Components: []DurationComponent{
+							// Total duration: 1000 ms
+							NoteLength{Denominator: 2},
+						},
+					},
+				},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectNoteOffsets(
+					(1000.0/6)*0,
+					(1000.0/6)*1,
+					(1000.0/6)*2,
+					(1000.0/6)*3,
+					(1000.0/6)*4,
+					(1000.0/6)*5,
+				),
+				expectMidiNoteNumbers(60, 62, 64, 60, 62, 64),
+			},
+		},
 	)
 }

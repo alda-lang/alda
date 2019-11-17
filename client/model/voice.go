@@ -48,14 +48,15 @@ func (part *Part) NewVoice(voiceNumber int32) *Part {
 
 	// mohae/deepcopy doesn't copy private fields.
 	//
-	// voiceTemplate, origin, and voices are deliberately private fields because
-	// if we make them public, deepcopy recurses infinitely through the part
-	// copies until the stack overflows.
+	// Some fields of Part are deliberately private because if we make them
+	// public, deepcopy recurses infinitely through the part copies until the
+	// stack overflows.
 	voice := deepcopy.Copy(part.voiceTemplate).(*Part)
 	// Instead, we manually copy the fields here.
 	voice.origin = part.origin
 	voice.voiceTemplate = part.voiceTemplate
 	voice.voices = part.voices
+	voice.score = part.score
 
 	part.voices.AddVoice(voiceNumber, voice)
 

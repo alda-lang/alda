@@ -100,16 +100,22 @@ func (vr VariableReference) UpdateScore(score *Score) error {
 // DurationMs implements ScoreUpdate.DurationMs by looking up the sequence of
 // events corresponding to the given variable name, and returning the sum of
 // the durations of the events.
-func (VariableReference) DurationMs(part *Part) float32 {
-	// TODO: look up the variable, sum the durations of the corresponding events
-	//
-	// If the variable is undefined, an error will be thrown when we come back
-	// through and look it up again for UpdateScore. So, we can safely ignore the
-	// fact that the variable is undefined here and simply return 0.
-	return 0
+func (vr VariableReference) DurationMs(part *Part) float32 {
+	events, err := part.score.GetVariable(vr.VariableName)
+	if err != nil {
+		// If the variable is undefined, an error will be thrown when we come back
+		// through and look it up again for UpdateScore. So, we can safely ignore
+		// the fact that the variable is undefined here and simply return 0.
+		return 0
+	}
 
-	// FIXME: DurationMs is actually going to need to also take the score as an
-	// argument, now, so that we can look up the variable value!
+	durationMs := float32(0)
+
+	for _, event := range events {
+		durationMs += event.DurationMs(part)
+	}
+
+	return durationMs
 }
 
 // VariableValue implements ScoreUpdate.VariableValue by capturing the current

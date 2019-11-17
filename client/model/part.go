@@ -40,9 +40,12 @@ type Part struct {
 	origin *Part
 	// A record of the clones created, one per voice.
 	voices *Voices
+	// A reference to the score to which the part belongs.
+	score *Score
 }
 
-func newPart(name string) (*Part, error) {
+// NewPart returns a new part in the score.
+func (score *Score) NewPart(name string) (*Part, error) {
 	stock, err := stockInstrument(name)
 	if err != nil {
 		return nil, err
@@ -77,6 +80,7 @@ func newPart(name string) (*Part, error) {
 		Transposition:  0,
 		ReferencePitch: 440.0,
 		voices:         NewVoices(),
+		score:          score,
 	}
 
 	part.origin = part
@@ -134,7 +138,7 @@ func determineParts(decl PartDeclaration, score *Score) ([]*Part, error) {
 
 		// Always create a new part if there is an alias.
 		if decl.Alias != "" {
-			part, err := newPart(name)
+			part, err := score.NewPart(name)
 			if err != nil {
 				return nil, err
 			}
@@ -149,7 +153,7 @@ func determineParts(decl PartDeclaration, score *Score) ([]*Part, error) {
 			return unnamedParts, nil
 		}
 
-		part, err := newPart(name)
+		part, err := score.NewPart(name)
 		if err != nil {
 			return nil, err
 		}
@@ -179,7 +183,7 @@ func determineParts(decl PartDeclaration, score *Score) ([]*Part, error) {
 		} else if len(unnamed) > 0 {
 			stockParts = append(stockParts, unnamed...)
 		} else {
-			part, err := newPart(name)
+			part, err := score.NewPart(name)
 			if err != nil {
 				return nil, err
 			}
@@ -218,7 +222,7 @@ func determineParts(decl PartDeclaration, score *Score) ([]*Part, error) {
 	// instruments.
 	if decl.Alias != "" && len(stockParts) > 0 {
 		for _, name := range decl.Names {
-			part, err := newPart(name)
+			part, err := score.NewPart(name)
 			if err != nil {
 				return nil, err
 			}
