@@ -163,5 +163,62 @@ func TestCram(t *testing.T) {
 				expectPartLastOffset("piano", 1750),
 			},
 		},
+		scoreUpdateTestCase{
+			label: "cram expression containing a repeat with OnRepetitions",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				Cram{
+					Events: []ScoreUpdate{
+						Repeat{
+							Times: 2,
+							Event: EventSequence{
+								Events: []ScoreUpdate{
+									Note{
+										Pitch:   LetterAndAccidentals{NoteLetter: C},
+										Slurred: true,
+									},
+									Note{
+										Pitch:   LetterAndAccidentals{NoteLetter: C},
+										Slurred: true,
+									},
+									OnRepetitions{
+										Repetitions: []RepetitionRange{
+											RepetitionRange{First: 1, Last: 1},
+										},
+										Event: Note{
+											Pitch:   LetterAndAccidentals{NoteLetter: C},
+											Slurred: true,
+										},
+									},
+									OnRepetitions{
+										Repetitions: []RepetitionRange{
+											RepetitionRange{First: 2, Last: 2},
+										},
+										Event: Note{
+											Pitch:   LetterAndAccidentals{NoteLetter: D},
+											Slurred: true,
+										},
+									},
+									Note{
+										Pitch:   LetterAndAccidentals{NoteLetter: C},
+										Slurred: true,
+									},
+								},
+							},
+						},
+					},
+					Duration: Duration{
+						Components: []DurationComponent{
+							// Total duration: 1000 ms
+							NoteLength{Denominator: 2},
+						},
+					},
+				},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectNoteOffsets(0, 125, 250, 375, 500, 625, 750, 875),
+				expectMidiNoteNumbers(60, 60, 60, 60, 60, 60, 62, 60),
+			},
+		},
 	)
 }

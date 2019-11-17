@@ -48,7 +48,11 @@ func (or OnRepetitions) UpdateScore(score *Score) error {
 // DurationMs implements ScoreUpdate.DurationMs by returning the duration of the
 // event on the current repetition.
 func (or OnRepetitions) DurationMs(part *Part) float32 {
-	return 0 // TODO
+	if or.AppliesTo(part.CurrentRepetition) {
+		return or.Event.DurationMs(part)
+	}
+
+	return 0
 }
 
 // VariableValue implements ScoreUpdate.VariableValue by returning a version of
