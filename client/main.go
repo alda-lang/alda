@@ -100,8 +100,6 @@ func main() {
 		}
 	}
 
-	fmt.Printf("%#v\n", score)
-
 	if startPlayerProcess {
 		fmt.Printf("Starting player process on port %d...\n", port)
 
