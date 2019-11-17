@@ -153,7 +153,7 @@ func (VoiceGroupEndMarker) UpdateScore(score *Score) error {
 			}
 		}
 
-		part.voices = nil
+		part.voices = NewVoices()
 		part.voiceTemplate = nil
 	}
 
