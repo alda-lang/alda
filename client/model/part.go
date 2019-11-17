@@ -398,12 +398,17 @@ func (decl PartDeclaration) UpdateScore(score *Score) error {
 	}
 
 	if decl.Alias != "" {
+		aliasesForPart := map[*Part][]string{}
+		for _, part := range parts {
+			aliasesForPart[part] = score.AliasesFor(part)
+		}
+
 		score.SetAlias(decl.Alias, parts)
 
 		for _, part := range parts {
 			score.SetAlias(decl.Alias+"."+part.Name, []*Part{part})
 
-			for _, alias := range score.AliasesFor(part) {
+			for _, alias := range aliasesForPart[part] {
 				score.SetAlias(decl.Alias+"."+alias, []*Part{part})
 			}
 		}
