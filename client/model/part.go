@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	log "alda.io/client/logging"
 	"github.com/mohae/deepcopy"
 )
 
@@ -106,6 +107,88 @@ func (score *Score) NewPart(name string) (*Part, error) {
 	part.origin = part
 
 	return part, nil
+}
+
+// SetAlias defines an alias that refers to 1 more parts.
+func (score *Score) SetAlias(alias string, parts []*Part) {
+	log.Debug().
+		Str("alias", alias).
+		Interface("parts", parts).
+		Msg("Adding alias.")
+
+	score.Aliases[alias] = parts
+}
+
+// NamedParts returns a list of Parts included in the score that correspond to
+// the provided `alias`, or nil if there are no such parts.
+func (score *Score) NamedParts(alias string) []*Part {
+	return score.Aliases[alias]
+}
+
+// UnnamedParts returns the list of Parts in the score that are not included in
+// any alias, and that are instances of the stock instrument identified by
+// `name`.
+func (score *Score) UnnamedParts(name string) []*Part {
+	stock := "N/A"
+	if stockInstrument, err := stockInstrumentName(name); err == nil {
+		stock = stockInstrument
+	}
+
+	results := []*Part{}
+
+	for _, part := range score.Parts {
+		isNamedPart := false
+		for _, namedParts := range score.Aliases {
+			for _, namedPart := range namedParts {
+				if namedPart == part {
+					isNamedPart = true
+				}
+			}
+		}
+
+		if !isNamedPart && part.StockInstrument.Name() == stock {
+			results = append(results, part)
+		}
+	}
+
+	return results
+}
+
+// AliasedStockInstruments returns the list of Parts in the score that have a
+// dedicated alias (e.g. 'piano "foo"'), and that are instances of the stock
+// instrument identified by `name`.
+func (score *Score) AliasedStockInstruments(name string) []*Part {
+	stock := "N/A"
+	if stockInstrument, err := stockInstrumentName(name); err == nil {
+		stock = stockInstrument
+	}
+
+	results := []*Part{}
+
+	for _, namedParts := range score.Aliases {
+		if len(namedParts) == 1 {
+			part := namedParts[0]
+			if part.StockInstrument.Name() == stock {
+				results = append(results, part)
+			}
+		}
+	}
+
+	return results
+}
+
+// AliasesFor returns the list of aliases in the score that correspond to a
+// single part, the one provided.
+func (score *Score) AliasesFor(part *Part) []string {
+	results := []string{}
+
+	for alias, parts := range score.Aliases {
+		if len(parts) == 1 && parts[0] == part {
+			results = append(results, alias)
+		}
+	}
+
+	return results
 }
 
 // The PartUpdate interface defines how something updates a part.
@@ -315,12 +398,13 @@ func (decl PartDeclaration) UpdateScore(score *Score) error {
 	}
 
 	if decl.Alias != "" {
-		score.Aliases[decl.Alias] = parts
+		score.SetAlias(decl.Alias, parts)
 
 		for _, part := range parts {
-			score.Aliases[decl.Alias+"."+part.Name] = []*Part{part}
+			score.SetAlias(decl.Alias+"."+part.Name, []*Part{part})
+
 			for _, alias := range score.AliasesFor(part) {
-				score.Aliases[decl.Alias+"."+alias] = []*Part{part}
+				score.SetAlias(decl.Alias+"."+alias, []*Part{part})
 			}
 		}
 	}
