@@ -44,14 +44,11 @@ func (oe OSCEmitter) EmitScore(score *model.Score) error {
 	client := osc.NewClient("localhost", int(oe.Port))
 	bundle := osc.NewBundle(time.Now())
 
-	tracks := map[*model.Part]int32{}
-	trackNumber := int32(1)
+	tracks := score.Tracks()
 
-	for _, part := range score.Parts {
-		tracks[part] = trackNumber
+	for part, trackNumber := range tracks {
 		patchNumber := part.StockInstrument.(model.MidiInstrument).PatchNumber
 		bundle.Append(midiPatchMsg(trackNumber, 0, patchNumber))
-		trackNumber++
 	}
 
 	for _, event := range score.Events {

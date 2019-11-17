@@ -66,3 +66,15 @@ func (score *Score) Update(updates ...ScoreUpdate) error {
 
 	return nil
 }
+
+// Tracks returns a map of Part instances to track numbers for the purposes of
+// emitting score data.
+func (score *Score) Tracks() map[*Part]int32 {
+	tracks := map[*Part]int32{}
+
+	for i, part := range score.Parts {
+		tracks[part.origin] = int32(i + 1)
+	}
+
+	return tracks
+}
