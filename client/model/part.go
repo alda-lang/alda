@@ -3,6 +3,8 @@ package model
 import (
 	"fmt"
 	"strings"
+
+	"github.com/mohae/deepcopy"
 )
 
 // A PartDeclaration sets the current instruments of the score, creating them if
@@ -42,6 +44,24 @@ type Part struct {
 	voices *Voices
 	// A reference to the score to which the part belongs.
 	score *Score
+}
+
+// Clone returns a copy of a part.
+func (part *Part) Clone() *Part {
+	// mohae/deepcopy doesn't copy private fields.
+	//
+	// Some fields of Part are deliberately private because if we make them
+	// public, deepcopy recurses infinitely through the part copies until the
+	// stack overflows.
+	clone := deepcopy.Copy(part).(*Part)
+
+	// Instead, we manually copy the fields here.
+	clone.origin = part.origin
+	clone.voiceTemplate = part.voiceTemplate
+	clone.voices = part.voices
+	clone.score = part.score
+
+	return clone
 }
 
 // NewPart returns a new part in the score.

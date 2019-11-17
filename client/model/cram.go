@@ -19,11 +19,7 @@ type Cram struct {
 // DurationMs can mutate the part, so we have to make a copy of the part and use
 // that for context.
 func innerDurationMs(cram Cram, part *Part) (float32, error) {
-	partCopy := deepcopy.Copy(part).(*Part)
-	// deepcopy doesn't copy private fields by design. Certain fields of Part are
-	// deliberately private in order to keep deepcopy from recursing infinitely
-	// and causing a stack overflow. So, we need to copy the pointers manually.
-	partCopy.score = part.score
+	partCopy := part.Clone()
 
 	totalDurationMs := float32(0.0)
 
