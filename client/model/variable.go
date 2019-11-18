@@ -3,6 +3,7 @@ package model
 import (
 	"fmt"
 
+	log "alda.io/client/logging"
 	"github.com/mohae/deepcopy"
 )
 
@@ -20,6 +21,10 @@ func (score *Score) GetVariable(name string) ([]ScoreUpdate, error) {
 
 // SetVariable defines the value of a variable.
 func (score *Score) SetVariable(name string, value []ScoreUpdate) {
+	log.Debug().
+		Str("name", name).
+		Interface("value", value).
+		Msg("Setting variable.")
 	score.Variables[name] = value
 }
 
@@ -87,6 +92,11 @@ func (vr VariableReference) UpdateScore(score *Score) error {
 	if err != nil {
 		return err
 	}
+
+	log.Debug().
+		Str("name", vr.VariableName).
+		Interface("events", events).
+		Msg("Dereferenced variable.")
 
 	for _, event := range events {
 		if err := event.UpdateScore(score); err != nil {
