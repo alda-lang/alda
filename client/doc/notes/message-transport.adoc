@@ -1,0 +1,85 @@
+= Message transport
+
+== Overview
+
+* The Alda client sends bundles of OSC messages over UDP to the Alda player.
+
+* It's possible to send OSC over TCP as well, but UDP is the typical choice for
+  OSC communication.
+** The trade-off is that UDP offers better latency, at the expense of
+reliability.
+
+* OSC messages can be sent as bundles, which have the benefit that you either
+  get all of the messages or none of them.
+
+* Re: Alda, we would prefer to lose an entire score over losing parts of it. So,
+  we send the entire score as a single bundle.
+** There are other ways that we could get the same benefit if we had to send
+   multiple packets. So, it isn't essential that the score actually be a single
+   OSC bundle. We just need a way of representing the messages of a score as a
+   single unit.
+** Even if we did send a score in multiple bundles, the concept of the "bundle"
+   ("transaction" is really a better name) is important because the player needs
+   the full context of the score / score update before it schedules the notes.
+*** For example, after scheduling the notes, the player bumps its internal
+    notion of what the next scheduling offset will be, based on the latest
+    notes.
+
+== UDP packet size limits
+
+NOTE: https://forum.juce.com/t/osc-blobs-are-lost-above-certain-size/20241/2
+
+* The UDP protocol allows a limit of 64K, but the practical guaranteed limit
+  is 576 bytes.
+
+* The person posting about this in the link above recommended a limit of 512
+  bytes to be safe.
+
+== Implications
+
+* A score of sufficient size will completely fail to play.
+
+* Testing this with Alda:
+** The Bach cello suite example played successfully.
+** The `variables.alda` example did NOT play successfully as written.
+*** Changing `rockinRiff*8` to `rockinRiff*6` worked. So I'm hitting the size
+limit somewhere beyond 6 repetitions.
+
+== Exploration
+
+* By running `bundle.MarshalBinary()` on the bundle to get the byte array and
+  printing its length, I was able to get an idea of how the number of Alda
+  events translates into the size of the bundle in bytes.
+** hello_world.alda => 9 events, 544 bytes
+** bach_cello_suite_no_1.alda => 658 events, 34K bytes
+** variables.alda w/ `rockinRiff*6` => 1152 events, 60K bytes
+** variables.alda w/ `rockinRiff*8` => 1536 events, 80K bytes
+** I was similarly able to see the size of the individual messages, and it
+appears to consistently be 48 bytes for note messages. Other types of messages
+are smaller, which makes sense because the note messages have more arguments.
+
+* We would clearly need to send a fair amount of packets if we want to be sure
+  that the packets' sizes are all 512 bytes or less.
+** In the case of variables.alda w/ `rockinRiff*8`, it would take about 150
+packets.
+** From what I've read about UDP and packet loss, it should be rare that we lose
+any packets when we're sending such a small number of them, especially just on
+the loopback interface (between two processes on a single machine).
+
+* Given that the individual OSC messages are at most 48 bytes...
+** 512 / 48 = 10.666...
+** So 8 messages is probably a good size. 48 * 8 = 384 bytes, well under 512.
+
+== Solution
+
+* Send scores in bundles of 512 bytes or less, guaranteeing that packets
+  won't be dropped because they're larger than the particular limit on someone's
+  machine.
+
+* Add a `/transaction/ID_HERE` route to the Alda OSC API.
+** Bundles can start with a `/transaction/ID_HERE` message to specify the
+sequence number and total number of messages in a transaction.
+
+* The player will collect messages in a transaction and hold off on taking
+  action until it has received all of the packets.
+
