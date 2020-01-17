@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"alda.io/client/model"
-	"github.com/hypebeast/go-osc/osc"
+	"github.com/daveyarwood/go-osc/osc"
 )
 
 // OSCEmitter sends OSC messages to a player process.
@@ -42,6 +42,7 @@ func midiNoteMsg(
 // player process how to perform the score.
 func (oe OSCEmitter) EmitScore(score *model.Score) error {
 	client := osc.NewClient("localhost", int(oe.Port))
+	client.SetNetworkProtocol(osc.TCP)
 	bundle := osc.NewBundle(time.Now())
 
 	tracks := score.Tracks()

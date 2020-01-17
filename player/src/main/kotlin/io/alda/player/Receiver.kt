@@ -6,8 +6,9 @@ import com.illposed.osc.OSCMessage
 import com.illposed.osc.OSCPacket
 import com.illposed.osc.OSCPacketEvent
 import com.illposed.osc.OSCPacketListener
-import com.illposed.osc.transport.udp.OSCPortIn
-import com.illposed.osc.transport.udp.OSCPortInBuilder
+import com.illposed.osc.transport.NetworkProtocol
+import com.illposed.osc.transport.OSCPortIn
+import com.illposed.osc.transport.OSCPortInBuilder
 
 private fun instructions(packet : OSCPacket) : List<OSCMessage> {
   if (packet is OSCMessage) {
@@ -18,8 +19,10 @@ private fun instructions(packet : OSCPacket) : List<OSCMessage> {
 }
 
 fun receiver(port : Int) : OSCPortIn {
-  return OSCPortInBuilder().setPort(port)
-                           .setPacketListener(object : OSCPacketListener {
+  return OSCPortInBuilder()
+    .setPort(port)
+    .setNetworkProtocol(NetworkProtocol.TCP)
+    .setPacketListener(object : OSCPacketListener {
     override fun handlePacket(event : OSCPacketEvent) {
       playerQueue.put(instructions(event.getPacket()))
     }

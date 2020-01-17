@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/hypebeast/go-osc/osc"
+	"github.com/daveyarwood/go-osc/osc"
 )
 
 var port int
@@ -295,6 +295,7 @@ func main() {
 	}
 
 	client := osc.NewClient("localhost", int(port))
+	client.SetNetworkProtocol(osc.TCP)
 
 	switch example {
 	case "play":

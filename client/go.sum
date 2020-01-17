@@ -1,9 +1,9 @@
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+github.com/daveyarwood/go-osc v0.0.0-20200116123019-3d015df6f75e h1:Akyn0lh1reLCg+He21RQo4Go4YgEU8MHmzOJZlpwfUQ=
+github.com/daveyarwood/go-osc v0.0.0-20200116123019-3d015df6f75e/go.mod h1:da7/n4R+yocxP9nqBc2kbUpe0PwlinMHS00O5ywd9+s=
 github.com/go-test/deep v1.0.1 h1:UQhStjbkDClarlmv0am7OXXO4/GaPdCGiUiMTvi28sg=
 github.com/go-test/deep v1.0.1/go.mod h1:wGDj63lr65AM2AQyKZd/NYHGb0R+1RLqB8NKt3aSFNA=
-github.com/hypebeast/go-osc v0.0.0-20181130121958-adefe22206c1 h1:csLuD/R1zpC5lpYGOQybOfpxI68kHU+eS13QZ26DZrM=
-github.com/hypebeast/go-osc v0.0.0-20181130121958-adefe22206c1/go.mod h1:VCiuhv+/+jPFqHeZAgVC61Cr4drPso5XEEKmEiqCsuU=
 github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 h1:RWengNIwukTxcDr9M+97sNutRR1RKhG96O6jWumTTnw=
 github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826/go.mod h1:TaXosZuwdSHYgviHp1DAtfrULt5eUgsSMsZf+YrPgl8=
 github.com/rs/zerolog v1.14.0 h1:F2F6pGdMrQHGPwr05uwcQNSiWnX5PD76SWw/mYvRBXs=
