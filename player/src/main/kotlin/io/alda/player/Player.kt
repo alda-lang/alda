@@ -49,9 +49,16 @@ class Track(val trackNumber : Int) {
   // events.
   var era = 0
 
+  // The base offset that is added to upcoming notes to be scheduled. As notes
+  // are scheduled, this base offset is updated to reflect the offset at which
+  // the last note to be scheduled will end, so that subsequent notes will line
+  // up in time right after the last note.
+  var startOffset = 0
+
   fun clear() {
     synchronized(era) {
       era++
+      startOffset = 0
       eventBufferQueue.clear()
       activePatterns.clear()
       withMidiChannel { midi.clearChannel(it) }
@@ -270,18 +277,11 @@ class Track(val trackNumber : Int) {
   init {
     // This thread schedules events on this track.
     thread {
-      // Before we can schedule these events, we need to know the start offset.
-      //
-      // This can change dynamically, e.g. if a pattern is changed on-the-fly
-      // during playback, so we defer scheduling the next buffer of events as
-      // long as we can.
-      //
       // When new events come in on the `eventsBufferQueue`, it may be the case
       // that previous events are still lined up to be scheduled (e.g. a pattern
       // is looping). When this is the case, the new events wait in line until
       // the previous scheduling has completed and the offset where the next
       // events should start is updated.
-      var startOffset = 0
       var scheduling = ReentrantLock(true) // fairness enabled
 
       while (!Thread.currentThread().isInterrupted()) {
