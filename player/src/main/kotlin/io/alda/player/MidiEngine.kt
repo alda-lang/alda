@@ -337,7 +337,15 @@ class MidiEngine {
     scheduleShortMsg(offset, ShortMessage.PROGRAM_CHANGE, channel, patch, 0)
   }
 
-  fun percussion(offset : Int, trackNumber : Int) {
+  // Immediately configure the track to use a percussion channel. That way, any
+  // note messages in the same bundle will be scheduled on a percussion channel.
+  fun percussionImmediate(trackNumber : Int) {
+    track(trackNumber).useMidiPercussionChannel()
+  }
+
+  // Configure a track to be a percussion track in the future by scheduling a
+  // metamessage that will do the above once the offset is reached.
+  fun percussionScheduled(trackNumber : Int, offset : Int) {
     scheduleMetaMsg(
       offset,
       CustomMetaMessage.PERCUSSION,

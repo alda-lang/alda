@@ -16,7 +16,7 @@ type Instrument interface {
 type MidiInstrument struct {
 	NameImpl     string
 	PatchNumber  int32
-	isPercussion bool
+	IsPercussion bool
 }
 
 // Name implements Instrument.Name by returning the name of the instrument.
@@ -230,7 +230,7 @@ func init() {
 
 	for _, instrumentNames := range midiPercussionInstruments {
 		instrument := MidiInstrument{
-			NameImpl: instrumentNames.name, isPercussion: true,
+			NameImpl: instrumentNames.name, IsPercussion: true,
 		}
 		stockInstruments[instrumentNames.name] = instrument
 		for _, alias := range instrumentNames.aliases {

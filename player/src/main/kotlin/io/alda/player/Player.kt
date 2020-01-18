@@ -216,9 +216,13 @@ class Track(val trackNumber : Int) {
     }
 
     events.filter { it is MidiPercussionEvent }.forEach {
-      midi.percussion(
-        startOffset + (it as MidiPercussionEvent).offset, trackNumber
-      )
+      val event = it as MidiPercussionEvent
+
+      if (event.offset == 0) {
+        midi.percussionImmediate(trackNumber)
+      } else {
+        midi.percussionScheduled(trackNumber, startOffset + event.offset)
+      }
     }
 
     val noteEvents =

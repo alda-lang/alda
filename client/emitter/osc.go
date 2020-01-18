@@ -25,6 +25,12 @@ func midiPatchMsg(track int32, offset int32, patch int32) *osc.Message {
 	return msg
 }
 
+func midiPercussionMsg(track int32, offset int32) *osc.Message {
+	msg := osc.NewMessage(fmt.Sprintf("/track/%d/midi/percussion", track))
+	msg.Append(offset)
+	return msg
+}
+
 func midiNoteMsg(
 	track int32, offset int32, note int32, duration int32, audibleDuration int32,
 	velocity int32,
@@ -48,8 +54,18 @@ func (oe OSCEmitter) EmitScore(score *model.Score) error {
 	tracks := score.Tracks()
 
 	for part, trackNumber := range tracks {
-		patchNumber := part.StockInstrument.(model.MidiInstrument).PatchNumber
+		// We currently only have MIDI instruments. This might change in the future,
+		// which is why Instrument is an interface instead of a plain struct. For
+		// now, we're operating under the assumption that all instruments are MIDI
+		// instruments.
+		stockInstrument := part.StockInstrument.(model.MidiInstrument)
+
+		patchNumber := stockInstrument.PatchNumber
 		bundle.Append(midiPatchMsg(trackNumber, 0, patchNumber))
+
+		if stockInstrument.IsPercussion {
+			bundle.Append(midiPercussionMsg(trackNumber, 0))
+		}
 	}
 
 	for _, event := range score.Events {
