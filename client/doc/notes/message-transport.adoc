@@ -70,7 +70,7 @@ the loopback interface (between two processes on a single machine).
 ** 512 / 48 = 10.666...
 ** So 8 messages is probably a good size. 48 * 8 = 384 bytes, well under 512.
 
-== Solution
+== Possible solution
 
 * Send scores in bundles of 512 bytes or less, guaranteeing that packets
   won't be dropped because they're larger than the particular limit on someone's
@@ -83,3 +83,17 @@ sequence number and total number of messages in a transaction.
 * The player will collect messages in a transaction and hold off on taking
   action until it has received all of the packets.
 
+== Actual solution
+
+I attempted the solution described above, and I quickly realized that packet
+loss is, in fact, very common. It was common enough that I would rarely get 100%
+of the packets from one side to the other.
+
+It became clear to me, at that point, that reliable delivery is much more
+important than latency. So, I decided to use TCP and send over bundles as a
+single packet instead. I don't think it impacts latency to a noticeable degree,
+and it greatly simplifies things (no need to work around unreliable delivery by
+specifying transaction IDs and sequence numbers).
+
+I did have to implement TCP support in JavaOSC and go-osc, but that was fairly
+straightforward, and the result works like a charm.
