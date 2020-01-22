@@ -1,17 +1,17 @@
 plugins {
-  id("org.jetbrains.kotlin.jvm") version("1.3.11")
+  id("org.jetbrains.kotlin.jvm") version("1.3.60")
   application
 }
 
 repositories {
-  jcenter()
   mavenLocal()
+  mavenCentral()
 }
 
 dependencies {
-  compile("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-  testImplementation("org.jetbrains.kotlin:kotlin-test")
-  testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
+  implementation(kotlin("stdlib-jdk8"))
+  testImplementation(kotlin("test"))
+  testImplementation(kotlin("test-junit"))
 
   compile("com.illposed.osc:javaosc-core")
 }
