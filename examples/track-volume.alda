@@ -1,0 +1,30 @@
+(tempo! 105)
+
+piano:
+  pmotif = [
+    o3
+    (vol 100) a16
+    (vol 90) b-
+    (vol 80) a
+    (vol 70) b-
+    (vol 60) > c d
+    (vol 50) e f
+  ]*2
+
+  (track-vol 70) pmotif
+  (track-vol 50) pmotif
+  (track-vol 30) pmotif
+  (track-vol 10) pmotif
+
+clarinet:
+  cmotif = [
+    (quant 100) o5
+    (vol 60) d8
+    (vol 70) c
+    (vol 80) < f+2.
+  ]
+
+  (track-vol 10) cmotif
+  (track-vol 30) cmotif
+  (track-vol 50) cmotif
+  (track-vol 70) cmotif
