@@ -73,7 +73,7 @@ class Track(val trackNumber : Int) {
     withMidiChannel { midi.unmuteChannel(it) }
   }
 
-  fun schedule(event : Event) {
+  fun schedule(event : Schedulable) {
     withMidiChannel { channel -> event.schedule(channel) }
   }
 
@@ -90,12 +90,12 @@ class Track(val trackNumber : Int) {
    * should begin, and a number of times to play it.
    * @param _startOffset The absolute offset to which the relative offset is
    * added.
-   * @return The list of scheduled notes across all iterations of the pattern.
+   * @return The list of scheduled events across all iterations of the pattern.
    */
   fun schedulePattern(event : PatternEventBase, _startOffset : Int)
-  : List<Event> {
+  : List<Schedulable> {
     var startOffset = _startOffset + event.offset
-    val patternEvents = mutableListOf<Event>()
+    val patternEvents = mutableListOf<Schedulable>()
 
     // A loop can be stopped externally by removing the pattern from
     // `activePatterns`. If this happens, we stop looping.
@@ -137,11 +137,11 @@ class Track(val trackNumber : Int) {
 
         val pattern = pattern(event.patternName)
 
-        val events : MutableList<Event> =
-          (pattern.events.filter { it !is PatternEventBase }
-           as MutableList<Event>)
-          .map { it.addOffset(startOffset) }
-          as MutableList<Event>
+        val events : MutableList<Schedulable> =
+          (pattern.events.filter { it is Schedulable }
+           as MutableList<Schedulable>)
+          .map { (it as Event).addOffset(startOffset) }
+          as MutableList<Schedulable>
 
         events.forEach { schedule(it) }
 
@@ -164,7 +164,7 @@ class Track(val trackNumber : Int) {
           }
 
         if (!events.isEmpty())
-          startOffset = events.map { it.endOffset() }.max()!!
+          startOffset = events.map { (it as Event).endOffset() }.max()!!
 
         patternEvents.addAll(events)
 
@@ -211,15 +211,16 @@ class Track(val trackNumber : Int) {
       }
     }
 
-    val scheduledEvents = mutableListOf<Event>()
+    val scheduledEvents = mutableListOf<Schedulable>()
 
-    val noteEvents =
-      events.filter { it is MidiNoteEvent }
-            .map { it.addOffset(startOffset) }
+    val immediateEvents : List<Schedulable> =
+      events.filter { it is Schedulable }
+            .map { (it as Event).addOffset(startOffset) }
+            as List<Schedulable>
 
-    noteEvents.forEach { schedule(it) }
+    immediateEvents.forEach { schedule(it) }
 
-    scheduledEvents.addAll(noteEvents)
+    scheduledEvents.addAll(immediateEvents)
 
     // For each pattern event, we...
     // * wait until right before the pattern is supposed to be played
@@ -238,7 +239,7 @@ class Track(val trackNumber : Int) {
     // collect the results in a CompletableFuture.
     events.filter { it is PatternEventBase }.map {
       val event = it as PatternEventBase
-      val future = CompletableFuture<List<Event>>()
+      val future = CompletableFuture<List<Schedulable>>()
 
       thread {
         future.complete(schedulePattern(event, startOffset))
@@ -265,7 +266,7 @@ class Track(val trackNumber : Int) {
     if (scheduledEvents.isEmpty())
       return _startOffset
 
-    return scheduledEvents.map { it.endOffset() }.max()!!
+    return scheduledEvents.map { (it as Event).endOffset() }.max()!!
   }
 
   init {

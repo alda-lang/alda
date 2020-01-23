@@ -16,8 +16,11 @@ enum class PatternAction {
 
 interface Event {
   fun addOffset(o : Int) : Event
-  fun schedule(channel : Int)
   fun endOffset() : Int
+}
+
+interface Schedulable {
+  fun schedule(channel : Int)
 }
 
 class TempoEvent(val offset : Int, val bpm : Float) : Event {
@@ -25,14 +28,10 @@ class TempoEvent(val offset : Int, val bpm : Float) : Event {
     return TempoEvent(offset + o, bpm)
   }
 
-  // Not relevant, as tempo events are applied at the system level, not the
-  // track level.
-  override fun schedule(channel : Int) {}
-
   override fun endOffset() = 0
 }
 
-class MidiPatchEvent(val offset : Int, val patch : Int) : Event {
+class MidiPatchEvent(val offset : Int, val patch : Int) : Event, Schedulable {
   override fun addOffset(o : Int) : MidiPatchEvent {
     return MidiPatchEvent(offset + o, patch)
   }
@@ -49,23 +48,13 @@ class MidiPercussionEvent(val offset : Int) : Event {
     return MidiPercussionEvent(offset + o)
   }
 
-  // Not exactly relevant, as MidiPercussionEvent is more about designating
-  // which MIDI channel to use than it is about scheduling an event.
-  //
-  // Technically, MidiPercussionEvent can be scheduled to happen at a specific
-  // offset in the future by scheduling a MetaMessage, but we would still need
-  // to have the track number in hand, not the channel number, so it isn't a
-  // clean fit, so we handle it via a separate function instead of implementing
-  // it here.
-  override fun schedule(channel : Int) {}
-
   override fun endOffset() = 0
 }
 
 class MidiNoteEvent(
   val offset : Int, val noteNumber : Int, val duration : Int,
   val audibleDuration : Int, val velocity : Int
-) : Event {
+) : Event, Schedulable {
   override fun addOffset(o : Int) : MidiNoteEvent {
     return MidiNoteEvent(
       offset + o, noteNumber, duration, audibleDuration, velocity
@@ -81,7 +70,9 @@ class MidiNoteEvent(
   override fun endOffset() = offset + duration
 }
 
-class MidiVolumeEvent(val offset : Int, val volume : Int) : Event {
+class MidiVolumeEvent(
+  val offset : Int, val volume : Int
+) : Event, Schedulable {
   override fun addOffset(o : Int) : MidiVolumeEvent {
     return MidiVolumeEvent(offset + o, volume)
   }
@@ -93,7 +84,9 @@ class MidiVolumeEvent(val offset : Int, val volume : Int) : Event {
   override fun endOffset() = 0
 }
 
-class MidiPanningEvent(val offset : Int, val panning : Int) : Event {
+class MidiPanningEvent(
+  val offset : Int, val panning : Int
+) : Event, Schedulable {
   override fun addOffset(o : Int) : MidiPanningEvent {
     return MidiPanningEvent(offset + o, panning)
   }
@@ -122,10 +115,6 @@ class PatternEvent(
     return iteration > times
   }
 
-  // Not relevant, as pattern events have to do with adjusting patterns instead
-  // of strictly scheduling events in the MidiEngine.
-  override fun schedule(channel : Int) {}
-
   override fun endOffset() = 0
 }
 
@@ -138,10 +127,6 @@ class PatternLoopEvent(
 
   override fun isDone(iteration : Int) : Boolean = false
 
-  // Not relevant, as pattern events have to do with adjusting patterns instead
-  // of strictly scheduling events in the MidiEngine.
-  override fun schedule(channel : Int) {}
-
   override fun endOffset() = 0
 }
 
@@ -150,10 +135,6 @@ class FinishLoopEvent(val offset : Int) : Event {
     return FinishLoopEvent(offset + o)
   }
 
-  // Not relevant, as pattern events have to do with adjusting patterns instead
-  // of strictly scheduling events in the MidiEngine.
-  override fun schedule(channel : Int) {}
-
   override fun endOffset() = 0
 }
 
@@ -161,10 +142,6 @@ class MidiExportEvent(val filepath : String) : Event {
   override fun addOffset(o : Int) : MidiExportEvent {
     return MidiExportEvent(filepath)
   }
-
-  // Not relevant, as pattern events have to do with adjusting patterns instead
-  // of strictly scheduling events in the MidiEngine.
-  override fun schedule(channel : Int) {}
 
   override fun endOffset() = 0
 }
