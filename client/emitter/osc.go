@@ -44,6 +44,20 @@ func midiNoteMsg(
 	return msg
 }
 
+func midiVolumeMsg(track int32, offset int32, volume int32) *osc.Message {
+	msg := osc.NewMessage(fmt.Sprintf("/track/%d/midi/volume", track))
+	msg.Append(offset)
+	msg.Append(volume)
+	return msg
+}
+
+func midiPanningMsg(track int32, offset int32, panning int32) *osc.Message {
+	msg := osc.NewMessage(fmt.Sprintf("/track/%d/midi/panning", track))
+	msg.Append(offset)
+	msg.Append(panning)
+	return msg
+}
+
 // EmitScore implements Emitter.EmitScore by sending OSC messages to instruct a
 // player process how to perform the score.
 func (oe OSCEmitter) EmitScore(score *model.Score) error {
@@ -72,9 +86,34 @@ func (oe OSCEmitter) EmitScore(score *model.Score) error {
 		switch event.(type) {
 		case model.NoteEvent:
 			noteEvent := event.(model.NoteEvent)
+			track := tracks[noteEvent.Part]
+			offset := int32(math.Round(float64(noteEvent.Offset)))
+
+			// Scheduling volume and panning control change messages before every note
+			// is terribly inefficient, but it's what we've always done in alda v1 and
+			// it gets the job done.
+			//
+			// At some point, it would be nice to make it so that we only send a
+			// volume or panning control change message when the values change.
+			bundle.Append(
+				midiVolumeMsg(
+					track,
+					offset,
+					int32(math.Round(float64(noteEvent.TrackVolume*127))),
+				),
+			)
+
+			bundle.Append(
+				midiPanningMsg(
+					track,
+					offset,
+					int32(math.Round(float64(noteEvent.Panning*127))),
+				),
+			)
+
 			bundle.Append(midiNoteMsg(
-				tracks[noteEvent.Part],
-				int32(math.Round(float64(noteEvent.Offset))),
+				track,
+				offset,
 				noteEvent.MidiNote,
 				int32(math.Round(float64(noteEvent.Duration))),
 				int32(math.Round(float64(noteEvent.AudibleDuration))),
