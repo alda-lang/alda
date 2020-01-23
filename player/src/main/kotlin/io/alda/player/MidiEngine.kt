@@ -82,6 +82,11 @@ private fun isNoteOnEvent(event : MidiEvent) : Boolean {
   return msg is ShortMessage && msg.getCommand() == ShortMessage.NOTE_ON
 }
 
+private fun isControlChangeEvent(event : MidiEvent) : Boolean {
+  val msg = event.getMessage()
+  return msg is ShortMessage && msg.getCommand() == ShortMessage.CONTROL_CHANGE
+}
+
 data class TempoEntry(
   val offsetMs : Int, val tempo : Float, val ticks : Long
 ) {}
@@ -368,6 +373,18 @@ class MidiEngine {
     )
   }
 
+  fun volume(offset : Int, channel : Int, volume : Int) {
+    scheduleShortMsg(
+      offset, ShortMessage.CONTROL_CHANGE, channel, MIDI_CHANNEL_VOLUME, volume
+    )
+  }
+
+  fun panning(offset : Int, channel : Int, panning : Int) {
+    scheduleShortMsg(
+      offset, ShortMessage.CONTROL_CHANGE, channel, MIDI_PANNING, panning
+    )
+  }
+
   // Schedules an event to occur at the desired offset.
   //
   // Returns a CountDownLatch that will count down from 1 to 0 when the event is
@@ -437,18 +454,18 @@ class MidiEngine {
     val sequenceCopy = Sequence(DIVISION_TYPE, RESOLUTION)
     val trackCopy = sequenceCopy.createTrack()
 
-    var earliestNoteOffset = Long.MAX_VALUE
+    var earliestOffset = Long.MAX_VALUE
     val trackEvents = mutableListOf<MidiEvent>()
     for (i in 0..(track.size() - 1)) {
       val event = track.get(i)
       trackEvents.add(event)
-      if (isNoteOnEvent(event))
-        earliestNoteOffset = minOf(earliestNoteOffset, event.getTick())
+      if (isNoteOnEvent(event) || isControlChangeEvent(event))
+        earliestOffset = minOf(earliestOffset, event.getTick())
     }
 
     trackEvents.forEach { event ->
       val msgCopy = event.getMessage().clone() as MidiMessage
-      val ticks = maxOf(0, event.getTick() - earliestNoteOffset)
+      val ticks = maxOf(0, event.getTick() - earliestOffset)
       trackCopy.add(MidiEvent(msgCopy, ticks))
     }
 

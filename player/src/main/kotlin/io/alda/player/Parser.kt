@@ -14,23 +14,95 @@ enum class PatternAction {
   CLEAR
 }
 
-interface Event {}
+interface Event {
+  fun addOffset(o : Int) : Event
+  fun schedule(channel : Int)
+  fun endOffset() : Int
+}
 
-class TempoEvent(val offset : Int, val bpm : Float) : Event {}
+class TempoEvent(val offset : Int, val bpm : Float) : Event {
+  override fun addOffset(o : Int) : TempoEvent {
+    return TempoEvent(offset + o, bpm)
+  }
 
-class MidiPatchEvent(val offset : Int, val patch : Int) : Event {}
+  // Not relevant, as tempo events are applied at the system level, not the
+  // track level.
+  override fun schedule(channel : Int) {}
 
-class MidiPercussionEvent(val offset : Int) : Event {}
+  override fun endOffset() = 0
+}
+
+class MidiPatchEvent(val offset : Int, val patch : Int) : Event {
+  override fun addOffset(o : Int) : MidiPatchEvent {
+    return MidiPatchEvent(offset + o, patch)
+  }
+
+  override fun schedule(channel : Int) {
+    midi.patch(offset, channel, patch)
+  }
+
+  override fun endOffset() = 0
+}
+
+class MidiPercussionEvent(val offset : Int) : Event {
+  override fun addOffset(o : Int) : MidiPercussionEvent {
+    return MidiPercussionEvent(offset + o)
+  }
+
+  // Not exactly relevant, as MidiPercussionEvent is more about designating
+  // which MIDI channel to use than it is about scheduling an event.
+  //
+  // Technically, MidiPercussionEvent can be scheduled to happen at a specific
+  // offset in the future by scheduling a MetaMessage, but we would still need
+  // to have the track number in hand, not the channel number, so it isn't a
+  // clean fit, so we handle it via a separate function instead of implementing
+  // it here.
+  override fun schedule(channel : Int) {}
+
+  override fun endOffset() = 0
+}
 
 class MidiNoteEvent(
   val offset : Int, val noteNumber : Int, val duration : Int,
   val audibleDuration : Int, val velocity : Int
 ) : Event {
-  fun addOffset(o : Int) : MidiNoteEvent {
+  override fun addOffset(o : Int) : MidiNoteEvent {
     return MidiNoteEvent(
       offset + o, noteNumber, duration, audibleDuration, velocity
     )
   }
+
+  override fun schedule(channel : Int) {
+    val noteStart = offset
+    val noteEnd = noteStart + audibleDuration
+    midi.note(noteStart, noteEnd, channel, noteNumber, velocity)
+  }
+
+  override fun endOffset() = offset + duration
+}
+
+class MidiVolumeEvent(val offset : Int, val volume : Int) : Event {
+  override fun addOffset(o : Int) : MidiVolumeEvent {
+    return MidiVolumeEvent(offset + o, volume)
+  }
+
+  override fun schedule(channel : Int) {
+    midi.volume(offset, channel, volume)
+  }
+
+  override fun endOffset() = 0
+}
+
+class MidiPanningEvent(val offset : Int, val panning : Int) : Event {
+  override fun addOffset(o : Int) : MidiPanningEvent {
+    return MidiPanningEvent(offset + o, panning)
+  }
+
+  override fun schedule(channel : Int) {
+    midi.panning(offset, channel, panning)
+  }
+
+  override fun endOffset() = 0
 }
 
 abstract class PatternEventBase(
@@ -42,20 +114,60 @@ abstract class PatternEventBase(
 class PatternEvent(
   override val offset : Int, override val patternName : String, val times : Int
 ) : Event, PatternEventBase(offset, patternName) {
+  override fun addOffset(o : Int) : PatternEvent {
+    return PatternEvent(offset + o, patternName, times)
+  }
+
   override fun isDone(iteration : Int) : Boolean {
     return iteration > times
   }
+
+  // Not relevant, as pattern events have to do with adjusting patterns instead
+  // of strictly scheduling events in the MidiEngine.
+  override fun schedule(channel : Int) {}
+
+  override fun endOffset() = 0
 }
 
 class PatternLoopEvent(
   override val offset : Int, override val patternName : String
 ) : Event, PatternEventBase(offset, patternName) {
+  override fun addOffset(o : Int) : PatternLoopEvent {
+    return PatternLoopEvent(offset + o, patternName)
+  }
+
   override fun isDone(iteration : Int) : Boolean = false
+
+  // Not relevant, as pattern events have to do with adjusting patterns instead
+  // of strictly scheduling events in the MidiEngine.
+  override fun schedule(channel : Int) {}
+
+  override fun endOffset() = 0
 }
 
-class FinishLoopEvent(val offset : Int) : Event {}
+class FinishLoopEvent(val offset : Int) : Event {
+  override fun addOffset(o : Int) : FinishLoopEvent {
+    return FinishLoopEvent(offset + o)
+  }
 
-class MidiExportEvent(val filepath : String) : Event {}
+  // Not relevant, as pattern events have to do with adjusting patterns instead
+  // of strictly scheduling events in the MidiEngine.
+  override fun schedule(channel : Int) {}
+
+  override fun endOffset() = 0
+}
+
+class MidiExportEvent(val filepath : String) : Event {
+  override fun addOffset(o : Int) : MidiExportEvent {
+    return MidiExportEvent(filepath)
+  }
+
+  // Not relevant, as pattern events have to do with adjusting patterns instead
+  // of strictly scheduling events in the MidiEngine.
+  override fun schedule(channel : Int) {}
+
+  override fun endOffset() = 0
+}
 
 class Updates() {
   var systemActions  = mutableSetOf<SystemAction>()
@@ -175,6 +287,18 @@ class Updates() {
           )
         }
 
+        Regex("/track/\\d+/midi/volume").matches(address) -> {
+          val offset = args.get(0) as Int
+          val volume = args.get(1) as Int
+          addTrackEvent(trackNumber(address), MidiVolumeEvent(offset, volume))
+        }
+
+        Regex("/track/\\d+/midi/panning").matches(address) -> {
+          val offset  = args.get(0) as Int
+          val panning = args.get(1) as Int
+          addTrackEvent(trackNumber(address), MidiPanningEvent(offset, panning))
+        }
+
         Regex("/track/\\d+/pattern").matches(address) -> {
           val offset      = args.get(0) as Int
           val patternName = args.get(1) as String
@@ -213,6 +337,22 @@ class Updates() {
             MidiNoteEvent(
               offset, noteNumber, duration, audibleDuration, velocity
             )
+          )
+        }
+
+        Regex("/pattern/[^/]+/midi/volume").matches(address) -> {
+          val offset = args.get(0) as Int
+          val volume = args.get(1) as Int
+          addPatternEvent(
+            patternName(address), MidiVolumeEvent(offset, volume)
+          )
+        }
+
+        Regex("/pattern/[^/]+/midi/panning").matches(address) -> {
+          val offset  = args.get(0) as Int
+          val panning = args.get(1) as Int
+          addPatternEvent(
+            patternName(address), MidiPanningEvent(offset, panning)
           )
         }
 

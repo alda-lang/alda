@@ -136,6 +136,13 @@ it should be done if one wants to export the score to a MIDI file.
   * `/midi/patch` - set the MIDI patch number for this track
   * `/midi/percussion` - designate this track to use the MIDI percussion channel
   * `/midi/note` - schedule a MIDI note on ... note off on this track
+  * `/midi/volume` - schedule a MIDI channel volume control change event
+    * "Volume" here refers to the channel volume, not per-note velocity.
+    * You can use channel volume control messages to set the volume of each
+      track to mix their levels relative to each other, and then set the
+      velocity on each note (as a parameter of `/midi/note`) for finer-grained
+      control over volume from note to note.
+  * `/midi/panning` - schedule a MIDI panning control change event
   * `/pattern` - schedule an instance of a pattern on this track
     * Includes a "times" parameter, for convenient finite loops without having
       to send numerous `/track/1/pattern` messages. You can, for example, send a
@@ -160,6 +167,12 @@ it should be done if one wants to export the score to a MIDI file.
     * To _replace_ a pattern's contents, send a bundle that starts with
       `/pattern/foo/clear` and is followed by a number of
       `/pattern/foo/midi/note` messages.
+  * `/midi/volume` - append a MIDI channel volume control change message to the
+    pattern's contents
+    * See `/track/1/midi/volume`
+  * `/midi/panning` - append a MIDI panning control change message to the
+    pattern's contents
+    * See `/track/1/midi/panning`
   * `/pattern` - appends a reference to another pattern with the given ID to
     this pattern's contents
     * If the referenced pattern is mutated during looped playback of this
