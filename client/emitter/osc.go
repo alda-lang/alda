@@ -118,10 +118,6 @@ func (oe OSCEmitter) EmitScore(score *model.Score) error {
 				int32(math.Round(float64(noteEvent.Duration))),
 				int32(math.Round(float64(noteEvent.AudibleDuration))),
 				int32(math.Round(float64(noteEvent.Volume*127))),
-				// TODO: handle track volume, panning
-				// I'm thinking these should be separate types of OSC message, like
-				// /track/1/midi/volume and /track/1/midi/panning. In the MIDI spec,
-				// they are sent separately from notes as control change messages.
 			))
 		default:
 			return fmt.Errorf("unsupported event: %#v", event)
