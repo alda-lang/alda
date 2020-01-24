@@ -15,6 +15,7 @@ import (
 	log "alda.io/client/logging"
 	"alda.io/client/model"
 	"alda.io/client/parser"
+	"github.com/daveyarwood/go-osc/osc"
 )
 
 func findOpenPort() (int, error) {
@@ -107,9 +108,6 @@ func main() {
 		cmd.Dir = "../player"
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
-		// See below about black magic to try and make sure the subprocess gets
-		// killed when the main process exits.
-		cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 		cmd.Start()
 
 		// This is a hacky way to make sure that the player process is ready before
@@ -131,20 +129,14 @@ func main() {
 		select {
 		case <-sigChan:
 			if cmd != nil {
-				fmt.Println("Killing player process...")
+				fmt.Println("Sending /system/shutdown message to player process...")
 
-				// Black magic to try and kill the subprocess once the main process ends.
-				// I have no idea how robust this is. Probably a better approach would be
-				// to add a lifetime to all player processes, such that they kill
-				// themselves after being idle for a while. Could make this configurable
-				// and set a short lifetime for the purposes of testing.
-				pgid, err := syscall.Getpgid(cmd.Process.Pid)
-				if err != nil {
+				client := osc.NewClient("localhost", int(port))
+				client.SetNetworkProtocol(osc.TCP)
+				if err := client.Send(osc.NewMessage("/system/shutdown")); err != nil {
 					fmt.Println(err)
 					os.Exit(1)
 				}
-
-				syscall.Kill(-pgid, 15)
 			}
 		}
 	}
