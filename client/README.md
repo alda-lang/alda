@@ -112,6 +112,6 @@ go run osc_api_demo/main.go 27278 patchange
 
 ## License
 
-Copyright © 2019 Dave Yarwood, et al
+Copyright © 2019-2020 Dave Yarwood, et al
 
 Distributed under the Eclipse Public License version 2.0.

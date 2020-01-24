@@ -31,6 +31,6 @@ You can then use the [client](../client) to send messages on the same port.
 
 ## License
 
-Copyright © 2019 Dave Yarwood, et al
+Copyright © 2019-2020 Dave Yarwood, et al
 
 Distributed under the Eclipse Public License version 2.0.
