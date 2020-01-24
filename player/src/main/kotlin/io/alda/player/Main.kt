@@ -1,7 +1,9 @@
 package io.alda.player
 
-import java.util.Scanner
+import kotlin.concurrent.thread
 import kotlin.system.exitProcess
+
+var isRunning = true
 
 fun main(args: Array<String>) {
   if (args.isEmpty()) {
@@ -18,15 +20,22 @@ fun main(args: Array<String>) {
   println("Starting player...")
   player.start()
 
-  // TODO: replace this with a proper shutdown mechanism
-  val scanner = Scanner(System.`in`)
-  println("Press ENTER when done.")
-  scanner.nextLine()
+  Runtime.getRuntime().addShutdownHook(thread(start = false) {
+    println("Stopping receiver...")
+    receiver.stopListening()
+    println("Stopping player...")
+    player.interrupt()
+  })
 
-  // shutdown actions
-  println("Stopping receiver...")
-  receiver.stopListening()
-  println("Stopping player...")
-  player.interrupt()
+  while (isRunning) {
+    try {
+      Thread.sleep(100)
+    } catch (iex : InterruptedException) {
+      println("Interrupted.")
+      break
+    }
+  }
+
+  exitProcess(0)
 }
 

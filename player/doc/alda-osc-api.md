@@ -121,6 +121,7 @@ it should be done if one wants to export the score to a MIDI file.
 ## Address patterns
 
 * `/system`
+  * `/shutdown` - shut down the player process
   * `/play` - start playing all tracks at the current system offset
   * `/stop` - stop playing all tracks
     * Remembers the state of the tracks, such that when a `/system/play` is

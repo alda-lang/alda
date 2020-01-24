@@ -3,7 +3,7 @@ package io.alda.player
 import com.illposed.osc.OSCMessage
 
 enum class SystemAction {
-  PLAY, STOP, CLEAR
+  SHUTDOWN, PLAY, STOP, CLEAR
 }
 
 enum class TrackAction {
@@ -203,6 +203,10 @@ class Updates() {
 
     try {
       when {
+        Regex("/system/shutdown").matches(address) -> {
+          systemActions.add(SystemAction.SHUTDOWN)
+        }
+
         Regex("/system/play").matches(address) -> {
           systemActions.add(SystemAction.PLAY)
         }

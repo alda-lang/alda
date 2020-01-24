@@ -363,7 +363,10 @@ private fun applyUpdates(updates : Updates) {
   println(updates.patternEvents)
   println("----")
 
-  // PHASE 1: stop/mute/clear
+  // PHASE 1: shutdown/stop/mute/clear
+
+  if (updates.systemActions.contains(SystemAction.SHUTDOWN))
+    isRunning = false
 
   if (updates.systemActions.contains(SystemAction.STOP))
     midi.stopSequencer()
