@@ -10,15 +10,14 @@ repositories {
 
 dependencies {
   implementation(kotlin("stdlib-jdk8"))
+  implementation("com.illposed.osc:javaosc-core")
   testImplementation(kotlin("test"))
   testImplementation(kotlin("test-junit"))
-
-  compile("com.illposed.osc:javaosc-core")
 }
 
 dependencies {
   constraints {
-    compile("com.illposed.osc:javaosc-core:0.7-SNAPSHOT")
+    implementation("com.illposed.osc:javaosc-core:0.7-SNAPSHOT")
   }
 }
 
@@ -31,17 +30,18 @@ val run by tasks.getting(JavaExec::class) {
 }
 
 val fatJar = task("fatJar", type = Jar::class) {
-    baseName = "${project.name}-fat"
-    manifest {
-        attributes["Main-Class"] = "io.alda.player.MainKt"
-    }
-    from(configurations.compile.get().map({ if (it.isDirectory) it else zipTree(it) }))
-    from(configurations.runtime.get().map({ if (it.isDirectory) it else zipTree(it) }))
-    with(tasks["jar"] as CopySpec)
+  archiveBaseName.set("${project.name}-fat")
+  duplicatesStrategy = DuplicatesStrategy.INCLUDE
+  manifest {
+    attributes["Main-Class"] = "io.alda.player.MainKt"
+  }
+  from(configurations.compileClasspath.get().map({ if (it.isDirectory) it else zipTree(it) }))
+  from(configurations.runtimeClasspath.get().map({ if (it.isDirectory) it else zipTree(it) }))
+  with(tasks["jar"] as CopySpec)
 }
 
 tasks {
-    "build" {
-        dependsOn(fatJar)
-    }
+  "build" {
+    dependsOn(fatJar)
+  }
 }
