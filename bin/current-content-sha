@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+# This script prints a git SHA that represents the current contents of this git
+# repo, including any unstaged and untracked changes.
+#
+# To accomplish this, we run `git add --all` followed by `git write-tree`, and
+# to ensure that this doesn't affect the current state of the git repo, we make
+# a copy of the index first and use that instead of the actual index.
+#
+# Usage:
+#
+#   Print current content SHA of the repo as a whole:
+#     current-content-sha
+#
+#   Print current content SHA of just the client directory:
+#     current-content-sha client
+#
+#   Print current content SHA of just the player directory:
+#     current-content-sha player
+
+cd "$(dirname $0)/../"
+
+tmp_git_index="$(mktemp)"
+cp .git/index "$tmp_git_index"
+export GIT_INDEX_FILE="$tmp_git_index"
+
+git add --all
+git write-tree $(if [[ -n "$1" ]]; then echo "--prefix=$1/"; fi)
+

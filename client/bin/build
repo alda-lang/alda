@@ -6,6 +6,17 @@ cd "$(dirname $0)/../"
 
 mkdir -p target
 
+# Keep the target folder from getting too big by deleting any builds older than
+# 7 days.
+find target/ -type d -mtime +7 -exec rm -vrf {} \;
+
+build_sha="$(../bin/current-content-sha client)"
+
+if [[ -d "target/$build_sha" ]]; then
+  echo "Existing build: $PWD/target/$build_sha"
+  exit 0
+fi
+
 function build() {
   os="$1"
   arch="$2"
@@ -16,7 +27,7 @@ function build() {
     ext=""
   fi
 
-  output_filename="target/$os-$arch/alda$ext"
+  output_filename="target/$build_sha/$os-$arch/alda$ext"
 
   echo "Building $output_filename..."
 
