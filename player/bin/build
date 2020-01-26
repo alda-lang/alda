@@ -9,20 +9,31 @@ mkdir -p target
 find target/ -type d -mtime +7 -exec rm -vrf {} \;
 
 build_sha="$(../bin/current-content-sha player)"
+build_dir="target/$build_sha"
 
-if [[ -d "target/$build_sha" ]]; then
-  echo "Existing build: $PWD/target/$build_sha"
+if [[ -d "$build_dir" ]]; then
+  echo "Existing build: $PWD/$build_dir"
   exit 0
 fi
 
 ./gradlew build
-
 echo
-tree build/libs/
+
+mkdir -p "$build_dir/windows"
+mkdir -p "$build_dir/non-windows"
+
+non_windows_build="$build_dir/non-windows/alda-player"
+
+echo "Building $non_windows_build..."
+
+cat \
+  <(echo -e "#!/bin/sh\n\nexec java -jar \$0 \"\$@\"\n\n\n") \
+  "build/libs/alda-player-fat.jar" \
+  > "$non_windows_build"
+
+chmod +x "$non_windows_build"
 
 # TODO:
-# * Create the non-Windows build by prepending the shebang header (see
-#   boot-jar2bin for example)
 # * Create the Windows build using launch4j.
 # * Artifacts should go in target/$build_sha/
 
