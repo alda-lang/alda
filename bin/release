@@ -10,10 +10,13 @@ ALDA_VERSION=1.99.0
 #   * Could use the GitHub API for this.
 #
 # * Look for current build in the `target/` directory.
-#
-# * Maybe verify that the build is current, somehow.
-#   * Maybe bin/build could tag the builds with a checksum of the current state
-#     of the project, and bin/release could verify the checksum?
+#   * Can tag the builds by git SHA. I think enforcing that every build
+#     corresponds to a git SHA (even if it's on a local-only branch) is a good
+#     thing.
+#   * Maybe I can tag the builds by both git SHA and a checksum of the current
+#     contents of the directory? That way, I could do local builds that I don't
+#     intend to release, and when it comes time to release, this script could
+#     enforce that the git state is clean and that there is a current build.
 #
 # * Push a new git version tag.
 #
