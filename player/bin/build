@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+cd "$(dirname $0)/../"
+
+./gradlew build
+
+echo
+tree build/libs/
+
+# TODO:
+# * Create the non-Windows build by prepending the shebang header (see
+#   boot-jar2bin for example)
+# * Create the Windows build using launch4j.
+
