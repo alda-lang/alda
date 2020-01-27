@@ -1,13 +1,8 @@
 #!/usr/bin/env bash
 
-# This script is a placeholder for now.
+set -e
 
-# TODO:
-#
-# * Build client.
-# * Build player.
-# * Output both the client and player to a `target/` directory.
-# * Maybe have a zip file (containing client and player) per arch?
+rootdir="$(dirname $0)/../"
+"$rootdir/client/bin/build"
+"$rootdir/player/bin/build"
 
-echo Not yet implemented.
-exit 1
