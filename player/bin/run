@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+set -e
+
+scriptdir="$(dirname $0)"
+
+### BUILD ####################
+
+pushd "$scriptdir/../" >/dev/null
+
+build_sha="$(../bin/current-content-sha player)"
+
+if [[ ! -d "target/$build_sha" ]]; then
+  bin/build
+fi
+
+popd >/dev/null
+
+### RUN ####################
+
+"$scriptdir/../target/$build_sha/non-windows/alda-player" "$@"
+

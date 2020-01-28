@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+
+set -e
+
+scriptdir="$(dirname $0)"
+
+### BUILD ####################
+
+pushd "$scriptdir/../" >/dev/null
+
+build_sha="$(../bin/current-content-sha client)"
+
+if [[ ! -d "target/$build_sha" ]]; then
+  bin/build
+fi
+
+case "$(uname -s)" in
+  Linux)
+    os=linux
+    ;;
+  Darwin)
+    os=darwin
+    ;;
+  *)
+    echo "uname -s returned an unexpected result: $(uname -s)"
+    exit 1
+esac
+
+case "$(uname -m)" in
+  x86_64)
+    arch=amd64
+    ;;
+  386)
+    arch=386
+    ;;
+  *)
+    echo "uname -m returned an unexpected result: $(uname -m)"
+    exit 1
+esac
+
+popd >/dev/null
+
+### RUN ####################
+
+"$scriptdir/../target/$build_sha/$os-$arch/alda" "$@"
+
