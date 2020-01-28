@@ -17,6 +17,9 @@ if [[ -d "target/$build_sha" ]]; then
   exit 0
 fi
 
+# Refuse to build unless the tests are all passing.
+go test $(go list ./...) || exit 1
+
 function build() {
   os="$1"
   arch="$2"
