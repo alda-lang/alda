@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+
+# This script ensures that the current content of the player/ directory has a
+# build and adds the build directory (containing the `alda-player` executable)
+# to the PATH.
+#
+# When no arguments are provided, the script starts a subshell with the amended
+# PATH.
+#
+# When arguments are provided, they are interpreted as a command to be run
+# within this environment with the amended PATH.
+#
+# Example usage 1:
+#
+#   bin/player-on-path client/bin/run examples/track-volume.alda
+#
+# Example usage 2:
+#
+#   cd client
+#   ../bin/player-on-path     # starts a subshell w/ player on PATH
+#   $ bin/run examples/hello_world.alda
+#   $ bin/run examples/phase.alda
+#   # etc.
+
+set -e
+
+pushd "$(dirname $0)/../" >/dev/null
+
+build_sha="$(bin/current-content-sha player)"
+
+if [[ ! -d "player/target/$build_sha" ]]; then
+  pushd player >/dev/null
+  bin/build
+  popd >/dev/null
+fi
+
+player_path="$PWD/player/target/$build_sha/non-windows"
+
+popd >/dev/null
+
+declare -a shell_args
+
+# In general, exporting an environment variable and then invoking `fish` to
+# start a subshell does work (the environment variable is inherited from the
+# script environment), but PATH seems to be an exception, so we have to set the
+# PATH after starting the shell as an init command.
+if [[ "$SHELL" =~ fish ]]; then
+  init_command="set -gx PATH $player_path \$PATH"
+  shell_args=("${shell_args[@]}" "-C" "$init_command")
+else
+  export PATH="$player_path:$PATH"
+fi
+
+if [[ $# == 0 ]]; then
+  shell_args=("${shell_args[@]}" "-i")
+else
+  shell_args=("${shell_args[@]}" "-c" "$*")
+fi
+
+"$SHELL" "${shell_args[@]}"
+

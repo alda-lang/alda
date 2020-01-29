@@ -102,16 +102,15 @@ func main() {
 	}
 
 	if startPlayerProcess {
+		aldaPlayer, err := exec.LookPath("alda-player")
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
 		fmt.Printf("Starting player process on port %d...\n", port)
 
-		// FIXME: This only works if your CWD is /path/to/alda/client/
-		//
-		// TODO: Ultimately, we will want the Alda client to look for the Alda
-		// player executable on the PATH or in some known location (perhaps using
-		// XDG conventions, although we might need to do something different for
-		// Windows).
-		cmd = exec.Command("./gradlew", "run", "--args", strconv.Itoa(port))
-		cmd.Dir = "../player"
+		cmd = exec.Command(aldaPlayer, strconv.Itoa(port))
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		cmd.Start()
