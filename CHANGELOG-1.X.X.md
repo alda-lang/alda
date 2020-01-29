@@ -638,9 +638,9 @@ Now, at long last, you can stop playback without restarting the server!
 
 Simply run `alda stop` at the command line or `:stop` in the Alda REPL.
 
-"Pause / resume" functionality is a TODO item, as it will be a little tricky to
-implement. It's coming, though! For now, running `:play` after you run `:stop`
-will start playback from the beginning of the score again.
+"Pause / resume" functionality will be coming in the future, as it's tricky to
+implement. For now, running `:play` after you run `:stop` will start playback
+from the beginning of the score again.
 
 ## 1.0.0-rc59 (2017-06-05)
 
@@ -1698,12 +1698,46 @@ Shout-out to [elyisgreat] for finding all these bugs!
 
 ## 1.0.0-rc1 (2015-12-25) :christmas_tree:
 
-* Server/client relationship allows you to run Alda servers in the background and interact with them via a much more lightweight CLI, implemented in Java. Everything is packaged into a single uberjar containing both the server and the client. The client is able to manage/start/stop servers as well as interact with them by handing them Alda code to play, etc.
-* This solves start-up time issues, making your Alda CLI experience much more lightweight and responsive. It still takes a while to start up an Alda server, but now you only have to do it once, and then you can leave the server running in the background, where it will be ready to parse/play code whenever you want, at a moment's notice.
-* Re-implementing the Alda REPL on the client side is a TODO item. In the meantime, you can still access the existing Alda REPL by typing `alda repl`. This is just as slow to start as it was before, as it still has to start the Clojure run-time, load the MIDI system and initialize a score when you start the REPL. In the near future, however, the Alda REPL will be much more lightweight, as it will be re-implemented in Java, and instead of starting an Alda server every time you use it, you'll be interacting with Alda servers you already have running.
-* Starting with this release, we'll be releasing Unix and Windows executables on GitHub. These are standalone programs; all you need to run them is Java. [Boot](http://boot-clj.com) is no longer a dependency to run Alda, just something we use to build it and create releases. For development builds, running `boot build -o directory_name` will generate `alda.jar`, `alda`, and `alda.exe` files which can be run directly.
-* In light of the above, the `bin/alda` Boot script that we were previously using as an entrypoint to the application is no longer needed, and has been removed.
-* Now that we are packaging everything together and not using Boot as a dependency, it is no longer feasible to include a MIDI soundfont with Alda. It is easy to install the FluidR3 soundfont into your Java Virtual Machine, and this is what we recommend doing. We've made this even easier (for Mac & Linux users, at least) by including a script (`scripts/install-fluid-r3`). Running it will download FluidR3 and replace `~/.gervill/soundbank-emg.sf2` (your JVM's default soundfont) with it. (If you're a Windows user and you know how to install a MIDI soundfont on a Windows system, please let us know!)
+* Server/client relationship allows you to run Alda servers in the background
+  and interact with them via a much more lightweight CLI, implemented in Java.
+  Everything is packaged into a single uberjar containing both the server and
+  the client. The client is able to manage/start/stop servers as well as
+  interact with them by handing them Alda code to play, etc.
+
+* This solves start-up time issues, making your Alda CLI experience much more
+  lightweight and responsive. It still takes a while to start up an Alda server,
+  but now you only have to do it once, and then you can leave the server running
+  in the background, where it will be ready to parse/play code whenever you
+  want, at a moment's notice.
+
+* In the future, we will re-implement the Alda REPL on the client side. In the
+  meantime, you can still access the existing Alda REPL by typing `alda repl`.
+  This is just as slow to start as it was before, as it still has to start the
+  Clojure run-time, load the MIDI system and initialize a score when you start
+  the REPL. In the near future, however, the Alda REPL will be much more
+  lightweight, as it will be re-implemented in Java, and instead of starting an
+  Alda server every time you use it, you'll be interacting with Alda servers you
+  already have running.
+
+* Starting with this release, we'll be releasing Unix and Windows executables on
+  GitHub. These are standalone programs; all you need to run them is Java.
+  [Boot](http://boot-clj.com) is no longer a dependency to run Alda, just
+  something we use to build it and create releases. For development builds,
+  running `boot build -o directory_name` will generate `alda.jar`, `alda`, and
+  `alda.exe` files which can be run directly.
+
+* In light of the above, the `bin/alda` Boot script that we were previously
+  using as an entrypoint to the application is no longer needed, and has been
+  removed.
+
+* Now that we are packaging everything together and not using Boot as a
+  dependency, it is no longer feasible to include a MIDI soundfont with Alda. It
+  is easy to install the FluidR3 soundfont into your Java Virtual Machine, and
+  this is what we recommend doing. We've made this even easier (for Mac & Linux
+  users, at least) by including a script (`scripts/install-fluid-r3`). Running
+  it will download FluidR3 and replace `~/.gervill/soundbank-emg.sf2` (your
+  JVM's default soundfont) with it. (If you're a Windows user and you know how
+  to install a MIDI soundfont on a Windows system, please let us know!)
 
 [jgkamat]: https://github.com/jgkamat
 [heikkil]: https://github.com/heikkil

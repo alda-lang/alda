@@ -55,7 +55,7 @@ for the text-based creation of all manner of music: classical, popular,
 
 [gm-sound-set]: http://www.midi.org/techspecs/gm1sound.php
 
-### TODO
+### Planned
 
 * [Define and use waveform synthesis instruments](https://github.com/alda-lang/alda/issues/100)
 * [Import MIDI files](https://github.com/alda-lang/alda-core/issues/25)
