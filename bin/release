@@ -2,7 +2,7 @@
 
 # This script is a placeholder for now.
 
-ALDA_VERSION=1.99.0
+release_version="$("$(dirname $0)/version")"
 
 # TODO:
 #
