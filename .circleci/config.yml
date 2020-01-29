@@ -1,0 +1,46 @@
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build_client
+      - build_player
+
+jobs:
+  build_client:
+    docker:
+      - image: circleci/golang:1.12.9
+
+    steps:
+      - checkout
+
+      - restore_cache:
+          key: go-mod-v1-{{ checksum "client/go.sum" }}
+
+      - run: client/bin/build
+
+      - save_cache:
+          key: go-mod-v1-{{ checksum "client/go.sum" }}
+          paths:
+            - "/go/pkg/mod"
+
+  build_player:
+    docker:
+      - image: daveyarwood:alda-player:latest
+
+    steps:
+      - checkout
+
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "player/build.gradle.kts" }}
+            # fallback to using the latest cache if no exact match is found
+            - v1-dependencies-
+
+      - run: player/bin/build
+
+      - save_cache:
+          paths:
+            - ~/.gradle
+          key: v1-dependencies-{{ checksum "player/build.gradle.kts" }}
+
