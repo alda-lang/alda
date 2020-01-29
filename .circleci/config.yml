@@ -23,9 +23,17 @@ jobs:
           paths:
             - "/go/pkg/mod"
 
+      - run: |
+          cd client/target/
+          cp -R $(../../bin/current-content-sha client) current-build
+
+      - store_artifacts:
+          path: client/target/current-build
+          destination: client
+
   build_player:
     docker:
-      - image: daveyarwood:alda-player:latest
+      - image: daveyarwood/alda-player:latest
 
     steps:
       - checkout
@@ -44,3 +52,10 @@ jobs:
             - ~/.gradle
           key: v1-dependencies-{{ checksum "player/build.gradle.kts" }}
 
+      - run: |
+          cd player/target/
+          cp -R $(../../bin/current-content-sha player) current-build
+
+      - store_artifacts:
+          path: player/target/current-build
+          destination: player
