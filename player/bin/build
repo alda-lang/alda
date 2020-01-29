@@ -82,7 +82,5 @@ done
 launch4j_config=$(mktemp)
 cat "$template" | envsubst > "$launch4j_config"
 
-cat "$launch4j_config"
-
 launch4j "$launch4j_config"
 
