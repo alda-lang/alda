@@ -26,8 +26,10 @@ non_windows_build="$build_dir/non-windows/alda-player"
 
 echo "Building $non_windows_build..."
 
+jvm_opts="-XX:+UseG1GC -XX:MaxGCPauseMillis=100 -Xmx1024m -Xms256m"
+
 cat \
-  <(echo -e "#!/bin/sh\n\nexec java -jar \$0 \"\$@\"\n\n\n") \
+  <(echo -e "#!/bin/sh\n\nexec java $jvm_opts -jar \$0 \"\$@\"\n\n\n") \
   "build/libs/alda-player-fat.jar" \
   > "$non_windows_build"
 
