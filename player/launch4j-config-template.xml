@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch4jConfig>
+  <headerType>console</headerType>
+  <outfile>${ALDA_EXE_FILE}</outfile>
+  <jar>${ALDA_JAR_FILE}</jar>
+  <classPath>
+    <mainClass>io.alda.player.MainKt</mainClass>
+  </classPath>
+  <jre>
+    <path></path>
+    <minVersion>1.8.0</minVersion>
+    <maxHeapSize>2048</maxHeapSize>
+    <jdkPreference>preferJdk</jdkPreference>${ALDA_JVM_OPTS}
+  </jre>
+  <versionInfo>
+    <fileVersion>${ALDA_VERSION}</fileVersion>
+    <txtFileVersion>${ALDA_VERSION}</txtFileVersion>
+    <fileDescription>alda-player</fileDescription>
+    <copyright>2012-${ALDA_YEAR} Dave Yarwood et al</copyright>
+    <productVersion>${ALDA_VERSION}</productVersion>
+    <txtProductVersion>${ALDA_VERSION}</txtProductVersion>
+    <productName>alda-player</productName>
+    <internalName>alda-player</internalName>
+    <originalFilename>alda-player.exe</originalFilename>
+  </versionInfo>
+</launch4jConfig>

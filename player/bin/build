@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 cd "$(dirname $0)/../"
 
 mkdir -p target
@@ -16,26 +18,71 @@ if [[ -d "$build_dir" ]]; then
   exit 0
 fi
 
+### FAT JAR ##############################
+
+fat_jar="build/libs/alda-player-fat.jar"
+
+echo "Building $fat_jar..."
 ./gradlew build
 echo
+
+if [[ ! -f "$fat_jar" ]]; then
+  echo "Gradle build failed to create $fat_jar."
+  exit 1
+fi
 
 mkdir -p "$build_dir/windows"
 mkdir -p "$build_dir/non-windows"
 
+windows_build="$build_dir/windows/alda-player.exe"
 non_windows_build="$build_dir/non-windows/alda-player"
-
-echo "Building $non_windows_build..."
 
 jvm_opts="-XX:+UseG1GC -XX:MaxGCPauseMillis=100 -Xmx1024m -Xms256m"
 
+### NON-WINDOWS BUILD ##############################
+
+echo "Building $non_windows_build..."
+
 cat \
   <(echo -e "#!/bin/sh\n\nexec java $jvm_opts -jar \$0 \"\$@\"\n\n\n") \
-  "build/libs/alda-player-fat.jar" \
+  "$fat_jar" \
   > "$non_windows_build"
 
 chmod +x "$non_windows_build"
 
-# TODO:
-# * Create the Windows build using launch4j.
-# * Artifacts should go in target/$build_sha/
+### WINDOWS BUILD ##############################
+
+echo "Building $windows_build..."
+
+template="launch4j-config-template.xml"
+
+export ALDA_EXE_FILE="$PWD/$windows_build"
+export ALDA_JAR_FILE="$PWD/$fat_jar"
+export ALDA_YEAR="$(date '+%Y')"
+
+# launch4j executables require 4 number segments (e.g. 1.2.3.4) for some dumb
+# reason. We use semantic(-ish) versioning (e.g. 1.2.3), so we have to add ".0"
+# to the end to get an equivalent 4-segment version number.
+export ALDA_VERSION="$(../bin/version).0"
+
+xml_jvm_opts=""
+for opt in $jvm_opts; do
+  xml_jvm_opts="$(printf "$xml_jvm_opts\n    <opt>$opt</opt>\n" "$opt")"
+done
+export ALDA_JVM_OPTS="$xml_jvm_opts"
+
+for envvar in $(grep --o "ALDA_[0-9A-Z_]\+" "$template" | sort | uniq); do
+  if [[ "${!envvar-not_set}" == "not_set" ]]; then
+    echo
+    echo "Environment variable required by $template but not set: ${envvar}"
+    exit 1
+  fi
+done
+
+launch4j_config=$(mktemp)
+cat "$template" | envsubst > "$launch4j_config"
+
+cat "$launch4j_config"
+
+launch4j "$launch4j_config"
 
