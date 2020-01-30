@@ -6,18 +6,23 @@ plugins {
 repositories {
   mavenLocal()
   mavenCentral()
+  // This can be removed after my branch of JavaOSC is merged upstream and we
+  // switch back to com.illposed.osc:javaosc-core.
+  jcenter()
 }
 
 dependencies {
   implementation(kotlin("stdlib-jdk8"))
-  implementation("com.illposed.osc:javaosc-core")
+  // implementation("com.illposed.osc:javaosc-core")
+  implementation("io.djy:javaosc")
   testImplementation(kotlin("test"))
   testImplementation(kotlin("test-junit"))
 }
 
 dependencies {
   constraints {
-    implementation("com.illposed.osc:javaosc-core:0.7-SNAPSHOT")
+    // implementation("com.illposed.osc:javaosc-core:0.7")
+    implementation("io.djy:javaosc:0.7")
   }
 }
 
