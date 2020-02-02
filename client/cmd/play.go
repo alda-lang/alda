@@ -71,17 +71,16 @@ var playCmd = &cobra.Command{
 			port = openPort
 		}
 
-		var score *model.Score
-
-		if scoreUpdates, err := parser.ParseFile(file); err != nil {
+		scoreUpdates, err := parser.ParseFile(file)
+		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
-		} else {
-			score = model.NewScore()
-			if err := score.Update(scoreUpdates...); err != nil {
-				fmt.Println(err)
-				os.Exit(1)
-			}
+		}
+
+		score := model.NewScore()
+		if err := score.Update(scoreUpdates...); err != nil {
+			fmt.Println(err)
+			os.Exit(1)
 		}
 
 		if startPlayerProcess {
@@ -96,7 +95,10 @@ var playCmd = &cobra.Command{
 			cmd = exec.Command(aldaPlayer, strconv.Itoa(port))
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
-			cmd.Start()
+			if err := cmd.Start(); err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
 
 			// This is a hacky way to make sure that the player process is ready before
 			// we start sending it messages. When we do this for real, it would be
@@ -109,7 +111,10 @@ var playCmd = &cobra.Command{
 		signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 
 		fmt.Printf("\nSending OSC messages to player on port: %d\n", port)
-		emitter.OSCEmitter{Port: port}.EmitScore(score)
+		if err := (emitter.OSCEmitter{Port: port}).EmitScore(score); err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
 
 		if startPlayerProcess {
 			fmt.Println("-- Press Ctrl-C to interrupt --")

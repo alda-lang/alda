@@ -126,7 +126,5 @@ func (oe OSCEmitter) EmitScore(score *model.Score) error {
 
 	bundle.Append(systemPlayMsg())
 
-	client.Send(bundle)
-
-	return nil
+	return client.Send(bundle)
 }
