@@ -12,7 +12,12 @@ func init() {
 		&verbose, "verbose", "v", false, "verbose output",
 	)
 
-	rootCmd.AddCommand(playCmd)
+	for _, cmd := range []*cobra.Command{
+		doctorCmd,
+		playCmd,
+	} {
+		rootCmd.AddCommand(cmd)
+	}
 }
 
 var rootCmd = &cobra.Command{

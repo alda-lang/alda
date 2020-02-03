@@ -657,6 +657,11 @@ func Parse(filepath string, input string) ([]model.ScoreUpdate, error) {
 	return p.updates, nil
 }
 
+// ParseString reads and parses a string of input.
+func ParseString(input string) ([]model.ScoreUpdate, error) {
+	return Parse("<no file>", input)
+}
+
 // ParseFile reads a file and parses the input.
 func ParseFile(filepath string) ([]model.ScoreUpdate, error) {
 	contents, err := ioutil.ReadFile(filepath)
