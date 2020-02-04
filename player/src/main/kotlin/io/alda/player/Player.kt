@@ -1,6 +1,7 @@
 package io.alda.player
 
 import com.illposed.osc.OSCMessage
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.locks.ReentrantLock
@@ -38,6 +39,13 @@ class Track(val trackNumber : Int) {
 
   val eventBufferQueue = LinkedBlockingQueue<List<Event>>()
 
+  // A count of tasks (List<Event>) that have been taken off of the
+  // `eventBufferQueue` and are currently being processed.
+  //
+  // The count is incremented before a task is placed on the queue and
+  // decremented once the task is complete (i.e. events have been scheduled).
+  val activeTasks = AtomicInteger(0)
+
   // The set of patterns that are currently looping (whether that be a finite
   // number of times or indefinitely).
   val activePatterns = mutableSetOf<String>()
@@ -60,6 +68,7 @@ class Track(val trackNumber : Int) {
       era++
       startOffset = 0
       eventBufferQueue.clear()
+      activeTasks.set(0)
       activePatterns.clear()
       withMidiChannel { midi.clearChannel(it) }
     }
@@ -272,12 +281,12 @@ class Track(val trackNumber : Int) {
   init {
     // This thread schedules events on this track.
     thread {
-      // When new events come in on the `eventsBufferQueue`, it may be the case
+      // When new events come in on the `eventBufferQueue`, it may be the case
       // that previous events are still lined up to be scheduled (e.g. a pattern
       // is looping). When this is the case, the new events wait in line until
       // the previous scheduling has completed and the offset where the next
       // events should start is updated.
-      var scheduling = ReentrantLock(true) // fairness enabled
+      val scheduling = ReentrantLock(true) // fairness enabled
 
       while (!Thread.currentThread().isInterrupted()) {
         try {
@@ -319,6 +328,7 @@ class Track(val trackNumber : Int) {
                 startOffset = scheduleEvents(events, startOffset)
               }
             } finally {
+              activeTasks.updateAndGet { n -> if (n == 0) 0 else n - 1 }
               scheduling.unlock()
             }
           }
@@ -405,13 +415,24 @@ private fun applyUpdates(updates : Updates) {
   // PHASE 3: update tracks
 
   updates.trackEvents.forEach { (trackNumber, events) ->
-    track(trackNumber).eventBufferQueue.put(events)
+    val track = track(trackNumber)
+    track.activeTasks.incrementAndGet()
+    track.eventBufferQueue.put(events)
   }
 
   // PHASE 4: export
 
   updates.systemEvents.filter { it is MidiExportEvent }.forEach {
     val event = it as MidiExportEvent
+
+    // Wait until any events that are about to be or are actively being
+    // scheduled are finished being scheduled before exporting the MIDI file.
+    tracks.forEach { (n, track) ->
+      while (track.activeTasks.get() > 0) {
+        Thread.sleep(100)
+      }
+    }
+
     midi.export(event.filepath)
   }
 

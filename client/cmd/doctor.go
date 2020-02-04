@@ -225,11 +225,6 @@ var doctorCmd = &cobra.Command{
 			tmpdir, fmt.Sprintf("%d.mid", time.Now().Unix()),
 		)
 
-		// FIXME: There is a race condition where running "play" followed
-		// immediately by "export" results in exporting an empty MIDI file because
-		// the notes haven't been added to the sequence yet.
-		time.Sleep(3 * time.Second)
-
 		msg := osc.NewMessage("/system/midi/export")
 		msg.Append(midiFilename)
 
