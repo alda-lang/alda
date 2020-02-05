@@ -5,10 +5,16 @@ import kotlin.system.exitProcess
 
 var isRunning = true
 
+// TODO: proper CLI argument/options parsing
 fun main(args: Array<String>) {
   if (args.isEmpty()) {
-    println("Args: PORT")
+    println("Args: [-V|--version] | PORT")
     exitProcess(1)
+  }
+
+  if (args[0] == "-V" || args[0] == "--version") {
+    println("TODO: print version information")
+    return
   }
 
   val port = args[0].toInt()
