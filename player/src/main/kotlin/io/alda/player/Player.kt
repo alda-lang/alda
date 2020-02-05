@@ -95,27 +95,30 @@ class Track(val trackNumber : Int) {
    * loop. We accomplish this by scheduling each iteration in a "just in time"
    * manner, i.e. shortly before it is due to be played.
    *
-   * @param event An event that specifies a pattern, a relative offset where it
+   * @param patternEvent An event that specifies a pattern, a relative offset where it
    * should begin, and a number of times to play it.
    * @param _startOffset The absolute offset to which the relative offset is
    * added.
    * @return The list of scheduled events across all iterations of the pattern.
    */
-  fun schedulePattern(event : PatternEventBase, _startOffset : Int)
+  fun schedulePattern(patternEvent : PatternEventBase, _startOffset : Int)
   : List<Schedulable> {
-    var startOffset = _startOffset + event.offset
+    var startOffset = _startOffset + patternEvent.offset
     val patternEvents = mutableListOf<Schedulable>()
 
     // A loop can be stopped externally by removing the pattern from
     // `activePatterns`. If this happens, we stop looping.
-    activePatterns.add(event.patternName)
+    activePatterns.add(patternEvent.patternName)
 
     try {
       var iteration = 1
 
-      while (!event.isDone(iteration) &&
-             activePatterns.contains(event.patternName)) {
-        println("scheduling iteration $iteration; startOffset: $startOffset; event.offset: ${event.offset}")
+      while (!patternEvent.isDone(iteration) &&
+             activePatterns.contains(patternEvent.patternName)) {
+        println(
+          "scheduling iteration $iteration; startOffset: $startOffset; " +
+          "patternEvent.offset: ${patternEvent.offset}"
+        )
 
         // This value is the point in time where we schedule the metamessage
         // that signals the lookup and scheduling of the pattern's events.
@@ -127,7 +130,9 @@ class Track(val trackNumber : Int) {
 
         // This returns a CountDownLatch that starts at 1 and counts down to 0
         // when the `patternSchedule` offset is reached in the sequence.
-        val latch = midi.scheduleEvent(patternSchedule, event.patternName)
+        val latch = midi.scheduleEvent(
+          patternSchedule, patternEvent.patternName
+        )
 
         // Wait until it's time to look up the pattern's current value and
         // schedule the events.
@@ -142,15 +147,18 @@ class Track(val trackNumber : Int) {
         println("eraBefore: $eraBefore; eraAfter: $eraAfter")
         if (eraBefore != eraAfter) break
 
-        println("scheduling pattern ${event.patternName}")
+        println("scheduling pattern ${patternEvent.patternName}")
 
-        val pattern = pattern(event.patternName)
+        val pattern = pattern(patternEvent.patternName)
 
+        // It's safe to filter a List<Event> down to just the ones that are
+        // Schedulable and then cast it to a List<Schedulable>.
+        @Suppress("UNCHECKED_CAST")
         val events : MutableList<Schedulable> =
-          (pattern.events.filter { it is Schedulable }
-           as MutableList<Schedulable>)
-          .map { (it as Event).addOffset(startOffset) }
-          as MutableList<Schedulable>
+          (pattern.events.map { it.addOffset(startOffset) }
+                         .filter { it is Schedulable }
+                         as List<Schedulable>)
+            .toMutableList()
 
         events.forEach { schedule(it) }
 
@@ -161,6 +169,9 @@ class Track(val trackNumber : Int) {
           if (midi.isPlaying) midi.startSequencer()
         }
 
+        // It's safe to filter a List<Event> down to just the ones that are
+        // PatternEvents and then cast it to a List<PatternEvent>.
+        @Suppress("UNCHECKED_CAST")
         // Here, we handle the case where the pattern's events include further
         // pattern events, i.e. the pattern references another pattern.
         //
@@ -168,9 +179,7 @@ class Track(val trackNumber : Int) {
         // this means we block here until the subpattern is about due to be
         // played.
         (pattern.events.filter { it is PatternEvent } as List<PatternEvent>)
-          .forEach { event ->
-            events.addAll(schedulePattern(event as PatternEvent, startOffset))
-          }
+          .forEach { events.addAll(schedulePattern(it, startOffset)) }
 
         if (!events.isEmpty())
           startOffset = events.map { (it as Event).endOffset() }.max()!!
@@ -180,7 +189,7 @@ class Track(val trackNumber : Int) {
         iteration++
       }
     } finally {
-      activePatterns.remove(event.patternName)
+      activePatterns.remove(patternEvent.patternName)
     }
 
     return patternEvents
@@ -222,9 +231,12 @@ class Track(val trackNumber : Int) {
 
     val scheduledEvents = mutableListOf<Schedulable>()
 
+    // It's safe to filter a List<Event> down to just the ones that are
+    // Schedulable and then cast it to a List<Schedulable>.
+    @Suppress("UNCHECKED_CAST")
     val immediateEvents : List<Schedulable> =
-      events.filter { it is Schedulable }
-            .map { (it as Event).addOffset(startOffset) }
+      events.map { it.addOffset(startOffset) }
+            .filter { it is Schedulable }
             as List<Schedulable>
 
     immediateEvents.forEach { schedule(it) }
@@ -427,7 +439,7 @@ private fun applyUpdates(updates : Updates) {
 
     // Wait until any events that are about to be or are actively being
     // scheduled are finished being scheduled before exporting the MIDI file.
-    tracks.forEach { (n, track) ->
+    tracks.forEach { (_, track) ->
       while (track.activeTasks.get() > 0) {
         Thread.sleep(100)
       }

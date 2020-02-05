@@ -74,7 +74,7 @@ enum class CustomMetaMessage(val type : Int) {
 private fun eventChannel(event : MidiEvent) : Int? {
   val msg = event.getMessage()
   if (msg !is ShortMessage) return null
-  return (msg as ShortMessage).getChannel()
+  return msg.getChannel()
 }
 
 private fun isNoteOnEvent(event : MidiEvent) : Boolean {
