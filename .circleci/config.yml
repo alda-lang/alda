@@ -1,9 +1,18 @@
+version: 2.1
+
 workflows:
   version: 2
-  build:
+  build_and_test:
     jobs:
       - build_client
       - build_player
+      - test_ubuntu_18_04:
+          requires:
+            - build_client
+            - build_player
+      - store_artifacts:
+          requires:
+            - test_ubuntu_18_04
 
 jobs:
   build_client:
@@ -16,20 +25,26 @@ jobs:
       - restore_cache:
           key: go-mod-v1-{{ checksum "client/go.sum" }}
 
-      - run: client/bin/build
+      - run:
+          name: Build Alda client executable
+          command: client/bin/build
 
       - save_cache:
           key: go-mod-v1-{{ checksum "client/go.sum" }}
           paths:
             - "/go/pkg/mod"
 
-      - run: |
-          cd client/target/
-          cp -R $(../../bin/current-content-sha client) current-build
+      - run:
+          name: Move build to output directory
+          working_directory: client/target
+          command: |
+            mkdir build
+            cp -R $(../../bin/current-content-sha client) build/client
 
-      - store_artifacts:
-          path: client/target/current-build
-          destination: client
+      - persist_to_workspace:
+          root: client/target
+          paths:
+            - build
 
   build_player:
     docker:
@@ -45,17 +60,61 @@ jobs:
             # fallback to using the latest cache if no exact match is found
             - v1-dependencies-
 
-      - run: player/bin/build
+      - run:
+          name: Build Alda player executable
+          command: player/bin/build
 
       - save_cache:
           paths:
             - ~/.gradle
           key: v1-dependencies-{{ checksum "player/build.gradle.kts" }}
 
-      - run: |
-          cd player/target/
-          cp -R $(../../bin/current-content-sha player) current-build
+      - run:
+          name: Move build to output directory
+          working_directory: player/target
+          command: |
+            mkdir -p build
+            cp -R $(../../bin/current-content-sha player) build/player
+
+      - persist_to_workspace:
+          root: player/target
+          paths:
+            - build
+
+  test_ubuntu_18_04:
+    docker:
+      - image: circleci/openjdk:8
+
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+
+      - run:
+          name: Install alda and alda-player
+          working_directory: /tmp/workspace/build
+          command: |
+            mkdir -p /home/circleci/bin
+            cp client/linux-amd64/alda /home/circleci/bin/
+            cp player/non-windows/alda-player /home/circleci/bin/
+            chmod +x /home/circleci/bin/alda
+            chmod +x /home/circleci/bin/alda-player
+            alda version
+            alda-player info
+
+      - run: alda -v doctor --no-audio
+
+  store_artifacts:
+    docker:
+      - image: circleci/buildpack-deps:bionic
+
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
 
       - store_artifacts:
-          path: player/target/current-build
+          path: /tmp/workspace/build/client
+          destination: client
+
+      - store_artifacts:
+          path: /tmp/workspace/build/player
           destination: player
