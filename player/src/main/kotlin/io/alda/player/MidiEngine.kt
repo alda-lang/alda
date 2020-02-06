@@ -14,6 +14,9 @@ import javax.sound.midi.MidiSystem
 import javax.sound.midi.Sequence
 import javax.sound.midi.ShortMessage
 import kotlin.concurrent.thread
+import mu.KotlinLogging
+
+private val log = KotlinLogging.logger {}
 
 // ref: https://www.csie.ntu.edu.tw/~r92092/ref/midi/
 //
@@ -128,7 +131,7 @@ private fun setTempoMessage(bpm : Float) : MetaMessage {
   // Punting altogether in this scenario because it's better than overflowing
   // and secretly setting the tempo to an unexpected value.
   if (uspq > maxByteArrayValue(3)) {
-    println("WARN: Tempo $bpm is < the minimum MIDI tempo of ~3.58 BPM.")
+    log.warn { "Tempo $bpm is < the minimum MIDI tempo of ~3.58 BPM." }
     return MetaMessage(CustomMetaMessage.CONTINUE.type, null, 0)
   }
 
@@ -239,12 +242,12 @@ class MidiEngine {
   }
 
   init {
-    println("Initializing MIDI sequencer...")
+    log.info { "Initializing MIDI sequencer..." }
     sequencer.open()
     sequencer.setSequence(sequence)
     sequencer.setTickPosition(0)
 
-    println("Initializing MIDI synthesizer...")
+    log.info { "Initializing MIDI synthesizer..." }
     // NB: This blocks for about a second.
     synthesizer.open()
 
@@ -272,7 +275,7 @@ class MidiEngine {
               latch.countDown()
               pendingEvents.remove(pendingEvent)
             } ?: run {
-              println("ERROR: $pendingEvent latch not found!")
+              log.error { "$pendingEvent latch not found!" }
             }
           }
         }
@@ -287,7 +290,7 @@ class MidiEngine {
         }
 
         else -> {
-          println("WARN: MetaMessage type $msgType not implemented.")
+          log.warn { "MetaMessage type $msgType not implemented." }
         }
       }
     })
@@ -315,7 +318,7 @@ class MidiEngine {
     thread {
       while (!Thread.currentThread().isInterrupted()) {
         try {
-          println("${if (isPlaying) "PLAYING; " else ""}current offset: ${currentOffset()}")
+          log.trace { "${if (isPlaying) "PLAYING; " else ""}current offset: ${currentOffset()}" }
           Thread.sleep(500)
         } catch (iex : InterruptedException) {
           Thread.currentThread().interrupt()
@@ -363,7 +366,7 @@ class MidiEngine {
     startOffset : Int, endOffset : Int, channel : Int, noteNumber : Int,
     velocity : Int
   ) {
-    println("channel ${channel}: scheduling note from ${startOffset} to ${endOffset}")
+    log.debug { "channel ${channel}: scheduling note from ${startOffset} to ${endOffset}" }
 
     scheduleShortMsg(
       startOffset, ShortMessage.NOTE_ON, channel, noteNumber, velocity
@@ -409,7 +412,7 @@ class MidiEngine {
     synthesizer.getChannels()[channelNumber]?.also { channel ->
       f(channel)
     } ?: run {
-      println("WARN: MIDI channel $channelNumber is null.")
+      log.warn { "MIDI channel $channelNumber is null." }
     }
   }
 

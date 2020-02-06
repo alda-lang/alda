@@ -9,6 +9,9 @@ import com.illposed.osc.OSCPacketListener
 import com.illposed.osc.transport.NetworkProtocol
 import com.illposed.osc.transport.OSCPortIn
 import com.illposed.osc.transport.OSCPortInBuilder
+import mu.KotlinLogging
+
+private val log = KotlinLogging.logger {}
 
 private fun instructions(packet : OSCPacket) : List<OSCMessage> {
   if (packet is OSCMessage) {
@@ -28,7 +31,7 @@ fun receiver(port : Int) : OSCPortIn {
     }
 
     override fun handleBadData(event : OSCBadDataEvent) {
-      println("bad data: $event")
+      log.error { "bad data: $event" }
     }
   }).build()
 }

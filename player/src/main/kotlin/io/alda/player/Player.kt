@@ -6,6 +6,9 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.thread
+import mu.KotlinLogging
+
+private val log = KotlinLogging.logger {}
 
 val playerQueue = LinkedBlockingQueue<List<OSCMessage>>()
 
@@ -31,7 +34,7 @@ class Track(val trackNumber : Int) {
     midiChannel()?.also { channel ->
       f(channel)
     } ?: run {
-      println("WARN: No MIDI channel available for track ${trackNumber}.")
+      log.warn { "No MIDI channel available for track ${trackNumber}." }
     }
   }
 
@@ -115,10 +118,10 @@ class Track(val trackNumber : Int) {
 
       while (!patternEvent.isDone(iteration) &&
              activePatterns.contains(patternEvent.patternName)) {
-        println(
+        log.debug {
           "scheduling iteration $iteration; startOffset: $startOffset; " +
           "patternEvent.offset: ${patternEvent.offset}"
-        )
+        }
 
         // This value is the point in time where we schedule the metamessage
         // that signals the lookup and scheduling of the pattern's events.
@@ -126,7 +129,7 @@ class Track(val trackNumber : Int) {
         // This scheduling happens shortly before the pattern is to be played.
         val patternSchedule = adjustStartOffset(startOffset)
 
-        println("patternSchedule: $patternSchedule")
+        log.debug { "patternSchedule: $patternSchedule" }
 
         // This returns a CountDownLatch that starts at 1 and counts down to 0
         // when the `patternSchedule` offset is reached in the sequence.
@@ -141,13 +144,13 @@ class Track(val trackNumber : Int) {
         // see if the track has been cleared in the meantime. We only proceed if
         // the track hasn't been cleared (i.e. if the `era` hasn't changed).
         val eraBefore = synchronized(era) { era }
-        println("awaiting latch")
+        log.debug { "awaiting latch" }
         latch.await()
         val eraAfter = synchronized(era) { era }
-        println("eraBefore: $eraBefore; eraAfter: $eraAfter")
+        log.debug { "eraBefore: $eraBefore; eraAfter: $eraAfter" }
         if (eraBefore != eraAfter) break
 
-        println("scheduling pattern ${patternEvent.patternName}")
+        log.debug { "scheduling pattern ${patternEvent.patternName}" }
 
         val pattern = pattern(patternEvent.patternName)
 
@@ -310,7 +313,7 @@ class Track(val trackNumber : Int) {
               val offset = adjustStartOffset(startOffset) + event.offset
               val latch = midi.scheduleEvent(offset, "FinishLoop")
               latch.await()
-              println("clearing active patterns")
+              log.debug { "clearing active patterns" }
               activePatterns.clear()
             }
           }
@@ -329,10 +332,10 @@ class Track(val trackNumber : Int) {
             scheduling.lock()
             val eraAfter = synchronized(era) { era }
 
-            println("TRACK ${trackNumber}: startOffset is ${startOffset}")
+            log.debug { "TRACK ${trackNumber}: startOffset is ${startOffset}" }
 
             try {
-              println("eraBefore: $eraBefore; eraAfter: $eraAfter")
+              log.debug { "eraBefore: $eraBefore; eraAfter: $eraAfter" }
               if (eraBefore == eraAfter) {
                 // Schedule events and update `startOffset` to be the offset at
                 // which the next events should start (after the ones we're
@@ -376,14 +379,14 @@ fun pattern(patternName: String): Pattern {
 
 private fun applyUpdates(updates : Updates) {
   // debug
-  println("----")
-  println(updates.systemActions)
-  println(updates.trackActions)
-  println(updates.systemEvents)
-  println(updates.trackEvents)
-  println(updates.patternActions)
-  println(updates.patternEvents)
-  println("----")
+  log.debug { "----" }
+  log.debug { updates.systemActions }
+  log.debug { updates.trackActions }
+  log.debug { updates.systemEvents }
+  log.debug { updates.trackEvents }
+  log.debug { updates.patternActions }
+  log.debug { updates.patternEvents }
+  log.debug { "----" }
 
   // PHASE 1: shutdown/stop/mute/clear
 

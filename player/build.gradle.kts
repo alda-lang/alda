@@ -13,17 +13,24 @@ repositories {
 
 dependencies {
   implementation(kotlin("stdlib-jdk8"))
-  // implementation("com.illposed.osc:javaosc-core")
-  implementation("io.djy:javaosc")
+
+  // implementation("com.illposed.osc:javaosc-core:0.7")
+  implementation("io.djy:javaosc:0.7") {
+    exclude("org.slf4j", "slf4j-api")
+    exclude("org.slf4j", "slf4j-ext")
+    exclude("org.slf4j", "slf4j-log4j12")
+    exclude("log4j", "log4j")
+  }
+
+  // logging
+  implementation("io.github.microutils:kotlin-logging:1.7.7")
+  implementation("org.slf4j:slf4j-api:1.7.30")
+  implementation("org.apache.logging.log4j:log4j-slf4j-impl:2.13.0")
+  implementation("org.apache.logging.log4j:log4j-api:2.13.0")
+  implementation("org.apache.logging.log4j:log4j-core:2.13.0")
+
   testImplementation(kotlin("test"))
   testImplementation(kotlin("test-junit"))
-}
-
-dependencies {
-  constraints {
-    // implementation("com.illposed.osc:javaosc-core:0.7")
-    implementation("io.djy:javaosc:0.7")
-  }
 }
 
 application {
@@ -39,6 +46,7 @@ val fatJar = task("fatJar", type = Jar::class) {
   duplicatesStrategy = DuplicatesStrategy.INCLUDE
   manifest {
     attributes["Main-Class"] = "io.alda.player.MainKt"
+    attributes["Multi-Release"] = "true"
   }
   from(configurations.compileClasspath.get().map({ if (it.isDirectory) it else zipTree(it) }))
   from(configurations.runtimeClasspath.get().map({ if (it.isDirectory) it else zipTree(it) }))

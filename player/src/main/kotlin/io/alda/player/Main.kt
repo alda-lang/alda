@@ -2,15 +2,25 @@ package io.alda.player
 
 import kotlin.concurrent.thread
 import kotlin.system.exitProcess
+import mu.KotlinLogging
+import org.apache.logging.log4j.core.config.Configurator
+import org.apache.logging.log4j.Level
+
+private val log = KotlinLogging.logger {}
 
 var isRunning = true
 
+// FIXME: only -v or -V or PORT is supported, not multiple
 // TODO: proper CLI argument/options parsing
 fun main(args: Array<String>) {
   if (args.isEmpty()) {
-    println("Args: [-V|--version] | PORT")
+    println("Args: [-v|--verbose] [-V|--version] | PORT")
     exitProcess(1)
   }
+
+  // if (args[0] == "-v" || args[0] == "--verbose") {
+    Configurator.setRootLevel(Level.DEBUG)
+  // }
 
   if (args[0] == "-V" || args[0] == "--version") {
     println("TODO: print version information")
@@ -18,18 +28,18 @@ fun main(args: Array<String>) {
   }
 
   val port = args[0].toInt()
-  println("Starting receiver, listening on port $port...")
+  log.info { "Starting receiver, listening on port $port..." }
   val receiver = receiver(port)
   receiver.startListening()
 
   val player = player()
-  println("Starting player...")
+  log.info { "Starting player..." }
   player.start()
 
   Runtime.getRuntime().addShutdownHook(thread(start = false) {
-    println("Stopping receiver...")
+    log.info { "Stopping receiver..." }
     receiver.stopListening()
-    println("Stopping player...")
+    log.info { "Stopping player..." }
     player.interrupt()
   })
 
@@ -37,7 +47,7 @@ fun main(args: Array<String>) {
     try {
       Thread.sleep(100)
     } catch (iex : InterruptedException) {
-      println("Interrupted.")
+      log.info { "Interrupted." }
       break
     }
   }

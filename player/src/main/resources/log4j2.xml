@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <appenders>
+    <console name="stdout" target="SYSTEM_OUT">
+      <patternLayout pattern="%d{ABSOLUTE} %5p %c{1}:%L - %m%n" />
+    </console>
+  </appenders>
+
+  <loggers>
+    <root level="info">
+      <appenderRef ref="stdout" />
+    </root>
+  </loggers>
+</configuration>

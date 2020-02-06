@@ -1,6 +1,9 @@
 package io.alda.player
 
 import com.illposed.osc.OSCMessage
+import mu.KotlinLogging
+
+private val log = KotlinLogging.logger {}
 
 enum class SystemAction {
   SHUTDOWN, PLAY, STOP, CLEAR
@@ -349,11 +352,11 @@ class Updates() {
         }
 
         else -> {
-          println("WARN: Unrecognized address: ${address}")
+          log.warn { "Unrecognized address: ${address}" }
         }
       }
     } catch (e : Throwable) {
-      println("WARN: Error while processing ${address} :: ${args}")
+      log.warn { "Error while processing ${address} :: ${args}" }
       e.printStackTrace()
     }
   }
