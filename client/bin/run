@@ -12,6 +12,9 @@ build_sha="$(../bin/current-content-sha client)"
 
 if [[ ! -d "target/$build_sha" ]]; then
   bin/build
+  echo
+  echo --------------------------------------------------
+  echo
 fi
 
 case "$(uname -s)" in
