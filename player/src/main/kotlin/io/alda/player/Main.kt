@@ -1,7 +1,7 @@
 package io.alda.player
 
 import io.github.soc.directories.ProjectDirectories
-import java.util.Random
+import kotlin.random.Random
 import kotlin.concurrent.thread
 import kotlin.streams.asSequence
 import kotlin.system.exitProcess
@@ -14,10 +14,8 @@ var isRunning = true
 // adapted from https://stackoverflow.com/a/46944275/2338327
 private fun generateId() : String {
   val source = "abcdefghijklmnopqrstuvwxyz"
-  return Random().ints(3, 0, source.length)
-                 .asSequence()
-                 .map(source::get)
-                 .joinToString("")
+  return (1..3).map { _ -> source.get(Random.nextInt(0, source.length)) }
+               .joinToString("")
 }
 
 val playerId = generateId()
