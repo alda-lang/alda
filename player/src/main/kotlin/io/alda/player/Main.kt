@@ -1,18 +1,21 @@
 package io.alda.player
 
+import io.github.soc.directories.ProjectDirectories
 import kotlin.concurrent.thread
 import kotlin.system.exitProcess
 import mu.KotlinLogging
 import org.apache.logging.log4j.core.config.Configurator
 import org.apache.logging.log4j.Level
 
-private val log = KotlinLogging.logger {}
-
 var isRunning = true
 
 // FIXME: only -v or -V or PORT is supported, not multiple
 // TODO: proper CLI argument/options parsing
 fun main(args: Array<String>) {
+  val projDirs = ProjectDirectories.from("io", "alda", "alda")
+  System.setProperty("logPath", projDirs.cacheDir)
+  val log = KotlinLogging.logger {}
+
   if (args.isEmpty()) {
     println("Args: [-v|--verbose] [-V|--version] | PORT")
     exitProcess(1)

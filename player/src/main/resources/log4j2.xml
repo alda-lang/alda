@@ -2,13 +2,23 @@
 <configuration>
   <appenders>
     <console name="stdout" target="SYSTEM_OUT">
-      <patternLayout pattern="%d{ABSOLUTE} %5p %c{1}:%L - %m%n" />
+      <patternLayout pattern="%highlight{%-5level} %d{yyyy-MM-dd HH:mm:ss} %c{1}.%M:%L - %msg%n%throwable{short.lineNumber}" />
     </console>
+    <rollingFile name="rollingFile" fileName="${sys:logPath}/alda-player.log" filePattern="${sys:logPath}/alda-player-%d{yyyy-MM-dd}.log">
+      <patternLayout pattern="%highlight{%-5level} %d{yyyy-MM-dd HH:mm:ss} %c{1}.%M:%L - %msg%n%throwable{short.lineNumber}" />
+      <policies>
+        <!-- Causes a rollover if the log file is older than the current JVM's start time -->
+        <!-- <onStartupTriggeringPolicy /> -->
+          <!-- Causes a rollover once the date/time pattern no longer applies to the active file -->
+        <timeBasedTriggeringPolicy interval="1" modulate="true" />
+      </policies>
+    </rollingFile>
   </appenders>
 
   <loggers>
-    <root level="info">
+    <root level="info" additivity="false">
       <appenderRef ref="stdout" />
+      <appenderRef ref="rollingFile" />
     </root>
   </loggers>
 </configuration>

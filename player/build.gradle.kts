@@ -22,6 +22,8 @@ dependencies {
     exclude("log4j", "log4j")
   }
 
+  implementation("io.github.soc:directories:11")
+
   // logging
   implementation("io.github.microutils:kotlin-logging:1.7.7")
   implementation("org.slf4j:slf4j-api:1.7.30")

@@ -37,7 +37,11 @@ mkdir -p "$build_dir/non-windows"
 windows_build="$build_dir/windows/alda-player.exe"
 non_windows_build="$build_dir/non-windows/alda-player"
 
-jvm_opts="-XX:+UseG1GC -XX:MaxGCPauseMillis=100 -Xmx1024m -Xms256m"
+# The logPath system property is reconfigured when the application starts.
+# Defining an initial value here means that if some logging sneaks in before we
+# can reconfigure the log path, a `tmplog` directory appears in the current
+# working directory, instead of a much uglier `${sys:logPath}` directory!
+jvm_opts="-XX:+UseG1GC -XX:MaxGCPauseMillis=100 -Xmx1024m -Xms256m -DlogPath=tmplog"
 
 ### NON-WINDOWS BUILD ##############################
 
