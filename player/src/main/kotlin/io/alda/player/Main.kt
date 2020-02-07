@@ -20,10 +20,12 @@ private fun generateId() : String {
                  .joinToString("")
 }
 
+val playerId = generateId()
+
 // FIXME: only -v or -V or PORT is supported, not multiple
 // TODO: proper CLI argument/options parsing
 fun main(args: Array<String>) {
-  System.setProperty("playerId", generateId())
+  System.setProperty("playerId", playerId)
 
   val projDirs = ProjectDirectories.from("io", "alda", "alda")
   System.setProperty("logPath", projDirs.cacheDir)
