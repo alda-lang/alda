@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
   <properties>
+    <property name="id">%yellow{${sys:playerId}}</property>
     <property name="level">%highlight{%-5level}</property>
     <property name="timestamp">%d{yyyy-MM-dd HH:mm:ss}</property>
     <property name="location">%c{1}.%M:%L</property>
     <property name="msg">%msg%n%throwable{short.lineNumber}</property>
-    <property name="patternBase">${level} ${timestamp} ${location} - ${msg}</property>
+    <property name="patternBase">${id} ${level} ${timestamp} ${location} - ${msg}</property>
   </properties>
   <appenders>
     <console name="stdout" target="SYSTEM_OUT">

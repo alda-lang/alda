@@ -1,7 +1,9 @@
 package io.alda.player
 
 import io.github.soc.directories.ProjectDirectories
+import java.util.Random
 import kotlin.concurrent.thread
+import kotlin.streams.asSequence
 import kotlin.system.exitProcess
 import mu.KotlinLogging
 import org.apache.logging.log4j.core.config.Configurator
@@ -9,9 +11,20 @@ import org.apache.logging.log4j.Level
 
 var isRunning = true
 
+// adapted from https://stackoverflow.com/a/46944275/2338327
+private fun generateId() : String {
+  val source = "abcdefghijklmnopqrstuvwxyz"
+  return Random().ints(3, 0, source.length)
+                 .asSequence()
+                 .map(source::get)
+                 .joinToString("")
+}
+
 // FIXME: only -v or -V or PORT is supported, not multiple
 // TODO: proper CLI argument/options parsing
 fun main(args: Array<String>) {
+  System.setProperty("playerId", generateId())
+
   val projDirs = ProjectDirectories.from("io", "alda", "alda")
   System.setProperty("logPath", projDirs.cacheDir)
   val log = KotlinLogging.logger {}
