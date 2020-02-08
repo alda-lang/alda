@@ -14,6 +14,8 @@ repositories {
 dependencies {
   implementation(kotlin("stdlib-jdk8"))
 
+  implementation("com.github.ajalt:clikt:2.4.0")
+
   // implementation("com.illposed.osc:javaosc-core:0.7")
   implementation("io.djy:javaosc:0.7") {
     exclude("org.slf4j", "slf4j-api")

@@ -1,13 +1,22 @@
 package io.alda.player
 
+import com.github.ajalt.clikt.core.CliktCommand
+import com.github.ajalt.clikt.core.subcommands
+import com.github.ajalt.clikt.parameters.options.flag
+import com.github.ajalt.clikt.parameters.options.option
+import com.github.ajalt.clikt.parameters.options.required
+import com.github.ajalt.clikt.parameters.types.int
 import io.github.soc.directories.ProjectDirectories
 import kotlin.random.Random
 import kotlin.concurrent.thread
 import kotlin.streams.asSequence
 import kotlin.system.exitProcess
 import mu.KotlinLogging
+import mu.KLogger
 import org.apache.logging.log4j.core.config.Configurator
 import org.apache.logging.log4j.Level
+
+var logger : KLogger? = null
 
 var isRunning = true
 
@@ -20,53 +29,76 @@ private fun generateId() : String {
 
 val playerId = generateId()
 
-// FIXME: only -v or -V or PORT is supported, not multiple
-// TODO: proper CLI argument/options parsing
-fun main(args: Array<String>) {
-  System.setProperty("playerId", playerId)
+val projDirs = ProjectDirectories.from("io", "alda", "alda")
 
-  val projDirs = ProjectDirectories.from("io", "alda", "alda")
-  System.setProperty("logPath", projDirs.cacheDir)
-  val log = KotlinLogging.logger {}
-
-  if (args.isEmpty()) {
-    println("Args: [-v|--verbose] [-V|--version] | PORT")
-    exitProcess(1)
+class Info : CliktCommand(
+  help = "Print useful information including the version and log path"
+) {
+  override fun run() {
+    println("alda-player X.X.X") // TODO: print the actual version
+    println("log path: ${projDirs.cacheDir}")
   }
+}
 
-  // if (args[0] == "-v" || args[0] == "--verbose") {
-    Configurator.setRootLevel(Level.DEBUG)
-  // }
+class Run : CliktCommand(
+  help = "Run the Alda player process"
+) {
+  val port by option(
+    "--port", "-p", help = "the port to listen on"
+  ).int().required()
 
-  if (args[0] == "-V" || args[0] == "--version") {
-    println("TODO: print version information")
-    return
-  }
+  override fun run() {
+    val log = logger!!
 
-  val port = args[0].toInt()
-  log.info { "Starting receiver, listening on port $port..." }
-  val receiver = receiver(port)
-  receiver.startListening()
+    log.info { "Starting receiver, listening on port $port..." }
+    val receiver = receiver(port)
+    receiver.startListening()
 
-  val player = player()
-  log.info { "Starting player..." }
-  player.start()
+    val player = player()
+    log.info { "Starting player..." }
+    player.start()
 
-  Runtime.getRuntime().addShutdownHook(thread(start = false) {
-    log.info { "Stopping receiver..." }
-    receiver.stopListening()
-    log.info { "Stopping player..." }
-    player.interrupt()
-  })
+    Runtime.getRuntime().addShutdownHook(thread(start = false) {
+      log.info { "Stopping receiver..." }
+      receiver.stopListening()
+      log.info { "Stopping player..." }
+      player.interrupt()
+    })
 
-  while (isRunning) {
-    try {
-      Thread.sleep(100)
-    } catch (iex : InterruptedException) {
-      log.info { "Interrupted." }
-      break
+    while (isRunning) {
+      try {
+        Thread.sleep(100)
+      } catch (iex : InterruptedException) {
+        log.info { "Interrupted." }
+        break
+      }
     }
   }
+}
+
+class Root : CliktCommand(
+  name = "alda-player",
+  help = "A background process that plays Alda scores"
+) {
+  val verbose by option(
+    "--verbose", "-v", help = "verbose output"
+  ).flag(default = false)
+
+  override fun run() {
+    if (verbose) {
+      Configurator.setRootLevel(Level.DEBUG)
+    }
+  }
+}
+
+fun main(args: Array<String>) {
+  System.setProperty("playerId", playerId)
+  System.setProperty("logPath", projDirs.cacheDir)
+  logger = KotlinLogging.logger {}
+
+  Root()
+    .subcommands(Info(), Run())
+    .main(args)
 
   exitProcess(0)
 }
