@@ -92,7 +92,7 @@ var playCmd = &cobra.Command{
 
 			fmt.Printf("Starting player process on port %d...\n", port)
 
-			cmd = exec.Command(aldaPlayer, strconv.Itoa(port))
+			cmd = exec.Command(aldaPlayer, "run", "-p", strconv.Itoa(port))
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
 			if err := cmd.Start(); err != nil {
