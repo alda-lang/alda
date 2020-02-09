@@ -183,7 +183,7 @@ var doctorCmd = &cobra.Command{
 		client := osc.NewClient("localhost", port)
 		client.SetNetworkProtocol(osc.TCP)
 
-		deadline := time.Now().Add(5 * time.Millisecond)
+		deadline := time.Now().Add(5 * time.Second)
 
 		for {
 			err := client.Send(osc.NewMessage("/ping"))
