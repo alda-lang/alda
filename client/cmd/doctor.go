@@ -168,6 +168,7 @@ var doctorCmd = &cobra.Command{
 		}
 
 		cmd := exec.Command(aldaPlayer, "run", "-p", strconv.Itoa(port))
+		cmd.Stdout = os.Stdout
 		if err := cmd.Start(); err != nil {
 			failure(err)
 		}
