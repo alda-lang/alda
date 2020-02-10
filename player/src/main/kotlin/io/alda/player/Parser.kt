@@ -40,7 +40,7 @@ class MidiPatchEvent(val offset : Int, val patch : Int) : Event, Schedulable {
   }
 
   override fun schedule(channel : Int) {
-    midi.patch(offset, channel, patch)
+    midi().patch(offset, channel, patch)
   }
 
   override fun endOffset() = 0
@@ -67,7 +67,7 @@ class MidiNoteEvent(
   override fun schedule(channel : Int) {
     val noteStart = offset
     val noteEnd = noteStart + audibleDuration
-    midi.note(noteStart, noteEnd, channel, noteNumber, velocity)
+    midi().note(noteStart, noteEnd, channel, noteNumber, velocity)
   }
 
   override fun endOffset() = offset + duration
@@ -81,7 +81,7 @@ class MidiVolumeEvent(
   }
 
   override fun schedule(channel : Int) {
-    midi.volume(offset, channel, volume)
+    midi().volume(offset, channel, volume)
   }
 
   override fun endOffset() = 0
@@ -95,7 +95,7 @@ class MidiPanningEvent(
   }
 
   override fun schedule(channel : Int) {
-    midi.panning(offset, channel, panning)
+    midi().panning(offset, channel, panning)
   }
 
   override fun endOffset() = 0
