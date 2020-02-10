@@ -186,6 +186,7 @@ var doctorCmd = &cobra.Command{
 
 		cmd := exec.Command(aldaPlayer, playerArgs...)
 		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
 		if err := cmd.Start(); err != nil {
 			failure(err)
 		}
