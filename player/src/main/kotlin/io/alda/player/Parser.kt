@@ -208,6 +208,10 @@ class Updates() {
 
     try {
       when {
+        Regex("/ping").matches(address) -> {
+          log.debug("received ping")
+        }
+
         Regex("/system/shutdown").matches(address) -> {
           systemActions.add(SystemAction.SHUTDOWN)
         }
