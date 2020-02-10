@@ -275,8 +275,8 @@ var doctorCmd = &cobra.Command{
 
 			// NB: For some reason, the contents of the MIDI sequence (at least,
 			// according to the library we're using to parse the MIDI file) appear to
-			// contain a bunch of other messages that don't make sense in the context of
-			// the score, in addition to containing all the notes that we expect.
+			// contain a bunch of other messages that don't make sense in the context
+			// of the score, in addition to containing all the notes that we expect.
 			//
 			// I suspect that there are some edge cases that the MIDI parsing library
 			// isn't handling correctly. Perhaps there is some header information that
@@ -287,18 +287,18 @@ var doctorCmd = &cobra.Command{
 			// player is exporting usable MIDI files.
 			//
 			// Since this is just a smoke test, we only really need to test that the
-			// MIDI sequence contains the notes we expect, and we can ignore all of the
-			// other messages. If this test passes, then we can be confident that the
-			// client can talk to the player, the player is up and running, and the
-			// player successfully handled the "play" and "export" instructions.
+			// MIDI sequence contains the notes we expect, and we can ignore all of
+			// the other messages. If this test passes, then we can be confident that
+			// the client can talk to the player, the player is up and running, and
+			// the player successfully handled the "play" and "export" instructions.
 		ExpectedNotesLoop:
 			for _, expectedNote := range expectedNotes {
 				for {
 					msg, err := rdr.Read()
 
 					// Error scenarios include reaching EOF (err == io.EOF), which we
-					// consider a failure case because we reached the end before we saw that
-					// all of the expected notes were included in the sequence.
+					// consider a failure case because we reached the end before we saw
+					// that all of the expected notes were included in the sequence.
 					if err != nil {
 						failure(err)
 					}
