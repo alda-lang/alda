@@ -49,6 +49,18 @@ func (oscpf OSCPacketForwarder) Dispatch(packet osc.Packet) {
 	oscpf.channel <- packet
 }
 
+var noAudio bool
+
+func init() {
+	doctorCmd.Flags().BoolVarP(
+		&noAudio,
+		"no-audio",
+		"",
+		false,
+		"disable checks that require an audio device",
+	)
+}
+
 var doctorCmd = &cobra.Command{
 	Use:   "doctor",
 	Short: "Run health checks to determine if Alda can run correctly",
@@ -167,7 +179,12 @@ var doctorCmd = &cobra.Command{
 			failure(err)
 		}
 
-		cmd := exec.Command(aldaPlayer, "run", "-p", strconv.Itoa(port))
+		playerArgs := []string{"run", "-p", strconv.Itoa(port)}
+		if noAudio {
+			playerArgs = append(playerArgs, "--no-audio")
+		}
+
+		cmd := exec.Command(aldaPlayer, playerArgs...)
 		cmd.Stdout = os.Stdout
 		if err := cmd.Start(); err != nil {
 			failure(err)
@@ -205,93 +222,97 @@ var doctorCmd = &cobra.Command{
 
 		//////////////////////////////////////////////////
 
-		step("Play score")
+		if !noAudio {
+			step("Play score")
 
-		if err := (emitter.OSCEmitter{Port: port}).EmitScore(score); err != nil {
-			failure(err)
-		}
-
-		success()
-
-		//////////////////////////////////////////////////
-
-		step("Export score as MIDI")
-
-		tmpdir, err := ioutil.TempDir("", "alda-doctor")
-		if err != nil {
-			failure(err)
-		}
-
-		midiFilename := filepath.Join(
-			tmpdir, fmt.Sprintf("%d.mid", time.Now().Unix()),
-		)
-
-		msg := osc.NewMessage("/system/midi/export")
-		msg.Append(midiFilename)
-
-		if err := client.Send(msg); err != nil {
-			failure(err)
-		}
-
-		var midiFile *os.File
-		deadline = time.Now().Add(5 * time.Second)
-
-		for {
-			midiFile, err = os.Open(midiFilename)
-
-			if err == nil {
-				break
-			}
-
-			if time.Now().After(deadline) {
+			if err := (emitter.OSCEmitter{Port: port}).EmitScore(score); err != nil {
 				failure(err)
 			}
 
-			time.Sleep(500 * time.Millisecond)
+			success()
 		}
 
-		rdr := midireader.New(bufio.NewReader(midiFile), nil)
+		//////////////////////////////////////////////////
 
-		// NB: For some reason, the contents of the MIDI sequence (at least,
-		// according to the library we're using to parse the MIDI file) appear to
-		// contain a bunch of other messages that don't make sense in the context of
-		// the score, in addition to containing all the notes that we expect.
-		//
-		// I suspect that there are some edge cases that the MIDI parsing library
-		// isn't handling correctly. Perhaps there is some header information that
-		// the MIDI parsing library is interpreting as NoteOn/NoteOff messages?
-		//
-		// When I play the MIDI file, it sounds correct, and when I load it into
-		// MuseScore, the sheet music looks correct, so I'm satisfied that the
-		// player is exporting usable MIDI files.
-		//
-		// Since this is just a smoke test, we only really need to test that the
-		// MIDI sequence contains the notes we expect, and we can ignore all of the
-		// other messages. If this test passes, then we can be confident that the
-		// client can talk to the player, the player is up and running, and the
-		// player successfully handled the "play" and "export" instructions.
-	ExpectedNotesLoop:
-		for _, expectedNote := range expectedNotes {
+		if !noAudio {
+			step("Export score as MIDI")
+
+			tmpdir, err := ioutil.TempDir("", "alda-doctor")
+			if err != nil {
+				failure(err)
+			}
+
+			midiFilename := filepath.Join(
+				tmpdir, fmt.Sprintf("%d.mid", time.Now().Unix()),
+			)
+
+			msg := osc.NewMessage("/system/midi/export")
+			msg.Append(midiFilename)
+
+			if err := client.Send(msg); err != nil {
+				failure(err)
+			}
+
+			var midiFile *os.File
+			deadline = time.Now().Add(5 * time.Second)
+
 			for {
-				msg, err := rdr.Read()
+				midiFile, err = os.Open(midiFilename)
 
-				// Error scenarios include reaching EOF (err == io.EOF), which we
-				// consider a failure case because we reached the end before we saw that
-				// all of the expected notes were included in the sequence.
-				if err != nil {
+				if err == nil {
+					break
+				}
+
+				if time.Now().After(deadline) {
 					failure(err)
 				}
 
-				switch msg.(type) {
-				case channel.NoteOn:
-					if msg.(channel.NoteOn).Key() == expectedNote {
-						continue ExpectedNotesLoop
+				time.Sleep(500 * time.Millisecond)
+			}
+
+			rdr := midireader.New(bufio.NewReader(midiFile), nil)
+
+			// NB: For some reason, the contents of the MIDI sequence (at least,
+			// according to the library we're using to parse the MIDI file) appear to
+			// contain a bunch of other messages that don't make sense in the context of
+			// the score, in addition to containing all the notes that we expect.
+			//
+			// I suspect that there are some edge cases that the MIDI parsing library
+			// isn't handling correctly. Perhaps there is some header information that
+			// the MIDI parsing library is interpreting as NoteOn/NoteOff messages?
+			//
+			// When I play the MIDI file, it sounds correct, and when I load it into
+			// MuseScore, the sheet music looks correct, so I'm satisfied that the
+			// player is exporting usable MIDI files.
+			//
+			// Since this is just a smoke test, we only really need to test that the
+			// MIDI sequence contains the notes we expect, and we can ignore all of the
+			// other messages. If this test passes, then we can be confident that the
+			// client can talk to the player, the player is up and running, and the
+			// player successfully handled the "play" and "export" instructions.
+		ExpectedNotesLoop:
+			for _, expectedNote := range expectedNotes {
+				for {
+					msg, err := rdr.Read()
+
+					// Error scenarios include reaching EOF (err == io.EOF), which we
+					// consider a failure case because we reached the end before we saw that
+					// all of the expected notes were included in the sequence.
+					if err != nil {
+						failure(err)
+					}
+
+					switch msg.(type) {
+					case channel.NoteOn:
+						if msg.(channel.NoteOn).Key() == expectedNote {
+							continue ExpectedNotesLoop
+						}
 					}
 				}
 			}
-		}
 
-		success()
+			success()
+		}
 
 		//////////////////////////////////////////////////
 

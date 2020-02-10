@@ -47,6 +47,10 @@ class Run : CliktCommand(
     "--port", "-p", help = "the port to listen on"
   ).int().required()
 
+  val noAudio by option(
+    "--no-audio", help = "don't use audio device resources"
+  ).flag(default = false)
+
   override fun run() {
     val log = logger!!
 
@@ -54,15 +58,22 @@ class Run : CliktCommand(
     val receiver = receiver(port)
     receiver.startListening()
 
-    val player = player()
-    log.info { "Starting player..." }
-    player.start()
+    var player : Thread? = null
+
+    if (!noAudio) {
+      player = player()
+      log.info { "Starting player..." }
+      player.start()
+    }
 
     Runtime.getRuntime().addShutdownHook(thread(start = false) {
       log.info { "Stopping receiver..." }
       receiver.stopListening()
-      log.info { "Stopping player..." }
-      player.interrupt()
+
+      if (!noAudio) {
+        log.info { "Stopping player..." }
+        player!!.interrupt()
+      }
     })
 
     while (isRunning) {
