@@ -179,7 +179,7 @@ var doctorCmd = &cobra.Command{
 			failure(err)
 		}
 
-		playerArgs := []string{"run", "-p", strconv.Itoa(port)}
+		playerArgs := []string{"-v", "run", "-p", strconv.Itoa(port)}
 		if noAudio {
 			playerArgs = append(playerArgs, "--lazy-audio")
 		}

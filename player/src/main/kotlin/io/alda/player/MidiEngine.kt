@@ -366,7 +366,7 @@ class MidiEngine {
     startOffset : Int, endOffset : Int, channel : Int, noteNumber : Int,
     velocity : Int
   ) {
-    log.debug { "channel ${channel}: scheduling note from ${startOffset} to ${endOffset}" }
+    log.trace { "channel ${channel}: scheduling note from ${startOffset} to ${endOffset}" }
 
     scheduleShortMsg(
       startOffset, ShortMessage.NOTE_ON, channel, noteNumber, velocity

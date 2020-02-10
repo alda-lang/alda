@@ -386,15 +386,14 @@ fun pattern(patternName: String): Pattern {
 }
 
 private fun applyUpdates(updates : Updates) {
-  // debug
-  log.debug { "----" }
-  log.debug { updates.systemActions }
-  log.debug { updates.trackActions }
-  log.debug { updates.systemEvents }
-  log.debug { updates.trackEvents }
-  log.debug { updates.patternActions }
-  log.debug { updates.patternEvents }
-  log.debug { "----" }
+  log.trace { "----" }
+  log.trace { updates.systemActions }
+  log.trace { updates.trackActions }
+  log.trace { updates.systemEvents }
+  log.trace { updates.trackEvents }
+  log.trace { updates.patternActions }
+  log.trace { updates.patternEvents }
+  log.trace { "----" }
 
   // PHASE 1: shutdown/stop/mute/clear
 

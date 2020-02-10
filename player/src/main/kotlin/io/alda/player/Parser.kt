@@ -204,6 +204,8 @@ class Updates() {
     val address = msg.getAddress()
     val args    = msg.getArguments()
 
+    log.trace { "${address} ${args}" }
+
     try {
       when {
         Regex("/system/shutdown").matches(address) -> {
