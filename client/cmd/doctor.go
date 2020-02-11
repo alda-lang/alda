@@ -31,24 +31,19 @@ func step(action string, test func() error) {
 	fmt.Printf("%s %s\n", aurora.Green("OK "), action)
 }
 
-func await(
-	description string, test func() (bool, error), timeoutDuration time.Duration,
-) error {
+func await(test func() error, timeoutDuration time.Duration) error {
 	timeout := time.After(timeoutDuration)
 
 	for {
-		complete, err := test()
+		err := test()
 
-		if err == nil && complete {
+		if err == nil {
 			return nil
 		}
 
 		select {
 		case <-timeout:
-			if err != nil {
-				return err
-			}
-			return fmt.Errorf("timed out before %s", description)
+			return err
 		default:
 			time.Sleep(100 * time.Millisecond)
 		}
@@ -159,19 +154,8 @@ var doctorCmd = &cobra.Command{
 				}()
 
 				if err := await(
-					"packet received",
-					func() (bool, error) {
-						err := emitter.OSCEmitter{Port: port}.EmitScore(score)
-
-						if err == nil {
-							return true, nil
-						}
-
-						if strings.Contains(err.Error(), "connection refused") {
-							return false, nil
-						}
-
-						return false, err
+					func() error {
+						return emitter.OSCEmitter{Port: port}.EmitScore(score)
 					},
 					5*time.Second,
 				); err != nil {
@@ -246,19 +230,8 @@ var doctorCmd = &cobra.Command{
 				client.SetNetworkProtocol(osc.TCP)
 
 				return await(
-					"packet sent",
-					func() (bool, error) {
-						err := client.Send(osc.NewMessage("/ping"))
-
-						if err == nil {
-							return true, nil
-						}
-
-						if strings.Contains(err.Error(), "connection refused") {
-							return false, nil
-						}
-
-						return false, err
+					func() error {
+						return client.Send(osc.NewMessage("/ping"))
 					},
 					5*time.Second,
 				)
@@ -301,16 +274,14 @@ var doctorCmd = &cobra.Command{
 					var midiFile *os.File
 
 					if err := await(
-						"MIDI file available",
-						func() (bool, error) {
+						func() error {
 							mf, err := os.Open(midiFilename)
-
-							if err == nil {
-								midiFile = mf
-								return true, nil
+							if err != nil {
+								return err
 							}
 
-							return false, nil
+							midiFile = mf
+							return nil
 						},
 						5*time.Second,
 					); err != nil {
