@@ -1,6 +1,7 @@
 module alda.io/client
 
 require (
+	github.com/OpenPeeDeeP/xdg v0.2.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/daveyarwood/go-osc v0.0.0-20200116123019-3d015df6f75e
 	github.com/go-test/deep v1.0.1

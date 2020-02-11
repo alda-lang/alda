@@ -14,6 +14,7 @@ import (
 	"alda.io/client/emitter"
 	"alda.io/client/model"
 	"alda.io/client/parser"
+	"github.com/OpenPeeDeeP/xdg"
 	"github.com/daveyarwood/go-osc/osc"
 	"github.com/logrusorgru/aurora"
 	"github.com/spf13/cobra"
@@ -337,6 +338,60 @@ var doctorCmd = &cobra.Command{
 				},
 			)
 		}
+
+		//////////////////////////////////////////////////
+
+		xdg := xdg.New("", "alda")
+		var logFile string
+
+		step(
+			"Locate player logs",
+			func() error {
+				return await(
+					func() error {
+						logFilename := "alda-player.log"
+
+						lf := xdg.QueryCache(logFilename)
+
+						if lf == "" {
+							return fmt.Errorf(
+								"unable to locate %s in %s",
+								logFilename,
+								xdg.CacheHome(),
+							)
+						}
+
+						logFile = lf
+						return nil
+					},
+					5*time.Second,
+				)
+			},
+		)
+
+		//////////////////////////////////////////////////
+
+		step(
+			"Player logs show the ping was received",
+			func() error {
+				indication := "received ping"
+				return await(
+					func() error {
+						contents, err := ioutil.ReadFile(logFile)
+						if err != nil {
+							return err
+						}
+
+						if !strings.Contains(string(contents), indication) {
+							return fmt.Errorf("%s does not contain %s", logFile, indication)
+						}
+
+						return nil
+					},
+					5*time.Second,
+				)
+			},
+		)
 
 		//////////////////////////////////////////////////
 
