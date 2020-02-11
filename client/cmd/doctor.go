@@ -31,6 +31,30 @@ func step(action string, test func() error) {
 	fmt.Printf("%s %s\n", aurora.Green("OK "), action)
 }
 
+func await(
+	description string, test func() (bool, error), timeoutDuration time.Duration,
+) error {
+	timeout := time.After(timeoutDuration)
+
+	for {
+		complete, err := test()
+
+		if err == nil && complete {
+			return nil
+		}
+
+		select {
+		case <-timeout:
+			if err != nil {
+				return err
+			}
+			return fmt.Errorf("timed out before %s", description)
+		default:
+			time.Sleep(100 * time.Millisecond)
+		}
+	}
+}
+
 // OSCPacketForwarder is a simple Dispatcher that puts each OSC packet that it
 // receives onto a channel.
 type OSCPacketForwarder struct {
@@ -117,7 +141,6 @@ var doctorCmd = &cobra.Command{
 			func() error {
 				packetsReceived := make(chan osc.Packet, 1000)
 				errors := make(chan error)
-				timeout := time.After(5 * time.Second)
 
 				server := osc.NewServer(
 					fmt.Sprintf("127.0.0.1:%d", port),
@@ -135,37 +158,32 @@ var doctorCmd = &cobra.Command{
 					}
 				}()
 
-				for {
-					err := emitter.OSCEmitter{Port: port}.EmitScore(score)
+				if err := await(
+					"packet received",
+					func() (bool, error) {
+						err := emitter.OSCEmitter{Port: port}.EmitScore(score)
 
-					if err == nil {
-						break
-					}
+						if err == nil {
+							return true, nil
+						}
 
-					if !strings.Contains(err.Error(), "connection refused") {
-						errors <- err
-						break
-					}
+						if strings.Contains(err.Error(), "connection refused") {
+							return false, nil
+						}
 
-					select {
-					case <-timeout:
-						errors <- err
-						break
-					default:
-						time.Sleep(500 * time.Millisecond)
-					}
+						return false, err
+					},
+					5*time.Second,
+				); err != nil {
+					errors <- err
 				}
 
 				select {
 				case <-packetsReceived:
-					// success!
+					return nil
 				case err := <-errors:
 					return err
-				case <-timeout:
-					return fmt.Errorf("timed out waiting for packet")
 				}
-
-				return nil
 			},
 		)
 
@@ -227,24 +245,23 @@ var doctorCmd = &cobra.Command{
 				client = osc.NewClient("localhost", port)
 				client.SetNetworkProtocol(osc.TCP)
 
-				deadline := time.Now().Add(5 * time.Second)
+				return await(
+					"packet sent",
+					func() (bool, error) {
+						err := client.Send(osc.NewMessage("/ping"))
 
-				for {
-					err := client.Send(osc.NewMessage("/ping"))
+						if err == nil {
+							return true, nil
+						}
 
-					if err == nil {
-						break
-					}
+						if strings.Contains(err.Error(), "connection refused") {
+							return false, nil
+						}
 
-					if !strings.Contains(err.Error(), "connection refused") ||
-						time.Now().After(deadline) {
-						return err
-					}
-
-					time.Sleep(500 * time.Millisecond)
-				}
-
-				return nil
+						return false, err
+					},
+					5*time.Second,
+				)
 			},
 		)
 
@@ -282,20 +299,22 @@ var doctorCmd = &cobra.Command{
 					}
 
 					var midiFile *os.File
-					deadline := time.Now().Add(5 * time.Second)
 
-					for {
-						midiFile, err = os.Open(midiFilename)
+					if err := await(
+						"MIDI file available",
+						func() (bool, error) {
+							mf, err := os.Open(midiFilename)
 
-						if err == nil {
-							break
-						}
+							if err == nil {
+								midiFile = mf
+								return true, nil
+							}
 
-						if time.Now().After(deadline) {
-							return err
-						}
-
-						time.Sleep(500 * time.Millisecond)
+							return false, nil
+						},
+						5*time.Second,
+					); err != nil {
+						return err
 					}
 
 					rdr := midireader.New(bufio.NewReader(midiFile), nil)
