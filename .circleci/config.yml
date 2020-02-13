@@ -116,11 +116,11 @@ jobs:
 
     steps:
       - attach_workspace:
-          at: %TEMP%\workspace
+          at: "%TEMP%\\workspace"
 
       - run:
           name: Install alda and alda-player
-          working_directory: %TEMP%\workspace\build
+          working_directory: "%TEMP%\\workspace\\build"
           command: |
             Write-Host 'Testing'
             # TODO: translate the below to Windows/Powershell
