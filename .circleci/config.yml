@@ -1,5 +1,8 @@
 version: 2.1
 
+orbs:
+  win: circleci/windows@2.2.0
+
 workflows:
   version: 2
   build_and_test:
@@ -10,9 +13,14 @@ workflows:
           requires:
             - build_client
             - build_player
+      - test_windows:
+          requires:
+            - build_client
+            - build_player
       - store_artifacts:
           requires:
             - test_ubuntu_18_04
+            - test_windows
 
 jobs:
   build_client:
@@ -98,6 +106,29 @@ jobs:
             cp player/non-windows/alda-player /home/circleci/bin/
             chmod +x /home/circleci/bin/alda
             chmod +x /home/circleci/bin/alda-player
+            alda version
+            alda-player info
+
+      - run: alda -v doctor --no-audio
+
+  test_windows:
+    executor: win/default
+
+    steps:
+      - attach_workspace:
+          at: %TEMP%\workspace
+
+      - run:
+          name: Install alda and alda-player
+          working_directory: %TEMP%\workspace\build
+          command: |
+            Write-Host 'Testing'
+            # TODO: translate the below to Windows/Powershell
+            # mkdir -p /home/circleci/bin
+            # cp client/linux-amd64/alda /home/circleci/bin/
+            # cp player/non-windows/alda-player /home/circleci/bin/
+            # chmod +x /home/circleci/bin/alda
+            # chmod +x /home/circleci/bin/alda-player
             alda version
             alda-player info
 
