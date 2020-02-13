@@ -116,19 +116,15 @@ jobs:
 
     steps:
       - attach_workspace:
-          at: C:\Users\circleci\AppData\Local\Temp\workspace
+          at: C:\Users\circleci\alda
 
       - run:
           name: Install alda and alda-player
-          working_directory: C:\Users\circleci\AppData\Local\Temp\workspace
+          working_directory: C:\Users\circleci\alda\build
           command: |
-            Write-Host 'Testing'
-            # TODO: translate the below to Windows/Powershell
-            # mkdir -p /home/circleci/bin
-            # cp client/linux-amd64/alda /home/circleci/bin/
-            # cp player/non-windows/alda-player /home/circleci/bin/
-            # chmod +x /home/circleci/bin/alda
-            # chmod +x /home/circleci/bin/alda-player
+            New-Item -ItemType "directory" -Path "C:\Program Files\Alda\bin"
+            Copy-Item -Path "client\windows-amd64\alda.exe" -Destination "C:\Program Files\Alda\bin"
+            Copy-Item -Path "player\windows\alda-player.exe" -Destination "C:\Program Files\Alda\bin"
             alda version
             alda-player info
 
