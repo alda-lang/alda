@@ -7,7 +7,7 @@
     <mainClass>io.alda.player.MainKt</mainClass>
   </classPath>
   <jre>
-    <path></path>
+    <path>%JAVA_HOME%</path>
     <minVersion>1.8.0</minVersion>
     <maxHeapSize>2048</maxHeapSize>
     <jdkPreference>preferJdk</jdkPreference>${ALDA_JVM_OPTS}
