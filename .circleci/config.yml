@@ -125,10 +125,15 @@ jobs:
             New-Item -ItemType "directory" -Path "C:\Program Files\Alda\bin"
             Copy-Item -Path "client\windows-amd64\alda.exe" -Destination "C:\Program Files\Alda\bin"
             Copy-Item -Path "player\windows\alda-player.exe" -Destination "C:\Program Files\Alda\bin"
+            $env:PATH = "$env:PATH;C:\Program Files\Alda\bin"
             alda version
             alda-player info
 
-      - run: alda -v doctor --no-audio
+      - run:
+          name: alda doctor
+          command: |
+            $env:PATH = "$env:PATH;C:\Program Files\Alda\bin"
+            alda -v doctor --no-audio
 
   store_artifacts:
     docker:
