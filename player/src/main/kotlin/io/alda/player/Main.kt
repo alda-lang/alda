@@ -40,6 +40,24 @@ class Info : CliktCommand(
   }
 }
 
+// A player process shuts down after a random length of inactivity between 15
+// and 20 minutes. This helps to ensure that a bunch of old player processes
+// aren't left hanging around, running idle in the background.
+val inactivityTimeoutMs = Random.nextInt(15 * 60000, 20 * 60000)
+
+var expiry = System.currentTimeMillis() + inactivityTimeoutMs
+
+fun delayExpiration(pointInTimeMs : Long) {
+  val newExpiry = pointInTimeMs + inactivityTimeoutMs
+  if (newExpiry > expiry) {
+    expiry = newExpiry
+  }
+}
+
+fun delayExpiration() {
+  delayExpiration(System.currentTimeMillis())
+}
+
 class Run : CliktCommand(
   help = "Run the Alda player process"
 ) {
@@ -72,8 +90,14 @@ class Run : CliktCommand(
       log.info { "Stopping player..." }
       player.interrupt()
     })
+
     while (isRunning) {
       try {
+        if (System.currentTimeMillis() > expiry) {
+          log.info { "Shutting down due to inactivity." }
+          break
+        }
+
         Thread.sleep(100)
       } catch (iex : InterruptedException) {
         log.info { "Interrupted." }

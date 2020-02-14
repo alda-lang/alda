@@ -374,6 +374,17 @@ class MidiEngine {
     scheduleShortMsg(
       endOffset, ShortMessage.NOTE_OFF, channel, noteNumber, velocity
     )
+
+    // Scheduling a note also delays the shutdown of the player process due to
+    // inactivity, because we wouldn't want the player process to suddenly shut
+    // down while it's playing a really long score.
+    //
+    // Here, we determine how far into the future the NOTE_OFF event is (in
+    // actual milliseconds, not "offset," which is related to sequencer ticks),
+    // and set the expiry based on that point in time.
+    val now = System.currentTimeMillis()
+    val noteOff = now + (endOffset - Math.round(currentOffset()))
+    delayExpiration(noteOff)
   }
 
   fun volume(offset : Int, channel : Int, volume : Int) {
