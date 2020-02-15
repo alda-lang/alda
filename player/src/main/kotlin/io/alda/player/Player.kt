@@ -385,6 +385,16 @@ fun pattern(patternName: String): Pattern {
   return patterns.get(patternName)!!
 }
 
+// Wait until any events that are about to be or are actively being scheduled
+// are finished being scheduled.
+fun awaitActiveTasks() {
+  tracks.forEach { (_, track) ->
+    while (track.activeTasks.get() > 0) {
+      Thread.sleep(100)
+    }
+  }
+}
+
 private fun applyUpdates(updates : Updates) {
   log.trace { "----" }
   log.trace { updates.systemActions }
@@ -445,17 +455,8 @@ private fun applyUpdates(updates : Updates) {
   // PHASE 4: export
 
   updates.systemEvents.filter { it is MidiExportEvent }.forEach {
-    val event = it as MidiExportEvent
-
-    // Wait until any events that are about to be or are actively being
-    // scheduled are finished being scheduled before exporting the MIDI file.
-    tracks.forEach { (_, track) ->
-      while (track.activeTasks.get() > 0) {
-        Thread.sleep(100)
-      }
-    }
-
-    midi().export(event.filepath)
+    awaitActiveTasks()
+    midi().export((it as MidiExportEvent).filepath)
   }
 
   // PHASE 5: unmute/play
@@ -468,8 +469,10 @@ private fun applyUpdates(updates : Updates) {
 
   // NB: We don't actually start the sequencer here; that action needs to be
   // deferred until after a track thread finishes scheduling a buffer of events.
-  if (updates.systemActions.contains(SystemAction.PLAY))
+  if (updates.systemActions.contains(SystemAction.PLAY)) {
+    awaitActiveTasks()
     midi().isPlaying = true
+  }
 }
 
 fun player() : Thread {
