@@ -1,0 +1,61 @@
+= Player management
+
+== Background
+
+* To play a score, a client must either locate an existing or spawn a new player
+process.
+
+* Each player process can be playing at most 1 score at a time.
+
+* Player processes are ephemeral. A player process "expires" after 15-20 minutes
+of inactivity.
+
+* After starting/locating a player process to use to play a score, the client
+needs to be able to re-locate that same player process in order to interact with
+the playing score, e.g. for live-coding.
+
+== Implementation
+
+=== Discoverability
+
+* Client and player processes will coordinate around the cache directory (e.g.
+XDG_CACHE_HOME).
+
+=== Player
+
+* Each player process has an ID (generated when the process starts) consisting
+of three lowercase letters.
+** I chose to go with three lowercase letters because collisions over time is
+not an issue (player processes are ephemeral), and because it's really easy
+for users to read and type three letters when interacting with Alda at the
+command line.
+
+* When a player process starts, it will write a file in the cache directory
+that indicates that the process is available for work.
+
+* A player process should periodically update the cache directory so that it's
+process/state file isn't just a stale one from a player process in the past that
+unexpectedly died or something.
+** Open question: can we use file last modified time for this, and just "touch"
+the files periodically to update the last modified time? I'm pretty sure that
+will work for Linux/macOS, but I'm less sure about Windows. Ideally Go and Java
+both have cross-platform APIs to check last modified time.
+*** As a last resort, we could always update the file to contain a timestamp of
+the last time it was touched, but that's less ideal because consumers would
+need to parse every single file and pull out that value.
+
+* Player processes should (at least periodically?) clean up the cache directory,
+removing files older than, say, 30 minutes. (If active player processes are
+regularly updating their files, then their files won't be reaped.)
+
+=== Client
+
+* Commands like `play` and `export` have options to inform which player process
+to use.
+** When unspecified, the client will attempt to locate an existing player
+process, defaulting to spawning a new one.
+** When `-p / --port` is specified, the client will assume there is a player
+listening on that port and send packets there.
+** When `-i / --player-id` is specified, the client will send packets to the
+player with that ID.
+
