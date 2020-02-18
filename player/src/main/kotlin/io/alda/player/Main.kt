@@ -7,6 +7,7 @@ import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
 import com.github.ajalt.clikt.parameters.types.int
 import io.github.soc.directories.ProjectDirectories
+import java.nio.file.Paths
 import kotlin.random.Random
 import kotlin.concurrent.thread
 import kotlin.streams.asSequence
@@ -30,6 +31,7 @@ private fun generateId() : String {
 val playerId = generateId()
 
 val projDirs = ProjectDirectories.from("io", "alda", "alda")
+val logPath = Paths.get(projDirs.cacheDir, "logs").toString()
 
 class Info : CliktCommand(
   help = "Print useful information including the version and log path"
@@ -124,7 +126,7 @@ class Root : CliktCommand(
 
 fun main(args: Array<String>) {
   System.setProperty("playerId", playerId)
-  System.setProperty("logPath", projDirs.cacheDir)
+  System.setProperty("logPath", logPath)
   logger = KotlinLogging.logger {}
 
   Root()

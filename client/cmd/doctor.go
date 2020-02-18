@@ -349,7 +349,7 @@ var doctorCmd = &cobra.Command{
 			func() error {
 				return await(
 					func() error {
-						logFilename := "alda-player.log"
+						logFilename := filepath.Join("logs", "alda-player.log")
 
 						lf := xdg.QueryCache(logFilename)
 
