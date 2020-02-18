@@ -27,7 +27,7 @@ fun receiver(port : Int) : OSCPortIn {
     .setNetworkProtocol(NetworkProtocol.TCP)
     .setPacketListener(object : OSCPacketListener {
     override fun handlePacket(event : OSCPacketEvent) {
-      delayExpiration()
+      stateManager!!.delayExpiration()
       playerQueue.put(instructions(event.getPacket()))
     }
 

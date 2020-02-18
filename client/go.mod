@@ -4,6 +4,7 @@ require (
 	github.com/OpenPeeDeeP/xdg v0.2.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/daveyarwood/go-osc v0.0.0-20200116123019-3d015df6f75e
+	github.com/dustin/go-humanize v1.0.0
 	github.com/go-test/deep v1.0.1
 	github.com/logrusorgru/aurora v0.0.0-20200102142835-e9ef32dff381
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826

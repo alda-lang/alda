@@ -18,6 +18,7 @@ import org.apache.logging.log4j.core.config.Configurator
 import org.apache.logging.log4j.Level
 
 var logger : KLogger? = null
+var stateManager : StateManager? = null
 
 var isRunning = true
 
@@ -29,6 +30,7 @@ private fun generateId() : String {
 }
 
 val playerId = generateId()
+val playerVersion = "1.99.0" // FIXME
 
 val projDirs = ProjectDirectories.from("io", "alda", "alda")
 val logPath = Paths.get(projDirs.cacheDir, "logs").toString()
@@ -37,27 +39,9 @@ class Info : CliktCommand(
   help = "Print useful information including the version and log path"
 ) {
   override fun run() {
-    println("alda-player X.X.X") // TODO: print the actual version
+    println("alda-player ${playerVersion}")
     println("log path: ${projDirs.cacheDir}")
   }
-}
-
-// A player process shuts down after a random length of inactivity between 15
-// and 20 minutes. This helps to ensure that a bunch of old player processes
-// aren't left hanging around, running idle in the background.
-val inactivityTimeoutMs = Random.nextInt(15 * 60000, 20 * 60000)
-
-var expiry = System.currentTimeMillis() + inactivityTimeoutMs
-
-fun delayExpiration(pointInTimeMs : Long) {
-  val newExpiry = pointInTimeMs + inactivityTimeoutMs
-  if (newExpiry > expiry) {
-    expiry = newExpiry
-  }
-}
-
-fun delayExpiration() {
-  delayExpiration(System.currentTimeMillis())
 }
 
 class Run : CliktCommand(
@@ -74,6 +58,9 @@ class Run : CliktCommand(
   override fun run() {
     val log = logger!!
 
+    stateManager = StateManager(port)
+    stateManager!!.start()
+
     log.info { "Starting receiver, listening on port $port..." }
     val receiver = receiver(port)
     receiver.startListening()
@@ -87,6 +74,7 @@ class Run : CliktCommand(
     player.start()
 
     Runtime.getRuntime().addShutdownHook(thread(start = false) {
+      stateManager!!.stop()
       log.info { "Stopping receiver..." }
       receiver.stopListening()
       log.info { "Stopping player..." }
@@ -95,7 +83,7 @@ class Run : CliktCommand(
 
     while (isRunning) {
       try {
-        if (System.currentTimeMillis() > expiry) {
+        if (stateManager!!.isExpired()) {
           log.info { "Shutting down due to inactivity." }
           break
         }

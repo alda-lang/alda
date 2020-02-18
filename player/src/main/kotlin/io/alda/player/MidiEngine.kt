@@ -384,7 +384,8 @@ class MidiEngine {
     // and set the expiry based on that point in time.
     val now = System.currentTimeMillis()
     val noteOff = now + (endOffset - Math.round(currentOffset()))
-    delayExpiration(noteOff)
+    stateManager!!.markUsed()
+    stateManager!!.delayExpiration(noteOff)
   }
 
   fun volume(offset : Int, channel : Int, volume : Int) {
