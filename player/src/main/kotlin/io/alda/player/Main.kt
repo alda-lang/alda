@@ -7,6 +7,7 @@ import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
 import com.github.ajalt.clikt.parameters.types.int
 import io.github.soc.directories.ProjectDirectories
+import java.nio.file.Paths
 import kotlin.random.Random
 import kotlin.concurrent.thread
 import kotlin.streams.asSequence
@@ -17,6 +18,7 @@ import org.apache.logging.log4j.core.config.Configurator
 import org.apache.logging.log4j.Level
 
 var logger : KLogger? = null
+var stateManager : StateManager? = null
 
 var isRunning = true
 
@@ -28,14 +30,16 @@ private fun generateId() : String {
 }
 
 val playerId = generateId()
+val playerVersion = "1.99.0" // FIXME
 
 val projDirs = ProjectDirectories.from("io", "alda", "alda")
+val logPath = Paths.get(projDirs.cacheDir, "logs").toString()
 
 class Info : CliktCommand(
   help = "Print useful information including the version and log path"
 ) {
   override fun run() {
-    println("alda-player X.X.X") // TODO: print the actual version
+    println("alda-player ${playerVersion}")
     println("log path: ${projDirs.cacheDir}")
   }
 }
@@ -54,6 +58,9 @@ class Run : CliktCommand(
   override fun run() {
     val log = logger!!
 
+    stateManager = StateManager(port)
+    stateManager!!.start()
+
     log.info { "Starting receiver, listening on port $port..." }
     val receiver = receiver(port)
     receiver.startListening()
@@ -67,13 +74,20 @@ class Run : CliktCommand(
     player.start()
 
     Runtime.getRuntime().addShutdownHook(thread(start = false) {
+      stateManager!!.stop()
       log.info { "Stopping receiver..." }
       receiver.stopListening()
       log.info { "Stopping player..." }
       player.interrupt()
     })
+
     while (isRunning) {
       try {
+        if (stateManager!!.isExpired()) {
+          log.info { "Shutting down due to inactivity." }
+          break
+        }
+
         Thread.sleep(100)
       } catch (iex : InterruptedException) {
         log.info { "Interrupted." }
@@ -100,7 +114,7 @@ class Root : CliktCommand(
 
 fun main(args: Array<String>) {
   System.setProperty("playerId", playerId)
-  System.setProperty("logPath", projDirs.cacheDir)
+  System.setProperty("logPath", logPath)
   logger = KotlinLogging.logger {}
 
   Root()
