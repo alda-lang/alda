@@ -22,6 +22,8 @@ import (
 	"gitlab.com/gomidi/midi/midireader"
 )
 
+const reasonableTimeout = 20 * time.Second
+
 func step(action string, test func() error) {
 	if err := test(); err != nil {
 		fmt.Printf("%s %s\n", aurora.Red("ERR"), action)
@@ -158,7 +160,7 @@ var doctorCmd = &cobra.Command{
 					func() error {
 						return emitter.OSCEmitter{Port: port}.EmitScore(score)
 					},
-					5*time.Second,
+					reasonableTimeout,
 				); err != nil {
 					errors <- err
 				}
@@ -234,7 +236,7 @@ var doctorCmd = &cobra.Command{
 					func() error {
 						return client.Send(osc.NewMessage("/ping"))
 					},
-					5*time.Second,
+					reasonableTimeout,
 				)
 			},
 		)
@@ -284,7 +286,7 @@ var doctorCmd = &cobra.Command{
 							midiFile = mf
 							return nil
 						},
-						5*time.Second,
+						reasonableTimeout,
 					); err != nil {
 						return err
 					}
@@ -364,7 +366,7 @@ var doctorCmd = &cobra.Command{
 						logFile = lf
 						return nil
 					},
-					5*time.Second,
+					reasonableTimeout,
 				)
 			},
 		)
@@ -388,7 +390,7 @@ var doctorCmd = &cobra.Command{
 
 						return nil
 					},
-					5*time.Second,
+					reasonableTimeout,
 				)
 			},
 		)
