@@ -32,7 +32,7 @@ private fun generateId() : String {
 val playerId = generateId()
 val playerVersion = "1.99.0" // FIXME
 
-val projDirs = ProjectDirectories.from("io", "alda", "alda")
+val projDirs = ProjectDirectories.from("", "", "alda")
 val logPath = Paths.get(projDirs.cacheDir, "logs").toString()
 
 class Info : CliktCommand(
