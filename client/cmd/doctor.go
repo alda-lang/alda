@@ -14,7 +14,6 @@ import (
 	"alda.io/client/emitter"
 	"alda.io/client/model"
 	"alda.io/client/parser"
-	"github.com/OpenPeeDeeP/xdg"
 	"github.com/daveyarwood/go-osc/osc"
 	"github.com/logrusorgru/aurora"
 	"github.com/spf13/cobra"
@@ -343,7 +342,6 @@ var doctorCmd = &cobra.Command{
 
 		//////////////////////////////////////////////////
 
-		xdg := xdg.New("", "alda")
 		var logFile string
 
 		step(
@@ -353,13 +351,13 @@ var doctorCmd = &cobra.Command{
 					func() error {
 						logFilename := filepath.Join("logs", "alda-player.log")
 
-						lf := xdg.QueryCache(logFilename)
+						lf := queryCache(logFilename)
 
 						if lf == "" {
 							return fmt.Errorf(
 								"unable to locate %s in %s",
 								logFilename,
-								xdg.CacheHome(),
+								cacheDir,
 							)
 						}
 
