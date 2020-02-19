@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/OpenPeeDeeP/xdg"
 	"github.com/dustin/go-humanize"
 	"github.com/spf13/cobra"
 )
@@ -24,9 +23,7 @@ var psCmd = &cobra.Command{
 	Use:   "ps",
 	Short: "Display information about running Alda processes",
 	Run: func(_ *cobra.Command, args []string) {
-		xdg := xdg.New("", "alda")
-		cacheDir := xdg.CacheHome()
-		playersDir := filepath.Join(cacheDir, "state", "players", VERSION)
+		playersDir := cachePath("state", "players", VERSION)
 
 		files, err := ioutil.ReadDir(playersDir)
 		if err != nil {
