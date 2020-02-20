@@ -55,19 +55,6 @@ var playCmd = &cobra.Command{
 	Short: "Evaluate and play Alda source code",
 	Run: func(_ *cobra.Command, args []string) {
 		var cmd *exec.Cmd
-		startPlayerProcess := false
-
-		if port == -1 {
-			openPort, err := findOpenPort()
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
-			}
-
-			startPlayerProcess = true
-			port = openPort
-		}
-
 		scoreUpdates, err := parser.ParseFile(file)
 		if err != nil {
 			fmt.Println(err)
@@ -80,7 +67,13 @@ var playCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		if startPlayerProcess {
+		if port == -1 {
+			port, err = findOpenPort()
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+
 			aldaPlayer, err := exec.LookPath("alda-player")
 			if err != nil {
 				fmt.Println(err)
