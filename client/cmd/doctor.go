@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -50,6 +51,25 @@ func await(test func() error, timeoutDuration time.Duration) error {
 			time.Sleep(100 * time.Millisecond)
 		}
 	}
+}
+
+func findOpenPort() (int, error) {
+	listener, err := net.Listen("tcp", ":0")
+	defer listener.Close()
+
+	if err != nil {
+		return 0, err
+	}
+
+	address := listener.Addr().String()
+	portStr := address[strings.LastIndex(address, ":")+1 : len(address)]
+	port, err := strconv.ParseInt(portStr, 10, 32)
+	if err != nil {
+		fmt.Printf("Failed to find open port. Address: %s\n", address)
+		return 0, err
+	}
+
+	return int(port), nil
 }
 
 func ping(port int) (*osc.Client, error) {

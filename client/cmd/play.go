@@ -2,36 +2,14 @@ package cmd
 
 import (
 	"fmt"
-	"net"
 	"os"
 	"os/exec"
-	"strconv"
-	"strings"
 
 	"alda.io/client/emitter"
 	"alda.io/client/model"
 	"alda.io/client/parser"
 	"github.com/spf13/cobra"
 )
-
-func findOpenPort() (int, error) {
-	listener, err := net.Listen("tcp", ":0")
-	defer listener.Close()
-
-	if err != nil {
-		return 0, err
-	}
-
-	address := listener.Addr().String()
-	portStr := address[strings.LastIndex(address, ":")+1 : len(address)]
-	port, err := strconv.ParseInt(portStr, 10, 32)
-	if err != nil {
-		fmt.Printf("Failed to find open port. Address: %s\n", address)
-		return 0, err
-	}
-
-	return int(port), nil
-}
 
 var port int
 var file string
@@ -49,11 +27,43 @@ func init() {
 	playCmd.MarkFlagRequired("file")
 }
 
+var errNoPlayersAvailable = fmt.Errorf("no players available")
+
+func findAvailablePlayer() (playerState, error) {
+	states, err := readPlayerStates()
+	if err != nil {
+		return playerState{}, err
+	}
+
+	for _, state := range states {
+		if state.Condition == "new" {
+			return state, nil
+		}
+	}
+
+	return playerState{}, errNoPlayersAvailable
+}
+
+func spawnPlayerProcess() error {
+	aldaPlayer, err := exec.LookPath("alda-player")
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("Starting player process...")
+
+	cmd := exec.Command(aldaPlayer, "run")
+	if err := cmd.Start(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 var playCmd = &cobra.Command{
 	Use:   "play",
 	Short: "Evaluate and play Alda source code",
 	Run: func(_ *cobra.Command, args []string) {
-		var cmd *exec.Cmd
 		scoreUpdates, err := parser.ParseFile(file)
 		if err != nil {
 			fmt.Println(err)
@@ -66,26 +76,35 @@ var playCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
+		// If no port is specified, the client will find an available player process
+		// to use, spawning one if necessary.
 		if port == -1 {
-			port, err = findOpenPort()
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
+			player, err := findAvailablePlayer()
+
+			if err == errNoPlayersAvailable {
+				if err := spawnPlayerProcess(); err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
+
+				if err := await(
+					func() error {
+						p, err := findAvailablePlayer()
+						if err != nil {
+							return err
+						}
+
+						player = p
+						return nil
+					},
+					reasonableTimeout,
+				); err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
 			}
 
-			aldaPlayer, err := exec.LookPath("alda-player")
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
-			}
-
-			fmt.Printf("Starting player process on port %d...\n", port)
-
-			cmd = exec.Command(aldaPlayer, "run", "-p", strconv.Itoa(port))
-			if err := cmd.Start(); err != nil {
-				fmt.Println(err)
-				os.Exit(1)
-			}
+			port = player.Port
 		}
 
 		fmt.Println("Waiting for player to respond to ping...")
