@@ -7,7 +7,6 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
-	"time"
 
 	"alda.io/client/emitter"
 	"alda.io/client/model"
@@ -87,15 +86,15 @@ var playCmd = &cobra.Command{
 				fmt.Println(err)
 				os.Exit(1)
 			}
-
-			// This is a hacky way to make sure that the player process is ready before
-			// we start sending it messages. When we do this for real, it would be
-			// better for the client to actually confirm that the player is up somehow.
-			fmt.Println("Waiting a bit for the player process to start...")
-			time.Sleep(5 * time.Second)
 		}
 
-		fmt.Printf("\nSending OSC messages to player on port: %d\n", port)
+		fmt.Println("Waiting for player to respond to ping...")
+		if _, err := ping(port); err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		fmt.Printf("Sending OSC messages to player on port: %d\n", port)
 		if err := (emitter.OSCEmitter{Port: port}).EmitScore(score); err != nil {
 			fmt.Println(err)
 			os.Exit(1)

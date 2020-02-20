@@ -52,6 +52,20 @@ func await(test func() error, timeoutDuration time.Duration) error {
 	}
 }
 
+func ping(port int) (*osc.Client, error) {
+	client := osc.NewClient("localhost", port)
+	client.SetNetworkProtocol(osc.TCP)
+
+	err := await(
+		func() error {
+			return client.Send(osc.NewMessage("/ping"))
+		},
+		reasonableTimeout,
+	)
+
+	return client, err
+}
+
 // OSCPacketForwarder is a simple Dispatcher that puts each OSC packet that it
 // receives onto a channel.
 type OSCPacketForwarder struct {
@@ -228,15 +242,13 @@ var doctorCmd = &cobra.Command{
 		step(
 			"Ping player process",
 			func() error {
-				client = osc.NewClient("localhost", port)
-				client.SetNetworkProtocol(osc.TCP)
+				pingClient, err := ping(port)
+				if err != nil {
+					return err
+				}
 
-				return await(
-					func() error {
-						return client.Send(osc.NewMessage("/ping"))
-					},
-					reasonableTimeout,
-				)
+				client = pingClient
+				return nil
 			},
 		)
 
