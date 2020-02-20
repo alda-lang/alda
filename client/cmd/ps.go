@@ -23,6 +23,7 @@ type playerState struct {
 
 func readPlayerStates() ([]playerState, error) {
 	playersDir := cachePath("state", "players", VERSION)
+	os.MkdirAll(playersDir, os.ModePerm)
 
 	files, err := ioutil.ReadDir(playersDir)
 	if err != nil {
