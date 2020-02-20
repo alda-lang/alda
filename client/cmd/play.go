@@ -5,16 +5,13 @@ import (
 	"net"
 	"os"
 	"os/exec"
-	"os/signal"
 	"strconv"
 	"strings"
-	"syscall"
 	"time"
 
 	"alda.io/client/emitter"
 	"alda.io/client/model"
 	"alda.io/client/parser"
-	"github.com/daveyarwood/go-osc/osc"
 	"github.com/spf13/cobra"
 )
 
@@ -107,31 +104,10 @@ var playCmd = &cobra.Command{
 			time.Sleep(5 * time.Second)
 		}
 
-		sigChan := make(chan os.Signal)
-		signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
-
 		fmt.Printf("\nSending OSC messages to player on port: %d\n", port)
 		if err := (emitter.OSCEmitter{Port: port}).EmitScore(score); err != nil {
 			fmt.Println(err)
 			os.Exit(1)
-		}
-
-		if startPlayerProcess {
-			fmt.Println("-- Press Ctrl-C to interrupt --")
-
-			select {
-			case <-sigChan:
-				if cmd != nil {
-					fmt.Println("Sending /system/shutdown message to player process...")
-
-					client := osc.NewClient("localhost", int(port))
-					client.SetNetworkProtocol(osc.TCP)
-					if err := client.Send(osc.NewMessage("/system/shutdown")); err != nil {
-						fmt.Println(err)
-						os.Exit(1)
-					}
-				}
-			}
 		}
 	},
 }
