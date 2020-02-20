@@ -70,7 +70,7 @@ var psCmd = &cobra.Command{
 
 		for _, state := range states {
 			if state.readError != nil {
-				fmt.Fprintln(os.Stderr, err)
+				fmt.Fprintln(os.Stderr, state.readError)
 				continue
 			}
 
