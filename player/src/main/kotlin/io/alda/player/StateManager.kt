@@ -37,10 +37,10 @@ class StateManager(val port : Int) {
     thread.interrupt()
   }
 
-  // A player process shuts down after a random length of inactivity between 15
-  // and 20 minutes. This helps to ensure that a bunch of old player processes
+  // A player process shuts down after a random length of inactivity between 5
+  // and 10 minutes. This helps to ensure that a bunch of old player processes
   // aren't left hanging around, running idle in the background.
-  val inactivityTimeoutMs = Random.nextInt(15 * 60000, 20 * 60000)
+  val inactivityTimeoutMs = Random.nextInt(5 * 60000, 10 * 60000)
 
   val state = PlayerState(
     port,

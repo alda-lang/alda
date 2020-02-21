@@ -7,7 +7,7 @@ process.
 
 * Each player process can be playing at most 1 score at a time.
 
-* Player processes are ephemeral. A player process "expires" after 15-20 minutes
+* Player processes are ephemeral. A player process "expires" after 5-10 minutes
 of inactivity.
 
 * After starting/locating a player process to use to play a score, the client
