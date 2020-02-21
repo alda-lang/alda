@@ -234,7 +234,7 @@ var doctorCmd = &cobra.Command{
 					return err
 				}
 
-				// Use this port is subsequent steps.
+				// Use this port in subsequent steps.
 				port = p
 
 				playerArgs := []string{"-v", "run", "-p", strconv.Itoa(port)}
@@ -267,6 +267,7 @@ var doctorCmd = &cobra.Command{
 					return err
 				}
 
+				// Use this client in subsequent steps.
 				client = pingClient
 				return nil
 			},
@@ -429,6 +430,60 @@ var doctorCmd = &cobra.Command{
 
 		step(
 			"Shut down player process",
+			func() error {
+				return client.Send(osc.NewMessage("/system/shutdown"))
+			},
+		)
+
+		//////////////////////////////////////////////////
+
+		step(
+			"Spawn a player on an unknown port",
+			spawnPlayer,
+		)
+
+		//////////////////////////////////////////////////
+
+		var player playerState
+
+		step(
+			"Discover the player",
+			func() error {
+				return await(
+					func() error {
+						p, err := findAvailablePlayer()
+						if err != nil {
+							return err
+						}
+
+						player = p
+						return nil
+					},
+					reasonableTimeout,
+				)
+			},
+		)
+
+		//////////////////////////////////////////////////
+
+		step(
+			"Ping the player",
+			func() error {
+				pingClient, err := ping(player.Port)
+				if err != nil {
+					return err
+				}
+
+				// Use this client in subsequent steps.
+				client = pingClient
+				return nil
+			},
+		)
+
+		//////////////////////////////////////////////////
+
+		step(
+			"Shut the player down",
 			func() error {
 				return client.Send(osc.NewMessage("/system/shutdown"))
 			},
