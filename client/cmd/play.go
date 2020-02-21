@@ -11,10 +11,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var playerID string
 var port int
 var file string
 
 func init() {
+	playCmd.Flags().StringVarP(
+		&playerID, "player-id", "i", "", "The ID of the Alda player process to use",
+	)
+
 	playCmd.Flags().IntVarP(
 		&port, "port", "p", -1, "The port of the Alda player process to use",
 	)
@@ -44,7 +49,22 @@ func findAvailablePlayer() (playerState, error) {
 	return playerState{}, errNoPlayersAvailable
 }
 
-func spawnPlayerProcess() error {
+func findPlayerByID(id string) (playerState, error) {
+	players, err := readPlayerStates()
+	if err != nil {
+		return playerState{}, err
+	}
+
+	for _, player := range players {
+		if player.id == id {
+			return player, nil
+		}
+	}
+
+	return playerState{}, fmt.Errorf("player not found: %s", id)
+}
+
+func spawnPlayer() error {
 	aldaPlayer, err := exec.LookPath("alda-player")
 	if err != nil {
 		return err
@@ -58,6 +78,42 @@ func spawnPlayerProcess() error {
 	}
 
 	return nil
+}
+
+func findOrSpawnPlayer() (playerState, error) {
+	player, err := findAvailablePlayer()
+
+	// Found an available player. Success!
+	if err == nil {
+		return player, nil
+	}
+
+	// There was an unexpected error while trying to find a player.
+	if err != errNoPlayersAvailable {
+		return playerState{}, err
+	}
+
+	// No players available, so spawn one and check again.
+	if err := spawnPlayer(); err != nil {
+		return playerState{}, err
+	}
+
+	if err := await(
+		func() error {
+			p, err := findAvailablePlayer()
+			if err != nil {
+				return err
+			}
+
+			player = p
+			return nil
+		},
+		reasonableTimeout,
+	); err != nil {
+		return playerState{}, err
+	}
+
+	return player, nil
 }
 
 var playCmd = &cobra.Command{
@@ -76,32 +132,25 @@ var playCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		// If no port is specified, the client will find an available player process
-		// to use, spawning one if necessary.
-		if port == -1 {
-			player, err := findAvailablePlayer()
+		// Determine the port to use based on the provided CLI options.
+		switch {
+		// Nothing to do; port is explicitly specified.
+		case port != -1:
+		// Player ID is specified; look up the player by ID and use its port.
+		case playerID != "":
+			player, err := findPlayerByID(playerID)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
 
-			if err == errNoPlayersAvailable {
-				if err := spawnPlayerProcess(); err != nil {
-					fmt.Println(err)
-					os.Exit(1)
-				}
-
-				if err := await(
-					func() error {
-						p, err := findAvailablePlayer()
-						if err != nil {
-							return err
-						}
-
-						player = p
-						return nil
-					},
-					reasonableTimeout,
-				); err != nil {
-					fmt.Println(err)
-					os.Exit(1)
-				}
+			port = player.Port
+		// Find an available player process to use, spawning one if necessary.
+		default:
+			player, err := findOrSpawnPlayer()
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
 			}
 
 			port = player.Port
