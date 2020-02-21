@@ -30,14 +30,14 @@ func init() {
 var errNoPlayersAvailable = fmt.Errorf("no players available")
 
 func findAvailablePlayer() (playerState, error) {
-	states, err := readPlayerStates()
+	players, err := readPlayerStates()
 	if err != nil {
 		return playerState{}, err
 	}
 
-	for _, state := range states {
-		if state.Condition == "new" {
-			return state, nil
+	for _, player := range players {
+		if player.Condition == "new" {
+			return player, nil
 		}
 	}
 
