@@ -13,6 +13,10 @@ workflows:
           requires:
             - build_client
             - build_player
+      - test_macos:
+          requires:
+            - build_client
+            - build_player
       - test_windows:
           requires:
             - build_client
@@ -20,6 +24,7 @@ workflows:
       - store_artifacts:
           requires:
             - test_ubuntu_18_04
+            - test_macos
             - test_windows
 
 jobs:
@@ -109,7 +114,33 @@ jobs:
             alda version
             alda-player info
 
-      - run: alda -v3 doctor --no-audio
+      - run:
+          name: alda doctor
+          command: alda -v3 doctor --no-audio
+
+  test_macos:
+    macos:
+      xcode: 11.3.0
+
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+
+      - run:
+          name: Install alda and alda-player
+          working_directory: /tmp/workspace/build
+          command: |
+            mkdir -p /home/circleci/bin
+            cp client/darwin-amd64/alda /home/circleci/bin/
+            cp player/non-windows/alda-player /home/circleci/bin/
+            chmod +x /home/circleci/bin/alda
+            chmod +x /home/circleci/bin/alda-player
+            alda version
+            alda-player info
+
+      - run:
+          name: alda doctor
+          command: alda -v3 doctor --no-audio
 
   test_windows:
     executor: win/default
