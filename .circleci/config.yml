@@ -109,7 +109,7 @@ jobs:
             alda version
             alda-player info
 
-      - run: alda -v doctor --no-audio
+      - run: alda -v3 doctor --no-audio
 
   test_windows:
     executor: win/default
@@ -133,7 +133,7 @@ jobs:
           name: alda doctor
           command: |
             $env:PATH = "$env:PATH;C:\Program Files\Alda\bin"
-            alda -v doctor --no-audio
+            alda -v3 doctor --no-audio
 
   store_artifacts:
     docker:
