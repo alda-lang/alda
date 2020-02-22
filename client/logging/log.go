@@ -2,15 +2,16 @@ package logging
 
 import (
 	"fmt"
-	"github.com/rs/zerolog"
 	"os"
 	"time"
+
+	"github.com/rs/zerolog"
 )
 
 var output = zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.Stamp}
 
 // Log is a global logger.
-var log = zerolog.New(output).With().Caller().Logger()
+var log = zerolog.New(output).With().Timestamp().Caller().Logger()
 
 // Debug logs at the DEBUG level.
 var Debug = log.Debug
