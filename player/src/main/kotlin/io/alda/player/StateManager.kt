@@ -3,17 +3,20 @@ package io.alda.player
 import com.beust.klaxon.Klaxon
 import java.io.File
 import java.nio.file.Paths
+import java.time.Duration
+import java.time.Instant
+import java.util.Date
 import kotlin.random.Random
 import kotlin.concurrent.thread
+import mu.KotlinLogging
 
-val json = Klaxon()
+private val json = Klaxon()
+private val log = KotlinLogging.logger {}
 
 class PlayerState(val port : Int, var expiry : Long, var condition : String)
 
 class StateManager(val port : Int) {
   val thread = thread(start = false) {
-    writeStateFile()
-
     while (!Thread.currentThread().isInterrupted()) {
       try {
         // Periodically "touch" the state file to update its last modified time.
@@ -37,30 +40,60 @@ class StateManager(val port : Int) {
     thread.interrupt()
   }
 
-  // A player process shuts down after a random length of inactivity between 15
-  // and 20 minutes. This helps to ensure that a bunch of old player processes
+  // A player process shuts down after a random length of inactivity between 5
+  // and 10 minutes. This helps to ensure that a bunch of old player processes
   // aren't left hanging around, running idle in the background.
-  val inactivityTimeoutMs = Random.nextInt(15 * 60000, 20 * 60000)
+  val inactivityTimeoutMs = Random.nextInt(5 * 60000, 10 * 60000)
 
   val state = PlayerState(
     port,
     System.currentTimeMillis() + inactivityTimeoutMs,
     "new")
 
-  val stateFilePath = Paths.get(
-    projDirs.cacheDir, "state", "players", playerVersion, playerId + ".json"
-  ).toString()
+  val stateFilesDir =
+    Paths.get(projDirs.cacheDir, "state", "players").toString()
+
+  val stateFilePath =
+    Paths.get(stateFilesDir, playerVersion, playerId + ".json").toString()
 
   val stateFile = File(stateFilePath)
+
+  fun writeStateFile() {
+    stateFile.writeText(json.toJsonString(state))
+  }
 
   init {
     stateFile.getParentFile().mkdirs()
     stateFile.createNewFile()
     stateFile.deleteOnExit()
-  }
+    writeStateFile()
 
-  fun writeStateFile() {
-    stateFile.writeText(json.toJsonString(state))
+    // Clean up the state files directory. This is important because even though
+    // we have a shutdown hook that removes a player's state file before
+    // exiting, it won't run in all scenarios (e.g. OOM error, kill -9).
+    log.info { "Cleaning up stale files in ${stateFilesDir}..." }
+
+    File(stateFilesDir).walkTopDown().filter { it.isFile() }.forEach {
+      val lastModified = Instant.ofEpochMilli(it.lastModified())
+      val now = Instant.now()
+      val age = Duration.between(lastModified, now)
+      val maxAge = Duration.ofMinutes(10)
+
+      if (age.compareTo(maxAge) > 0) {
+        log.debug {
+          "Deleting stale state file ${it.getAbsolutePath()} " +
+          "(last update was ${age} ago)"
+        }
+        it.delete()
+      }
+    }
+
+    File(stateFilesDir).walkBottomUp().filter { it.isDirectory() }.forEach {
+      if (it.list().size == 0) {
+        log.debug { "Deleting empty directory ${it.getAbsolutePath()}" }
+        it.delete()
+      }
+    }
   }
 
   fun isExpired() = System.currentTimeMillis() > state.expiry

@@ -2,11 +2,12 @@ package io.alda.player
 
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.subcommands
+import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
-import com.github.ajalt.clikt.parameters.options.required
 import com.github.ajalt.clikt.parameters.types.int
 import io.github.soc.directories.ProjectDirectories
+import java.net.ServerSocket
 import java.nio.file.Paths
 import kotlin.random.Random
 import kotlin.concurrent.thread
@@ -44,12 +45,19 @@ class Info : CliktCommand(
   }
 }
 
+private fun findOpenPort() : Int {
+  ServerSocket(0).use { socket -> return socket.getLocalPort() }
+}
+
 class Run : CliktCommand(
   help = "Run the Alda player process"
 ) {
   val port by option(
-    "--port", "-p", help = "the port to listen on"
-  ).int().required()
+    "--port",
+    "-p",
+    help = "the port to listen on (default: random available port)"
+  ).int()
+   .default(findOpenPort())
 
   val lazyAudio by option(
     "--lazy-audio", help = "don't immediately set up audio device resources"

@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -50,6 +51,39 @@ func await(test func() error, timeoutDuration time.Duration) error {
 			time.Sleep(100 * time.Millisecond)
 		}
 	}
+}
+
+func findOpenPort() (int, error) {
+	listener, err := net.Listen("tcp", ":0")
+	defer listener.Close()
+
+	if err != nil {
+		return 0, err
+	}
+
+	address := listener.Addr().String()
+	portStr := address[strings.LastIndex(address, ":")+1 : len(address)]
+	port, err := strconv.ParseInt(portStr, 10, 32)
+	if err != nil {
+		fmt.Printf("Failed to find open port. Address: %s\n", address)
+		return 0, err
+	}
+
+	return int(port), nil
+}
+
+func ping(port int) (*osc.Client, error) {
+	client := osc.NewClient("localhost", port)
+	client.SetNetworkProtocol(osc.TCP)
+
+	err := await(
+		func() error {
+			return client.Send(osc.NewMessage("/ping"))
+		},
+		reasonableTimeout,
+	)
+
+	return client, err
 }
 
 // OSCPacketForwarder is a simple Dispatcher that puts each OSC packet that it
@@ -200,7 +234,7 @@ var doctorCmd = &cobra.Command{
 					return err
 				}
 
-				// Use this port is subsequent steps.
+				// Use this port in subsequent steps.
 				port = p
 
 				playerArgs := []string{"-v", "run", "-p", strconv.Itoa(port)}
@@ -210,7 +244,7 @@ var doctorCmd = &cobra.Command{
 
 				cmd := exec.Command(aldaPlayer, playerArgs...)
 
-				if verbose {
+				if verbosity > 1 {
 					cmd.Stdout = os.Stdout
 					cmd.Stderr = os.Stderr
 				}
@@ -228,15 +262,14 @@ var doctorCmd = &cobra.Command{
 		step(
 			"Ping player process",
 			func() error {
-				client = osc.NewClient("localhost", port)
-				client.SetNetworkProtocol(osc.TCP)
+				pingClient, err := ping(port)
+				if err != nil {
+					return err
+				}
 
-				return await(
-					func() error {
-						return client.Send(osc.NewMessage("/ping"))
-					},
-					reasonableTimeout,
-				)
+				// Use this client in subsequent steps.
+				client = pingClient
+				return nil
 			},
 		)
 
@@ -397,6 +430,60 @@ var doctorCmd = &cobra.Command{
 
 		step(
 			"Shut down player process",
+			func() error {
+				return client.Send(osc.NewMessage("/system/shutdown"))
+			},
+		)
+
+		//////////////////////////////////////////////////
+
+		step(
+			"Spawn a player on an unknown port",
+			spawnPlayer,
+		)
+
+		//////////////////////////////////////////////////
+
+		var player playerState
+
+		step(
+			"Discover the player",
+			func() error {
+				return await(
+					func() error {
+						p, err := findAvailablePlayer()
+						if err != nil {
+							return err
+						}
+
+						player = p
+						return nil
+					},
+					reasonableTimeout,
+				)
+			},
+		)
+
+		//////////////////////////////////////////////////
+
+		step(
+			"Ping the player",
+			func() error {
+				pingClient, err := ping(player.Port)
+				if err != nil {
+					return err
+				}
+
+				// Use this client in subsequent steps.
+				client = pingClient
+				return nil
+			},
+		)
+
+		//////////////////////////////////////////////////
+
+		step(
+			"Shut the player down",
 			func() error {
 				return client.Send(osc.NewMessage("/system/shutdown"))
 			},
