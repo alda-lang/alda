@@ -244,7 +244,7 @@ var doctorCmd = &cobra.Command{
 
 				cmd := exec.Command(aldaPlayer, playerArgs...)
 
-				if verbose {
+				if verbosity > 1 {
 					cmd.Stdout = os.Stdout
 					cmd.Stderr = os.Stderr
 				}

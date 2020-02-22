@@ -1,15 +1,18 @@
 package cmd
 
 import (
+	"fmt"
+	"os"
+
 	log "alda.io/client/logging"
 	"github.com/spf13/cobra"
 )
 
-var verbose bool
+var verbosity int
 
 func init() {
-	rootCmd.PersistentFlags().BoolVarP(
-		&verbose, "verbose", "v", false, "verbose output",
+	rootCmd.PersistentFlags().IntVarP(
+		&verbosity, "verbosity", "v", 1, "verbosity level (0-3)",
 	)
 
 	for _, cmd := range []*cobra.Command{
@@ -26,12 +29,18 @@ var rootCmd = &cobra.Command{
 	Use:   "alda",
 	Short: "alda: a text-based language for music composition",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		// TODO: add more control over log levels. maybe the default log level
-		// should be warn, -v should be info, and -vv should be debug?
-		if verbose {
-			log.SetGlobalLevel("debug")
-		} else {
+		switch verbosity {
+		case 0:
+			log.SetGlobalLevel("error")
+		case 1:
+			log.SetGlobalLevel("warn")
+		case 2:
 			log.SetGlobalLevel("info")
+		case 3:
+			log.SetGlobalLevel("debug")
+		default:
+			fmt.Println("Invalid verbosity level. Valid values are 0-3.")
+			os.Exit(1)
 		}
 	},
 }
