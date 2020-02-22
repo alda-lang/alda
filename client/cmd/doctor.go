@@ -456,6 +456,22 @@ var doctorCmd = &cobra.Command{
 							return err
 						}
 
+						// We're doing all of this so fast that the player we find might
+						// inadvertently be the one that we spawned and shut down earlier.
+						// (This can only happen if the --no-audio flag is provided, because
+						// otherwise, the player we just used will have been used to play a
+						// score already and thus will not be considered "available.")
+						//
+						// To avoid this, we check the port of the player we just found
+						// and consider it a failure condition. This will cue `await`
+						// to keep checking until it finds a player that isn't that one.
+						if p.Port == port {
+							return fmt.Errorf(
+								"only find the player from before (%s/%d)",
+								p.id, p.Port,
+							)
+						}
+
 						player = p
 						return nil
 					},
