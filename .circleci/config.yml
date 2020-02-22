@@ -130,11 +130,11 @@ jobs:
           name: Install alda and alda-player
           working_directory: /tmp/workspace/build
           command: |
-            mkdir -p /home/circleci/bin
-            cp client/darwin-amd64/alda /home/circleci/bin/
-            cp player/non-windows/alda-player /home/circleci/bin/
-            chmod +x /home/circleci/bin/alda
-            chmod +x /home/circleci/bin/alda-player
+            mkdir -p /usr/local/bin
+            cp client/darwin-amd64/alda /usr/local/bin/
+            cp player/non-windows/alda-player /usr/local/bin/
+            chmod +x /usr/local/bin/alda
+            chmod +x /usr/local/bin/alda-player
             alda version
             alda-player info
 
