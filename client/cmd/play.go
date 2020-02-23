@@ -116,6 +116,32 @@ func findOrSpawnPlayer() (playerState, error) {
 	return player, nil
 }
 
+func fillPlayerPool() error {
+	players, err := readPlayerStates()
+	if err != nil {
+		return err
+	}
+
+	availablePlayers := 0
+	for _, player := range players {
+		if player.Condition == "new" {
+			availablePlayers++
+		}
+	}
+
+	desiredAvailablePlayers := 2
+	playersToStart := desiredAvailablePlayers - availablePlayers
+
+	for i := 0; i < playersToStart; i++ {
+		err := spawnPlayer()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 var playCmd = &cobra.Command{
 	Use:   "play",
 	Short: "Evaluate and play Alda source code",

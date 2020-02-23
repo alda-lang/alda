@@ -42,6 +42,20 @@ var rootCmd = &cobra.Command{
 			fmt.Println("Invalid verbosity level. Valid values are 0-3.")
 			os.Exit(1)
 		}
+
+		// Regardless of the command being run*, Alda will preemptively spawn player
+		// processes in the background, up to a desired amount. This helps to ensure
+		// that the application will feel fast, because each time you need a player
+		// process, there will probably already be one available.
+		//
+		// *`alda ps` is an exception because it is designed to be run repeatedly,
+		// e.g. `watch -n 0.25 alda ps`, in order to provide a live-updating view of
+		// current Alda processes.
+		if cmd.Use != "ps" {
+			if err := fillPlayerPool(); err != nil {
+				log.Warn().Err(err).Msg("Failed to fill player pool.")
+			}
+		}
 	},
 }
 
