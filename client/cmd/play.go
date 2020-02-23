@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"time"
 
 	"alda.io/client/emitter"
 	log "alda.io/client/logging"
@@ -71,12 +72,12 @@ func spawnPlayer() error {
 		return err
 	}
 
-	log.Info().Msg("Starting player process.")
-
 	cmd := exec.Command(aldaPlayer, "run")
 	if err := cmd.Start(); err != nil {
 		return err
 	}
+
+	log.Info().Msg("Spawned player process.")
 
 	return nil
 }
@@ -118,10 +119,15 @@ var playCmd = &cobra.Command{
 		}
 
 		score := model.NewScore()
+		start := time.Now()
 		if err := score.Update(scoreUpdates...); err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
+		log.Info().
+			Int("updates", len(scoreUpdates)).
+			Str("took", fmt.Sprintf("%s", time.Since(start))).
+			Msg("Constructed score.")
 
 		// Determine the port to use based on the provided CLI options.
 		switch {
@@ -155,16 +161,22 @@ var playCmd = &cobra.Command{
 			}
 		}
 
-		fmt.Println("Waiting for player to respond to ping...")
+		log.Debug().
+			Int("port", port).
+			Msg("Waiting for player to respond to ping.")
+
 		if _, err := ping(port); err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 
-		fmt.Printf("Sending OSC messages to player on port: %d\n", port)
 		if err := (emitter.OSCEmitter{Port: port}).EmitScore(score); err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
+
+		log.Info().
+			Int("port", port).
+			Msg("Sent OSC messages to player.")
 	},
 }
