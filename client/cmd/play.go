@@ -6,6 +6,7 @@ import (
 	"os/exec"
 
 	"alda.io/client/emitter"
+	log "alda.io/client/logging"
 	"alda.io/client/model"
 	"alda.io/client/parser"
 	"github.com/spf13/cobra"
@@ -70,7 +71,7 @@ func spawnPlayer() error {
 		return err
 	}
 
-	fmt.Println("Starting player process...")
+	log.Info().Msg("Starting player process.")
 
 	cmd := exec.Command(aldaPlayer, "run")
 	if err := cmd.Start(); err != nil {
@@ -78,42 +79,6 @@ func spawnPlayer() error {
 	}
 
 	return nil
-}
-
-func findOrSpawnPlayer() (playerState, error) {
-	player, err := findAvailablePlayer()
-
-	// Found an available player. Success!
-	if err == nil {
-		return player, nil
-	}
-
-	// There was an unexpected error while trying to find a player.
-	if err != errNoPlayersAvailable {
-		return playerState{}, err
-	}
-
-	// No players available, so spawn one and check again.
-	if err := spawnPlayer(); err != nil {
-		return playerState{}, err
-	}
-
-	if err := await(
-		func() error {
-			p, err := findAvailablePlayer()
-			if err != nil {
-				return err
-			}
-
-			player = p
-			return nil
-		},
-		reasonableTimeout,
-	); err != nil {
-		return playerState{}, err
-	}
-
-	return player, nil
 }
 
 func fillPlayerPool() error {
@@ -171,15 +136,23 @@ var playCmd = &cobra.Command{
 			}
 
 			port = player.Port
-		// Find an available player process to use, spawning one if necessary.
+		// Find an available player process to use.
 		default:
-			player, err := findOrSpawnPlayer()
-			if err != nil {
+			if err := await(
+				func() error {
+					player, err := findAvailablePlayer()
+					if err != nil {
+						return err
+					}
+
+					port = player.Port
+					return nil
+				},
+				reasonableTimeout,
+			); err != nil {
 				fmt.Println(err)
 				os.Exit(1)
 			}
-
-			port = player.Port
 		}
 
 		fmt.Println("Waiting for player to respond to ping...")
