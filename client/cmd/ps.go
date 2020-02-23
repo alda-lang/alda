@@ -14,7 +14,7 @@ import (
 )
 
 type playerState struct {
-	Condition string
+	State     string
 	Port      int
 	Expiry    int64
 	id        string
@@ -67,7 +67,7 @@ var psCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		fmt.Println("id\tport\tcondition\texpiry")
+		fmt.Println("id\tport\tstate\texpiry")
 
 		for _, state := range states {
 			if state.readError != nil {
@@ -78,7 +78,7 @@ var psCmd = &cobra.Command{
 			expiry := humanize.Time(time.Unix(state.Expiry/1000, 0))
 
 			fmt.Printf(
-				"%s\t%d\t%s\t%s\n", state.id, state.Port, state.Condition, expiry,
+				"%s\t%d\t%s\t%s\n", state.id, state.Port, state.State, expiry,
 			)
 		}
 	},

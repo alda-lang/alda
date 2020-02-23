@@ -235,7 +235,7 @@ class MidiEngine {
     // that point in time.
     val now = System.currentTimeMillis()
     val pointInFuture = now + (offset - Math.round(currentOffset()))
-    stateManager!!.markUsed()
+    stateManager!!.markActive()
     stateManager!!.delayExpiration(pointInFuture)
   }
 
@@ -338,6 +338,8 @@ class MidiEngine {
         }
       }
     }
+
+    stateManager!!.markReady()
   }
 
   fun startSequencer() {

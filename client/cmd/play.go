@@ -43,7 +43,7 @@ func findAvailablePlayer() (playerState, error) {
 	}
 
 	for _, player := range players {
-		if player.Condition == "new" {
+		if player.State == "ready" {
 			return player, nil
 		}
 	}
@@ -90,7 +90,7 @@ func fillPlayerPool() error {
 
 	availablePlayers := 0
 	for _, player := range players {
-		if player.Condition == "new" {
+		if player.State == "ready" {
 			availablePlayers++
 		}
 	}
