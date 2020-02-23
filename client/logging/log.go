@@ -10,7 +10,6 @@ import (
 
 var output = zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.Stamp}
 
-// Log is a global logger.
 var log = zerolog.New(output).With().Timestamp().Caller().Logger()
 
 // Debug logs at the DEBUG level.
