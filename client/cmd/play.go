@@ -90,7 +90,7 @@ func fillPlayerPool() error {
 
 	availablePlayers := 0
 	for _, player := range players {
-		if player.State == "ready" {
+		if player.State == "ready" || player.State == "starting" {
 			availablePlayers++
 		}
 	}
