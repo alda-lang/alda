@@ -40,8 +40,8 @@ class Info : CliktCommand(
   help = "Print useful information including the version and log path"
 ) {
   override fun run() {
-    println("alda-player ${playerVersion}")
-    println("log path: ${projDirs.cacheDir}")
+    println("alda-player $playerVersion")
+    println("log path: $logPath")
   }
 }
 
