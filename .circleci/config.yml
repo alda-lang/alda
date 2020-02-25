@@ -176,6 +176,11 @@ jobs:
             $env:PATH = "$env:PATH;C:\Program Files\Alda\bin"
             alda -v3 doctor --no-audio
 
+      - run:
+          name: "Troubleshooting: player logs"
+          command: type C:\Users\circleci\AppData\Local\alda\cache\logs\alda-player.log
+          when: on_fail
+
   store_artifacts:
     docker:
       - image: circleci/buildpack-deps:bionic
