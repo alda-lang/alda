@@ -118,6 +118,11 @@ jobs:
           name: alda doctor
           command: alda -v3 doctor --no-audio
 
+      - run:
+          name: Troubleshooting: player logs
+          command: cat /home/circleci/.cache/alda/logs/alda-player.log
+          when: on_fail
+
   test_macos:
     macos:
       xcode: 11.3.0
@@ -141,6 +146,11 @@ jobs:
       - run:
           name: alda doctor
           command: alda -v3 doctor --no-audio
+
+      - run:
+          name: Troubleshooting: player logs
+          command: cat /Users/distiller/Library/Caches/alda/logs/alda-player.log
+          when: on_fail
 
   test_windows:
     executor: win/default
