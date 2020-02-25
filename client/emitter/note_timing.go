@@ -18,7 +18,7 @@ type NoteTimingEmitter struct{}
 // EmitScore implements Emitter.EmitScore by printing the offset, duration, and
 // pitch of every note in the score.
 func (nte NoteTimingEmitter) EmitScore(score *model.Score) error {
-	fmt.Println("offset, duration, midi note")
+	fmt.Println("offset,duration,midi note")
 
 	for _, event := range score.Events {
 		switch event.(type) {
