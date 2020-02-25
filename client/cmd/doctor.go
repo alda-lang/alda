@@ -439,7 +439,14 @@ var doctorCmd = &cobra.Command{
 
 		step(
 			"Spawn a player on an unknown port",
-			spawnPlayer,
+			func() error {
+				playerArgs := []string{"-v", "run"}
+				if noAudio {
+					playerArgs = append(playerArgs, "--lazy-audio")
+				}
+
+				return exec.Command(aldaPlayer, playerArgs...).Start()
+			},
 		)
 
 		//////////////////////////////////////////////////
