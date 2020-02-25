@@ -458,9 +458,25 @@ var doctorCmd = &cobra.Command{
 			func() error {
 				return await(
 					func() error {
-						p, err := findAvailablePlayer()
+						players, err := readPlayerStates()
 						if err != nil {
 							return err
+						}
+
+						foundPlayer := false
+						for _, p := range players {
+							// A player process only enters the "ready" state after the MIDI
+							// system is initialized, and that never happens if the --no-audio
+							// flag is provided.
+							if p.State == "ready" || (noAudio && p.State == "starting") {
+								foundPlayer = true
+								player = p
+								break
+							}
+						}
+
+						if !foundPlayer {
+							return errNoPlayersAvailable
 						}
 
 						// We're doing all of this so fast that the player we find might
@@ -472,14 +488,13 @@ var doctorCmd = &cobra.Command{
 						// To avoid this, we check the port of the player we just found
 						// and consider it a failure condition. This will cue `await`
 						// to keep checking until it finds a player that isn't that one.
-						if p.Port == port {
+						if player.Port == port {
 							return fmt.Errorf(
-								"only find the player from before (%s/%d)",
-								p.id, p.Port,
+								"only found the player from before (%s/%d)",
+								player.id, player.Port,
 							)
 						}
 
-						player = p
 						return nil
 					},
 					reasonableTimeout,
