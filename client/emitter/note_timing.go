@@ -28,7 +28,7 @@ func (nte NoteTimingEmitter) EmitScore(score *model.Score) error {
 			offset := int32(math.Round(float64(noteEvent.Offset)))
 			duration := int32(math.Round(float64(noteEvent.AudibleDuration)))
 
-			fmt.Printf("%d, %d, %d\n", offset, duration, noteEvent.MidiNote)
+			fmt.Printf("%d,%d,%d\n", offset, duration, noteEvent.MidiNote)
 		default:
 			return fmt.Errorf("unsupported event: %#v", event)
 		}
