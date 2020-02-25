@@ -42,6 +42,7 @@ class Info : CliktCommand(
   override fun run() {
     println("alda-player $playerVersion")
     println("log path: $logPath")
+    exitProcess(0)
   }
 }
 
