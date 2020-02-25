@@ -119,7 +119,7 @@ jobs:
           command: alda -v3 doctor --no-audio
 
       - run:
-          name: Troubleshooting: player logs
+          name: "Troubleshooting: player logs"
           command: cat /home/circleci/.cache/alda/logs/alda-player.log
           when: on_fail
 
@@ -148,7 +148,7 @@ jobs:
           command: alda -v3 doctor --no-audio
 
       - run:
-          name: Troubleshooting: player logs
+          name: "Troubleshooting: player logs"
           command: cat /Users/distiller/Library/Caches/alda/logs/alda-player.log
           when: on_fail
 
