@@ -631,7 +631,7 @@ func Parse(filepath string, input string) ([]model.ScoreUpdate, error) {
 		log.Info().
 			Str("filepath", filepath).
 			Str("took", fmt.Sprintf("%s", time.Since(start))).
-			Msg("Parse successful.")
+			Msg("Parsed input.")
 	}(time.Now())
 
 	tokens, err := Scan(filepath, input)

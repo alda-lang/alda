@@ -45,7 +45,7 @@ declare -a shell_args
 # script environment), but PATH seems to be an exception, so we have to set the
 # PATH after starting the shell as an init command.
 if [[ "$SHELL" =~ fish ]]; then
-  init_command="set -gx PATH $player_path \$PATH"
+  init_command="set -gx PATH \"$player_path\" \$PATH"
   shell_args=("${shell_args[@]}" "-C" "$init_command")
 else
   export PATH="$player_path:$PATH"
@@ -54,7 +54,7 @@ fi
 if [[ $# == 0 ]]; then
   shell_args=("${shell_args[@]}" "-i")
 else
-  shell_args=("${shell_args[@]}" "-c" "$*")
+  shell_args=("${shell_args[@]}" "-c" "$(printf " %q" "$@")")
 fi
 
 "$SHELL" "${shell_args[@]}"

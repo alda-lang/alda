@@ -224,6 +224,19 @@ class MidiEngine {
     offset : Int, command : Int, channel : Int, data1: Int, data2: Int
   ) {
     scheduleMidiMsg(offset, ShortMessage(command, channel, data1, data2))
+
+    // Scheduling notes, patch changes, and other such events also delays the
+    // shutdown of the player process due to inactivity. We do this because we
+    // don't want the player process to suddenly shut down while it's playing a
+    // really long score.
+    //
+    // Here, we determine how far into the future the event offset is (based on
+    // the system clock, not the sequencer clock), and set the expiry based on
+    // that point in time.
+    val now = System.currentTimeMillis()
+    val pointInFuture = now + (offset - Math.round(currentOffset()))
+    stateManager!!.markActive()
+    stateManager!!.delayExpiration(pointInFuture)
   }
 
   private fun scheduleMetaMsg(
@@ -325,6 +338,8 @@ class MidiEngine {
         }
       }
     }
+
+    stateManager!!.markReady()
   }
 
   fun startSequencer() {
@@ -374,18 +389,6 @@ class MidiEngine {
     scheduleShortMsg(
       endOffset, ShortMessage.NOTE_OFF, channel, noteNumber, velocity
     )
-
-    // Scheduling a note also delays the shutdown of the player process due to
-    // inactivity, because we wouldn't want the player process to suddenly shut
-    // down while it's playing a really long score.
-    //
-    // Here, we determine how far into the future the NOTE_OFF event is (in
-    // actual milliseconds, not "offset," which is related to sequencer ticks),
-    // and set the expiry based on that point in time.
-    val now = System.currentTimeMillis()
-    val noteOff = now + (endOffset - Math.round(currentOffset()))
-    stateManager!!.markUsed()
-    stateManager!!.delayExpiration(noteOff)
   }
 
   fun volume(offset : Int, channel : Int, volume : Int) {

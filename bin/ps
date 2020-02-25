@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+
+# This script uses the current build of the client (i.e. the executable built
+# from the current contents of the client/ directory) to run `alda ps`, or bails
+# out if there is no current build.
+#
+# Generally, it's better to use client/bin/run to run the current build of the
+# client, because it will do a build if there isn't one already. `alda ps` is
+# different because it's useful to run it repeatedly with a command like:
+#
+#    watch -n 0.25 alda ps
+#
+# and a workflow like that doesn't play nice with client/bin/run.
+
+set -e
+
+scriptdir="$(dirname $0)"
+
+pushd "$scriptdir/../" >/dev/null
+
+build_sha="$(bin/current-content-sha client)"
+
+if [[ ! -d "client/target/$build_sha" ]]; then
+  echo "Client build not found for content SHA $build_sha"
+  exit 1
+fi
+
+case "$(uname -s)" in
+  Linux)
+    os=linux
+    ;;
+  Darwin)
+    os=darwin
+    ;;
+  *)
+    echo "uname -s returned an unexpected result: $(uname -s)"
+    exit 1
+esac
+
+case "$(uname -m)" in
+  x86_64)
+    arch=amd64
+    ;;
+  386)
+    arch=386
+    ;;
+  *)
+    echo "uname -m returned an unexpected result: $(uname -m)"
+    exit 1
+esac
+
+popd >/dev/null
+
+"$scriptdir/../client/target/$build_sha/$os-$arch/alda" ps "$@"
+

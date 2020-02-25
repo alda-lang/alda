@@ -13,7 +13,7 @@ import mu.KotlinLogging
 private val json = Klaxon()
 private val log = KotlinLogging.logger {}
 
-class PlayerState(val port : Int, var expiry : Long, var condition : String)
+class PlayerState(val port : Int, var expiry : Long, var state : String)
 
 class StateManager(val port : Int) {
   val thread = thread(start = false) {
@@ -48,7 +48,7 @@ class StateManager(val port : Int) {
   val state = PlayerState(
     port,
     System.currentTimeMillis() + inactivityTimeoutMs,
-    "new")
+    "starting")
 
   val stateFilesDir =
     Paths.get(projDirs.cacheDir, "state", "players").toString()
@@ -112,12 +112,15 @@ class StateManager(val port : Int) {
     delayExpiration(System.currentTimeMillis())
   }
 
-  fun markUsed() {
+  fun setState(str : String) {
     synchronized(state) {
-      if (state.condition != "used") {
-        state.condition = "used"
+      if (state.state != str) {
+        state.state = str
         writeStateFile()
       }
     }
   }
+
+  fun markReady() = setState("ready")
+  fun markActive() = setState("active")
 }

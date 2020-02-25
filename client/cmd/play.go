@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"time"
 
 	"alda.io/client/emitter"
+	log "alda.io/client/logging"
 	"alda.io/client/model"
 	"alda.io/client/parser"
 	"github.com/spf13/cobra"
@@ -41,7 +43,7 @@ func findAvailablePlayer() (playerState, error) {
 	}
 
 	for _, player := range players {
-		if player.Condition == "new" {
+		if player.State == "ready" {
 			return player, nil
 		}
 	}
@@ -70,50 +72,40 @@ func spawnPlayer() error {
 		return err
 	}
 
-	fmt.Println("Starting player process...")
-
 	cmd := exec.Command(aldaPlayer, "run")
 	if err := cmd.Start(); err != nil {
 		return err
 	}
 
+	log.Info().Msg("Spawned player process.")
+
 	return nil
 }
 
-func findOrSpawnPlayer() (playerState, error) {
-	player, err := findAvailablePlayer()
-
-	// Found an available player. Success!
-	if err == nil {
-		return player, nil
+func fillPlayerPool() error {
+	players, err := readPlayerStates()
+	if err != nil {
+		return err
 	}
 
-	// There was an unexpected error while trying to find a player.
-	if err != errNoPlayersAvailable {
-		return playerState{}, err
+	availablePlayers := 0
+	for _, player := range players {
+		if player.State == "ready" || player.State == "starting" {
+			availablePlayers++
+		}
 	}
 
-	// No players available, so spawn one and check again.
-	if err := spawnPlayer(); err != nil {
-		return playerState{}, err
+	desiredAvailablePlayers := 2
+	playersToStart := desiredAvailablePlayers - availablePlayers
+
+	for i := 0; i < playersToStart; i++ {
+		err := spawnPlayer()
+		if err != nil {
+			return err
+		}
 	}
 
-	if err := await(
-		func() error {
-			p, err := findAvailablePlayer()
-			if err != nil {
-				return err
-			}
-
-			player = p
-			return nil
-		},
-		reasonableTimeout,
-	); err != nil {
-		return playerState{}, err
-	}
-
-	return player, nil
+	return nil
 }
 
 var playCmd = &cobra.Command{
@@ -127,10 +119,15 @@ var playCmd = &cobra.Command{
 		}
 
 		score := model.NewScore()
+		start := time.Now()
 		if err := score.Update(scoreUpdates...); err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
+		log.Info().
+			Int("updates", len(scoreUpdates)).
+			Str("took", fmt.Sprintf("%s", time.Since(start))).
+			Msg("Constructed score.")
 
 		// Determine the port to use based on the provided CLI options.
 		switch {
@@ -145,27 +142,41 @@ var playCmd = &cobra.Command{
 			}
 
 			port = player.Port
-		// Find an available player process to use, spawning one if necessary.
+		// Find an available player process to use.
 		default:
-			player, err := findOrSpawnPlayer()
-			if err != nil {
+			if err := await(
+				func() error {
+					player, err := findAvailablePlayer()
+					if err != nil {
+						return err
+					}
+
+					port = player.Port
+					return nil
+				},
+				reasonableTimeout,
+			); err != nil {
 				fmt.Println(err)
 				os.Exit(1)
 			}
-
-			port = player.Port
 		}
 
-		fmt.Println("Waiting for player to respond to ping...")
+		log.Debug().
+			Int("port", port).
+			Msg("Waiting for player to respond to ping.")
+
 		if _, err := ping(port); err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 
-		fmt.Printf("Sending OSC messages to player on port: %d\n", port)
 		if err := (emitter.OSCEmitter{Port: port}).EmitScore(score); err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
+
+		log.Info().
+			Int("port", port).
+			Msg("Sent OSC messages to player.")
 	},
 }
