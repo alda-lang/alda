@@ -61,8 +61,9 @@ func midiPanningMsg(track int32, offset int32, panning int32) *osc.Message {
 // EmitScore implements Emitter.EmitScore by sending OSC messages to instruct a
 // player process how to perform the score.
 func (oe OSCEmitter) EmitScore(score *model.Score) error {
-	client := osc.NewClient("localhost", int(oe.Port))
-	client.SetNetworkProtocol(osc.TCP)
+	client := osc.NewClient(
+		"localhost", int(oe.Port), osc.ClientProtocol(osc.TCP),
+	)
 	bundle := osc.NewBundle(time.Now())
 
 	tracks := score.Tracks()

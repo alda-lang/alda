@@ -73,8 +73,7 @@ func findOpenPort() (int, error) {
 }
 
 func ping(port int) (*osc.Client, error) {
-	client := osc.NewClient("localhost", port)
-	client.SetNetworkProtocol(osc.TCP)
+	client := osc.NewClient("localhost", port, osc.ClientProtocol(osc.TCP))
 
 	err := await(
 		func() error {
@@ -177,11 +176,10 @@ var doctorCmd = &cobra.Command{
 					fmt.Sprintf("127.0.0.1:%d", port),
 					OSCPacketForwarder{channel: packetsReceived},
 					0,
+					osc.ServerProtocol(osc.TCP),
 				)
 
 				defer server.CloseConnection()
-
-				server.SetNetworkProtocol(osc.TCP)
 
 				go func() {
 					if err := server.ListenAndServe(); err != nil {

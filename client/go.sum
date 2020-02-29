@@ -8,8 +8,11 @@ github.com/coreos/go-semver v0.2.0/go.mod h1:nnelYz7RCh+5ahJtPPxZlU+153eP4D4r3Ee
 github.com/cpuguy83/go-md2man v1.0.10/go.mod h1:SmD6nW6nTyfqj6ABTjUi3V3JVMnlJmwcJI5acqYI6dE=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+github.com/daveyarwood/go-osc v0.0.0-20181130121958-adefe22206c1 h1:bR9j8lP/DpA/1VGhJw6LP2BVHTOJUz4XKfURF7IQJgE=
 github.com/daveyarwood/go-osc v0.0.0-20200116123019-3d015df6f75e h1:Akyn0lh1reLCg+He21RQo4Go4YgEU8MHmzOJZlpwfUQ=
 github.com/daveyarwood/go-osc v0.0.0-20200116123019-3d015df6f75e/go.mod h1:da7/n4R+yocxP9nqBc2kbUpe0PwlinMHS00O5ywd9+s=
+github.com/daveyarwood/go-osc v0.0.0-20200229013406-0675d0af5e0b h1:7Fw67Bi/cmrgvVt/ZAoVy6Lhmt3AeDutl/ksbil/gkY=
+github.com/daveyarwood/go-osc v0.0.0-20200229013406-0675d0af5e0b/go.mod h1:da7/n4R+yocxP9nqBc2kbUpe0PwlinMHS00O5ywd9+s=
 github.com/dustin/go-humanize v1.0.0 h1:VSnTsYCnlFHaM2/igO1h6X3HA71jcobQuxemgkq4zYo=
 github.com/dustin/go-humanize v1.0.0/go.mod h1:HtrtbFcZ19U5GC7JDqmcUSB87Iq5E25KnS6fMYU6eOk=
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
