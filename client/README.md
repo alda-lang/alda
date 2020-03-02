@@ -9,7 +9,7 @@ data representation of a musical score, and sends instructions to an Alda
 The client sends instructions to the player in the form of OSC message bundles.
 
 See the [OSC API doc](../player/doc/alda-osc-api.md) and [OSC API
-demo](osc_api_demo/README.md).
+demo](dev/osc/README.md).
 
 ## Development
 

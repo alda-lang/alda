@@ -298,8 +298,7 @@ func main() {
 		example = os.Args[2]
 	}
 
-	client := osc.NewClient("localhost", int(port))
-	client.SetNetworkProtocol(osc.TCP)
+	client := osc.NewClient("localhost", int(port), osc.ClientProtocol(osc.TCP))
 
 	switch example {
 	case "shutdown":
