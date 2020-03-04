@@ -51,7 +51,10 @@ var rootCmd = &cobra.Command{
 		// *`alda ps` is an exception because it is designed to be run repeatedly,
 		// e.g. `watch -n 0.25 alda ps`, in order to provide a live-updating view of
 		// current Alda processes.
-		if cmd.Use != "ps" {
+		//
+		// FIXME: Temporarily disabling player spawning for "alda version" too to
+		// see if it fixes the Windows CI build.
+		if cmd.Use != "ps" && cmd.Use != "version" {
 			if err := fillPlayerPool(); err != nil {
 				log.Warn().Err(err).Msg("Failed to fill player pool.")
 			}
