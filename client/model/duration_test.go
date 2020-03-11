@@ -17,6 +17,13 @@ type durationToMsTestCase struct {
 	expectedMs float32
 }
 
+type noteDurationTestCase struct {
+	note         Note
+	tempo        float32
+	quantization float32
+	expectedMs   float32
+}
+
 func TestDuration(t *testing.T) {
 	for _, testCase := range []noteLengthToBeatsTestCase{
 		{noteLength: NoteLength{Denominator: 4}, expectedBeats: 1},
@@ -145,6 +152,48 @@ func TestDuration(t *testing.T) {
 			t.Errorf(
 				"Expected %#v at tempo %f to equal %f ms, got %f ms",
 				testCase.duration, testCase.tempo, testCase.expectedMs, actualMs,
+			)
+		}
+	}
+
+	for _, testCase := range []noteDurationTestCase{
+		{
+			note: Note{
+				Pitch: LetterAndAccidentals{NoteLetter: C},
+				Duration: Duration{
+					Components: []DurationComponent{NoteLength{Denominator: 4}},
+				},
+				Slurred: true,
+			},
+			tempo:        126,
+			quantization: 42, // ignored because the note is slurred
+			// The formula for beats => ms is:
+			//
+			//   beats * (60,000 / tempo in bpm)
+			//
+			// So in this case:
+			//
+			//   1 beat * (60,000 / 126 bpm) = 476.19ms
+			expectedMs: 476.19,
+		},
+	} {
+		label := "Note => audible duration"
+
+		// This duplicates some of the business logic in model/note.go. I thought
+		// about pulling it out into a helper function and unit test that function
+		// here, but I couldn't quite figure out how to do that cleanly.
+		durationMs := testCase.note.Duration.Ms(testCase.tempo)
+		audibleDurationMs := durationMs
+		if !testCase.note.Slurred {
+			audibleDurationMs *= testCase.quantization
+		}
+
+		if !equalish32(audibleDurationMs, testCase.expectedMs) {
+			t.Error(label)
+			t.Errorf(
+				"Expected %#v at tempo %f to have an audible duration of %f ms, "+
+					"got %f ms",
+				testCase.note, testCase.tempo, testCase.expectedMs, audibleDurationMs,
 			)
 		}
 	}
