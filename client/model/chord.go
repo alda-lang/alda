@@ -41,7 +41,7 @@ func (chord Chord) UpdateScore(score *Score) error {
 
 		for _, part := range score.CurrentParts {
 			duration := effectiveDuration(specifiedDuration, part)
-			durationMs := float64(duration.Ms(part.Tempo))
+			durationMs := float64(duration.Ms(part.Tempo) * part.TimeScale)
 			shortestDurationMs[part] = math.Min(shortestDurationMs[part], durationMs)
 		}
 
