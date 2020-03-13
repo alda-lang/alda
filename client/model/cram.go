@@ -69,8 +69,10 @@ func timeScale(cram Cram, part *Part) (float32, error) {
 //
 // * Restore the part's previous TimeScale value.
 func (cram Cram) UpdateScore(score *Score) error {
+	previousDurations := map[*Part]Duration{}
 	previousTimeScales := map[*Part]float32{}
 	for _, part := range score.CurrentParts {
+		previousDurations[part] = part.Duration
 		previousTimeScales[part] = part.TimeScale
 	}
 
@@ -91,6 +93,7 @@ func (cram Cram) UpdateScore(score *Score) error {
 	}
 
 	for _, part := range score.CurrentParts {
+		part.Duration = previousDurations[part]
 		part.TimeScale = previousTimeScales[part]
 	}
 
