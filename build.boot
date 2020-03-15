@@ -1,15 +1,15 @@
 (set-env!
   :dependencies '[; build / release
-                  [adzerk/boot-jar2bin   "1.1.1" :scope "test"]
+                  [adzerk/boot-jar2bin   "1.2.0" :scope "test"]
                   [io.djy/boot-github    "0.1.4" :scope "test"]
                   [org.clojure/clojure   "1.10.1"]
                   [alda/client-java      "0.7.1"]
                   [alda/server-clj       "0.5.0"]
-                  [alda/core             "0.6.0"]
+                  [alda/core             "0.6.1"]
                   [alda/sound-engine-clj "1.2.3"]
 
                   ; silence slf4j logging dammit
-                  [org.slf4j/slf4j-nop "2.0.0-alpha0"]])
+                  [org.slf4j/slf4j-nop "2.0.0-alpha1"]])
 
 (require '[adzerk.boot-jar2bin :refer :all]
          '[io.djy.boot-github  :refer (push-version-tag create-release
@@ -19,7 +19,7 @@
          '[cheshire.core   :as json]
          '[clj-http.client :as http])
 
-(def ^:const +version+ "1.3.3")
+(def ^:const +version+ "1.3.4")
 
 (defn- exe-version
   "Convert non-exe-friendly version numbers like 1.0.0-rc1 to four-number
