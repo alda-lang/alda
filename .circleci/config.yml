@@ -169,12 +169,20 @@ jobs:
             $env:PATH = "$env:PATH;C:\Program Files\Alda\bin"
             alda version
             alda-player info
+            # Work around a bug in CircleCI Windows builds where it apparently
+            # hangs forever if there are any background processes, e.g. the
+            # player processes that `alda` spawns.
+            Stop-Process -Name "alda-player"
 
       - run:
           name: alda doctor
           command: |
             $env:PATH = "$env:PATH;C:\Program Files\Alda\bin"
             alda -v3 doctor --no-audio
+            # Work around a bug in CircleCI Windows builds where it apparently
+            # hangs forever if there are any background processes, e.g. the
+            # player processes that `alda` spawns.
+            Stop-Process -Name "alda-player"
 
       - run:
           name: "Troubleshooting: player logs"
