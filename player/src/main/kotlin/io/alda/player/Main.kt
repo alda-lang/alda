@@ -42,9 +42,6 @@ class Info : CliktCommand(
   override fun run() {
     println("alda-player $playerVersion")
     println("log path: $logPath")
-    // TODO: See if this fixes the Windows build and either add an explanatory
-    // comment or remove it.
-    exitProcess(0)
   }
 }
 
