@@ -5,6 +5,19 @@ series.
 
 For recent versions, see [CHANGELOG](CHANGELOG.md).
 
+## 1.3.4 (2020-03-14)
+
+* Fixed a minor bug where the parser would fail to recognize that a note at the
+  end of a part that ends with a `~` followed by a `|` is supposed to be
+  slurred.
+
+  In other words, it was treating `c4~ |` at the end of an instrument part as an
+  un-slurred note, when it's supposed to be slurred.
+
+* Fixed buggy error handling logic in the case of an unhandled exception.
+  Before, we were inadvertently hiding the exception and the message ended up
+  being "null." Now the exception message gets through.
+
 ## 1.3.3 (2019-08-16)
 
 * New alda.lisp function, `midi-note`, is available as an alternative to

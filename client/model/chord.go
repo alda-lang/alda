@@ -41,7 +41,7 @@ func (chord Chord) UpdateScore(score *Score) error {
 
 		for _, part := range score.CurrentParts {
 			duration := effectiveDuration(specifiedDuration, part)
-			durationMs := float64(duration.Ms(part.Tempo))
+			durationMs := float64(duration.Ms(part.Tempo) * part.TimeScale)
 			shortestDurationMs[part] = math.Min(shortestDurationMs[part], durationMs)
 		}
 
@@ -64,9 +64,6 @@ func (chord Chord) UpdateScore(score *Score) error {
 // DurationMs implements ScoreUpdate.DurationMs by returning the shortest
 // note/rest duration in the chord, within the context of the part's current
 // tempo.
-//
-// Also updates the part's default duration, so that it can be correctly
-// considered when tallying the duration of subsequent events.
 func (chord Chord) DurationMs(part *Part) float32 {
 	shortestDurationMs := math.MaxFloat64
 

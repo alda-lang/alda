@@ -13,7 +13,7 @@
 piano:  # verse 1
 # LH
 V1: o2 b1/>b | o2 g+/>g+ | o2 g/>g
-    o2 f+2/>f+ o2 e+/>e+ | o2 e/>e o2 d+/d+ | o2 d1/>d
+    o2 f+2/>f+ o2 e+/>e+ | o2 e/>e o2 d+/>d+ | o2 d1/>d
 # RH
 V2: r4 o4 d+/f+ e/g f+/a | d1/f+/b | d/f+/b |
     r4 c+4/f+/a+ c+2/e+/g+ | r4 c+/e/g < a+2/>d+/f+ |
