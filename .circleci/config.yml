@@ -173,6 +173,7 @@ jobs:
             # hangs forever if there are any background processes, e.g. the
             # player processes that `alda` spawns.
             Stop-Process -Name "alda-player"
+            Stop-Process -Name "java"
 
       - run:
           name: alda doctor
@@ -183,6 +184,7 @@ jobs:
             # hangs forever if there are any background processes, e.g. the
             # player processes that `alda` spawns.
             Stop-Process -Name "alda-player"
+            Stop-Process -Name "java"
 
       - run:
           name: "Troubleshooting: player logs"
