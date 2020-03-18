@@ -28,8 +28,7 @@ fi
 target_dir="$1"
 
 circleci_api_base_url="https://circleci.com/api/v1.1"
-# FIXME: s/daveyarwood/alda-lang/
-circleci_project="github/daveyarwood/alda"
+circleci_project="github/alda-lang/alda"
 
 function get_build_number() {
   local commit="$1"
