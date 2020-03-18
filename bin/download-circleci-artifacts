@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+
+# This script locates CircleCI build artifacts for the current commit and
+# downloads them to the specified target directory.
+#
+# NB: We're going to want to store these somewhere public at some point, and
+# it's not clear yet where that should be. Once that place has been determined,
+# we should add a step to the CircleCI build pipeline that uploads the artifacts
+# there.
+
+set -e
+
+if [[ -z "$CIRCLECI_API_TOKEN" ]]; then
+  echo "CIRCLECI_API_TOKEN must be set."
+  exit 1
+fi
+
+if ! which jq > /dev/null; then
+  echo "jq must be on the PATH."
+  exit 1
+fi
+
+if [[ $# -ne 1 ]]; then
+  echo "Usage: $0 TARGET_DIR"
+  exit 1
+fi
+
+target_dir="$1"
+
+circleci_api_base_url="https://circleci.com/api/v1.1"
+# FIXME: s/daveyarwood/alda-lang/
+circleci_project="github/daveyarwood/alda"
+
+function get_build_number() {
+  local commit="$1"
+
+  curl -s --fail \
+    -H "Circle-Token: $CIRCLECI_API_TOKEN" \
+    "$circleci_api_base_url/project/$circleci_project" \
+    | jq ".[]
+          | select(.vcs_revision == \"$commit\" and
+                   .workflows.job_name == \"store_artifacts\" and
+                   .status == \"success\")
+          | .build_num"
+}
+
+current_commit="$(git rev-parse HEAD)"
+
+echo "Looking for a build corresponding to git commit $current_commit..."
+build_number="$(get_build_number "$current_commit")"
+
+if [[ -z "$build_number" ]]; then
+  echo "No build found."
+  exit 1
+fi
+
+echo "Found build $build_number"
+
+curl -s --fail \
+  -H "Circle-Token: $CIRCLECI_API_TOKEN" \
+  "$circleci_api_base_url/project/$circleci_project/$build_number/artifacts" \
+  | jq -r '.[] | [.path, .url] | @tsv' | while read path download_url; do
+  echo
+  echo "Downloading $download_url => $path"
+  base_path="$(echo "$target_dir/$path" | sed -r 's/\/[^\/]+$//')"
+  mkdir -p "$base_path"
+  curl "$download_url" > "$target_dir/$path"
+done
