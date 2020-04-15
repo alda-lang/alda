@@ -72,6 +72,7 @@ Loop).
 | Language | Library    | Author       |
 |----------|------------|--------------|
 | Clojure  | [alda-clj] | Dave Yarwood |
+| Ruby     | [alda-rb]  | Ulysses Zhan |
 
 [alda-clj]: https://github.com/daveyarwood/alda-clj
-
+[alda-rb]: https://github.com/UlyssesZh/alda-rb
