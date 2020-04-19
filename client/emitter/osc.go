@@ -88,7 +88,7 @@ func (oe OSCEmitter) EmitScore(score *model.Score) error {
 		case model.NoteEvent:
 			noteEvent := event.(model.NoteEvent)
 			track := tracks[noteEvent.Part]
-			offset := int32(math.Round(float64(noteEvent.Offset)))
+			offset := int32(math.Round(noteEvent.Offset))
 
 			// Scheduling volume and panning control change messages before every note
 			// is terribly inefficient, but it's what we've always done in alda v1 and
@@ -100,7 +100,7 @@ func (oe OSCEmitter) EmitScore(score *model.Score) error {
 				midiVolumeMsg(
 					track,
 					offset,
-					int32(math.Round(float64(noteEvent.TrackVolume*127))),
+					int32(math.Round(noteEvent.TrackVolume*127)),
 				),
 			)
 
@@ -108,7 +108,7 @@ func (oe OSCEmitter) EmitScore(score *model.Score) error {
 				midiPanningMsg(
 					track,
 					offset,
-					int32(math.Round(float64(noteEvent.Panning*127))),
+					int32(math.Round(noteEvent.Panning*127)),
 				),
 			)
 
@@ -116,9 +116,9 @@ func (oe OSCEmitter) EmitScore(score *model.Score) error {
 				track,
 				offset,
 				noteEvent.MidiNote,
-				int32(math.Round(float64(noteEvent.Duration))),
-				int32(math.Round(float64(noteEvent.AudibleDuration))),
-				int32(math.Round(float64(noteEvent.Volume*127))),
+				int32(math.Round(noteEvent.Duration)),
+				int32(math.Round(noteEvent.AudibleDuration)),
+				int32(math.Round(noteEvent.Volume*127)),
 			))
 		default:
 			return fmt.Errorf("unsupported event: %#v", event)

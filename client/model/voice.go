@@ -87,7 +87,7 @@ func (vm VoiceMarker) UpdateScore(score *Score) error {
 
 // DurationMs implements ScoreUpdate.DurationMs by returning 0, since a voice
 // marker is conceptually instantaneous.
-func (VoiceMarker) DurationMs(part *Part) float32 {
+func (VoiceMarker) DurationMs(part *Part) float64 {
 	return 0
 }
 
@@ -149,7 +149,7 @@ func (VoiceGroupEndMarker) UpdateScore(score *Score) error {
 
 // DurationMs implements ScoreUpdate.DurationMs by returning 0, since a voice
 // marker is conceptually instantaneous.
-func (VoiceGroupEndMarker) DurationMs(part *Part) float32 {
+func (VoiceGroupEndMarker) DurationMs(part *Part) float64 {
 	return 0
 }
 

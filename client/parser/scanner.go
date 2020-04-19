@@ -315,13 +315,13 @@ func (s *scanner) parseIntegerFrom(startIndex int) int32 {
 // This function is meant to be called after consuming a bunch of digits, then
 // optionally a period and a bunch more digits. It reads from the start index up
 // until the current index and parses the result as a float.
-func (s *scanner) parseFloatFrom(startIndex int) float32 {
-	number, _ := strconv.ParseFloat(string(s.input[s.start:s.current]), 32)
-	return float32(number)
+func (s *scanner) parseFloatFrom(startIndex int) float64 {
+	number, _ := strconv.ParseFloat(string(s.input[s.start:s.current]), 64)
+	return number
 }
 
 type noteLength struct {
-	denominator float32
+	denominator float64
 	dots        int32
 }
 

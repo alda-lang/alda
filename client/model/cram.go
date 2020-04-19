@@ -18,10 +18,10 @@ type Cram struct {
 //
 // DurationMs can mutate the part, so we have to make a copy of the part and use
 // that for context.
-func innerDurationMs(cram Cram, part *Part) (float32, error) {
+func innerDurationMs(cram Cram, part *Part) (float64, error) {
 	partCopy := part.Clone()
 
-	totalDurationMs := float32(0.0)
+	totalDurationMs := 0.0
 
 	for _, event := range cram.Events {
 		totalDurationMs += event.DurationMs(partCopy)
@@ -30,7 +30,7 @@ func innerDurationMs(cram Cram, part *Part) (float32, error) {
 	return totalDurationMs, nil
 }
 
-func timeScale(cram Cram, part *Part) (float32, error) {
+func timeScale(cram Cram, part *Part) (float64, error) {
 	duration := effectiveDuration(cram.Duration, part)
 
 	// The "outer duration" is the total duration for the entire cram
@@ -70,7 +70,7 @@ func timeScale(cram Cram, part *Part) (float32, error) {
 // * Restore the part's previous TimeScale value.
 func (cram Cram) UpdateScore(score *Score) error {
 	previousDurations := map[*Part]Duration{}
-	previousTimeScales := map[*Part]float32{}
+	previousTimeScales := map[*Part]float64{}
 	for _, part := range score.CurrentParts {
 		previousDurations[part] = part.Duration
 		previousTimeScales[part] = part.TimeScale
@@ -103,7 +103,7 @@ func (cram Cram) UpdateScore(score *Score) error {
 // DurationMs implements ScoreUpdate.DurationMs by returning the effective
 // duration of the Cram expression, i.e. either the specified duration of the
 // Cram expression or the part's default duration.
-func (cram Cram) DurationMs(part *Part) float32 {
+func (cram Cram) DurationMs(part *Part) float64 {
 	return effectiveDuration(cram.Duration, part).Ms(part.Tempo)
 }
 

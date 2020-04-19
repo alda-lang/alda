@@ -26,8 +26,8 @@ func (repeat Repeat) UpdateScore(score *Score) error {
 
 // DurationMs implements ScoreUpdate.DurationMs by returning the total duration
 // of the event being repeated the specified number of times.
-func (repeat Repeat) DurationMs(part *Part) float32 {
-	durationMs := float32(0)
+func (repeat Repeat) DurationMs(part *Part) float64 {
+	durationMs := 0.0
 
 	for repetition := int32(1); repetition <= repeat.Times; repetition++ {
 		part.CurrentRepetition = repetition

@@ -39,7 +39,7 @@ func (marker Marker) UpdateScore(score *Score) error {
 
 // DurationMs implements ScoreUpdate.DurationMs by returning 0, since defining a
 // marker is conceptually instantaneous.
-func (Marker) DurationMs(part *Part) float32 {
+func (Marker) DurationMs(part *Part) float64 {
 	return 0
 }
 
@@ -80,7 +80,7 @@ func (atMarker AtMarker) UpdateScore(score *Score) error {
 //
 // NB: I don't think it really makes any sense for an AtMarker event to occur
 // within a Cram expression. Arguably, this should result in a syntax error.
-func (AtMarker) DurationMs(part *Part) float32 {
+func (AtMarker) DurationMs(part *Part) float64 {
 	return 0
 }
 

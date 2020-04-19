@@ -117,7 +117,7 @@ func (p *parser) lispForm(context string) (model.LispForm, error) {
 	case p.match(Symbol):
 		return model.LispSymbol{Name: p.previous().text}, nil
 	case p.match(Number):
-		return model.LispNumber{Value: p.previous().literal.(float32)}, nil
+		return model.LispNumber{Value: p.previous().literal.(float64)}, nil
 	case p.match(String):
 		return model.LispString{Value: p.previous().literal.(string)}, nil
 	case p.match(LeftParen):
@@ -273,7 +273,7 @@ func (p *parser) durationComponent() model.DurationComponent {
 			Dots:        nl.dots,
 		}
 	case NoteLengthMs:
-		return model.NoteLengthMs{Quantity: token.literal.(float32)}
+		return model.NoteLengthMs{Quantity: token.literal.(float64)}
 	}
 
 	// We shouldn't get here.

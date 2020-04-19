@@ -277,7 +277,7 @@ func defattribute(names []string, signatures ...attributeFunctionSignature) {
 	}
 }
 
-func positiveNumber(form LispForm) (float32, error) {
+func positiveNumber(form LispForm) (float64, error) {
 	value := form.(LispNumber).Value
 
 	if value < 1 {
@@ -287,7 +287,7 @@ func positiveNumber(form LispForm) (float32, error) {
 	return value, nil
 }
 
-func nonNegativeNumber(form LispForm) (float32, error) {
+func nonNegativeNumber(form LispForm) (float64, error) {
 	value := form.(LispNumber).Value
 
 	if value < 0 {
@@ -300,14 +300,14 @@ func nonNegativeNumber(form LispForm) (float32, error) {
 func integer(form LispForm) (int32, error) {
 	value := form.(LispNumber).Value
 
-	if value != float32(int32(value)) {
+	if value != float64(int32(value)) {
 		return 0, fmt.Errorf("Expected integer, got %f", value)
 	}
 
 	return int32(value), nil
 }
 
-func percentage(form LispForm) (float32, error) {
+func percentage(form LispForm) (float64, error) {
 	value := form.(LispNumber).Value
 
 	if value < 0 || value > 100 {
@@ -352,7 +352,7 @@ func noteLength(str string) (NoteLength, error) {
 		}
 	}
 
-	denominator, _ := strconv.ParseFloat(string(denominatorChars), 32)
+	denominator, _ := strconv.ParseFloat(string(denominatorChars), 64)
 
 	// Any periods remaining are treated as dots.
 	dots := 0
@@ -367,7 +367,7 @@ func noteLength(str string) (NoteLength, error) {
 		return NoteLength{}, fmt.Errorf("Invalid note length: %q", str)
 	}
 
-	return NoteLength{Denominator: float32(denominator), Dots: int32(dots)}, nil
+	return NoteLength{Denominator: denominator, Dots: int32(dots)}, nil
 }
 
 func duration(form LispForm) (Duration, error) {
@@ -1165,7 +1165,7 @@ func (n LispNil) UpdateScore(score *Score) error {
 }
 
 // DurationMs implements ScoreUpdate.DurationMs by returning 0.
-func (n LispNil) DurationMs(part *Part) float32 {
+func (n LispNil) DurationMs(part *Part) float64 {
 	return 0
 }
 
@@ -1219,7 +1219,7 @@ func (sym LispSymbol) Eval() (LispForm, error) {
 
 // LispNumber is a floating point number.
 type LispNumber struct {
-	Value float32
+	Value float64
 }
 
 // TypeString implements LispForm.TypeString.
@@ -1353,7 +1353,7 @@ func (l LispList) UpdateScore(score *Score) error {
 
 // DurationMs implements ScoreUpdate.DurationMs by evaluating the S-expression
 // and returning the duration of the resulting value.
-func (l LispList) DurationMs(part *Part) float32 {
+func (l LispList) DurationMs(part *Part) float64 {
 	// FIXME: We end up evaluating this a second time when UpdateScore is called.
 	// This will be problematic if/when we add functions that have side effects.
 	//

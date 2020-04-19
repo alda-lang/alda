@@ -25,8 +25,8 @@ func (nte NoteTimingEmitter) EmitScore(score *model.Score) error {
 		case model.NoteEvent:
 			noteEvent := event.(model.NoteEvent)
 
-			offset := int32(math.Round(float64(noteEvent.Offset)))
-			duration := int32(math.Round(float64(noteEvent.AudibleDuration)))
+			offset := int32(math.Round(noteEvent.Offset))
+			duration := int32(math.Round(noteEvent.AudibleDuration))
 
 			fmt.Printf("%d,%d,%d\n", offset, duration, noteEvent.MidiNote)
 		default:

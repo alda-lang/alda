@@ -15,8 +15,8 @@ func (es EventSequence) UpdateScore(score *Score) error {
 
 // DurationMs implements ScoreUpdate.DurationMs by returning the total duration
 // of the events in the sequence.
-func (es EventSequence) DurationMs(part *Part) float32 {
-	durationMs := float32(0)
+func (es EventSequence) DurationMs(part *Part) float64 {
+	durationMs := 0.0
 
 	for _, event := range es.Events {
 		durationMs += event.DurationMs(part)

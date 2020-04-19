@@ -55,7 +55,7 @@ func (vd VariableDefinition) UpdateScore(score *Score) error {
 
 // DurationMs implements ScoreUpdate.DurationMs by returning 0, since a
 // variable definition is conceptually instantaneous.
-func (VariableDefinition) DurationMs(part *Part) float32 {
+func (VariableDefinition) DurationMs(part *Part) float64 {
 	return 0
 }
 
@@ -110,7 +110,7 @@ func (vr VariableReference) UpdateScore(score *Score) error {
 // DurationMs implements ScoreUpdate.DurationMs by looking up the sequence of
 // events corresponding to the given variable name, and returning the sum of
 // the durations of the events.
-func (vr VariableReference) DurationMs(part *Part) float32 {
+func (vr VariableReference) DurationMs(part *Part) float64 {
 	events, err := part.score.GetVariable(vr.VariableName)
 	if err != nil {
 		// If the variable is undefined, an error will be thrown when we come back
@@ -119,7 +119,7 @@ func (vr VariableReference) DurationMs(part *Part) float32 {
 		return 0
 	}
 
-	durationMs := float32(0)
+	durationMs := 0.0
 
 	for _, event := range events {
 		durationMs += event.DurationMs(part)

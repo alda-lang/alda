@@ -11,7 +11,7 @@ type ScoreUpdate interface {
 	//
 	// The context for this is the Cram event, which involves summing the duration
 	// of a number of events and then time-scaling them into a fixed duration.
-	DurationMs(part *Part) float32
+	DurationMs(part *Part) float64
 
 	// VariableValue returns the value that is captured when an event is part of a
 	// variable definition.
@@ -37,7 +37,7 @@ type Score struct {
 	Aliases          map[string][]*Part
 	Events           []ScoreEvent
 	GlobalAttributes *GlobalAttributes
-	Markers          map[string]OffsetMs
+	Markers          map[string]float64
 	Variables        map[string][]ScoreUpdate
 	chordMode        bool
 }
@@ -48,7 +48,7 @@ func NewScore() *Score {
 		Parts:            []*Part{},
 		Aliases:          map[string][]*Part{},
 		GlobalAttributes: NewGlobalAttributes(),
-		Markers:          map[string]OffsetMs{},
+		Markers:          map[string]float64{},
 		Variables:        map[string][]ScoreUpdate{},
 	}
 }

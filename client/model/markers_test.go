@@ -9,7 +9,7 @@ import (
 	_ "alda.io/client/testing"
 )
 
-func expectMarker(name string, expectedOffset OffsetMs) func(s *Score) error {
+func expectMarker(name string, expectedOffset float64) func(s *Score) error {
 	return func(s *Score) error {
 		actualOffset, hit := s.Markers[name]
 		if !hit {

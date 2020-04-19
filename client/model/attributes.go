@@ -22,7 +22,7 @@ func (au AttributeUpdate) UpdateScore(score *Score) error {
 
 // DurationMs implements ScoreUpdate.DurationMs by returning 0, since an
 // attribute update is conceptually instantaneous.
-func (au AttributeUpdate) DurationMs(part *Part) float32 {
+func (au AttributeUpdate) DurationMs(part *Part) float64 {
 	return 0
 }
 
@@ -39,21 +39,21 @@ func (au AttributeUpdate) VariableValue(score *Score) (ScoreUpdate, error) {
 type GlobalAttributes struct {
 	// We store both the map of offset => updates and an ordered list of offsets,
 	// so that we can easily traverse the map in order.
-	itinerary map[OffsetMs][]PartUpdate
-	offsets   []OffsetMs
+	itinerary map[float64][]PartUpdate
+	offsets   []float64
 }
 
 // NewGlobalAttributes returns an initialized GlobalAttributes structure.
 func NewGlobalAttributes() *GlobalAttributes {
 	return &GlobalAttributes{
-		itinerary: map[OffsetMs][]PartUpdate{},
-		offsets:   []OffsetMs{},
+		itinerary: map[float64][]PartUpdate{},
+		offsets:   []float64{},
 	}
 }
 
 // Record adds attribute changes at a particular offset to the itinerary of
 // global attribute changes.
-func (ga *GlobalAttributes) Record(offset OffsetMs, update PartUpdate) {
+func (ga *GlobalAttributes) Record(offset float64, update PartUpdate) {
 	_, hit := ga.itinerary[offset]
 	if !hit {
 		ga.itinerary[offset] = []PartUpdate{}
@@ -70,7 +70,7 @@ func (ga *GlobalAttributes) Record(offset OffsetMs, update PartUpdate) {
 // InWindow returns the list of global attribute updates that fall within the
 // window between `startOffset` and `endOffset`.
 func (ga GlobalAttributes) InWindow(
-	startOffset OffsetMs, endOffset OffsetMs,
+	startOffset float64, endOffset float64,
 ) []PartUpdate {
 	updates := []PartUpdate{}
 
@@ -115,7 +115,7 @@ type GlobalAttributeUpdate struct {
 // The attribute is also immediately applied to all parts.
 func (gau GlobalAttributeUpdate) UpdateScore(score *Score) error {
 	// Record this attribute update in the record of global attributes.
-	var offset OffsetMs
+	var offset float64
 	switch len(score.CurrentParts) {
 	case 0:
 		offset = 0
@@ -147,7 +147,7 @@ func (gau GlobalAttributeUpdate) UpdateScore(score *Score) error {
 
 // DurationMs implements ScoreUpdate.DurationMs by returning 0, since an
 // attribute update is conceptually instantaneous.
-func (gau GlobalAttributeUpdate) DurationMs(part *Part) float32 {
+func (gau GlobalAttributeUpdate) DurationMs(part *Part) float64 {
 	return 0
 }
 
@@ -160,7 +160,7 @@ func (gau GlobalAttributeUpdate) VariableValue(
 
 // TempoSet sets the tempo of all active parts.
 type TempoSet struct {
-	Tempo float32
+	Tempo float64
 }
 
 func (ts TempoSet) updatePart(part *Part) {
@@ -170,7 +170,7 @@ func (ts TempoSet) updatePart(part *Part) {
 // MetricModulation sets the tempo of all active parts, defining the tempo as a
 // ratio of new tempo : old tempo.
 type MetricModulation struct {
-	Ratio float32
+	Ratio float64
 }
 
 func (mm MetricModulation) updatePart(part *Part) {
@@ -202,7 +202,7 @@ func (OctaveDown) updatePart(part *Part) {
 
 // VolumeSet sets the volume of all active parts.
 type VolumeSet struct {
-	Volume float32
+	Volume float64
 }
 
 func (vs VolumeSet) updatePart(part *Part) {
@@ -211,7 +211,7 @@ func (vs VolumeSet) updatePart(part *Part) {
 
 // TrackVolumeSet sets the track volume of all active parts.
 type TrackVolumeSet struct {
-	TrackVolume float32
+	TrackVolume float64
 }
 
 func (tvs TrackVolumeSet) updatePart(part *Part) {
@@ -220,7 +220,7 @@ func (tvs TrackVolumeSet) updatePart(part *Part) {
 
 // PanningSet sets the panning of all active parts.
 type PanningSet struct {
-	Panning float32
+	Panning float64
 }
 
 func (ps PanningSet) updatePart(part *Part) {
@@ -229,7 +229,7 @@ func (ps PanningSet) updatePart(part *Part) {
 
 // QuantizationSet sets the quantization of all active parts.
 type QuantizationSet struct {
-	Quantization float32
+	Quantization float64
 }
 
 func (qs QuantizationSet) updatePart(part *Part) {
@@ -266,7 +266,7 @@ func (ts TranspositionSet) updatePart(part *Part) {
 // ReferencePitchSet sets the reference pitch of all active parts. The reference
 // pitch is represented as the frequency of A4.
 type ReferencePitchSet struct {
-	Frequency float32
+	Frequency float64
 }
 
 func (rps ReferencePitchSet) updatePart(part *Part) {

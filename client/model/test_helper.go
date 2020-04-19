@@ -84,8 +84,3 @@ func equalish(float1 float64, float2 float64) bool {
 
 	return (lower + threshold) > upper
 }
-
-// The float32 variation of equalish.
-func equalish32(float1 float32, float2 float32) bool {
-	return equalish(float64(float1), float64(float2))
-}

@@ -8,20 +8,20 @@ import (
 
 type noteLengthToBeatsTestCase struct {
 	noteLength    NoteLength
-	expectedBeats float32
+	expectedBeats float64
 }
 
 type durationToMsTestCase struct {
 	duration   Duration
-	tempo      float32
-	expectedMs float32
+	tempo      float64
+	expectedMs float64
 }
 
 type noteDurationTestCase struct {
 	note         Note
-	tempo        float32
-	quantization float32
-	expectedMs   float32
+	tempo        float64
+	quantization float64
+	expectedMs   float64
 }
 
 func TestDuration(t *testing.T) {
@@ -42,7 +42,7 @@ func TestDuration(t *testing.T) {
 			return
 		}
 
-		if !equalish32(actualBeats, testCase.expectedBeats) {
+		if !equalish(actualBeats, testCase.expectedBeats) {
 			t.Error(label)
 			t.Errorf(
 				"Expected %#v to equal %f beats, got %f beats",
@@ -147,7 +147,7 @@ func TestDuration(t *testing.T) {
 
 		actualMs := testCase.duration.Ms(testCase.tempo)
 
-		if !equalish32(actualMs, testCase.expectedMs) {
+		if !equalish(actualMs, testCase.expectedMs) {
 			t.Error(label)
 			t.Errorf(
 				"Expected %#v at tempo %f to equal %f ms, got %f ms",
@@ -188,7 +188,7 @@ func TestDuration(t *testing.T) {
 			audibleDurationMs *= testCase.quantization
 		}
 
-		if !equalish32(audibleDurationMs, testCase.expectedMs) {
+		if !equalish(audibleDurationMs, testCase.expectedMs) {
 			t.Error(label)
 			t.Errorf(
 				"Expected %#v at tempo %f to have an audible duration of %f ms, "+

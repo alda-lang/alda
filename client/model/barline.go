@@ -8,7 +8,7 @@ type Barline struct{}
 //
 // A barline is considered a DurationComponent purely for syntactic reasons, for
 // better or for worse.
-func (Barline) Beats() (float32, error) {
+func (Barline) Beats() (float64, error) {
 	return 0, nil
 }
 
@@ -16,7 +16,7 @@ func (Barline) Beats() (float32, error) {
 //
 // A barline is considered a DurationComponent purely for syntactic reasons, for
 // better or for worse.
-func (Barline) Ms(tempo float32) float32 {
+func (Barline) Ms(tempo float64) float64 {
 	return 0
 }
 
@@ -28,7 +28,7 @@ func (Barline) UpdateScore(score *Score) error {
 
 // DurationMs implements ScoreUpdate.DurationMs by returning 0, since a barline
 // is conceptually instantaneous.
-func (Barline) DurationMs(part *Part) float32 {
+func (Barline) DurationMs(part *Part) float64 {
 	return 0
 }
 

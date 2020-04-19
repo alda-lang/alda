@@ -14,12 +14,12 @@ type Note struct {
 type NoteEvent struct {
 	Part            *Part
 	MidiNote        int32
-	Offset          OffsetMs
-	Duration        float32
-	AudibleDuration float32
-	Volume          float32
-	TrackVolume     float32
-	Panning         float32
+	Offset          float64
+	Duration        float64
+	AudibleDuration float64
+	Volume          float64
+	TrackVolume     float64
+	Panning         float64
 }
 
 func effectiveDuration(specifiedDuration Duration, part *Part) Duration {
@@ -83,7 +83,7 @@ func addNoteOrRest(score *Score, noteOrRest ScoreUpdate) {
 
 		if !score.chordMode {
 			part.LastOffset = part.CurrentOffset
-			part.CurrentOffset += float64(durationMs)
+			part.CurrentOffset += durationMs
 		}
 
 		updateDefaultDuration(part, duration)
@@ -106,7 +106,7 @@ func (note Note) UpdateScore(score *Score) error {
 //
 // Also updates the part's default duration, so that it can be correctly
 // considered when tallying the duration of subsequent events.
-func (note Note) DurationMs(part *Part) float32 {
+func (note Note) DurationMs(part *Part) float64 {
 	durationMs := effectiveDuration(note.Duration, part).Ms(part.Tempo)
 	updateDefaultDuration(part, note.Duration)
 	return durationMs
@@ -138,7 +138,7 @@ func (rest Rest) UpdateScore(score *Score) error {
 //
 // Also updates the part's default duration, so that it can be correctly
 // considered when tallying the duration of subsequent events.
-func (rest Rest) DurationMs(part *Part) float32 {
+func (rest Rest) DurationMs(part *Part) float64 {
 	durationMs := effectiveDuration(rest.Duration, part).Ms(part.Tempo)
 	updateDefaultDuration(part, rest.Duration)
 	return durationMs

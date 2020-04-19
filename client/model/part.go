@@ -22,19 +22,19 @@ type Part struct {
 	Name              string
 	StockInstrument   Instrument
 	TempoRole         TempoRole
-	Tempo             float32
+	Tempo             float64
 	KeySignature      KeySignature
 	Transposition     int32
-	ReferencePitch    float32
-	CurrentOffset     OffsetMs
-	LastOffset        OffsetMs
+	ReferencePitch    float64
+	CurrentOffset     float64
+	LastOffset        float64
 	Octave            int32
-	Volume            float32
-	TrackVolume       float32
-	Panning           float32
-	Quantization      float32
+	Volume            float64
+	TrackVolume       float64
+	Panning           float64
+	Quantization      float64
 	Duration          Duration
-	TimeScale         float32
+	TimeScale         float64
 	CurrentRepetition int32
 	// A snapshot copy of the part at the point in time when a voice group starts.
 	// This is used as a template for each new voice.
@@ -423,7 +423,7 @@ func (decl PartDeclaration) UpdateScore(score *Score) error {
 
 // DurationMs implements ScoreUpdate.DurationMs by returning 0, since a part
 // declaration is conceptually instantaneous.
-func (decl PartDeclaration) DurationMs(part *Part) float32 {
+func (decl PartDeclaration) DurationMs(part *Part) float64 {
 	return 0
 }
 

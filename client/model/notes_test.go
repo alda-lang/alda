@@ -7,7 +7,7 @@ import (
 	_ "alda.io/client/testing"
 )
 
-func expectNoteOffsets(expectedOffsets ...OffsetMs) func(*Score) error {
+func expectNoteOffsets(expectedOffsets ...float64) func(*Score) error {
 	return func(s *Score) error {
 		if len(s.Events) != len(expectedOffsets) {
 			return fmt.Errorf(
@@ -35,7 +35,7 @@ func expectNoteOffsets(expectedOffsets ...OffsetMs) func(*Score) error {
 }
 
 func expectNoteFloatValues(
-	valueName string, method func(NoteEvent) float32, expectedValues []float32,
+	valueName string, method func(NoteEvent) float64, expectedValues []float64,
 ) func(*Score) error {
 	return func(s *Score) error {
 		if len(s.Events) != len(expectedValues) {
@@ -49,7 +49,7 @@ func expectNoteFloatValues(
 		for i := 0; i < len(expectedValues); i++ {
 			expectedValue := expectedValues[i]
 			actualValue := method(s.Events[i].(NoteEvent))
-			if !equalish32(expectedValue, actualValue) {
+			if !equalish(expectedValue, actualValue) {
 				return fmt.Errorf(
 					"expected note #%d to have %s %f, but it was %f",
 					i+1, valueName, expectedValue, actualValue,
@@ -61,20 +61,20 @@ func expectNoteFloatValues(
 	}
 }
 
-func expectNoteDurations(expectedDurations ...float32) func(*Score) error {
+func expectNoteDurations(expectedDurations ...float64) func(*Score) error {
 	return expectNoteFloatValues(
 		"audible duration",
-		func(note NoteEvent) float32 { return note.Duration },
+		func(note NoteEvent) float64 { return note.Duration },
 		expectedDurations,
 	)
 }
 
 func expectNoteAudibleDurations(
-	expectedAudibleDurations ...float32,
+	expectedAudibleDurations ...float64,
 ) func(*Score) error {
 	return expectNoteFloatValues(
 		"audible duration",
-		func(note NoteEvent) float32 { return note.AudibleDuration },
+		func(note NoteEvent) float64 { return note.AudibleDuration },
 		expectedAudibleDurations,
 	)
 }

@@ -11,7 +11,7 @@ func lispSymbol(name string) model.LispSymbol {
 	return model.LispSymbol{Name: name}
 }
 
-func lispNumber(value float32) model.LispNumber {
+func lispNumber(value float64) model.LispNumber {
 	return model.LispNumber{Value: value}
 }
 

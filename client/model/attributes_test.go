@@ -26,12 +26,12 @@ func expectPartIntValue(
 }
 
 func expectPartFloatValue(
-	instrument string, valueName string, method func(p *Part) float32,
-	expected float32) func(s *Score) error {
+	instrument string, valueName string, method func(p *Part) float64,
+	expected float64) func(s *Score) error {
 	return expectPart(instrument, func(part *Part) error {
 		actual := method(part)
 
-		if !equalish32(actual, expected) {
+		if !equalish(actual, expected) {
 			return fmt.Errorf(
 				"%s %s is %f, not %f", instrument, valueName, actual, expected,
 			)
@@ -42,8 +42,8 @@ func expectPartFloatValue(
 }
 
 func expectPartOffsetMsValue(
-	instrument string, valueName string, method func(p *Part) OffsetMs,
-	expected OffsetMs) func(s *Score) error {
+	instrument string, valueName string, method func(p *Part) float64,
+	expected float64) func(s *Score) error {
 	return expectPart(instrument, func(part *Part) error {
 		actual := method(part)
 
@@ -79,43 +79,43 @@ func expectPartOctave(instrument string, octave int32) func(s *Score) error {
 	)
 }
 
-func expectPartVolume(instrument string, volume float32) func(s *Score) error {
+func expectPartVolume(instrument string, volume float64) func(s *Score) error {
 	return expectPartFloatValue(
-		instrument, "volume", func(part *Part) float32 { return part.Volume },
+		instrument, "volume", func(part *Part) float64 { return part.Volume },
 		volume,
 	)
 }
 
 func expectPartTrackVolume(
-	instrument string, trackVolume float32,
+	instrument string, trackVolume float64,
 ) func(s *Score) error {
 	return expectPartFloatValue(
 		instrument, "track volume",
-		func(part *Part) float32 { return part.TrackVolume }, trackVolume,
+		func(part *Part) float64 { return part.TrackVolume }, trackVolume,
 	)
 }
 
 func expectPartPanning(
-	instrument string, panning float32,
+	instrument string, panning float64,
 ) func(s *Score) error {
 	return expectPartFloatValue(
-		instrument, "panning", func(part *Part) float32 { return part.Panning },
+		instrument, "panning", func(part *Part) float64 { return part.Panning },
 		panning,
 	)
 }
 
 func expectPartQuantization(
-	instrument string, quantization float32,
+	instrument string, quantization float64,
 ) func(s *Score) error {
 	return expectPartFloatValue(
 		instrument, "quantization",
-		func(part *Part) float32 { return part.Quantization }, quantization,
+		func(part *Part) float64 { return part.Quantization }, quantization,
 	)
 }
 
-func expectPartTempo(instrument string, tempo float32) func(s *Score) error {
+func expectPartTempo(instrument string, tempo float64) func(s *Score) error {
 	return expectPartFloatValue(
-		instrument, "tempo", func(part *Part) float32 { return part.Tempo }, tempo,
+		instrument, "tempo", func(part *Part) float64 { return part.Tempo }, tempo,
 	)
 }
 
@@ -138,34 +138,34 @@ func expectPartTransposition(
 }
 
 func expectPartReferencePitch(
-	instrument string, frequency float32,
+	instrument string, frequency float64,
 ) func(s *Score) error {
 	return expectPartFloatValue(
 		instrument, "reference pitch",
-		func(part *Part) float32 { return part.ReferencePitch }, frequency,
+		func(part *Part) float64 { return part.ReferencePitch }, frequency,
 	)
 }
 
 func expectPartCurrentOffset(
-	instrument string, expected OffsetMs,
+	instrument string, expected float64,
 ) func(s *Score) error {
 	return expectPartOffsetMsValue(
 		instrument, "current offset",
-		func(part *Part) OffsetMs { return part.CurrentOffset }, expected,
+		func(part *Part) float64 { return part.CurrentOffset }, expected,
 	)
 }
 
 func expectPartLastOffset(
-	instrument string, expected OffsetMs,
+	instrument string, expected float64,
 ) func(s *Score) error {
 	return expectPartOffsetMsValue(
 		instrument, "last offset",
-		func(part *Part) OffsetMs { return part.LastOffset }, expected,
+		func(part *Part) float64 { return part.LastOffset }, expected,
 	)
 }
 
 func expectPartDurationBeats(
-	instrument string, expected float32,
+	instrument string, expected float64,
 ) func(s *Score) error {
 	return expectPart(instrument, func(part *Part) error {
 		actual, err := part.Duration.Beats()
@@ -185,7 +185,7 @@ func expectPartDurationBeats(
 }
 
 func expectPartDurationMs(
-	instrument string, expected float32,
+	instrument string, expected float64,
 ) func(s *Score) error {
 	return expectPart(instrument, func(part *Part) error {
 		actual := part.Duration.Ms(part.Tempo)
@@ -202,7 +202,7 @@ func expectPartDurationMs(
 }
 
 func expectGlobalAttributeUpdates(
-	offset OffsetMs, updates []PartUpdate,
+	offset float64, updates []PartUpdate,
 ) func(s *Score) error {
 	return func(s *Score) error {
 		updatesAtOffset, hit := s.GlobalAttributes.itinerary[offset]
@@ -366,7 +366,7 @@ func TestAttributes(t *testing.T) {
 				PartDeclaration{Names: []string{"piano"}},
 			},
 			expectations: []scoreUpdateExpectation{
-				expectPartTrackVolume("piano", float32(100.0/127)),
+				expectPartTrackVolume("piano", 100.0/127),
 			},
 		},
 		scoreUpdateTestCase{
