@@ -24,6 +24,13 @@ type noteDurationTestCase struct {
 	expectedMs   float64
 }
 
+type durationEquivalenceTestCase struct {
+	duration1 Duration
+	duration2 Duration
+	tempo1    float64
+	tempo2    float64
+}
+
 func TestDuration(t *testing.T) {
 	for _, testCase := range []noteLengthToBeatsTestCase{
 		{noteLength: NoteLength{Denominator: 4}, expectedBeats: 1},
@@ -194,6 +201,42 @@ func TestDuration(t *testing.T) {
 				"Expected %#v at tempo %f to have an audible duration of %f ms, "+
 					"got %f ms",
 				testCase.note, testCase.tempo, testCase.expectedMs, audibleDurationMs,
+			)
+		}
+	}
+
+	for _, testCase := range []durationEquivalenceTestCase{
+		{
+			duration1: Duration{
+				Components: []DurationComponent{
+					NoteLength{Denominator: 2, Dots: 2},
+					NoteLength{Denominator: 8},
+				},
+			},
+			tempo1: 90,
+
+			duration2: Duration{
+				Components: []DurationComponent{
+					NoteLength{Denominator: 1},
+				},
+			},
+			tempo2: 90,
+		},
+	} {
+		label := "Duration equivalence"
+
+		durationMs1 := testCase.duration1.Ms(testCase.tempo1)
+		durationMs2 := testCase.duration2.Ms(testCase.tempo2)
+
+		if durationMs1 != durationMs2 {
+			t.Error(label)
+			t.Errorf(
+				"Expected %#v at tempo %f to be the same length as %#v at tempo %f, "+
+					"got %f ms and %f ms",
+				testCase.duration1, testCase.tempo1,
+				testCase.duration2, testCase.tempo2,
+				durationMs1,
+				durationMs2,
 			)
 		}
 	}
