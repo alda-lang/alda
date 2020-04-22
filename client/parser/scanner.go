@@ -506,7 +506,7 @@ func (s *scanner) parseVoiceMarker() error {
 
 func isValidSymbolChar(c rune) bool {
 	switch c {
-	case ' ', '\t', '\r', '\n', '(', ')', '[', ']', '{', '}':
+	case ' ', '\t', '\r', '\n', '(', ')', '[', ']', '{', '}', '"':
 		return false
 	}
 
