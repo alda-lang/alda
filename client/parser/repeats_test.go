@@ -120,6 +120,23 @@ func TestRepeats(t *testing.T) {
 			},
 		},
 		parseTestCase{
+			label: "repeated event sequence containing repeated note",
+			given: "[c*2]*2",
+			expect: []model.ScoreUpdate{
+				repeat(
+					eventSequence(
+						repeat(
+							model.Note{
+								Pitch: model.LetterAndAccidentals{NoteLetter: model.C},
+							},
+							2,
+						),
+					),
+					2,
+				),
+			},
+		},
+		parseTestCase{
 			label: "repeat w/ repetitions: [c'1,3]*3",
 			given: "[c'1,3]*3",
 			expect: []model.ScoreUpdate{

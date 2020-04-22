@@ -456,7 +456,11 @@ func (s *scanner) parseRepeat() error {
 	startDigits := s.current
 	s.consumeDigits()
 
-	if c := s.peek(); c != ' ' && c != '\n' && !s.reachedEOF() {
+	if c := s.peek(); c != ' ' &&
+		c != '\n' &&
+		c != ']' &&
+		c != '}' &&
+		!s.reachedEOF() {
 		return s.unexpectedCharError(c, "in repeat", s.line, s.column)
 	}
 
