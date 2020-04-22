@@ -82,5 +82,21 @@ func TestVoices(t *testing.T) {
 				),
 			},
 		},
+		parseTestCase{
+			label: "voice group end marker",
+			given: `piano:
+			V1: c
+			V2: e
+			V0: g`,
+			expect: []model.ScoreUpdate{
+				model.PartDeclaration{Names: []string{"piano"}},
+				model.VoiceMarker{VoiceNumber: 1},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
+				model.VoiceMarker{VoiceNumber: 2},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.E}},
+				model.VoiceGroupEndMarker{},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.G}},
+			},
+		},
 	)
 }
