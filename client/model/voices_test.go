@@ -140,6 +140,149 @@ func TestVoices(t *testing.T) {
 				),
 			},
 		},
+		// piano:
+		//   V1: c4 d e f
+		//   V2: o2 c2
+		//   V0: g1
+		//
+		//   V1: c4 d e f
+		//   V2: o2 c2
+		//   V0: g1
+		scoreUpdateTestCase{
+			label: "V0: ends the voice group",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+
+				// quarter note x4 (500 * 4 = 2000 ms)
+				VoiceMarker{VoiceNumber: 1},
+				Note{
+					Pitch: LetterAndAccidentals{NoteLetter: C},
+					Duration: Duration{
+						Components: []DurationComponent{
+							NoteLength{Denominator: 4},
+						},
+					},
+				},
+				Note{Pitch: LetterAndAccidentals{NoteLetter: D}},
+				Note{Pitch: LetterAndAccidentals{NoteLetter: E}},
+				Note{Pitch: LetterAndAccidentals{NoteLetter: F}},
+
+				// half note = 1000 ms (deliberately shorter than voice 1)
+				VoiceMarker{VoiceNumber: 2},
+				AttributeUpdate{PartUpdate: OctaveSet{OctaveNumber: 2}},
+				Note{
+					Pitch: LetterAndAccidentals{NoteLetter: C},
+					Duration: Duration{
+						Components: []DurationComponent{
+							NoteLength{Denominator: 2},
+						},
+					},
+				},
+
+				// voice 1 should become "the" voice at the end of the voice group, so
+				// this note should happen at offset 2000, not 1000
+				//
+				// and it should be in octave 4, not 2
+				VoiceGroupEndMarker{},
+				Note{
+					Pitch: LetterAndAccidentals{NoteLetter: G},
+					Duration: Duration{
+						Components: []DurationComponent{
+							NoteLength{Denominator: 1},
+						},
+					},
+				},
+
+				// ...now, do the same thing again:
+
+				// quarter note x4 (500 * 4 = 2000 ms)
+				VoiceMarker{VoiceNumber: 1},
+				Note{
+					Pitch: LetterAndAccidentals{NoteLetter: C},
+					Duration: Duration{
+						Components: []DurationComponent{
+							NoteLength{Denominator: 4},
+						},
+					},
+				},
+				Note{Pitch: LetterAndAccidentals{NoteLetter: D}},
+				Note{Pitch: LetterAndAccidentals{NoteLetter: E}},
+				Note{Pitch: LetterAndAccidentals{NoteLetter: F}},
+
+				// half note = 1000 ms (deliberately shorter than voice 1)
+				VoiceMarker{VoiceNumber: 2},
+				AttributeUpdate{PartUpdate: OctaveSet{OctaveNumber: 2}},
+				Note{
+					Pitch: LetterAndAccidentals{NoteLetter: C},
+					Duration: Duration{
+						Components: []DurationComponent{
+							NoteLength{Denominator: 2},
+						},
+					},
+				},
+
+				// voice 1 should become "the" voice at the end of the voice group, so
+				// this note should happen at offset 2000, not 1000
+				//
+				// and it should be in octave 4, not 2
+				VoiceGroupEndMarker{},
+				Note{
+					Pitch: LetterAndAccidentals{NoteLetter: G},
+					Duration: Duration{
+						Components: []DurationComponent{
+							NoteLength{Denominator: 1},
+						},
+					},
+				},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectNoteOffsets(
+					// voice 1
+					0, 500, 1000, 1500,
+					// voice 2
+					0,
+					// end of voice group (i.e. resume from voice 1)
+					2000,
+
+					// voice 1
+					4000, 4500, 5000, 5500,
+					// voice 2
+					4000,
+					// end of voice group (i.e. resume from voice 1)
+					6000,
+				),
+				expectNoteDurations(
+					// voice 1
+					500, 500, 500, 500,
+					// voice 2
+					1000,
+					// end of voice group (i.e. resume from voice 1)
+					2000,
+
+					// voice 1
+					500, 500, 500, 500,
+					// voice 2
+					1000,
+					// end of voice group (i.e. resume from voice 1)
+					2000,
+				),
+				expectMidiNoteNumbers(
+					// voice 1 (C4, D4, E4, F4)
+					60, 62, 64, 65,
+					// voice 2 (C2)
+					36,
+					// end of voice group (i.e. resume from voice 1)
+					67,
+
+					// voice 1 (C4, D4, E4, F4)
+					60, 62, 64, 65,
+					// voice 2 (C2)
+					36,
+					// end of voice group (i.e. resume from voice 1)
+					67,
+				),
+			},
+		},
 		scoreUpdateTestCase{
 			label: "a part declaration implicitly ends a preceding voice group",
 			updates: []ScoreUpdate{

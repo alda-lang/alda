@@ -102,7 +102,10 @@ type VoiceGroupEndMarker struct{}
 
 // UpdateScore implements ScoreUpdate.UpdateScore by updating the "origin" part
 // of each current part (i.e. the part that was forked into N voices) to be
-// equal to the last voice to finish (offset-wise).
+// equal to the last voice to finish (offset-wise), and then updating the
+// pointers to the part (e.g. in score.CurrentParts and score.Parts) to point to
+// the last voice to finish, effectively making it "the" voice of that part in
+// the score, going forward.
 func (VoiceGroupEndMarker) UpdateScore(score *Score) error {
 	for i, part := range score.CurrentParts {
 		if len(part.voices.voices) == 0 {
@@ -124,6 +127,9 @@ func (VoiceGroupEndMarker) UpdateScore(score *Score) error {
 			}
 		}
 
+		lastVoiceToFinish.voices = NewVoices()
+		lastVoiceToFinish.voiceTemplate = nil
+
 		score.CurrentParts[i] = lastVoiceToFinish
 
 		for i, partsPart := range score.Parts {
@@ -139,9 +145,6 @@ func (VoiceGroupEndMarker) UpdateScore(score *Score) error {
 				}
 			}
 		}
-
-		part.voices = NewVoices()
-		part.voiceTemplate = nil
 	}
 
 	return nil
