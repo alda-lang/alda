@@ -7,11 +7,11 @@ import (
 	_ "alda.io/client/testing"
 )
 
-func TestCRAM(t *testing.T) {
+func TestCram(t *testing.T) {
 	executeParseTestCases(
 		t,
 		parseTestCase{
-			label: "CRAM expression",
+			label: "cram expression",
 			given: "{c d e}",
 			expect: []model.ScoreUpdate{
 				model.Cram{
@@ -24,7 +24,7 @@ func TestCRAM(t *testing.T) {
 			},
 		},
 		parseTestCase{
-			label: "CRAM expression with specified duration",
+			label: "cram expression with specified duration",
 			given: "{c d e}2",
 			expect: []model.ScoreUpdate{
 				model.Cram{

@@ -78,7 +78,7 @@ func TestVariables(t *testing.T) {
 			},
 		},
 		parseTestCase{
-			label: "variable definition containing a CRAM expression",
+			label: "variable definition containing a cram expression",
 			given: "cheesecake = { c/e }2",
 			expect: []model.ScoreUpdate{
 				variableDefinition(

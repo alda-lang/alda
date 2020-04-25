@@ -548,7 +548,7 @@ func (p *parser) cram() ([]model.ScoreUpdate, error) {
 
 	for token := p.peek(); token.tokenType != CramClose; token = p.peek() {
 		if p.match(EOF) {
-			return nil, p.errorAtToken(token, "Unterminated CRAM expression.")
+			return nil, p.errorAtToken(token, "Unterminated cram expression.")
 		}
 
 		events, err := p.topLevel()
@@ -558,7 +558,7 @@ func (p *parser) cram() ([]model.ScoreUpdate, error) {
 		allEvents = append(allEvents, events...)
 	}
 
-	if _, err := p.consume(CramClose, "in CRAM expression"); err != nil {
+	if _, err := p.consume(CramClose, "in cram expression"); err != nil {
 		return nil, err
 	}
 
