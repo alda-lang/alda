@@ -93,7 +93,15 @@ func (cram Cram) UpdateScore(score *Score) error {
 	}
 
 	for _, part := range score.CurrentParts {
-		part.Duration = previousDurations[part]
+		// If the cram expression has a specified duration, then that becomes the
+		// new duration of each part.
+		//
+		// Otherwise, it remains whatever it was before the cram expression.
+		if cram.Duration.Components != nil {
+			part.Duration = cram.Duration
+		} else {
+			part.Duration = previousDurations[part]
+		}
 		part.TimeScale = previousTimeScales[part]
 	}
 

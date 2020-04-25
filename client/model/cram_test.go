@@ -297,5 +297,30 @@ func TestCram(t *testing.T) {
 				expectPartDurationBeats("piano", 1),
 			},
 		},
+		scoreUpdateTestCase{
+			label: "the specified duration outside a cram expression should affect " +
+				"parts' default duration",
+			updates: []ScoreUpdate{
+				// default duration is a quarter note
+				PartDeclaration{Names: []string{"piano"}},
+				// the cram's duration is a sixteenth note, which should change the
+				// part's default duration to a sixteenth note
+				Cram{
+					Events: []ScoreUpdate{
+						Note{Pitch: LetterAndAccidentals{NoteLetter: C}},
+						Note{Pitch: LetterAndAccidentals{NoteLetter: D}},
+						Note{Pitch: LetterAndAccidentals{NoteLetter: C}},
+					},
+					Duration: Duration{
+						Components: []DurationComponent{
+							NoteLength{Denominator: 16},
+						},
+					},
+				},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPartDurationBeats("piano", 0.25),
+			},
+		},
 	)
 }
