@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"strconv"
+	"unicode"
 
 	log "alda.io/client/logging"
 )
@@ -42,7 +43,20 @@ func (s *scanner) unexpectedCharError(
 	if context != "" {
 		context = " " + context
 	}
-	msg := fmt.Sprintf("Unexpected '%c'%s", c, context)
+
+	// FIXME: This presents e.g. newlines in a way that is opaque to the average
+	// user. It would be better to see a message like "Unexpected newline" instead
+	// of "Unexpected control character (10)."
+	//
+	// TODO: Write a helper function that switches on the numeric value of the
+	// rune and returns a string like "newline", "'w'", "control character (13)",
+	// etc.
+	charStr := fmt.Sprintf("'%c'", c)
+	if unicode.IsControl(c) {
+		charStr = fmt.Sprintf("control character (%d)", c)
+	}
+
+	msg := fmt.Sprintf("Unexpected %s%s", charStr, context)
 	return s.errorAtPosition(line, column, msg)
 }
 
