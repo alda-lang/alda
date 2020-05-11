@@ -340,7 +340,7 @@ type noteLength struct {
 }
 
 func terminatesNoteLength(c rune) bool {
-	return c == ' ' || c == '\n' || c == '/' || c == '~'
+	return c == ' ' || c == '\r' || c == '\n' || c == '/' || c == '~'
 }
 
 func (s *scanner) parseNoteLength() {
@@ -471,6 +471,7 @@ func (s *scanner) parseRepeat() error {
 	s.consumeDigits()
 
 	if c := s.peek(); c != ' ' &&
+		c != '\r' &&
 		c != '\n' &&
 		c != ']' &&
 		c != '}' &&
@@ -490,7 +491,7 @@ func (s *scanner) parseOctaveSet() error {
 
 	s.consumeDigits()
 
-	if c := s.peek(); c != ' ' && c != '\n' && !s.reachedEOF() {
+	if c := s.peek(); c != ' ' && c != '\r' && c != '\n' && !s.reachedEOF() {
 		return s.unexpectedCharError(c, "in octave set", s.line, s.column)
 	}
 
@@ -623,7 +624,8 @@ func followsNoteLetter(c rune) bool {
 	}
 
 	switch c {
-	case '#', ' ', '\n', '+', '-', '_', '/', '~', '*', '\'', '}', ']', '<', '>':
+	case '#', ' ', '\r', '\n', '+', '-', '_', '/', '~', '*', '\'', '}', ']', '<',
+		'>':
 		return true
 	}
 
@@ -636,7 +638,7 @@ func followsRestLetter(c rune) bool {
 	}
 
 	switch c {
-	case '#', ' ', '\n', '/', '~', '*', '\'', '}', ']', '<', '>':
+	case '#', ' ', '\r', '\n', '/', '~', '*', '\'', '}', ']', '<', '>':
 		return true
 	}
 
