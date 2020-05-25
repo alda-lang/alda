@@ -1,5 +1,7 @@
 package model
 
+import log "alda.io/client/logging"
+
 // A Note represents a single pitch being sustained for a period of time.
 type Note struct {
 	Pitch    PitchIdentifier
@@ -76,6 +78,13 @@ func addNoteOrRest(score *Score, noteOrRest ScoreUpdate) {
 					TrackVolume:     part.TrackVolume,
 					Panning:         part.Panning,
 				}
+
+				log.Debug().
+					Int32("MidiNote", noteEvent.MidiNote).
+					Float64("Offset", noteEvent.Offset).
+					Float64("AudibleDuration", noteEvent.AudibleDuration).
+					Float64("Duration", noteEvent.Duration).
+					Msg("Adding note.")
 
 				score.Events = append(score.Events, noteEvent)
 			}

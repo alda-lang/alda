@@ -2,6 +2,8 @@ package model
 
 import (
 	"fmt"
+
+	log "alda.io/client/logging"
 )
 
 // Voices wraps a map of voice numbers to Part instances and an insertion order,
@@ -72,6 +74,10 @@ type VoiceMarker struct {
 // A voice group effectively forks a part into N copies of itself, one per
 // voice.
 func (vm VoiceMarker) UpdateScore(score *Score) error {
+	log.Debug().
+		Int32("VoiceNumber", vm.VoiceNumber).
+		Msg("Voice marker")
+
 	for _, part := range score.CurrentParts {
 		voice := part.GetVoice(vm.VoiceNumber)
 

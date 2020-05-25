@@ -3,6 +3,8 @@ package model
 import (
 	"fmt"
 	"sort"
+
+	log "alda.io/client/logging"
 )
 
 // AttributeUpdate updates the value of an attribute for all current parts.
@@ -54,6 +56,11 @@ func NewGlobalAttributes() *GlobalAttributes {
 // Record adds attribute changes at a particular offset to the itinerary of
 // global attribute changes.
 func (ga *GlobalAttributes) Record(offset float64, update PartUpdate) {
+	log.Debug().
+		Float64("offset", offset).
+		Interface("update", update).
+		Msg("Recording global attribute update.")
+
 	_, hit := ga.itinerary[offset]
 	if !hit {
 		ga.itinerary[offset] = []PartUpdate{}
@@ -98,6 +105,11 @@ func (score *Score) ApplyGlobalAttributes() {
 			part.LastOffset, part.CurrentOffset,
 		) {
 			for _, part := range score.CurrentParts {
+				log.Debug().
+					Str("part", part.Name).
+					Interface("update", update).
+					Msg("Applying global attribute update.")
+
 				update.updatePart(part)
 			}
 		}
