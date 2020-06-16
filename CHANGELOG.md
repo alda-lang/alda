@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 1.4.2 (2020-06-15)
+
+* Fixed a bug where in some cases, a global attribute can be recorded a fraction
+  of a millisecond too late, potentially resulting in parts/voices not picking
+  up on the attribute change until it's too late.
+
 ## 1.4.1 (2020-04-17)
 
 * Fixed a minor bug related to alternate endings / repetitions, where input like
