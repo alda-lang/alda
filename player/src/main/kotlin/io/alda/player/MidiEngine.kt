@@ -26,8 +26,12 @@ const val MIDI_SET_TEMPO    = 0x51
 const val MIDI_END_OF_TRACK = 0x2F
 
 // ref: https://www.midi.org/specifications-old/item/table-3-control-change-messages-data-bytes-2
-const val MIDI_CHANNEL_VOLUME = 7
-const val MIDI_PANNING        = 10
+const val MIDI_PANNING    = 10
+
+// "Expression" is basically volume. We used to use Channel Volume (7) instead,
+// but Expression (11) is more appropriate to use in a MIDI sequence.  ref:
+// https://github.com/alda-lang/alda-core/issues/75
+const val MIDI_EXPRESSION = 11
 
 const val DIVISION_TYPE = Sequence.PPQ
 // This ought to allow for notes as fast as 512th notes at a tempo of 120 bpm,
@@ -393,7 +397,7 @@ class MidiEngine {
 
   fun volume(offset : Int, channel : Int, volume : Int) {
     scheduleShortMsg(
-      offset, ShortMessage.CONTROL_CHANGE, channel, MIDI_CHANNEL_VOLUME, volume
+      offset, ShortMessage.CONTROL_CHANGE, channel, MIDI_EXPRESSION, volume
     )
   }
 
