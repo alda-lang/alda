@@ -24,6 +24,12 @@ type NoteEvent struct {
 	Panning         float64
 }
 
+// EventOffset implements ScoreEvent.EventOffset by returning the offset of the
+// note.
+func (note NoteEvent) EventOffset() float64 {
+	return note.Offset
+}
+
 func effectiveDuration(specifiedDuration Duration, part *Part) Duration {
 	// If no duration is specified, use the part's default duration.
 	if specifiedDuration.Components == nil {

@@ -3,6 +3,7 @@ package emitter
 import (
 	"fmt"
 	"math"
+	"sort"
 	"time"
 
 	"alda.io/client/model"
@@ -66,9 +67,36 @@ func (oe OSCEmitter) EmitScore(score *model.Score) error {
 	)
 	bundle := osc.NewBundle(time.Now())
 
+	// In order to support features like:
+	//
+	// * Avoiding scheduling more volume and panning control change messages than
+	//   we have to (see below).
+	//
+	// * Playing just a slice of a score, e.g. `alda play --from 0:05 --to 0:10`
+	//
+	// ...we sort the events in the score by offset and schedule them in
+	// chronological order.
+	sort.Slice(score.Events, func(i, j int) bool {
+		return score.Events[i].EventOffset() < score.Events[j].EventOffset()
+	})
+
+	// In Alda's model, the track volume and panning are an attribute of each
+	// individual note. However, in MIDI, these attributes are set persistently on
+	// a channel via a control change message.
+	//
+	// To make this work, as we're scheduling the events of the score in
+	// chonological order, we keep track of the volume and panning attributes for
+	// each track, so that we can send volume and panning control changes only
+	// when necessary (when the values change).
+	currentVolume := map[int32]float64{}
+	currentPanning := map[int32]float64{}
+
 	tracks := score.Tracks()
 
 	for part, trackNumber := range tracks {
+		currentVolume[trackNumber] = -1
+		currentPanning[trackNumber] = -1
+
 		// We currently only have MIDI instruments. This might change in the future,
 		// which is why Instrument is an interface instead of a plain struct. For
 		// now, we're operating under the assumption that all instruments are MIDI
@@ -90,27 +118,29 @@ func (oe OSCEmitter) EmitScore(score *model.Score) error {
 			track := tracks[noteEvent.Part]
 			offset := int32(math.Round(noteEvent.Offset))
 
-			// Scheduling volume and panning control change messages before every note
-			// is terribly inefficient, but it's what we've always done in alda v1 and
-			// it gets the job done.
-			//
-			// At some point, it would be nice to make it so that we only send a
-			// volume or panning control change message when the values change.
-			bundle.Append(
-				midiVolumeMsg(
-					track,
-					offset,
-					int32(math.Round(noteEvent.TrackVolume*127)),
-				),
-			)
+			if noteEvent.TrackVolume != currentVolume[track] {
+				currentVolume[track] = noteEvent.TrackVolume
 
-			bundle.Append(
-				midiPanningMsg(
-					track,
-					offset,
-					int32(math.Round(noteEvent.Panning*127)),
-				),
-			)
+				bundle.Append(
+					midiVolumeMsg(
+						track,
+						offset,
+						int32(math.Round(noteEvent.TrackVolume*127)),
+					),
+				)
+			}
+
+			if noteEvent.Panning != currentPanning[track] {
+				currentPanning[track] = noteEvent.Panning
+
+				bundle.Append(
+					midiPanningMsg(
+						track,
+						offset,
+						int32(math.Round(noteEvent.Panning*127)),
+					),
+				)
+			}
 
 			bundle.Append(midiNoteMsg(
 				track,

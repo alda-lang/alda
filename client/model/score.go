@@ -22,7 +22,11 @@ type ScoreUpdate interface {
 
 // The ScoreEvent interface is implemented by events that occur at moments of
 // time in a score.
-type ScoreEvent interface{}
+type ScoreEvent interface {
+	// EventOffset returns the offset of the event, represented as a number of
+	// milliseconds after the beginning of the score.
+	EventOffset() float64
+}
 
 // A Score is a data structure representing a musical score.
 //
