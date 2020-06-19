@@ -58,7 +58,7 @@ func findPlayerByID(id string) (playerState, error) {
 	}
 
 	for _, player := range players {
-		if player.id == id {
+		if player.ID == id {
 			return player, nil
 		}
 	}

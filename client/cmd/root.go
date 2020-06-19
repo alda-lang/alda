@@ -19,6 +19,7 @@ func init() {
 		doctorCmd,
 		playCmd,
 		psCmd,
+		stopCmd,
 		versionCmd,
 	} {
 		rootCmd.AddCommand(cmd)

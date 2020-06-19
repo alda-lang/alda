@@ -19,6 +19,10 @@ func systemPlayMsg() *osc.Message {
 	return osc.NewMessage("/system/play")
 }
 
+func systemStopMsg() *osc.Message {
+	return osc.NewMessage("/system/stop")
+}
+
 func midiPatchMsg(track int32, offset int32, patch int32) *osc.Message {
 	msg := osc.NewMessage(fmt.Sprintf("/track/%d/midi/patch", track))
 	msg.Append(offset)
@@ -59,12 +63,18 @@ func midiPanningMsg(track int32, offset int32, panning int32) *osc.Message {
 	return msg
 }
 
+func oscClient(port int) *osc.Client {
+	return osc.NewClient("localhost", int(port), osc.ClientProtocol(osc.TCP))
+}
+
+// EmitStopMessage sends a "stop" message to a player process.
+func (oe OSCEmitter) EmitStopMessage() error {
+	return oscClient(oe.Port).Send(systemStopMsg())
+}
+
 // EmitScore implements Emitter.EmitScore by sending OSC messages to instruct a
 // player process how to perform the score.
 func (oe OSCEmitter) EmitScore(score *model.Score) error {
-	client := osc.NewClient(
-		"localhost", int(oe.Port), osc.ClientProtocol(osc.TCP),
-	)
 	bundle := osc.NewBundle(time.Now())
 
 	// In order to support features like:
@@ -157,5 +167,5 @@ func (oe OSCEmitter) EmitScore(score *model.Score) error {
 
 	bundle.Append(systemPlayMsg())
 
-	return client.Send(bundle)
+	return oscClient(oe.Port).Send(bundle)
 }

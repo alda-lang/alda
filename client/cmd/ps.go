@@ -17,7 +17,7 @@ type playerState struct {
 	State     string
 	Port      int
 	Expiry    int64
-	id        string
+	ID        string
 	readError error
 }
 
@@ -48,7 +48,7 @@ func readPlayerStates() ([]playerState, error) {
 			}
 		}
 
-		state.id = strings.Replace(file.Name(), ".json", "", 1)
+		state.ID = strings.Replace(file.Name(), ".json", "", 1)
 		state.readError = readError
 
 		states = append(states, state)
@@ -78,7 +78,7 @@ var psCmd = &cobra.Command{
 			expiry := humanize.Time(time.Unix(state.Expiry/1000, 0))
 
 			fmt.Printf(
-				"%s\t%d\t%s\t%s\n", state.id, state.Port, state.State, expiry,
+				"%s\t%d\t%s\t%s\n", state.ID, state.Port, state.State, expiry,
 			)
 		}
 	},

@@ -489,7 +489,7 @@ var doctorCmd = &cobra.Command{
 						if player.Port == port {
 							return fmt.Errorf(
 								"only found the player from before (%s/%d)",
-								player.id, player.Port,
+								player.ID, player.Port,
 							)
 						}
 
