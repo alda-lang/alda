@@ -59,7 +59,7 @@ func readPlayerStates() ([]playerState, error) {
 
 var psCmd = &cobra.Command{
 	Use:   "ps",
-	Short: "Display information about running Alda processes",
+	Short: "List background processes",
 	Run: func(_ *cobra.Command, args []string) {
 		states, err := readPlayerStates()
 		if err != nil {

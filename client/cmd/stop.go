@@ -11,11 +11,11 @@ import (
 
 func init() {
 	stopCmd.Flags().StringVarP(
-		&playerID, "player-id", "i", "", "The ID of the Alda player process to tell to stop playback",
+		&playerID, "player-id", "i", "", "The ID of the player process to tell to stop playback",
 	)
 
 	stopCmd.Flags().IntVarP(
-		&port, "port", "p", -1, "The port of the Alda player process to tell to stop playback",
+		&port, "port", "p", -1, "The port of the player process to tell to stop playback",
 	)
 }
 

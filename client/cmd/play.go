@@ -19,11 +19,11 @@ var file string
 
 func init() {
 	playCmd.Flags().StringVarP(
-		&playerID, "player-id", "i", "", "The ID of the Alda player process to use",
+		&playerID, "player-id", "i", "", "The ID of the player process to use",
 	)
 
 	playCmd.Flags().IntVarP(
-		&port, "port", "p", -1, "The port of the Alda player process to use",
+		&port, "port", "p", -1, "The port of the player process to use",
 	)
 
 	playCmd.Flags().StringVarP(
