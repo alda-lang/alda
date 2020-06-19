@@ -19,6 +19,7 @@ func init() {
 		doctorCmd,
 		playCmd,
 		psCmd,
+		shutdownCmd,
 		stopCmd,
 		versionCmd,
 	} {
@@ -113,23 +114,35 @@ func Execute() error {
 		}
 	}
 
-	// Regardless of the command being run*, Alda will preemptively spawn player
-	// processes in the background, up to a desired amount. This helps to ensure
-	// that the application will feel fast, because each time you need a player
-	// process, there will probably already be one available.
+	// Unless the command is one of the exceptions below, Alda will preemptively
+	// spawn player processes in the background, up to a desired amount. This
+	// helps to ensure that the application will feel fast, because each time you
+	// need a player process, there will probably already be one available.
 	//
-	// *`alda ps` is an exception because it is designed to be run repeatedly,
-	// e.g. `watch -n 0.25 alda ps`, in order to provide a live-updating view of
-	// current Alda processes.
-	commandIsProbablyPs := false
+	// Exceptions:
+	// * `alda ps` is designed to be run repeatedly, e.g. `watch -n 0.25 alda ps`,
+	//   in order to provide a live-updating view of current Alda processes.
+	//
+	// * `alda shutdown` shuts down a player process (or all of them, if no player
+	//   ID or port is specified). It's probably fair to assume that if someone is
+	//   running `alda shutdown`, they don't want additional player processes to
+	//   be spawned.
+	commandIsAnException := false
 
+	// NB: This isn't scientific. If _any_ of the arguments are one of these
+	// strings (even if it's an argument other than the command), then that will
+	// cause a false positive. But I think that scenario is pretty unlikely, and
+	// the consequence is just that it won't fill the player pool on that one run
+	// of `alda`. Any other command (e.g. `alda --help`) _will_ fill the player
+	// pool, so with typical usage, the odds are high that there will be at least
+	// one player process available when you need it.
 	for _, arg := range os.Args {
-		if arg == "ps" {
-			commandIsProbablyPs = true
+		if arg == "ps" || arg == "shutdown" {
+			commandIsAnException = true
 		}
 	}
 
-	if !commandIsProbablyPs {
+	if !commandIsAnException {
 		if err := fillPlayerPool(); err != nil {
 			log.Warn().Err(err).Msg("Failed to fill player pool.")
 		}
