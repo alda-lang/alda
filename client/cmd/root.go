@@ -143,9 +143,11 @@ func Execute() error {
 	}
 
 	if !commandIsAnException {
-		if err := fillPlayerPool(); err != nil {
-			log.Warn().Err(err).Msg("Failed to fill player pool.")
-		}
+		go func() {
+			if err := fillPlayerPool(); err != nil {
+				log.Warn().Err(err).Msg("Failed to fill player pool.")
+			}
+		}()
 	}
 
 	return rootCmd.Execute()
