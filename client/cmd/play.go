@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"regexp"
 	"time"
 
 	"alda.io/client/emitter"
@@ -72,8 +73,42 @@ func spawnPlayer() error {
 		return err
 	}
 
-	cmd := exec.Command(aldaPlayer, "run")
-	if err := cmd.Start(); err != nil {
+	// First, we run `alda-player info` and parse the version number from the
+	// output, so that we can confirm that the player is the same version as the
+	// client.
+	infoCmd := exec.Command(aldaPlayer, "info")
+	infoCmd.Stdout = nil
+	infoCmd.Stderr = nil
+	outputBytes, err := infoCmd.Output()
+	if err != nil {
+		return err
+	}
+
+	output := string(outputBytes)
+
+	re := regexp.MustCompile(`alda-player (.*)`)
+	captured := re.FindStringSubmatch(output)
+	if len(captured) < 2 {
+		return fmt.Errorf(
+			"unable to parse player version from output: %s", output,
+		)
+	}
+	// captured[0] is "alda-player X.X.X", captured[1] is "X.X.X"
+	playerVersion := captured[1]
+
+	// TODO: If the player version is different from the client version, offer to
+	// download and install the correct player version.
+	if playerVersion != VERSION {
+		return fmt.Errorf(
+			"client version is %s, but player version is %s",
+			VERSION, playerVersion,
+		)
+	}
+
+	// Once we've confirmed that the client and player version are the same, we
+	// run `alda-player run` to start the player process.
+	runCmd := exec.Command(aldaPlayer, "run")
+	if err := runCmd.Start(); err != nil {
 		return err
 	}
 
