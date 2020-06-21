@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"alda.io/client/generated"
 	"github.com/dustin/go-humanize"
 	"github.com/spf13/cobra"
 )
@@ -22,7 +23,7 @@ type playerState struct {
 }
 
 func readPlayerStates() ([]playerState, error) {
-	playersDir := cachePath("state", "players", VERSION)
+	playersDir := cachePath("state", "players", generated.ClientVersion)
 	os.MkdirAll(playersDir, os.ModePerm)
 
 	files, err := ioutil.ReadDir(playersDir)

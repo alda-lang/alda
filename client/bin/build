@@ -2,13 +2,16 @@
 
 set -e
 
-cd "$(dirname $0)/../"
+cd "$(dirname "$0")/../"
 
 mkdir -p target
 
 # Keep the target folder from getting too big by deleting any builds older than
 # 7 days.
 find target/ -maxdepth 1 -type d -mtime +7 -exec rm -vrf {} \;
+
+# See comments about generated code in main.go.
+go generate
 
 build_sha="$(../bin/current-content-sha client)"
 

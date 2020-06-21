@@ -30,8 +30,13 @@ private fun generateId() : String {
                .joinToString("")
 }
 
+// Source: https://stackoverflow.com/a/61345914/2338327
+private fun readResourceFile(path : String) : String {
+  return {}::class.java.classLoader.getResource(path).readText()
+}
+
 val playerId = generateId()
-val playerVersion = "1.99.0" // FIXME
+val playerVersion = readResourceFile("VERSION").trim()
 
 val projDirs = ProjectDirectories.from("", "", "alda")
 val logPath = Paths.get(projDirs.cacheDir, "logs").toString()

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"alda.io/client/emitter"
+	"alda.io/client/generated"
 	log "alda.io/client/logging"
 	"alda.io/client/model"
 	"alda.io/client/parser"
@@ -98,10 +99,10 @@ func spawnPlayer() error {
 
 	// TODO: If the player version is different from the client version, offer to
 	// download and install the correct player version.
-	if playerVersion != VERSION {
+	if playerVersion != generated.ClientVersion {
 		return fmt.Errorf(
 			"client version is %s, but player version is %s",
-			VERSION, playerVersion,
+			generated.ClientVersion, playerVersion,
 		)
 	}
 

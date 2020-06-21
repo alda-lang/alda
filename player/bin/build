@@ -67,7 +67,7 @@ export ALDA_YEAR="$(date '+%Y')"
 # launch4j executables require 4 number segments (e.g. 1.2.3.4) for some dumb
 # reason. We use semantic(-ish) versioning (e.g. 1.2.3), so we have to add ".0"
 # to the end to get an equivalent 4-segment version number.
-export ALDA_VERSION="$(../bin/version).0"
+export ALDA_VERSION="$(cat ../VERSION).0"
 
 xml_jvm_opts=""
 for opt in $jvm_opts; do
