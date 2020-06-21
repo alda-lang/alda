@@ -18,12 +18,19 @@
 #   Print current content SHA of just the player directory:
 #     current-content-sha player
 
-cd "$(dirname $0)/../"
+cd "$(dirname "$0")/../"
 
 tmp_git_index="$(mktemp)"
 cp .git/index "$tmp_git_index"
 export GIT_INDEX_FILE="$tmp_git_index"
 
 git add --all
-git write-tree $(if [[ -n "$1" ]]; then echo "--prefix=$1/"; fi)
+sha="$(git write-tree $(if [[ -n "$1" ]]; then echo "--prefix=$1/"; fi))"
+
+# Prepend the version number to force a rebuild when the top-level VERSION file
+# changes. This way, we can make sure that the client and player pick up on the
+# new version number and report the correct version.
+version="$(cat VERSION)"
+
+echo "$version-$sha"
 
