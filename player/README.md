@@ -15,19 +15,65 @@ loop patterns during playback.
 
 ## Development
 
+### Requirements
+
+None, besides Java 8+, which you probably already have installed.
+
 > Gradle is used to build/run the player, however there is a `gradlew` wrapper
 > checked into the repo that makes it so that you don't need to have Gradle
 > installed. You can replace `gradle` below with `./gradlew` and it should work
 > the same as if you had Gradle installed.
 
+### Running a player process
+
+After following the instructions below to start a player process on a particular
+port, you can then use the [Alda client](../client) to send messages on the same
+port.
+
+There are two ways to run the player process locally:
+
+* **Basic**: run a script and pass it arguments as if you're running
+  `alda-player` on your PATH. Takes a little bit longer sometimes, but is more
+  convenient most of the time and it's exactly like running a release
+  executable.
+
+* **Gradle**: use `gradle` (or `./gradlew`) for faster builds (no need to fully
+  compile the executable) and more control over build options. Useful if you're
+  handy with Gradle and you know what you're doing.
+
+#### Basic
+
+To run the player with no arguments, which displays usage information:
+
+```bash
+# equivalent to running `alda-player`
+bin/run
+```
+
 To run the player, listening on port 27278 (or replace with the port number of
 your choosing):
 
 ```bash
-gradle run --args 27278
+# equivalent to running `alda-player run -p 27278`
+bin/run run -p 27278
 ```
 
-You can then use the [client](../client) to send messages on the same port.
+#### Gradle
+
+To run the player with no arguments, which displays usage information:
+
+```bash
+# equivalent to running `alda-player`
+gradle run
+```
+
+To run the player, listening on port 27278 (or replace with the port number of
+your choosing):
+
+```bash
+# equivalent to running `alda-player run -p 27278`
+gradle run --args "run -p 27278"
+```
 
 ## License
 
