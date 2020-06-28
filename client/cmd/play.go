@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"regexp"
@@ -18,6 +19,7 @@ import (
 var playerID string
 var port int
 var file string
+var code string
 
 func init() {
 	playCmd.Flags().StringVarP(
@@ -31,9 +33,10 @@ func init() {
 	playCmd.Flags().StringVarP(
 		&file, "file", "f", "", "Read Alda source code from a file",
 	)
-	// TODO: Make this flag optional. Instead, allow input to be provided either
-	// as a file (-f / --file), as a string (-c / --code), or via STDIN.
-	playCmd.MarkFlagRequired("file")
+
+	playCmd.Flags().StringVarP(
+		&code, "code", "c", "", "Supply Alda source code as a string",
+	)
 }
 
 var errNoPlayersAvailable = fmt.Errorf("no players available")
@@ -147,8 +150,56 @@ func fillPlayerPool() error {
 var playCmd = &cobra.Command{
 	Use:   "play",
 	Short: "Evaluate and play Alda source code",
+	Long: `Evaluate and play Alda source code
+
+---
+
+Source code can be provided in one of three ways:
+
+The path to a file (-f, --file):
+  alda play -f path/to/my-score.alda
+
+A string of code (-c, --code):
+  alda play -c "harpsichord: o5 d+8 < b g+ e d+1"
+
+Text piped into the process on stdin:
+  echo "glockenspiel: o5 g8 < g > g e4 d4." | alda play
+
+---`,
 	Run: func(_ *cobra.Command, args []string) {
-		scoreUpdates, err := parser.ParseFile(file)
+		var scoreUpdates []model.ScoreUpdate
+		var err error
+
+		switch {
+		case file != "":
+			scoreUpdates, err = parser.ParseFile(file)
+
+		case code != "":
+			scoreUpdates, err = parser.ParseString(code)
+
+		default:
+			stat, err := os.Stdin.Stat()
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+
+			if stat.Mode()&os.ModeCharDevice != 0 {
+				fmt.Println(
+					"No input supplied. See `alda play -h` for usage information.",
+				)
+				os.Exit(1)
+			}
+
+			bytes, err := ioutil.ReadAll(os.Stdin)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+
+			scoreUpdates, err = parser.ParseString(string(bytes))
+		}
+
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
