@@ -93,7 +93,7 @@ let versionOutput = alda("version");
 console.log(versionOutput);
 ```
 
-And it would print:
+And it would capture the output of `alda version` and print it:
 
 ```
 Client version: 1.4.2
