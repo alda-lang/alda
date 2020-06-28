@@ -65,9 +65,9 @@ that allows you to program interactively, e.g. in a REPL (Read-Evaluate-Print
 Loop).
 
 > If your favorite programming language is not listed here and you're interested
-> in using it to generate Alda scores, please consider writing your own Alda
-> live-coding library in that language and adding it to this list. It's
-> surprisingly easy!
+> in using it to generate Alda scores, please consider [writing your own Alda
+> live-coding library][write-your-own-alda-library] in that language and adding it
+> to this list. It's surprisingly easy!
 
 | Language | Library    | Author       |
 |----------|------------|--------------|
@@ -76,3 +76,4 @@ Loop).
 
 [alda-clj]: https://github.com/daveyarwood/alda-clj
 [alda-rb]: https://github.com/UlyssesZh/alda-rb
+[write-your-own-alda-library]: implementing-an-alda-library.md
