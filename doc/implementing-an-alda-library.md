@@ -161,8 +161,8 @@ Usage: play [options]
     ...
 ```
 
-If we were working directly at the command line, we could accomplish the
-harmonica example above by running these commands:
+If we were working directly at the command line, we could make the harmonica
+example above work by running these commands:
 
 ```bash
 # Play the first 3 notes.
