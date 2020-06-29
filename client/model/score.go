@@ -1,5 +1,11 @@
 package model
 
+import (
+	"fmt"
+	"regexp"
+	"strconv"
+)
+
 // The ScoreUpdate interface is implemented by events that update a score.
 type ScoreUpdate interface {
 	// UpdateScore modifies a score and returns nil, or returns an error if
@@ -81,4 +87,33 @@ func (score *Score) Tracks() map[*Part]int32 {
 	}
 
 	return tracks
+}
+
+// InterpretOffsetReference interprets a string as a specific offset in the
+// score in milliseconds.
+//
+// Returns an error if the string cannot be interpreted as a reference to a
+// particular offset in the score.
+//
+// Examples of valid offset references include:
+// * Time markings, e.g. "0:30"
+// * Names of markers that are defined in the score
+func (score *Score) InterpretOffsetReference(
+	reference string,
+) (float64, error) {
+	re := regexp.MustCompile(`^(\d+):(\d+)$`)
+	captured := re.FindStringSubmatch(reference)
+	if len(captured) >= 2 {
+		// captured[0] is the full string, e.g. "0:10"
+		minutes, _ := strconv.Atoi(captured[1])
+		seconds, _ := strconv.Atoi(captured[2])
+		return (float64)(minutes*60*1000) + (float64)(seconds*1000), nil
+	}
+
+	offset, hit := score.Markers[reference]
+	if !hit {
+		return 0, fmt.Errorf("invalid offset reference: %s", reference)
+	}
+
+	return offset, nil
 }

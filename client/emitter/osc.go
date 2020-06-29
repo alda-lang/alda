@@ -83,7 +83,35 @@ func (oe OSCEmitter) EmitShutdownMessage() error {
 
 // EmitScore implements Emitter.EmitScore by sending OSC messages to instruct a
 // player process how to perform the score.
-func (oe OSCEmitter) EmitScore(score *model.Score) error {
+func (oe OSCEmitter) EmitScore(
+	score *model.Score, opts ...EmissionOption,
+) error {
+	ctx := &EmissionContext{}
+	for _, opt := range opts {
+		opt(ctx)
+	}
+
+	startOffset := 0.0
+	endOffset := math.MaxFloat64
+
+	if ctx.from != "" {
+		offset, err := score.InterpretOffsetReference(ctx.from)
+		if err != nil {
+			return err
+		}
+
+		startOffset = offset
+	}
+
+	if ctx.to != "" {
+		offset, err := score.InterpretOffsetReference(ctx.to)
+		if err != nil {
+			return err
+		}
+
+		endOffset = offset
+	}
+
 	bundle := osc.NewBundle(time.Now())
 
 	// In order to support features like:
@@ -131,11 +159,33 @@ func (oe OSCEmitter) EmitScore(score *model.Score) error {
 	}
 
 	for _, event := range score.Events {
+		eventOffset := event.EventOffset()
+
+		// Filter out events before the `--from` time marking / marker, when
+		// supplied.
+		if eventOffset < startOffset {
+			continue
+		}
+
+		// Filter out events after the `--to` time marking / marker, when supplied.
+		if eventOffset >= endOffset {
+			break
+		}
+
 		switch event.(type) {
 		case model.NoteEvent:
 			noteEvent := event.(model.NoteEvent)
 			track := tracks[noteEvent.Part]
-			offset := int32(math.Round(noteEvent.Offset))
+
+			// We subtract `startOffset` from the offset so that when the `--from`
+			// option is used (e.g. `--from 0:30`), we will shift all of the events
+			// back by that amount so that playback starts as if those events were at
+			// the beginning of the score. Otherwise, `--from 0:30` would result in
+			// you having to wait 30 seconds before you hear anything.
+			//
+			// By default, `startOffset` is 0, so the usual scenario is that the event
+			// offsets are not adjusted.
+			offset := int32(math.Round(noteEvent.Offset - startOffset))
 
 			if noteEvent.TrackVolume != currentVolume[track] {
 				currentVolume[track] = noteEvent.TrackVolume

@@ -20,6 +20,8 @@ var playerID string
 var port int
 var file string
 var code string
+var playFrom string
+var playTo string
 
 func init() {
 	playCmd.Flags().StringVarP(
@@ -36,6 +38,22 @@ func init() {
 
 	playCmd.Flags().StringVarP(
 		&code, "code", "c", "", "Supply Alda source code as a string",
+	)
+
+	playCmd.Flags().StringVarP(
+		&playFrom,
+		"from",
+		"F",
+		"",
+		"A time marking (e.g. 0:30) or marker from which to start playback",
+	)
+
+	playCmd.Flags().StringVarP(
+		&playTo,
+		"to",
+		"T",
+		"",
+		"A time marking (e.g. 1:00) or marker at which to end playback",
 	)
 }
 
@@ -273,7 +291,13 @@ Text piped into the process on stdin:
 			os.Exit(1)
 		}
 
-		if err := (emitter.OSCEmitter{Port: port}).EmitScore(score); err != nil {
+		emitOpts := []emitter.EmissionOption{
+			emitter.EmitFrom(playFrom),
+			emitter.EmitTo(playTo),
+		}
+
+		err = (emitter.OSCEmitter{Port: port}).EmitScore(score, emitOpts...)
+		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
