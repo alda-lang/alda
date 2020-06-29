@@ -147,6 +147,41 @@ func fillPlayerPool() error {
 	return nil
 }
 
+var errNoInputSupplied = fmt.Errorf("no input supplied")
+
+func readStdin() ([]byte, error) {
+	stat, err := os.Stdin.Stat()
+	if err != nil {
+		return nil, err
+	}
+
+	if stat.Mode()&os.ModeCharDevice != 0 {
+		return nil, errNoInputSupplied
+	}
+
+	bytes, err := ioutil.ReadAll(os.Stdin)
+	if err != nil {
+		return nil, err
+	}
+
+	return bytes, nil
+}
+
+func parseStdin(usageCommand string) ([]model.ScoreUpdate, error) {
+	bytes, err := readStdin()
+	if err != nil {
+		if err == errNoInputSupplied {
+			err = fmt.Errorf(
+				"no input supplied. See `%s` for usage information", usageCommand,
+			)
+		}
+
+		return nil, err
+	}
+
+	return parser.ParseString(string(bytes))
+}
+
 var playCmd = &cobra.Command{
 	Use:   "play",
 	Short: "Evaluate and play Alda source code",
@@ -178,26 +213,7 @@ Text piped into the process on stdin:
 			scoreUpdates, err = parser.ParseString(code)
 
 		default:
-			stat, err := os.Stdin.Stat()
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
-			}
-
-			if stat.Mode()&os.ModeCharDevice != 0 {
-				fmt.Println(
-					"No input supplied. See `alda play -h` for usage information.",
-				)
-				os.Exit(1)
-			}
-
-			bytes, err := ioutil.ReadAll(os.Stdin)
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
-			}
-
-			scoreUpdates, err = parser.ParseString(string(bytes))
+			scoreUpdates, err = parseStdin("alda play -h")
 		}
 
 		if err != nil {
