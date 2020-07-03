@@ -155,6 +155,12 @@ func fillPlayerPool() error {
 	desiredAvailablePlayers := 2
 	playersToStart := desiredAvailablePlayers - availablePlayers
 
+	log.Debug().
+		Int("availablePlayers", availablePlayers).
+		Int("desiredAvailablePlayers", desiredAvailablePlayers).
+		Int("playersToStart", playersToStart).
+		Msg("Spawning players.")
+
 	for i := 0; i < playersToStart; i++ {
 		err := spawnPlayer()
 		if err != nil {

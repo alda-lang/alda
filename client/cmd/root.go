@@ -142,13 +142,30 @@ func Execute() error {
 		}
 	}
 
-	if !commandIsAnException {
-		go func() {
-			if err := fillPlayerPool(); err != nil {
-				log.Warn().Err(err).Msg("Failed to fill player pool.")
-			}
-		}()
+	filledPlayerPool := make(chan bool)
+
+	if commandIsAnException {
+		close(filledPlayerPool)
+		return rootCmd.Execute()
 	}
 
-	return rootCmd.Execute()
+	go func() {
+		if err := fillPlayerPool(); err != nil {
+			log.Warn().Err(err).Msg("Failed to fill player pool.")
+		}
+
+		filledPlayerPool <- true
+	}()
+
+	err := rootCmd.Execute()
+
+	// The filling of the player pool is happening in the background, but I
+	// noticed that if we exit the main thread too quickly, the background
+	// processes never start. So, we wait here for the goroutine above to finish
+	// before we exit.
+	log.Debug().Msg("Awaiting completion of player pool filling routine...")
+	<-filledPlayerPool
+	log.Debug().Msg("Done.")
+
+	return err
 }
