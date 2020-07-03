@@ -85,6 +85,12 @@ func ping(port int) (*osc.Client, error) {
 	return client, err
 }
 
+func sendShutdownMessage(client *osc.Client) error {
+	msg := osc.NewMessage("/system/shutdown")
+	msg.Append(int32(0))
+	return client.Send(msg)
+}
+
 // OSCPacketForwarder is a simple Dispatcher that puts each OSC packet that it
 // receives onto a channel.
 type OSCPacketForwarder struct {
@@ -429,7 +435,7 @@ var doctorCmd = &cobra.Command{
 		step(
 			"Shut down player process",
 			func() error {
-				return client.Send(osc.NewMessage("/system/shutdown"))
+				return sendShutdownMessage(client)
 			},
 		)
 
@@ -521,7 +527,7 @@ var doctorCmd = &cobra.Command{
 		step(
 			"Shut the player down",
 			func() error {
-				return client.Send(osc.NewMessage("/system/shutdown"))
+				return sendShutdownMessage(client)
 			},
 		)
 	},

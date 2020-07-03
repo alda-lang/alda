@@ -18,8 +18,10 @@ func appendAll(bundle *osc.Bundle, msgs []*osc.Message) {
 	}
 }
 
-func systemShutdownMsg() *osc.Message {
-	return osc.NewMessage("/system/shutdown")
+func systemShutdownMsg(offset int32) *osc.Message {
+	msg := osc.NewMessage("/system/shutdown")
+	msg.Append(offset)
+	return msg
 }
 
 func systemPlayMsg() *osc.Message {
@@ -302,7 +304,7 @@ func main() {
 
 	switch example {
 	case "shutdown":
-		client.Send(systemShutdownMsg())
+		client.Send(systemShutdownMsg(0))
 	case "play":
 		client.Send(systemPlayMsg())
 	case "stop":

@@ -410,6 +410,11 @@ private fun applyUpdates(updates : Updates) {
   if (updates.systemActions.contains(SystemAction.SHUTDOWN))
     isRunning = false
 
+  updates.systemEvents.filter {it is ShutdownEvent}.forEach {
+    val shutdownEvent = it as ShutdownEvent
+    midi().scheduleShutdown(shutdownEvent.offset)
+  }
+
   if (updates.systemActions.contains(SystemAction.STOP))
     midi().stopSequencer()
 

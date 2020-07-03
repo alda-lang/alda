@@ -53,7 +53,7 @@ var shutdownCmd = &cobra.Command{
 		}
 
 		for _, player := range players {
-			err := (emitter.OSCEmitter{Port: player.Port}).EmitShutdownMessage()
+			err := (emitter.OSCEmitter{Port: player.Port}).EmitShutdownMessage(0)
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)

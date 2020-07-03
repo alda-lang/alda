@@ -26,6 +26,14 @@ interface Schedulable {
   fun schedule(channel : Int)
 }
 
+class ShutdownEvent(val offset : Int) : Event {
+  override fun addOffset(o : Int) : ShutdownEvent {
+    return ShutdownEvent(offset + o)
+  }
+
+  override fun endOffset() = 0
+}
+
 class TempoEvent(val offset : Int, val bpm : Float) : Event {
   override fun addOffset(o : Int) : TempoEvent {
     return TempoEvent(offset + o, bpm)
@@ -213,7 +221,21 @@ class Updates() {
         }
 
         Regex("/system/shutdown").matches(address) -> {
-          systemActions.add(SystemAction.SHUTDOWN)
+          val offset = args.get(0) as Int
+
+          // There are two "modes" of shutting down:
+          //
+          // 1. A system action that immediately shuts the player process down.
+          //    Use case: immediately shutting the player down
+          //
+          // 2. A system event that schedules the player to be shut down when a
+          //    particular offset is reached.
+          //    Use case: shutting the player down after the end of a score
+          if (offset == 0) {
+            systemActions.add(SystemAction.SHUTDOWN)
+          } else {
+            systemEvents.add(ShutdownEvent(offset))
+          }
         }
 
         Regex("/system/play").matches(address) -> {

@@ -23,8 +23,10 @@ func systemStopMsg() *osc.Message {
 	return osc.NewMessage("/system/stop")
 }
 
-func systemShutdownMsg() *osc.Message {
-	return osc.NewMessage("/system/shutdown")
+func systemShutdownMsg(offset int32) *osc.Message {
+	msg := osc.NewMessage("/system/shutdown")
+	msg.Append(offset)
+	return msg
 }
 
 func midiPatchMsg(track int32, offset int32, patch int32) *osc.Message {
@@ -77,8 +79,8 @@ func (oe OSCEmitter) EmitStopMessage() error {
 }
 
 // EmitShutdownMessage sends a "shutdown" message to a player process.
-func (oe OSCEmitter) EmitShutdownMessage() error {
-	return oscClient(oe.Port).Send(systemShutdownMsg())
+func (oe OSCEmitter) EmitShutdownMessage(offset int32) error {
+	return oscClient(oe.Port).Send(systemShutdownMsg(offset))
 }
 
 // EmitScore implements Emitter.EmitScore by sending OSC messages to instruct a

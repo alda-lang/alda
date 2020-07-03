@@ -70,7 +70,8 @@ const val CONTINUATION_INTERVAL_MS = 1000
 enum class CustomMetaMessage(val type : Int) {
   CONTINUE(0x30),
   PERCUSSION(0x31),
-  EVENT(0x32)
+  EVENT(0x32),
+  SHUTDOWN(0x33)
 }
 
 // Returns the channel affected by a MidiEvent. For example, a MIDI NOTE_ON
@@ -258,6 +259,11 @@ class MidiEngine {
     scheduleMetaMsg(offset, CustomMetaMessage.CONTINUE)
   }
 
+  fun scheduleShutdown(offsetMs : Int) {
+    val now = Math.round(currentOffset()).toInt()
+    scheduleMetaMsg(now + offsetMs, CustomMetaMessage.SHUTDOWN)
+  }
+
   init {
     log.info { "Initializing MIDI sequencer..." }
     sequencer.open()
@@ -295,6 +301,10 @@ class MidiEngine {
               log.error { "$pendingEvent latch not found!" }
             }
           }
+        }
+
+        CustomMetaMessage.SHUTDOWN.type -> {
+          isRunning = false
         }
 
         MIDI_END_OF_TRACK -> {
