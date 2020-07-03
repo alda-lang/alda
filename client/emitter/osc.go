@@ -73,6 +73,11 @@ func oscClient(port int) *osc.Client {
 	return osc.NewClient("localhost", int(port), osc.ClientProtocol(osc.TCP))
 }
 
+// EmitPlayMessage sends a "play" message to a player process.
+func (oe OSCEmitter) EmitPlayMessage() error {
+	return oscClient(oe.Port).Send(systemPlayMsg())
+}
+
 // EmitStopMessage sends a "stop" message to a player process.
 func (oe OSCEmitter) EmitStopMessage() error {
 	return oscClient(oe.Port).Send(systemStopMsg())

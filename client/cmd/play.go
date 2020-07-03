@@ -215,15 +215,16 @@ func readStdin() ([]byte, error) {
 	return bytes, nil
 }
 
-func parseStdin(usageCommand string) ([]model.ScoreUpdate, error) {
+// Parses Alda source code piped into stdin and returns the parsed score
+// updates.
+//
+// Returns `errNoInputSupplied` if no input is being piped into stdin.
+//
+// Returns a different error if the input couldn't be parsed as valid Alda code,
+// or if something else went wrong.
+func parseStdin() ([]model.ScoreUpdate, error) {
 	bytes, err := readStdin()
 	if err != nil {
-		if err == errNoInputSupplied {
-			err = fmt.Errorf(
-				"no input supplied. See `%s` for usage information", usageCommand,
-			)
-		}
-
 		return nil, err
 	}
 
@@ -253,6 +254,13 @@ Text piped into the process on stdin:
 		var scoreUpdates []model.ScoreUpdate
 		var err error
 
+		// If no input Alda code is provided, then we treat the `alda play` command
+		// as an "unpause" command. We will send a bundle that just contains a
+		// "play" message to all player processes, and if any of them are in a
+		// "paused" state (i.e. they were playing something and then they got paused
+		// via `alda stop`), they will resume playback from where they left off.
+		action := "play"
+
 		switch {
 		case file != "":
 			scoreUpdates, err = parser.ParseFile(file)
@@ -261,7 +269,11 @@ Text piped into the process on stdin:
 			scoreUpdates, err = parser.ParseString(code)
 
 		default:
-			scoreUpdates, err = parseStdin("alda play -h")
+			scoreUpdates, err = parseStdin()
+			if err == errNoInputSupplied {
+				action = "unpause"
+				err = nil
+			}
 		}
 
 		if err != nil {
@@ -280,10 +292,16 @@ Text piped into the process on stdin:
 			Str("took", fmt.Sprintf("%s", time.Since(start))).
 			Msg("Constructed score.")
 
+		var players []playerState
+
 		// Determine the port to use based on the provided CLI options.
 		switch {
-		// Nothing to do; port is explicitly specified.
+
+		// Port is explicitly specified, so use that port.
 		case port != -1:
+			player := playerState{ID: "unknown", State: "unknown", Port: port}
+			players = []playerState{player}
+
 		// Player ID is specified; look up the player by ID and use its port.
 		case playerID != "":
 			player, err := findPlayerByID(playerID)
@@ -291,8 +309,24 @@ Text piped into the process on stdin:
 				fmt.Println(err)
 				os.Exit(1)
 			}
+			players = []playerState{player}
 
-			port = player.Port
+		// We're actually unpausing, not playing, so send the message to all active
+		// player processes so that if any of them are paused, they'll resume
+		// playing.
+		case action == "unpause":
+			allPlayers, err := readPlayerStates()
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			players = []playerState{}
+			for _, player := range allPlayers {
+				if player.State == "active" {
+					players = append(players, player)
+				}
+			}
+
 		// Find an available player process to use.
 		default:
 			if err := await(
@@ -302,7 +336,7 @@ Text piped into the process on stdin:
 						return err
 					}
 
-					port = player.Port
+					players = []playerState{player}
 					return nil
 				},
 				reasonableTimeout,
@@ -312,29 +346,47 @@ Text piped into the process on stdin:
 			}
 		}
 
-		log.Debug().
-			Int("port", port).
-			Msg("Waiting for player to respond to ping.")
-
-		if _, err := ping(port); err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-
 		emitOpts := []emitter.EmissionOption{
 			emitter.EmitFrom(playFrom),
 			emitter.EmitTo(playTo),
-			emitter.OneOff(),
 		}
 
-		err = (emitter.OSCEmitter{Port: port}).EmitScore(score, emitOpts...)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+		if action == "play" {
+			emitOpts = append(emitOpts, emitter.OneOff())
 		}
 
 		log.Info().
-			Int("port", port).
-			Msg("Sent OSC messages to player.")
+			Interface("players", players).
+			Str("action", action).
+			Msg("Sending messages to players.")
+
+		for _, player := range players {
+			log.Debug().
+				Interface("player", player).
+				Msg("Waiting for player to respond to ping.")
+
+			if _, err := ping(player.Port); err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+
+			emitter := emitter.OSCEmitter{Port: player.Port}
+
+			var emissionError error
+
+			if action == "unpause" {
+				emissionError = emitter.EmitPlayMessage()
+			} else {
+				emissionError = emitter.EmitScore(score, emitOpts...)
+			}
+			if emissionError != nil {
+				fmt.Println(emissionError)
+				os.Exit(1)
+			}
+
+			log.Info().
+				Interface("player", player).
+				Msg("Sent OSC messages to player.")
+		}
 	},
 }
