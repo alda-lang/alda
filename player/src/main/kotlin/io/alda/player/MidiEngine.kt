@@ -353,6 +353,12 @@ class MidiEngine {
       }
     }
 
+    // HACK: It seems like the JVM MIDI synth needs a second or two to "warm up"
+    // before it's ready to start playing without a noticeable jitter during the
+    // first handful of notes. Adding this sleep makes the problem go away, at
+    // least on my machine.
+    Thread.sleep(2500)
+
     stateManager!!.markReady()
   }
 
