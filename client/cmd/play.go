@@ -179,15 +179,31 @@ func fillPlayerPool() error {
 	return nil
 }
 
+// Returns true if input is being piped into stdin.
+//
+// Returns an error if something went wrong while trying to determine this.
+func isInputBeingPipedIn() (bool, error) {
+	stat, err := os.Stdin.Stat()
+	if err != nil {
+		return false, err
+	}
+
+	return stat.Mode()&os.ModeCharDevice == 0, nil
+}
+
 var errNoInputSupplied = fmt.Errorf("no input supplied")
 
+// Reads all bytes piped into stdin and returns them.
+//
+// Returns the error `errNoInputSupplied` if no input is being piped in, or a
+// different error if something else went wrong.
 func readStdin() ([]byte, error) {
-	stat, err := os.Stdin.Stat()
+	isInputSupplied, err := isInputBeingPipedIn()
 	if err != nil {
 		return nil, err
 	}
 
-	if stat.Mode()&os.ModeCharDevice != 0 {
+	if !isInputSupplied {
 		return nil, errNoInputSupplied
 	}
 
