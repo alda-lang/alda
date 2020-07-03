@@ -161,8 +161,16 @@ func fillPlayerPool() error {
 		Int("playersToStart", playersToStart).
 		Msg("Spawning players.")
 
+	results := []<-chan error{}
+
 	for i := 0; i < playersToStart; i++ {
-		err := spawnPlayer()
+		result := make(chan error)
+		results = append(results, result)
+		go func() { result <- spawnPlayer() }()
+	}
+
+	for _, result := range results {
+		err := <-result
 		if err != nil {
 			return err
 		}
