@@ -8,6 +8,12 @@ type EmissionContext struct {
 	from string
 	// A time marking (e.g. 1:00) or marker at which to end.
 	to string
+	// When true, no further emissions are expected for this particular score.
+	//
+	// What this means can vary depending on the emitter. For the OSC emitter, it
+	// means that we append a "shutdown" message at the end of the OSC bundle,
+	// which tells the player process to shut down after playing the score.
+	oneOff bool
 }
 
 // EmissionOption is a function that customizes an EmissionContext
@@ -22,6 +28,16 @@ func EmitFrom(from string) EmissionOption {
 // EmitTo sets the time marking or marker at which to end.
 func EmitTo(to string) EmissionOption {
 	return func(ctx *EmissionContext) { ctx.to = to }
+}
+
+// OneOff specifies that no further emissions are expected for this particular
+// score.
+//
+// What this means can vary depending on the emitter. For the OSC emitter, it
+// means that we append a "shutdown" message at the end of the OSC bundle, which
+// tells the player process to shut down after playing the score.
+func OneOff() EmissionOption {
+	return func(ctx *EmissionContext) { ctx.oneOff = true }
 }
 
 // An Emitter sends score data somewhere for performance, visualization, etc.

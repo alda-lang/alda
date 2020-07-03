@@ -308,6 +308,7 @@ Text piped into the process on stdin:
 		emitOpts := []emitter.EmissionOption{
 			emitter.EmitFrom(playFrom),
 			emitter.EmitTo(playTo),
+			emitter.OneOff(),
 		}
 
 		err = (emitter.OSCEmitter{Port: port}).EmitScore(score, emitOpts...)

@@ -14,6 +14,11 @@ data representation to play the score.
 * There is no intention to "continue" a score, so the client simply exits,
   discarding the score data in memory.
 
+* The client also appends a "shutdown" message to the end of the OSC bundle sent
+  to the player, which tells the player process to shut down after the audible
+  end of the score. That way, we can avoid having a bunch of stale player
+  processes hanging around waiting to expire.
+
 == REPL mode
 
 * Serves a couple of use cases:
@@ -26,6 +31,12 @@ data representation to play the score.
 
 * Users can "continue" the score by providing more input, which is parsed,
   eval'd and played using the existing score as a starting point.
+
+* The REPL server keeps track of which player process it is using and continues
+  to use that same process. This unlocks the ability to use live coding features
+  built into the player, such as:
+** Appending additional notes to the end of the ones currently queued up.
+** Looping a phrase indefinitely and redefining it while it's playing.
 
 === For interactive development
 

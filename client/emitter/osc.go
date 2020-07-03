@@ -160,6 +160,12 @@ func (oe OSCEmitter) EmitScore(
 		}
 	}
 
+	// We keep track of the known (audible) length of the score as we iterate
+	// through the events. That way, at the end, if we want to schedule a shutdown
+	// message to clean up, we can schedule it for shortly after the audible end
+	// of the score.
+	scoreLength := 0.0
+
 	for _, event := range score.Events {
 		eventOffset := event.EventOffset()
 
@@ -187,7 +193,8 @@ func (oe OSCEmitter) EmitScore(
 			//
 			// By default, `startOffset` is 0, so the usual scenario is that the event
 			// offsets are not adjusted.
-			offset := int32(math.Round(noteEvent.Offset - startOffset))
+			offset := noteEvent.Offset - startOffset
+			offsetRounded := int32(math.Round(offset))
 
 			if noteEvent.TrackVolume != currentVolume[track] {
 				currentVolume[track] = noteEvent.TrackVolume
@@ -195,7 +202,7 @@ func (oe OSCEmitter) EmitScore(
 				bundle.Append(
 					midiVolumeMsg(
 						track,
-						offset,
+						offsetRounded,
 						int32(math.Round(noteEvent.TrackVolume*127)),
 					),
 				)
@@ -207,7 +214,7 @@ func (oe OSCEmitter) EmitScore(
 				bundle.Append(
 					midiPanningMsg(
 						track,
-						offset,
+						offsetRounded,
 						int32(math.Round(noteEvent.Panning*127)),
 					),
 				)
@@ -215,18 +222,24 @@ func (oe OSCEmitter) EmitScore(
 
 			bundle.Append(midiNoteMsg(
 				track,
-				offset,
+				offsetRounded,
 				noteEvent.MidiNote,
 				int32(math.Round(noteEvent.Duration)),
 				int32(math.Round(noteEvent.AudibleDuration)),
 				int32(math.Round(noteEvent.Volume*127)),
 			))
+
+			scoreLength = math.Max(scoreLength, offset+noteEvent.AudibleDuration)
 		default:
 			return fmt.Errorf("unsupported event: %#v", event)
 		}
 	}
 
 	bundle.Append(systemPlayMsg())
+
+	if ctx.oneOff {
+		bundle.Append(systemShutdownMsg(int32(math.Round(scoreLength + 1000))))
+	}
 
 	return oscClient(oe.Port).Send(bundle)
 }
