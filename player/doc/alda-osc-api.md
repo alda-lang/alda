@@ -38,16 +38,26 @@ The client expresses timing to the player in terms of relative **offsets**.
 For example, a client might ask the player to play a three-note chord followed
 by two other notes by sending a bundle including the following messages:
 
-> NB: This isn't the correct order of parameters; I'm still sketching at this
-point. For the purposes of this example, the parameters are offset, note number,
-duration, audible duration.
+> The parameters here are, in this order:
+>
+> 1. Offset
+> 2. Note number
+> 3. Duration
+> 4. Audible duration
+> 5. Velocity
+>
+> For example, the first three messages below specify that MIDI notes 60, 64,
+> and 67 should each be played at offset 0 with a velocity of 100/127, and each
+> note should stop sounding after 450 ms.
+>
+> (If you're wondering what the duration of 500 ms is for, keep reading!)
 
 ```
-/track/1/midi/note 0    60 500 500
-/track/1/midi/note 0    64 500 500
-/track/1/midi/note 0    67 500 500
-/track/1/midi/note 500  69 500 450
-/track/1/midi/note 1000 72 500 450
+/track/1/midi/note 0    60 500 450 100
+/track/1/midi/note 0    64 500 450 100
+/track/1/midi/note 0    67 500 450 100
+/track/1/midi/note 500  69 500 450 100
+/track/1/midi/note 1000 72 500 450 100
 ```
 
 In Alda notation, this might look like `(tempo! 120) c8/e/g a > c`
@@ -62,12 +72,12 @@ later (1000 + 500 = 1500). A subsequent bundle could then be sent to play
 another sequence of notes after that:
 
 ```
-/track/1/midi/note 0    74 500 450
-/track/1/midi/note 500  76 500 450
-/track/1/midi/note 1000 77 500 450
+/track/1/midi/note 0    74 500 450 100
+/track/1/midi/note 500  76 500 450 100
+/track/1/midi/note 1000 77 500 450 100
 ```
 
-Note that these notes start from "offset 0," but this is a new bundle, so the
+The first of these notes starts at "offset 0," but this is a new bundle, so the
 notes will be placed in time _after_ the notes sent in the previous bundle. This
 means that "offset 0" in the second bundle is conceptually "offset 1500" in the
 first bundle.
@@ -92,8 +102,8 @@ necessarily coupled to tempo. We want to be able to export MIDI files that work
 in this way, which means the division type must be pulses per quarter note
 (PPQ).
 
-So that we can have our cake and eat it too, we keep track of the history of
-tempo changes during a score, and use this "tempo itinerary" to help us convert
+So that we can have our cake and eat it too, we keep a record of all the tempo
+changes in a score, and we use this "tempo itinerary" to help us convert
 absolute offsets in milliseconds to PPQ offsets expressed in ticks, where the
 physical duration depends on the tempo.
 
@@ -102,13 +112,13 @@ offsets are expressed in milliseconds, and tempo can be set at any point in the
 score for compatibility with any music software that needs to know about tempo.
 
 Strictly speaking, it isn't necessary to set the tempo, but it can be done, and
-it should be done if one wants to export the score to a MIDI file.
+you should do it if you want to export the score to a MIDI file that is usable
+with other music software (e.g. sheet music notation programs).
 
 ## Bundle vs. message
 
 * The top-level can be either a message or a bundle containing 1+ messages.
-  * Bundles cannot be nested, as it isn't really clear to me right now what that
-    would imply.
+  Bundles cannot be nested.
 
 * When a bundle is received, the player will synchronize the timing of all of
   the messages in the bundle. This will allow, for example, chords to be
