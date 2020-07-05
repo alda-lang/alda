@@ -40,11 +40,11 @@ by two other notes by sending a bundle including the following messages:
 
 > The parameters here are, in this order:
 >
-> 1. Offset
-> 2. Note number
-> 3. Duration
-> 4. Audible duration
-> 5. Velocity
+> * Offset
+> * Note number
+> * Duration
+> * Audible duration
+> * Velocity
 >
 > For example, the first three messages below specify that MIDI notes 60, 64,
 > and 67 should each be played at offset 0 with a velocity of 100/127, and each
@@ -128,75 +128,334 @@ with other music software (e.g. sheet music notation programs).
 * When an individual message is received, it is treated as if it's a bundle
   containing one message.
 
-## Address patterns
+## API
 
-* `/system`
-  * `/shutdown` - shut down the player process
-  * `/play` - start playing all tracks at the current system offset
-  * `/stop` - stop playing all tracks
-    * Remembers the state of the tracks, such that when a `/system/play` is
-      received again, playback will continue where it left off.
-  * `/clear` - clear all tracks of upcoming events
-  * `/tempo` - sets the tempo in BPM
-  * `/midi/export` - writes the current state of the sequence to a MIDI file
-
-* `/track/1`
-  * `/mute` - mute this track
-  * `/unmute` - unmute this track
-  * `/clear` - clear this track of upcoming events
-  * `/midi/patch` - set the MIDI patch number for this track
-  * `/midi/percussion` - designate this track to use the MIDI percussion channel
-  * `/midi/note` - schedule a MIDI note on ... note off on this track
-  * `/midi/volume` - schedule a MIDI expression (11) control change event
-    * "Volume" here refers to the overall volume of the channel, not per-note
-      velocity.
-    * You can use expression control messages to set the volume of each track to
-      mix their levels relative to each other, and then set the velocity on each
-      note (as a parameter of `/midi/note`) for finer-grained control over
-      volume from note to note.
-  * `/midi/panning` - schedule a MIDI panning control change event
-  * `/pattern` - schedule an instance of a pattern on this track
-    * Includes a "times" parameter, for convenient finite loops without having
-      to send numerous `/track/1/pattern` messages. You can, for example, send a
-      single message that says to play a pattern 16 times.
-    * If the pattern is mutated before its scheduled time, the mutated version
-      is picked up when the pattern is dereferenced.
-  * `/pattern-loop` - loop a pattern indefinitely until stop or clear occurs
-    * This is scheduled with an offset, exactly like `/track/1/midi/note` and
-      `/track/1/pattern`.
-    * If the pattern is mutated during playback, the new version will be picked
-      up upon the next iteration through the pattern.
-    * Any subsequent notes will be placed "on hold" until the loop is terminated
-      via `/track/1/finish-loop`.
-  * `/finish-loop` - finish the current iteration of the pattern being looped
-    and stop looping.
-    * After the final iteration of the loop, any notes scheduled after the loop
-      will play in time.
-
-* `/pattern/foo`
-  * `/clear` - clear this pattern's contents
-  * `/midi/note` - append a note on ... note off to this pattern's contents
-    * To _replace_ a pattern's contents, send a bundle that starts with
-      `/pattern/foo/clear` and is followed by a number of
-      `/pattern/foo/midi/note` messages.
-  * `/midi/volume` - append a MIDI expression control change message to the
-    pattern's contents
-    * See `/track/1/midi/volume`
-  * `/midi/panning` - append a MIDI panning control change message to the
-    pattern's contents
-    * See `/track/1/midi/panning`
-  * `/pattern` - appends a reference to another pattern with the given ID to
-    this pattern's contents
-    * If the referenced pattern is mutated during looped playback of this
-      pattern, the new version will be picked up upon the next iteration through
-      this pattern.
+<table>
+  <thead>
+    <tr>
+      <th>Address pattern</th>
+      <th>Arguments</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>/system/shutdown</code></td>
+      <td>
+        <ul>
+          <li>Offset (integer)</li>
+        </ul>
+      </td>
+      <td>
+        <p>Shut down the player process.</p>
+        <p>
+          If the provided offset is 0, the player process will shut down
+          immediately.
+        </p>
+        <p>
+          Otherwise, the player process will be scheduled to be shut down at the
+          specified offset. For example, if you want to schedule three notes
+          that are 500 ms long (500 * 3 = 1500 ms total length) and then have
+          the player shut down shortly after the last note ends, you can send a
+          bundle consisting of three <code>/track/{number}/midi/note</code>
+          messages and a <code>/system/shutdown</code> message with an offset of
+          something like 2000.
+        </p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>/system/play</code></td>
+      <td></td>
+      <td>Start playing all tracks at the current system offset.</td>
+    </tr>
+    <tr>
+      <td><code>/system/stop</code></td>
+      <td></td>
+      <td>
+        <p>Stop playing all tracks.</p>
+        <p>
+          This puts the player into a "paused" state, such that when a
+          <code>/system/play</code> message is received again, playback will
+          continue where it left off.
+        </p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>/system/clear</code></td>
+      <td></td>
+      <td>Clear all tracks of upcoming events.</td>
+    </tr>
+    <tr>
+      <td><code>/system/tempo</code></td>
+      <td>
+        <ul>
+          <li>Offset (integer)</li>
+          <li>BPM (float)</li>
+        </ul>
+      </td>
+      <td>Sets the tempo in BPM.</td>
+    </tr>
+    <tr>
+      <td><code>/system/midi/export</code></td>
+      <td>
+        <ul>
+          <li>File path (string)</li>
+        </ul>
+      </td>
+      <td>Writes the current state of the sequence to a MIDI file.</td>
+    </tr>
+    <tr>
+      <td><code>/track/{number}/mute</code></td>
+      <td></td>
+      <td>Mute this track.</td>
+    </tr>
+    <tr>
+      <td><code>/track/{number}/unmute</code></td>
+      <td></td>
+      <td>Unmute this track.</td>
+    </tr>
+    <tr>
+      <td><code>/track/{number}/clear</code></td>
+      <td></td>
+      <td>Clear this track of upcoming events.</td>
+    </tr>
+    <tr>
+      <td><code>/track/{number}/midi/patch</code></td>
+      <td>
+        <ul>
+          <li>Offset (integer)</li>
+          <li>Patch number (integer)</li>
+        </ul>
+      </td>
+      <td>Set the MIDI patch number for this track.</td>
+    </tr>
+    <tr>
+      <td><code>/track/{number}/midi/percussion</code></td>
+      <td>
+        <ul>
+          <li>Offset (integer)</li>
+        </ul>
+      </td>
+      <td>
+        <p>Designate this track to use the MIDI percussion channel.</p>
+        <p>If you want this to happen immediately, provide an offset of 0.</p>
+        <p>
+          If you want all notes at a particular offset and beyond to be played
+          on the percussion channel, provide that offset.
+        </p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>/track/{number}/midi/note</code></td>
+      <td>
+        <ul>
+          <li>Offset (integer)</li>
+          <li>MIDI note number (integer)</li>
+          <li>Duration (integer)</li>
+          <li>Audible duration (integer)</li>
+          <li>Velocity (integer)</li>
+        </ul>
+      </td>
+      <td>
+        <p>Schedule a MIDI note on ... note off on this track.</p>
+        <p>Velocity is expected to be an integer in the range 0-127.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>/track/{number}/midi/volume</code></td>
+      <td>
+        <ul>
+          <li>Offset (integer)</li>
+          <li>Volume (integer)</li>
+        </ul>
+      </td>
+      <td>
+        <p>Schedule a MIDI expression (11) control change event.</p>
+        <p>Volume is expected to be an integer in the range 0-127.</p>
+        <p>
+          "Volume" here refers to the overall volume of the channel, not
+          per-note velocity.
+        </p>
+        <p>
+          You can use expression control messages to set the volume of each
+          track to mix their levels relative to one another, and then set the
+          velocity on each note (as a parameter of
+          <code>/track/{number}/midi/note</code>) for finer-grained control over
+          volume from note to note.
+        </p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>/track/{number}/midi/panning</code></td>
+      <td>
+        <ul>
+          <li>Offset (integer)</li>
+          <li>Panning (integer)</li>
+        </ul>
+      </td>
+      <td>
+        <p>Schedule a MIDI panning (10) control change event.</p>
+        <p>Panning is expected to be an integer in the range 0-127.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>/track/{number}/pattern</code></td>
+      <td>
+        <ul>
+          <li>Offset (integer)</li>
+          <li>Pattern name (string)</li>
+          <li>Times (integer)</li>
+        </ul>
+      </td>
+      <td>
+        <p>Schedule an instance of a pattern on this track.</p>
+        <p>
+          The "times" argument allows for convenient finite loops without having
+          to send numerous <code>/track/{number}/pattern</code> messages.  You
+          can, for example, send a single message that says to play a pattern 16
+          times.
+        </p>
+        <p>
+          If the pattern is mutated during playback, the new version will be
+          picked up upon the next iteration through the pattern.
+        </p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>/track/{number}/pattern-loop</code></td>
+      <td>
+        <ul>
+          <li>Offset (integer)</li>
+          <li>Pattern name (string)</li>
+        </ul>
+      </td>
+      <td>
+        <p>
+          Loop a pattern indefinitely until <code>stop</code> or
+          <code>clear</code> occurs.
+        </p>
+        <p>
+          This is scheduled with an offset, exactly like
+          <code>/track/{number}/midi/note</code> and
+          <code>/track/{number}/pattern</code>.
+        </p>
+        <p>
+          Any subsequent notes will be placed "on hold" until the loop is
+          terminated via <code>/track/{number}/finish-loop</code>.
+        </p>
+        <p>
+          If the pattern is mutated during playback, the new version will be
+          picked up upon the next iteration through the pattern.
+        </p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>/track/{number}/finish-loop</code></td>
+      <td>
+        <ul>
+          <li>Offset (integer)</li>
+        </ul>
+      </td>
+      <td>
+        <p>
+          Finish the current iteration of the pattern being looped and stop
+          looping.
+        </p>
+        <p>
+          After the final iteration of the loop, any notes scheduled after the
+          loop will play in time.
+        </p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>/pattern/{name}/clear</code></td>
+      <td></td>
+      <td>Clear this pattern's contents.</td>
+    </tr>
+    <tr>
+      <td><code>/pattern/{name}/midi/note</code></td>
+      <td>
+        <ul>
+          <li>Offset (integer)</li>
+          <li>MIDI note number (integer)</li>
+          <li>Duration (integer)</li>
+          <li>Audible duration (integer)</li>
+          <li>Velocity (integer)</li>
+        </ul>
+      </td>
+      <td>
+        <p>
+          Append a MIDI note on ... note off to this pattern's contents.
+        </p>
+        <p>
+          To <em>replace</em> a pattern's contents, send a bundle that starts
+          with <code>/pattern/{name}/clear</code> and is followed by a number of
+          <code>/pattern/{name}/midi/note</code> messages.
+        </p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>/pattern/{name}/midi/volume</code></td>
+      <td>
+        <ul>
+          <li>Offset (integer)</li>
+          <li>Volume (integer)</li>
+        </ul>
+      </td>
+      <td>
+        <p>
+          Append a MIDI expression (11) control change message to the pattern's
+          contents.
+        </p>
+        <p>
+          See <code>/track/{number}/midi/volume</code>.
+        </p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>/pattern/{name}/midi/panning</code></td>
+      <td>
+        <ul>
+          <li>Offset (integer)</li>
+          <li>Panning (integer)</li>
+        </ul>
+      </td>
+      <td>
+        <p>
+          Append a MIDI panning (10) control change message to the pattern's
+          contents.
+        </p>
+        <p>
+          See <code>/track/{number}/midi/panning</code>.
+        </p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>/pattern/{name}/pattern</code></td>
+      <td>
+        <ul>
+          <li>Offset (integer)</li>
+          <li>Pattern name (string)</li>
+          <li>Times (integer)</li>
+        </ul>
+      </td>
+      <td>
+        <p>
+          Append a reference to another pattern to this pattern's contents.
+        </p>
+        <p>
+          If the referenced pattern is mutated during looped playback of this
+          pattern, the new version will be picked up upon the next iteration
+          through this pattern.
+        </p>
+      </td>
+    </tr>
+  </tbody>
+</table>
 
 ## Examples
 
-> This is only a sketch. Parameter order almost guaranteed to be wrong!
-
 * Make track 1 a MIDI channel with instrument 37 (Slap Bass 1) loaded:
-
 
   ```
   /track/1/midi/patch 0 37
