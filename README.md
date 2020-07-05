@@ -202,6 +202,6 @@ For more details on how you can contribute to Alda, see [CONTRIBUTING.md](CONTRI
 
 ## License
 
-Copyright © 2012-2019 Dave Yarwood et al
+Copyright © 2012-2020 Dave Yarwood et al
 
 Distributed under the Eclipse Public License version 1.0.
