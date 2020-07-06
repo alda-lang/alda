@@ -1,0 +1,105 @@
+= Alda v2 REPL
+
+The REPL experience will be a little bit different in Alda v2 compared to Alda
+v1. See the link:interaction-modes.adoc[interaction modes] doc for more details.
+
+== Basic usage
+
+Basic usage of the REPL will be about the same from the user's perspective.
+Running `alda repl` will open an interactive prompt where you can enter lines of
+Alda source code in an iterative fashion and hear the new notes. Each successive
+line of input is interpreted in the context of all of the lines entered so far.
+
+Under the hood, however, this will work differently from Alda v1.
+
+=== Implementation
+
+==== Alda v1
+
+In Alda v1, this worked by essentially sending over the entire score all over
+again with every line of input entered. The score up to that point was included
+as _history_, and the new code sent separately in the same request. The Alda v1
+CLI also lets you do this the same way: `alda play --history "..." --code
+"..."`. I chose to do it this way in order to accommodate the architectural
+choice to have workers be somewhat long-lived processes that can handle multiple
+scores during their lifetimes. That was already complicated enough, so I think
+in order to avoid complicating things further, I chose not to have worker
+processes keep track of the state of each score. After playing a score, a worker
+would forget about it entirely. It was then the client's responsibility to keep
+track of the state ("history") of a score and include it with every subsequent
+request.
+
+==== Alda v2
+
+In Alda v2, the client has a lot more context about a score because the client
+is doing most of the work now instead of a background process. The client is
+responsible for parsing and evaluating a score. The client, then, easily has the
+ability to keep track of the _state_ of the score because it's already an object
+in memory.
+
+The Alda REPL tracks its state in a `*Score` instance. Each line of input is
+parsed into a list of events. The events are then applied to the in-memory score
+object.
+
+I think we can keep track of which output events (e.g. notes) are new by just
+keeping track of the number of events before vs. after, and indexing into the
+list. Then, we can emit OSC messages to the player for just the new notes.
+
+The REPL `:new` command can simply replace the `*Score` instance with a new one.
+
+The REPL `:load` command can parse an existing score and use the resulting
+`*Score` object.
+
+We will also keep track of the history of successfully-parsed lines of input so
+that when the user uses the `:save` command, it will save the lines of input
+into a file.
+
+== Player management
+
+For the most part, whenever an `alda` command is run (`alda --help`, `alda
+play ...`, etc.), the client checks in the background that there are enough
+player processes available so that subsequent `alda play` commands can result in
+immediate playback. The client spawns more player processes as needed.
+
+`alda repl` is a little different in that it's a long-running process, so it's
+likely that the user won't be running `alda` commands as often because they'll
+be interacting with the REPL (a single, long-running process) instead. I think
+it would probably make sense to have a background routine that checks about once
+per minute that there enough player processes available and fill the pool of
+available players as needed.
+
+This should almost always be a no-op because the REPL workflow is one where the
+same player process is used repeatedly. But if the user runs the `:new` REPL
+command, that should both reset the score object to a new `*Score` instance and
+also shut down the player process it was using and obtain a new one. At that
+point, a new player process will need to be spawned, so this background routine
+would take care of that the next time it comes around.
+
+== TODO
+
+* MVP of the implementation described above.
+** Interactive REPL prompt
+** Keeps track of successful lines of input (for `:save`)
+** Keeps track of state in a `*Score` object
+** Parses each successive line of input as updates and applies them to the score
+object in memory
+
+* Implement player spawning routine (see "Player management" above)
+
+* Implement REPL server.
+** Investigate the options for a communication protocol.
+*** I'm curious to see if nREPL would be a good fit.
+** `alda repl` should both start an interactive prompt and run a REPL server
+that is listening for messages coming from outside the process. Both the prompt
+and the server should be interacting with the same `*Score` object.
+*** Updates should be queued up in a synchronous fashion to avoid issues with
+concurrency and mutable state.
+
+* Command line options
+** `alda repl --client` starts just the client
+** `alda repl --server` starts just the server
+** `alda repl --client --server` (or just `alda repl`) starts both
+** `--host` and `--port` options
+
+* Implement the various REPL commands for parity with Alda v1
+
