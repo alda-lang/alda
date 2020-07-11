@@ -103,7 +103,7 @@ func (score *Score) InterpretOffsetReference(
 ) (float64, error) {
 	re := regexp.MustCompile(`^(\d+):(\d+)$`)
 	captured := re.FindStringSubmatch(reference)
-	if len(captured) >= 3 {
+	if len(captured) == 3 {
 		// captured[0] is the full string, e.g. "0:10"
 		minutes, _ := strconv.Atoi(captured[1])
 		seconds, _ := strconv.Atoi(captured[2])
