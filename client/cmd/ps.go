@@ -1,68 +1,20 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
-	"path/filepath"
-	"strings"
 	"time"
 
-	"alda.io/client/generated"
+	"alda.io/client/system"
 	"github.com/dustin/go-humanize"
 	"github.com/spf13/cobra"
 )
-
-type playerState struct {
-	State     string
-	Port      int
-	Expiry    int64
-	ID        string
-	readError error
-}
-
-func readPlayerStates() ([]playerState, error) {
-	playersDir := cachePath("state", "players", generated.ClientVersion)
-	os.MkdirAll(playersDir, os.ModePerm)
-
-	files, err := ioutil.ReadDir(playersDir)
-	if err != nil {
-		return nil, err
-	}
-
-	states := []playerState{}
-
-	for _, file := range files {
-		filepath := filepath.Join(playersDir, file.Name())
-
-		var readError error
-		var state playerState
-
-		contents, err := ioutil.ReadFile(filepath)
-		if err != nil {
-			readError = err
-		} else {
-			err := json.Unmarshal(contents, &state)
-			if err != nil {
-				readError = err
-			}
-		}
-
-		state.ID = strings.Replace(file.Name(), ".json", "", 1)
-		state.readError = readError
-
-		states = append(states, state)
-	}
-
-	return states, nil
-}
 
 var psCmd = &cobra.Command{
 	Use:   "ps",
 	Short: "List background processes",
 	Run: func(_ *cobra.Command, args []string) {
-		states, err := readPlayerStates()
+		states, err := system.ReadPlayerStates()
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -71,8 +23,8 @@ var psCmd = &cobra.Command{
 		fmt.Println("id\tport\tstate\texpiry")
 
 		for _, state := range states {
-			if state.readError != nil {
-				fmt.Fprintln(os.Stderr, state.readError)
+			if state.ReadError != nil {
+				fmt.Fprintln(os.Stderr, state.ReadError)
 				continue
 			}
 

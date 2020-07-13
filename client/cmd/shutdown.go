@@ -6,6 +6,7 @@ import (
 
 	"alda.io/client/emitter"
 	log "alda.io/client/logging"
+	"alda.io/client/system"
 	"github.com/spf13/cobra"
 )
 
@@ -23,19 +24,19 @@ var shutdownCmd = &cobra.Command{
 	Use:   "shutdown",
 	Short: "Shut down background processes",
 	Run: func(_ *cobra.Command, args []string) {
-		players := []playerState{}
+		players := []system.PlayerState{}
 
 		// Determine the players to which to send a "shutdown" message based on the
 		// provided CLI options.
 		switch {
 		// Port is explicitly specified, so use that port.
 		case port != -1:
-			players = append(players, playerState{
+			players = append(players, system.PlayerState{
 				ID: "unknown", State: "unknown", Port: port,
 			})
 		// Player ID is specified; look up the player by ID and use its port.
 		case playerID != "":
-			player, err := findPlayerByID(playerID)
+			player, err := system.FindPlayerByID(playerID)
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)
@@ -43,7 +44,7 @@ var shutdownCmd = &cobra.Command{
 			players = append(players, player)
 		// Send a "shutdown" message to all known players.
 		default:
-			knownPlayers, err := readPlayerStates()
+			knownPlayers, err := system.ReadPlayerStates()
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)

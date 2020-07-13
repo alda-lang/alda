@@ -15,6 +15,8 @@ import (
 	"alda.io/client/emitter"
 	"alda.io/client/model"
 	"alda.io/client/parser"
+	"alda.io/client/system"
+	"alda.io/client/util"
 	"github.com/daveyarwood/go-osc/osc"
 	"github.com/logrusorgru/aurora"
 	"github.com/spf13/cobra"
@@ -32,25 +34,6 @@ func step(action string, test func() error) {
 	}
 
 	fmt.Printf("%s %s\n", aurora.Green("OK "), action)
-}
-
-func await(test func() error, timeoutDuration time.Duration) error {
-	timeout := time.After(timeoutDuration)
-
-	for {
-		err := test()
-
-		if err == nil {
-			return nil
-		}
-
-		select {
-		case <-timeout:
-			return err
-		default:
-			time.Sleep(100 * time.Millisecond)
-		}
-	}
 }
 
 func findOpenPort() (int, error) {
@@ -75,7 +58,7 @@ func findOpenPort() (int, error) {
 func ping(port int) (*osc.Client, error) {
 	client := osc.NewClient("localhost", port, osc.ClientProtocol(osc.TCP))
 
-	err := await(
+	err := util.Await(
 		func() error {
 			return client.Send(osc.NewMessage("/ping"))
 		},
@@ -193,7 +176,7 @@ var doctorCmd = &cobra.Command{
 					}
 				}()
 
-				if err := await(
+				if err := util.Await(
 					func() error {
 						return emitter.OSCEmitter{Port: port}.EmitScore(score)
 					},
@@ -312,7 +295,7 @@ var doctorCmd = &cobra.Command{
 
 					var midiFile *os.File
 
-					if err := await(
+					if err := util.Await(
 						func() error {
 							mf, err := os.Open(midiFilename)
 							if err != nil {
@@ -384,17 +367,17 @@ var doctorCmd = &cobra.Command{
 		step(
 			"Locate player logs",
 			func() error {
-				return await(
+				return util.Await(
 					func() error {
 						logFilename := filepath.Join("logs", "alda-player.log")
 
-						lf := queryCache(logFilename)
+						lf := system.QueryCache(logFilename)
 
 						if lf == "" {
 							return fmt.Errorf(
 								"unable to locate %s in %s",
 								logFilename,
-								cacheDir,
+								system.CacheDir,
 							)
 						}
 
@@ -412,7 +395,7 @@ var doctorCmd = &cobra.Command{
 			"Player logs show the ping was received",
 			func() error {
 				indication := "received ping"
-				return await(
+				return util.Await(
 					func() error {
 						contents, err := ioutil.ReadFile(logFile)
 						if err != nil {
@@ -455,14 +438,14 @@ var doctorCmd = &cobra.Command{
 
 		//////////////////////////////////////////////////
 
-		var player playerState
+		var player system.PlayerState
 
 		step(
 			"Discover the player",
 			func() error {
-				return await(
+				return util.Await(
 					func() error {
-						players, err := readPlayerStates()
+						players, err := system.ReadPlayerStates()
 						if err != nil {
 							return err
 						}
@@ -480,7 +463,7 @@ var doctorCmd = &cobra.Command{
 						}
 
 						if !foundPlayer {
-							return errNoPlayersAvailable
+							return system.ErrNoPlayersAvailable
 						}
 
 						// We're doing all of this so fast that the player we find might
@@ -490,7 +473,7 @@ var doctorCmd = &cobra.Command{
 						// score already and thus will not be considered "available.")
 						//
 						// To avoid this, we check the port of the player we just found
-						// and consider it a failure condition. This will cue `await`
+						// and consider it a failure condition. This will cue `util.Await`
 						// to keep checking until it finds a player that isn't that one.
 						if player.Port == port {
 							return fmt.Errorf(

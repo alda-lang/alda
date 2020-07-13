@@ -4,15 +4,14 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"os/exec"
-	"regexp"
 	"time"
 
 	"alda.io/client/emitter"
-	"alda.io/client/generated"
 	log "alda.io/client/logging"
 	"alda.io/client/model"
 	"alda.io/client/parser"
+	"alda.io/client/system"
+	"alda.io/client/util"
 	"github.com/spf13/cobra"
 )
 
@@ -55,128 +54,6 @@ func init() {
 		"",
 		"A time marking (e.g. 1:00) or marker at which to end playback",
 	)
-}
-
-var errNoPlayersAvailable = fmt.Errorf("no players available")
-
-func findAvailablePlayer() (playerState, error) {
-	players, err := readPlayerStates()
-	if err != nil {
-		return playerState{}, err
-	}
-
-	for _, player := range players {
-		if player.State == "ready" {
-			return player, nil
-		}
-	}
-
-	return playerState{}, errNoPlayersAvailable
-}
-
-func findPlayerByID(id string) (playerState, error) {
-	players, err := readPlayerStates()
-	if err != nil {
-		return playerState{}, err
-	}
-
-	for _, player := range players {
-		if player.ID == id {
-			return player, nil
-		}
-	}
-
-	return playerState{}, fmt.Errorf("player not found: %s", id)
-}
-
-func spawnPlayer() error {
-	aldaPlayer, err := exec.LookPath("alda-player")
-	if err != nil {
-		return err
-	}
-
-	// First, we run `alda-player info` and parse the version number from the
-	// output, so that we can confirm that the player is the same version as the
-	// client.
-	infoCmd := exec.Command(aldaPlayer, "info")
-	infoCmd.Stdout = nil
-	infoCmd.Stderr = nil
-	outputBytes, err := infoCmd.Output()
-	if err != nil {
-		return err
-	}
-
-	output := string(outputBytes)
-
-	re := regexp.MustCompile(`alda-player (.*)`)
-	captured := re.FindStringSubmatch(output)
-	if len(captured) < 2 {
-		return fmt.Errorf(
-			"unable to parse player version from output: %s", output,
-		)
-	}
-	// captured[0] is "alda-player X.X.X", captured[1] is "X.X.X"
-	playerVersion := captured[1]
-
-	// TODO: If the player version is different from the client version, offer to
-	// download and install the correct player version.
-	if playerVersion != generated.ClientVersion {
-		return fmt.Errorf(
-			"client version is %s, but player version is %s",
-			generated.ClientVersion, playerVersion,
-		)
-	}
-
-	// Once we've confirmed that the client and player version are the same, we
-	// run `alda-player run` to start the player process.
-	runCmd := exec.Command(aldaPlayer, "run")
-	if err := runCmd.Start(); err != nil {
-		return err
-	}
-
-	log.Info().Msg("Spawned player process.")
-
-	return nil
-}
-
-func fillPlayerPool() error {
-	players, err := readPlayerStates()
-	if err != nil {
-		return err
-	}
-
-	availablePlayers := 0
-	for _, player := range players {
-		if player.State == "ready" || player.State == "starting" {
-			availablePlayers++
-		}
-	}
-
-	desiredAvailablePlayers := 2
-	playersToStart := desiredAvailablePlayers - availablePlayers
-
-	log.Debug().
-		Int("availablePlayers", availablePlayers).
-		Int("desiredAvailablePlayers", desiredAvailablePlayers).
-		Int("playersToStart", playersToStart).
-		Msg("Spawning players.")
-
-	results := []<-chan error{}
-
-	for i := 0; i < playersToStart; i++ {
-		result := make(chan error)
-		results = append(results, result)
-		go func() { result <- spawnPlayer() }()
-	}
-
-	for _, result := range results {
-		err := <-result
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 // Returns true if input is being piped into stdin.
@@ -292,35 +169,35 @@ Text piped into the process on stdin:
 			Str("took", fmt.Sprintf("%s", time.Since(start))).
 			Msg("Constructed score.")
 
-		var players []playerState
+		var players []system.PlayerState
 
 		// Determine the port to use based on the provided CLI options.
 		switch {
 
 		// Port is explicitly specified, so use that port.
 		case port != -1:
-			player := playerState{ID: "unknown", State: "unknown", Port: port}
-			players = []playerState{player}
+			player := system.PlayerState{ID: "unknown", State: "unknown", Port: port}
+			players = []system.PlayerState{player}
 
 		// Player ID is specified; look up the player by ID and use its port.
 		case playerID != "":
-			player, err := findPlayerByID(playerID)
+			player, err := system.FindPlayerByID(playerID)
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)
 			}
-			players = []playerState{player}
+			players = []system.PlayerState{player}
 
 		// We're actually unpausing, not playing, so send the message to all active
 		// player processes so that if any of them are paused, they'll resume
 		// playing.
 		case action == "unpause":
-			allPlayers, err := readPlayerStates()
+			allPlayers, err := system.ReadPlayerStates()
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)
 			}
-			players = []playerState{}
+			players = []system.PlayerState{}
 			for _, player := range allPlayers {
 				if player.State == "active" {
 					players = append(players, player)
@@ -329,14 +206,14 @@ Text piped into the process on stdin:
 
 		// Find an available player process to use.
 		default:
-			if err := await(
+			if err := util.Await(
 				func() error {
-					player, err := findAvailablePlayer()
+					player, err := system.FindAvailablePlayer()
 					if err != nil {
 						return err
 					}
 
-					players = []playerState{player}
+					players = []system.PlayerState{player}
 					return nil
 				},
 				reasonableTimeout,

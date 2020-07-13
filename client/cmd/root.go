@@ -5,6 +5,7 @@ import (
 	"os"
 
 	log "alda.io/client/logging"
+	"alda.io/client/system"
 	"github.com/spf13/cobra"
 )
 
@@ -150,7 +151,7 @@ func Execute() error {
 	}
 
 	go func() {
-		if err := fillPlayerPool(); err != nil {
+		if err := system.FillPlayerPool(); err != nil {
 			log.Warn().Err(err).Msg("Failed to fill player pool.")
 		}
 
