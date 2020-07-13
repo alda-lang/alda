@@ -22,6 +22,9 @@ workflows:
             - build_client
             - build_player
       - store_artifacts:
+          filters:
+            branches:
+              only: v2
           requires:
             - test_ubuntu_18_04
             - test_macos
