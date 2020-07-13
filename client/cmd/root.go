@@ -20,6 +20,7 @@ func init() {
 		doctorCmd,
 		playCmd,
 		psCmd,
+		replCmd,
 		shutdownCmd,
 		stopCmd,
 		versionCmd,

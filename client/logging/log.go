@@ -2,15 +2,28 @@ package logging
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"time"
 
 	"github.com/rs/zerolog"
 )
 
-var output = zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.Stamp}
+func logger(writer io.Writer) zerolog.Logger {
+	output := zerolog.ConsoleWriter{Out: writer, TimeFormat: time.Stamp}
+	return zerolog.New(output).With().Timestamp().Caller().Logger()
+}
 
-var log = zerolog.New(output).With().Timestamp().Caller().Logger()
+var log = logger(os.Stderr)
+
+// SetOutput sets the writer that we log to.
+//
+// ...OK, technically, we create a NEW logger that is logging to the new writer,
+// because as far as I can tell, zerolog won't let you change the writer of a
+// zerolog.Logger instance after the instance is created.
+func SetOutput(writer io.Writer) {
+	log = logger(writer)
+}
 
 // Debug logs at the DEBUG level.
 var Debug = log.Debug
