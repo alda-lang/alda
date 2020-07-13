@@ -77,6 +77,12 @@ jobs:
             - v1-dependencies-
 
       - run:
+          name: Copy VERSION file because symlinks don't seem to work here
+          command: |
+            rm player/src/main/resources/VERSION
+            cp VERSION player/src/main/resources/VERSION
+
+      - run:
           name: Build Alda player executable
           command: player/bin/build
 
