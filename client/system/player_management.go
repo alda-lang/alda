@@ -128,7 +128,7 @@ func spawnPlayer() error {
 
 	output := string(outputBytes)
 
-	re := regexp.MustCompile(`alda-player (.*)`)
+	re := regexp.MustCompile(`alda-player ([^\r\n]+)`)
 	captured := re.FindStringSubmatch(output)
 	if len(captured) < 2 {
 		return fmt.Errorf(
