@@ -93,10 +93,16 @@ func (oe OSCEmitter) EmitShutdownMessage(offset int32) error {
 func (oe OSCEmitter) EmitScore(
 	score *model.Score, opts ...EmissionOption,
 ) error {
-	ctx := &EmissionContext{}
+	ctx := &EmissionContext{toIndex: -1}
 	for _, opt := range opts {
 		opt(ctx)
 	}
+
+	if ctx.toIndex == -1 {
+		ctx.toIndex = len(score.Events)
+	}
+
+	events := score.Events[ctx.fromIndex:ctx.toIndex]
 
 	startOffset := 0.0
 	endOffset := math.MaxFloat64
@@ -130,8 +136,8 @@ func (oe OSCEmitter) EmitScore(
 	//
 	// ...we sort the events in the score by offset and schedule them in
 	// chronological order.
-	sort.Slice(score.Events, func(i, j int) bool {
-		return score.Events[i].EventOffset() < score.Events[j].EventOffset()
+	sort.Slice(events, func(i, j int) bool {
+		return events[i].EventOffset() < events[j].EventOffset()
 	})
 
 	// In Alda's model, the track volume and panning are an attribute of each
@@ -171,7 +177,7 @@ func (oe OSCEmitter) EmitScore(
 	// of the score.
 	scoreLength := 0.0
 
-	for _, event := range score.Events {
+	for _, event := range events {
 		eventOffset := event.EventOffset()
 
 		// Filter out events before the `--from` time marking / marker, when

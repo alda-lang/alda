@@ -8,6 +8,10 @@ type EmissionContext struct {
 	from string
 	// A time marking (e.g. 1:00) or marker at which to end.
 	to string
+	// The index of the first event to emit. (default: 0)
+	fromIndex int
+	// The index (+ 1) of the last event to emit. (default: len(events))
+	toIndex int
 	// When true, no further emissions are expected for this particular score.
 	//
 	// What this means can vary depending on the emitter. For the OSC emitter, it
@@ -28,6 +32,16 @@ func EmitFrom(from string) EmissionOption {
 // EmitTo sets the time marking or marker at which to end.
 func EmitTo(to string) EmissionOption {
 	return func(ctx *EmissionContext) { ctx.to = to }
+}
+
+// EmitFromIndex sets the index of the first event to emit.
+func EmitFromIndex(i int) EmissionOption {
+	return func(ctx *EmissionContext) { ctx.fromIndex = i }
+}
+
+// EmitToIndex sets the index (+ 1) of the last event to emit.
+func EmitToIndex(i int) EmissionOption {
+	return func(ctx *EmissionContext) { ctx.toIndex = i }
 }
 
 // OneOff specifies that no further emissions are expected for this particular
