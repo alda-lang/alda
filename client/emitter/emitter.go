@@ -12,6 +12,12 @@ type EmissionContext struct {
 	fromIndex int
 	// The index (+ 1) of the last event to emit. (default: len(events))
 	toIndex int
+	// An optional map of parts to offsets that is used for the purpose of
+	// synchronization. For each part present in the map, any event emitted for
+	// that part will have the indicated offset subtracted from its offset. The
+	// use case for this is REPL usage, where a score is built up incrementally as
+	// the score is being played.
+	syncOffsets map[*model.Part]float64
 	// When true, no further emissions are expected for this particular score.
 	//
 	// What this means can vary depending on the emitter. For the OSC emitter, it
@@ -42,6 +48,15 @@ func EmitFromIndex(i int) EmissionOption {
 // EmitToIndex sets the index (+ 1) of the last event to emit.
 func EmitToIndex(i int) EmissionOption {
 	return func(ctx *EmissionContext) { ctx.toIndex = i }
+}
+
+// SyncOffsets uses the provided map of parts to offsets for the purpose of
+// synchronization. For each part present in the map, any event emitted for that
+// part will have the indicated offset subtracted from its offset. The use case
+// for this is REPL usage, where a score is built up incrementally as the score
+// is being played.
+func SyncOffsets(syncOffsets map[*model.Part]float64) EmissionOption {
+	return func(ctx *EmissionContext) { ctx.syncOffsets = syncOffsets }
 }
 
 // OneOff specifies that no further emissions are expected for this particular

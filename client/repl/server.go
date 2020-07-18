@@ -96,6 +96,11 @@ func (server *Server) play(input string) error {
 		return err
 	}
 
+	// Take note of the current offsets of all parts in the score, for the purpose
+	// of synchronization. (See below where we use the emitter.SyncOffsets
+	// option when emitting the score.)
+	partOffsets := server.score.PartOffsets()
+
 	if err := server.score.Update(scoreUpdates...); err != nil {
 		return err
 	}
@@ -108,6 +113,19 @@ func (server *Server) play(input string) error {
 		// Emit only new events, i.e. events added as a result of parsing the
 		// provided `input` and applying the resulting updates to the score.
 		emitter.EmitFromIndex(server.eventIndex),
+		// The previous offset of each part is subtracted from any new events for
+		// that part. The effect is that we "synchronize" that part with the events
+		// that we already sent to the player. For example, if a client submits the
+		// following code:
+		//
+		//   piano: c d e f
+		//
+		// Followed by (sometime before the 4 notes above finish playing):
+		//
+		//   piano: g a b > c
+		//
+		// Then the notes `c d e f g a b > c` will be played in time.
+		emitter.SyncOffsets(partOffsets),
 	}
 
 	// Update the starting index so that the next invocation of `play` for this

@@ -89,6 +89,17 @@ func (score *Score) Tracks() map[*Part]int32 {
 	return tracks
 }
 
+// PartOffsets returns a map of Part instances to their current offsets.
+func (score *Score) PartOffsets() map[*Part]float64 {
+	offsets := map[*Part]float64{}
+
+	for _, part := range score.Parts {
+		offsets[part.origin] = part.origin.CurrentOffset
+	}
+
+	return offsets
+}
+
 // InterpretOffsetReference interprets a string as a specific offset in the
 // score in milliseconds.
 //

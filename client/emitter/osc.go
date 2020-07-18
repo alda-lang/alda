@@ -205,6 +205,19 @@ func (oe OSCEmitter) EmitScore(
 			// By default, `startOffset` is 0, so the usual scenario is that the event
 			// offsets are not adjusted.
 			offset := noteEvent.Offset - startOffset
+
+			// When sync offsets are provided, we subtract the specified offset for
+			// each part from its events. (When syncOffsets isn't provided, or when
+			// the sync offset for a part isn't specified, the result is that 0 is
+			// subtracted from the part's events' offsets, i.e. the offsets for that
+			// part are not adjusted.)
+			//
+			// NB: ctx.from and ctx.syncOffsets are not intended to be used together.
+			// If they are used together, the behavior is unspecified (we would
+			// probably subtract too much from each offset and the features wouldn't
+			// work the way they're supposed to.)
+			offset -= ctx.syncOffsets[noteEvent.Part]
+
 			// The OSC API works with offsets that are ints, not floats, so we do the
 			// rounding here and work with the int value from here onward.
 			offsetRounded := int32(math.Round(offset))
