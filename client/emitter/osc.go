@@ -205,6 +205,8 @@ func (oe OSCEmitter) EmitScore(
 			// By default, `startOffset` is 0, so the usual scenario is that the event
 			// offsets are not adjusted.
 			offset := noteEvent.Offset - startOffset
+			// The OSC API works with offsets that are ints, not floats, so we do the
+			// rounding here and work with the int value from here onward.
 			offsetRounded := int32(math.Round(offset))
 
 			if noteEvent.TrackVolume != currentVolume[track] {
