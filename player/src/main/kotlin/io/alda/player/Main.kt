@@ -118,9 +118,14 @@ class Root : CliktCommand(
     "--verbose", "-v", help = "verbose output"
   ).flag(default = false)
 
+  val veryVerbose by option(
+    "--very-verbose", "-vv", help = "very verbose output"
+  ).flag(default = false)
+
   override fun run() {
-    if (verbose) {
-      Configurator.setRootLevel(Level.DEBUG)
+    when {
+      veryVerbose -> Configurator.setRootLevel(Level.TRACE)
+      verbose     -> Configurator.setRootLevel(Level.DEBUG)
     }
   }
 }
