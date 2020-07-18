@@ -217,8 +217,11 @@ class Track(val trackNumber : Int) {
 
     // Ensure that there is time to schedule the events before they're due to
     // come up in the sequence.
-    if (midi().isPlaying && (startOffset - now < SCHEDULE_BUFFER_TIME_MS))
+    if (midi().isPlaying && (startOffset - now < SCHEDULE_BUFFER_TIME_MS)) {
+      log.trace { "The note would be due in ${startOffset - now} ms, so " +
+                  "adding ${SCHEDULE_BUFFER_TIME_MS} to the scheduled offset" }
       startOffset += SCHEDULE_BUFFER_TIME_MS
+    }
 
     return startOffset
   }
