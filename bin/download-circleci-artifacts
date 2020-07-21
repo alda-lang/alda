@@ -33,7 +33,7 @@ circleci_project="github/alda-lang/alda"
 function get_build_number() {
   local commit="$1"
 
-  curl -s --fail \
+  curl -Ls --fail \
     -H "Circle-Token: $CIRCLECI_API_TOKEN" \
     "$circleci_api_base_url/project/$circleci_project" \
     | jq ".[]
@@ -55,7 +55,7 @@ fi
 
 echo "Found build $build_number"
 
-curl -s --fail \
+curl -Ls --fail \
   -H "Circle-Token: $CIRCLECI_API_TOKEN" \
   "$circleci_api_base_url/project/$circleci_project/$build_number/artifacts" \
   | jq -r '.[] | [.path, .url] | @tsv' | while read path download_url; do
@@ -63,5 +63,5 @@ curl -s --fail \
   echo "Downloading $download_url => $path"
   base_path="$(echo "$target_dir/$path" | sed -r 's/\/[^\/]+$//')"
   mkdir -p "$base_path"
-  curl "$download_url" > "$target_dir/$path"
+  curl -L "$download_url" > "$target_dir/$path"
 done
