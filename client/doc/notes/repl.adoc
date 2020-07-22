@@ -134,7 +134,7 @@ the events resulting from parsing/evaluating the file that you're loading.
 
 * MVP of the implementation described above.
 ** Interactive REPL prompt
-** Keeps track of successful lines of input (for `:save`)
+** Keeps track of successful lines of input (for `:save` and `:load`)
 ** Keeps track of state in a `*Score` object
 ** Parses each successive line of input as updates and applies them to the score
 object in memory
