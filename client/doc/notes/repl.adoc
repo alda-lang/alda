@@ -75,6 +75,61 @@ also shut down the player process it was using and obtain a new one. At that
 point, a new player process will need to be spawned, so this background routine
 would take care of that the next time it comes around.
 
+== REPL differences, v1 vs. v2
+
+* In the Alda v1 REPL, if you provide two lines of input in quick succession,
+e.g.:
++
+[.source, alda]
+----
+piano: c d e f
+g a b > c
+----
++
+If you submit the second line of input immediately after the first, you will
+hear the 4 notes on the second line overlapping with the 4 notes on the first
+line.
++
+In Alda v2, if you run the lines of input above in quick succession, the second
+line of input is parsed, evaluated into events, and those events are intuitively
+scheduled right after the last note on the first line, so you end up hearing the
+8 notes played in time.
+
+* The `:play` command's behavior might be surprising to some users in that if
+you enter lines of input with pauses in between, and then you enter the `:play`
+command with no arguments (i.e. "play what I have so far"), you will hear a
+replay of the input you entered above, _with pauses preserved_ because of the
+live-coding nature of the Alda v2 REPL.
++
+If instead, you want to reload the lines of input entered so far and play them
+all back to back (as if they were all entered at once as a single, multi-line
+string), then you can do `:load` followed by `:play`.
++
+In the Alda v1 REPL, the `:load` command without arguments doesn't work unless
+you've already loaded a _file_ (i.e. `:load /path/to/some/file.alda`) or if
+you've saved the current REPL session into a file. In the Alda v2 REPL, `:load
+/path/to/some/file.alda` still works the same way, but now `:load` also works,
+and what it does is that it reloads all the lines of input that have been
+entered so far (not preserving pauses, because the source code doesn't encode
+that information).
++
+Note that in both Alda v1 and v2, the `:load` command is a destructive command.
+When you use the `:load` command, you will lose whatever state you had in the
+REPL session, which means:
++
+** v1 REPL: The lines of input that you entered are blown away and replaced with
+the contents of the file you're loading.
+** v2 REPL, `:load` (without arguments): Your input is preserved, but the REPL
+server player starts over with a new player process, re-parses/re-evaluates your
+input, and uses the resulting events to bootstrap the new player process. This
+has the effect of losing any pauses in between lines of input and making it
+sound like the score that would result from simply parsing/evaluating all of the
+lines of the input together as a single score.
+** v2 REPL, `:load /path/to/some/file.alda`: The lines of input that you entered
+are blown and way and replaced with the contents of the file you're loading. The
+REPL server also starts over with a new player process and bootstraps it using
+the events resulting from parsing/evaluating the file that you're loading.
+
 == TODO
 
 * MVP of the implementation described above.
