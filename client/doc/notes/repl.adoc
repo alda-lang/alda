@@ -43,7 +43,7 @@ object.
 
 I think we can keep track of which output events (e.g. notes) are new by just
 keeping track of the number of events before vs. after, and indexing into the
-list. Then, we can emit OSC messages to the player for just the new notes.
+list. Then, we can transmit OSC messages to the player for just the new notes.
 
 The REPL `:new` command can simply replace the `*Score` instance with a new one.
 

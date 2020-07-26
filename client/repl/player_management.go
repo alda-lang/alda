@@ -5,9 +5,9 @@ import (
 	"strings"
 	"time"
 
-	"alda.io/client/emitter"
 	log "alda.io/client/logging"
 	"alda.io/client/system"
+	"alda.io/client/transmitter"
 	"alda.io/client/util"
 )
 
@@ -38,33 +38,34 @@ func findAvailablePlayer() (system.PlayerState, error) {
 	return player, nil
 }
 
-func (server *Server) emitter() (emitter.OSCEmitter, error) {
+func (server *Server) transmitter() (transmitter.OSCTransmitter, error) {
 	if !server.hasPlayer() {
-		return emitter.OSCEmitter{}, fmt.Errorf("no player process is available")
+		return transmitter.OSCTransmitter{},
+			fmt.Errorf("no player process is available")
 	}
 
-	return emitter.OSCEmitter{Port: server.player.Port}, nil
+	return transmitter.OSCTransmitter{Port: server.player.Port}, nil
 }
 
 // Player management happens asynchronously (see the loop in `managePlayers`),
 // so at any given moment, it is probable, but not 100% certain, that a player
 // process will be available. This function handles the boilerplate of waiting
-// for a player process to be available, constructing an OSCEmitter that will
-// emit to that player's port, and then running `execute`, a function that uses
-// the OSCEmitter.
-func (server *Server) withEmitter(
-	execute func(emitter.OSCEmitter) error,
+// for a player process to be available, constructing an OSCTransmitter that
+// will transmit to that player's port, and then running `execute`, a function
+// that uses the OSCTransmitter.
+func (server *Server) withTransmitter(
+	execute func(transmitter.OSCTransmitter) error,
 ) error {
-	var emitter emitter.OSCEmitter
+	var transmitter transmitter.OSCTransmitter
 
 	if err := util.Await(
 		func() error {
-			oe, err := server.emitter()
+			oe, err := server.transmitter()
 			if err != nil {
 				return err
 			}
 
-			emitter = oe
+			transmitter = oe
 			return nil
 		},
 		findPlayerTimeout,
@@ -72,7 +73,7 @@ func (server *Server) withEmitter(
 		return err
 	}
 
-	return execute(emitter)
+	return execute(transmitter)
 }
 
 // Boilerplate to overcome the slight awkwardness of Go's zero value semantics
@@ -164,10 +165,10 @@ func (server *Server) managePlayers() {
 		if server.hasPlayer() && now.Sub(lastPing) > pingInterval {
 			// We can safely ignore `err` here because it should always be nil, given
 			// that we just checked that `server.hasPlayer()` is true.
-			emitter, _ := server.emitter()
+			transmitter, _ := server.transmitter()
 
 			if err := util.Await(
-				func() error { return emitter.EmitPingMessage() },
+				func() error { return transmitter.TransmitPingMessage() },
 				pingTimeout,
 			); err != nil {
 				log.Warn().
@@ -190,9 +191,11 @@ func (server *Server) managePlayers() {
 }
 
 func (server *Server) shutdownPlayer() error {
-	if err := server.withEmitter(func(emitter emitter.OSCEmitter) error {
-		return emitter.EmitShutdownMessage(0)
-	}); err != nil {
+	if err := server.withTransmitter(
+		func(transmitter transmitter.OSCTransmitter) error {
+			return transmitter.TransmitShutdownMessage(0)
+		},
+	); err != nil {
 		return err
 	}
 

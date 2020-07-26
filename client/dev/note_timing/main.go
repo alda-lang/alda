@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	"alda.io/client/emitter"
 	log "alda.io/client/logging"
 	"alda.io/client/model"
 	"alda.io/client/parser"
+	"alda.io/client/transmitter"
 )
 
 func printUsage() {
@@ -38,5 +38,5 @@ func main() {
 		os.Exit(1)
 	}
 
-	emitter.NoteTimingEmitter{}.EmitScore(score)
+	transmitter.NoteTimingTransmitter{}.TransmitScore(score)
 }

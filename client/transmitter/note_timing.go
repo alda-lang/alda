@@ -1,4 +1,4 @@
-package emitter
+package transmitter
 
 import (
 	"fmt"
@@ -7,17 +7,17 @@ import (
 	"alda.io/client/model"
 )
 
-// NoteTimingEmitter prints the offset, duration, and pitch of every note in a
-// score.
+// NoteTimingTransmitter prints the offset, duration, and pitch of every note in
+// a score.
 //
 // The goal is to compare the same output from Alda v1 to find discrepancies.
 //
 // See: https://github.com/daveyarwood/alda-v1-v2-comparer
-type NoteTimingEmitter struct{}
+type NoteTimingTransmitter struct{}
 
-// EmitScore implements Emitter.EmitScore by printing the offset, duration, and
-// pitch of every note in the score.
-func (nte NoteTimingEmitter) EmitScore(score *model.Score) error {
+// TransmitScore implements Transmitter.TransmitScore by printing the offset,
+// duration, and pitch of every note in the score.
+func (nte NoteTimingTransmitter) TransmitScore(score *model.Score) error {
 	fmt.Println("offset,duration,midi note")
 
 	for _, event := range score.Events {

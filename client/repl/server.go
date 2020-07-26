@@ -1,11 +1,11 @@
 package repl
 
 import (
-	"alda.io/client/emitter"
 	log "alda.io/client/logging"
 	"alda.io/client/model"
 	"alda.io/client/parser"
 	"alda.io/client/system"
+	"alda.io/client/transmitter"
 )
 
 // Server is a stateful Alda REPL server object.
@@ -44,14 +44,14 @@ func RunServer() (*Server, error) {
 }
 
 // Parses a string of `input`, updates the server's score and related state, and
-// returns a list of emission options that would make it so that we're emitting
-// only the new events that resulted from this string of input.
+// returns a list of transmission options that would make it so that we're
+// transmitting only the new events that resulted from this string of input.
 func (server *Server) updateScoreWithInput(
 	input string,
-) ([]emitter.EmissionOption, error) {
+) ([]transmitter.TransmissionOption, error) {
 	// Take note of the current offsets of all parts in the score, for the purpose
-	// of synchronization. (See below where we use the emitter.SyncOffsets
-	// option when emitting the score.)
+	// of synchronization. (See below where we use the transmitter.SyncOffsets
+	// option when transmitting the score.)
 	partOffsets := server.score.PartOffsets()
 
 	// Take note of the current `eventIndex` value, so that we know where to start
@@ -75,10 +75,10 @@ func (server *Server) updateScoreWithInput(
 	// this same score will result in only playing newly added events.
 	server.eventIndex = len(server.score.Events)
 
-	return []emitter.EmissionOption{
-		// Emit only the new events, i.e. events added as a result of parsing the
-		// provided `input` and applying the resulting updates to the score.
-		emitter.EmitFromIndex(eventIndex),
+	return []transmitter.TransmissionOption{
+		// Transmit only the new events, i.e. events added as a result of parsing
+		// the provided `input` and applying the resulting updates to the score.
+		transmitter.TransmitFromIndex(eventIndex),
 		// The previous offset of each part is subtracted from any new events for
 		// that part. The effect is that we "synchronize" that part with the events
 		// that we already sent to the player. For example, if a client submits the
@@ -91,23 +91,25 @@ func (server *Server) updateScoreWithInput(
 		//   piano: g a b > c
 		//
 		// Then the notes `c d e f g a b > c` will be played in time.
-		emitter.SyncOffsets(partOffsets),
+		transmitter.SyncOffsets(partOffsets),
 	}, nil
 }
 
 func (server *Server) evalAndPlay(input string) error {
-	return server.withEmitter(func(emitter emitter.OSCEmitter) error {
-		emitOpts, err := server.updateScoreWithInput(input)
-		if err != nil {
-			return err
-		}
+	return server.withTransmitter(
+		func(transmitter transmitter.OSCTransmitter) error {
+			transmitOpts, err := server.updateScoreWithInput(input)
+			if err != nil {
+				return err
+			}
 
-		log.Info().
-			Interface("player", server.player).
-			Msg("Sending OSC messages to player.")
+			log.Info().
+				Interface("player", server.player).
+				Msg("Sending OSC messages to player.")
 
-		return emitter.EmitScore(server.score, emitOpts...)
-	})
+			return transmitter.TransmitScore(server.score, transmitOpts...)
+		},
+	)
 }
 
 // TODO: support `from` and `to` parameters, when provided in the message
@@ -118,9 +120,9 @@ func (server *Server) replay() error {
 	// and re-adding it to the state of the server.
 	input := server.input
 
-	// We reset the server state here so that we can re-emit the score "from
-	// scratch" (or just re-emit the part that we want to hear, if `from` and/or
-	// `to` parameters are provided). This makes it so that what we hear
+	// We reset the server state here so that we can re-transmit the score "from
+	// scratch" (or just re-transmit the part that we want to hear, if `from`
+	// and/or `to` parameters are provided). This makes it so that what we hear
 	// corresponds more directly to the input entered so far.
 	//
 	// An alternative would be to tell the player to rewind to offset 0 and play

@@ -12,10 +12,10 @@ import (
 	"strings"
 	"time"
 
-	"alda.io/client/emitter"
 	"alda.io/client/model"
 	"alda.io/client/parser"
 	"alda.io/client/system"
+	"alda.io/client/transmitter"
 	"alda.io/client/util"
 	"github.com/daveyarwood/go-osc/osc"
 	"github.com/logrusorgru/aurora"
@@ -178,7 +178,7 @@ var doctorCmd = &cobra.Command{
 
 				if err := util.Await(
 					func() error {
-						return emitter.OSCEmitter{Port: port}.EmitScore(score)
+						return transmitter.OSCTransmitter{Port: port}.TransmitScore(score)
 					},
 					reasonableTimeout,
 				); err != nil {
@@ -266,7 +266,7 @@ var doctorCmd = &cobra.Command{
 			step(
 				"Play score",
 				func() error {
-					return (emitter.OSCEmitter{Port: port}).EmitScore(score)
+					return (transmitter.OSCTransmitter{Port: port}).TransmitScore(score)
 				},
 			)
 		}

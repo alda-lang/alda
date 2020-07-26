@@ -1,4 +1,4 @@
-package emitter
+package transmitter
 
 import (
 	"fmt"
@@ -11,8 +11,8 @@ import (
 	"github.com/daveyarwood/go-osc/osc"
 )
 
-// OSCEmitter sends OSC messages to a player process.
-type OSCEmitter struct {
+// OSCTransmitter sends OSC messages to a player process.
+type OSCTransmitter struct {
 	Port int
 }
 
@@ -78,32 +78,32 @@ func oscClient(port int) *osc.Client {
 	return osc.NewClient("localhost", int(port), osc.ClientProtocol(osc.TCP))
 }
 
-// EmitPingMessage sends a "ping" message to a player process.
-func (oe OSCEmitter) EmitPingMessage() error {
+// TransmitPingMessage sends a "ping" message to a player process.
+func (oe OSCTransmitter) TransmitPingMessage() error {
 	return oscClient(oe.Port).Send(pingMsg())
 }
 
-// EmitPlayMessage sends a "play" message to a player process.
-func (oe OSCEmitter) EmitPlayMessage() error {
+// TransmitPlayMessage sends a "play" message to a player process.
+func (oe OSCTransmitter) TransmitPlayMessage() error {
 	return oscClient(oe.Port).Send(systemPlayMsg())
 }
 
-// EmitStopMessage sends a "stop" message to a player process.
-func (oe OSCEmitter) EmitStopMessage() error {
+// TransmitStopMessage sends a "stop" message to a player process.
+func (oe OSCTransmitter) TransmitStopMessage() error {
 	return oscClient(oe.Port).Send(systemStopMsg())
 }
 
-// EmitShutdownMessage sends a "shutdown" message to a player process.
-func (oe OSCEmitter) EmitShutdownMessage(offset int32) error {
+// TransmitShutdownMessage sends a "shutdown" message to a player process.
+func (oe OSCTransmitter) TransmitShutdownMessage(offset int32) error {
 	return oscClient(oe.Port).Send(systemShutdownMsg(offset))
 }
 
-// EmitScore implements Emitter.EmitScore by sending OSC messages to instruct a
-// player process how to perform the score.
-func (oe OSCEmitter) EmitScore(
-	score *model.Score, opts ...EmissionOption,
+// TransmitScore implements Transmitter.TransmitScore by sending OSC messages to
+// instruct a player process how to perform the score.
+func (oe OSCTransmitter) TransmitScore(
+	score *model.Score, opts ...TransmissionOption,
 ) error {
-	ctx := &EmissionContext{toIndex: -1}
+	ctx := &TransmissionContext{toIndex: -1}
 	for _, opt := range opts {
 		opt(ctx)
 	}
@@ -114,7 +114,7 @@ func (oe OSCEmitter) EmitScore(
 
 	log.Debug().
 		Str("ctx", fmt.Sprintf("%#v", ctx)).
-		Msg("Emission options applied.")
+		Msg("Transmission options applied.")
 
 	events := score.Events[ctx.fromIndex:ctx.toIndex]
 

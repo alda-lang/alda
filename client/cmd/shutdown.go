@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"alda.io/client/emitter"
 	log "alda.io/client/logging"
 	"alda.io/client/system"
+	"alda.io/client/transmitter"
 	"github.com/spf13/cobra"
 )
 
@@ -54,7 +54,8 @@ var shutdownCmd = &cobra.Command{
 		}
 
 		for _, player := range players {
-			err := (emitter.OSCEmitter{Port: player.Port}).EmitShutdownMessage(0)
+			transmitter := transmitter.OSCTransmitter{Port: player.Port}
+			err := transmitter.TransmitShutdownMessage(0)
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)

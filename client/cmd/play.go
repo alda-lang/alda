@@ -6,11 +6,11 @@ import (
 	"os"
 	"time"
 
-	"alda.io/client/emitter"
 	log "alda.io/client/logging"
 	"alda.io/client/model"
 	"alda.io/client/parser"
 	"alda.io/client/system"
+	"alda.io/client/transmitter"
 	"alda.io/client/util"
 	"github.com/spf13/cobra"
 )
@@ -223,13 +223,13 @@ Text piped into the process on stdin:
 			}
 		}
 
-		emitOpts := []emitter.EmissionOption{
-			emitter.EmitFrom(playFrom),
-			emitter.EmitTo(playTo),
+		transmitOpts := []transmitter.TransmissionOption{
+			transmitter.TransmitFrom(playFrom),
+			transmitter.TransmitTo(playTo),
 		}
 
 		if action == "play" {
-			emitOpts = append(emitOpts, emitter.OneOff())
+			transmitOpts = append(transmitOpts, transmitter.OneOff())
 		}
 
 		log.Info().
@@ -247,17 +247,17 @@ Text piped into the process on stdin:
 				os.Exit(1)
 			}
 
-			emitter := emitter.OSCEmitter{Port: player.Port}
+			transmitter := transmitter.OSCTransmitter{Port: player.Port}
 
-			var emissionError error
+			var transmissionError error
 
 			if action == "unpause" {
-				emissionError = emitter.EmitPlayMessage()
+				transmissionError = transmitter.TransmitPlayMessage()
 			} else {
-				emissionError = emitter.EmitScore(score, emitOpts...)
+				transmissionError = transmitter.TransmitScore(score, transmitOpts...)
 			}
-			if emissionError != nil {
-				fmt.Println(emissionError)
+			if transmissionError != nil {
+				fmt.Println(transmissionError)
 				os.Exit(1)
 			}
 
