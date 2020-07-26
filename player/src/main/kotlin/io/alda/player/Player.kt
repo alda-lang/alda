@@ -408,12 +408,12 @@ private fun applyUpdates(updates : Updates) {
   log.trace { updates.patternEvents }
   log.trace { "----" }
 
-  // PHASE 1: shutdown/stop/mute/clear
+  // PHASE 1: shutdown/stop/offset/mute/clear
 
   if (updates.systemActions.contains(SystemAction.SHUTDOWN))
     isRunning = false
 
-  updates.systemEvents.filter {it is ShutdownEvent}.forEach {
+  updates.systemEvents.filter { it is ShutdownEvent }.forEach {
     val shutdownEvent = it as ShutdownEvent
     midi().scheduleShutdown(shutdownEvent.offset)
   }
@@ -423,6 +423,11 @@ private fun applyUpdates(updates : Updates) {
 
   if (updates.systemActions.contains(SystemAction.CLEAR)) {
     tracks.forEach { _, track -> track.clear() }
+  }
+
+  updates.systemEvents.filter { it is SetOffsetEvent }.forEach {
+    val setOffsetEvent = it as SetOffsetEvent
+    midi().setSequencerOffset(setOffsetEvent.offset)
   }
 
   updates.trackActions.forEach { (trackNumber, actions) ->
@@ -443,7 +448,7 @@ private fun applyUpdates(updates : Updates) {
 
   // PHASE 2: update tempo and patterns
 
-  updates.systemEvents.filter {it is TempoEvent}.forEach {
+  updates.systemEvents.filter { it is TempoEvent }.forEach {
     val tempoEvent = it as TempoEvent
     midi().setTempo(tempoEvent.offset, tempoEvent.bpm)
   }

@@ -181,6 +181,18 @@ with other music software (e.g. sheet music notation programs).
       </td>
     </tr>
     <tr>
+      <td><code>/system/offset</code></td>
+      <td>
+        <ul>
+          <li>Offset (integer)</li>
+        </ul>
+      </td>
+      <td>
+        Set the sequence position to the provided offset, which is expressed in
+        milliseconds since the beginning of the score.
+      </td>
+    </tr>
+    <tr>
       <td><code>/system/clear</code></td>
       <td></td>
       <td>Clear all tracks of upcoming events.</td>

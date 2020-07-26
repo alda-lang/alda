@@ -376,6 +376,10 @@ class MidiEngine {
     }
   }
 
+  fun setSequencerOffset(offsetMs : Int) {
+    sequencer.setTickPosition(msToTicks(offsetMs * 1.0))
+  }
+
   fun patch(offset : Int, channel : Int, patch : Int) {
     scheduleShortMsg(offset, ShortMessage.PROGRAM_CHANGE, channel, patch, 0)
   }

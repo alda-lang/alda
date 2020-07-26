@@ -34,6 +34,14 @@ class ShutdownEvent(val offset : Int) : Event {
   override fun endOffset() = 0
 }
 
+class SetOffsetEvent(val offset : Int) : Event {
+  override fun addOffset(o : Int) : SetOffsetEvent {
+    return SetOffsetEvent(offset + o)
+  }
+
+  override fun endOffset() = 0
+}
+
 class TempoEvent(val offset : Int, val bpm : Float) : Event {
   override fun addOffset(o : Int) : TempoEvent {
     return TempoEvent(offset + o, bpm)
@@ -244,6 +252,11 @@ class Updates() {
 
         Regex("/system/stop").matches(address) -> {
           systemActions.add(SystemAction.STOP)
+        }
+
+        Regex("/system/offset").matches(address) -> {
+          val offset = args.get(0) as Int
+          systemEvents.add(SetOffsetEvent(offset))
         }
 
         Regex("/system/clear").matches(address) -> {
