@@ -224,8 +224,20 @@ class Updates() {
 
     try {
       when {
+        // When a client (e.g. an Alda REPL server) sends a /ping message, it
+        // has the effect of "claiming" the player process, i.e. putting the
+        // player into the "active" state and prolonging the expiration of the
+        // player process.
+        //
+        // This is helpful because it allows an Alda REPL server to continuously
+        // use the same player process for playback across multiple evaluations,
+        // which enables live coding. The Alda REPL server repeatedly sends
+        // /ping messages, which ensures that the player process will not expire
+        // before the server is done using it.
         Regex("/ping").matches(address) -> {
-          log.debug("received ping")
+          log.trace("received ping")
+          stateManager!!.markActive()
+          stateManager!!.delayExpiration()
         }
 
         Regex("/system/shutdown").matches(address) -> {
