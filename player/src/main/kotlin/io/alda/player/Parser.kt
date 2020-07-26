@@ -235,7 +235,7 @@ class Updates() {
         // /ping messages, which ensures that the player process will not expire
         // before the server is done using it.
         Regex("/ping").matches(address) -> {
-          log.trace("received ping")
+          log.debug("received ping")
           stateManager!!.markActive()
           stateManager!!.delayExpiration()
         }
