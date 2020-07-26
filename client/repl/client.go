@@ -1,3 +1,5 @@
+// vim: tabstop=2
+
 package repl
 
 import (
@@ -29,31 +31,75 @@ const aldaVersionText = `
          repl session
 `
 
+// Client is a stateful Alda REPL client object.
+type Client struct {
+	// TODO: The end goal is to have the client send the input over the network to
+	// a server (which could potentially be in another process or on another
+	// machine) and print feedback based on the response from the server.
+	//
+	// For now, just to get something working, I'm implementing this all in one
+	// process, using stuff in repl/server.go directly.
+	server *Server
+}
+
 type replCommand struct {
 	helpSummary string
 	helpDetails string
-	run         func(args string) error
+	run         func(client *Client, args string) error
 }
 
-// FIXME
+// TODO: implement the rest for parity with v1
 var replCommands = map[string]replCommand{
 	"help": {
 		helpSummary: "Display this help text.",
 		helpDetails: `Usage:
   :help help
   :help new`,
-		run: func(args string) error {
+		run: func(client *Client, args string) error {
 			return fmt.Errorf("not yet implemented")
+		}},
+
+	"play": {
+		helpSummary: "Plays the current score.",
+		helpDetails: `Can take optional ` + "`from`" + `and ` + "`to`" + `arguments, in the form of markers or mm:ss
+times.
+
+Without arguments, will play the entire score from beginning to end.
+
+Example usage:
+
+  :play
+  :play from 0:05
+  :play to 0:10
+  :play from 0:05 to 0:10
+  :play from guitarIn
+  :play to verse
+  :play from verse to bridge`,
+		run: func(client *Client, args string) error {
+			// TODO: send a message over the network instead
+			//       * I need to think about the parameters that the message allows.
+			//         It might look something like the EmissionContext, but it
+			//         doesn't necessarily have to be the same.
+			//
+			//         UPDATE: I was tempted to just use EmissionContext and make sure
+			//         that we keep it serializable, because that would be one less
+			//         set of options to worry about. But then, thinking about it
+			//         more, I decided it would be better to keep the two things
+			//         separate, because one is user-facing (the REPL server API) and
+			//         the other is an implementation detail (EmissionContext).
+			//
+			// TODO: parse and handle "from" and "to" options
+			return client.server.replay()
 		}},
 }
 
-func handleCommand(name string, args string) error {
+func (client *Client) handleCommand(name string, args string) error {
 	command, defined := replCommands[name]
 	if !defined {
 		return fmt.Errorf("unrecognized command: %s", name)
 	}
 
-	return command.run(args)
+	return command.run(client, args)
 }
 
 var replHistoryFilepath = system.CachePath("history", "alda-repl-history")
@@ -70,6 +116,8 @@ func RunClient() error {
 	if err != nil {
 		return err
 	}
+
+	client := &Client{server: server}
 
 	fmt.Printf(
 		"%s\n\n%s\n\n%s\n\n",
@@ -129,7 +177,7 @@ ReplLoop:
 			// captured[0] is the full string, e.g. ":foo bar baz"
 			command := captured[1]
 			args := captured[2]
-			if err := handleCommand(command, args); err != nil {
+			if err := client.handleCommand(command, args); err != nil {
 				fmt.Printf("ERROR: %s\n", err)
 			}
 
@@ -142,7 +190,7 @@ ReplLoop:
 		default:
 			// FIXME: see comment at the top of RunClient about communicating with a
 			// server process instead of doing this all in one client+server process
-			if err := server.play(input); err != nil {
+			if err := server.evalAndPlay(input); err != nil {
 				fmt.Printf("ERROR: %s\n", err)
 			}
 		}

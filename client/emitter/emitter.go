@@ -1,6 +1,11 @@
 package emitter
 
-import "alda.io/client/model"
+import (
+	"fmt"
+
+	log "alda.io/client/logging"
+	"alda.io/client/model"
+)
 
 // EmissionContext provides context about how the score data should be emitted.
 type EmissionContext struct {
@@ -32,21 +37,41 @@ type EmissionOption func(*EmissionContext)
 
 // EmitFrom sets the time marking or marker from which to start.
 func EmitFrom(from string) EmissionOption {
-	return func(ctx *EmissionContext) { ctx.from = from }
+	return func(ctx *EmissionContext) {
+		log.Debug().
+			Str("from", from).
+			Msg("Applying emission option")
+
+		ctx.from = from
+	}
 }
 
 // EmitTo sets the time marking or marker at which to end.
 func EmitTo(to string) EmissionOption {
+	log.Debug().
+		Str("to", to).
+		Msg("Applying emission option")
+
 	return func(ctx *EmissionContext) { ctx.to = to }
 }
 
 // EmitFromIndex sets the index of the first event to emit.
 func EmitFromIndex(i int) EmissionOption {
-	return func(ctx *EmissionContext) { ctx.fromIndex = i }
+	return func(ctx *EmissionContext) {
+		log.Debug().
+			Interface("fromIndex", i).
+			Msg("Applying emission option")
+
+		ctx.fromIndex = i
+	}
 }
 
 // EmitToIndex sets the index (+ 1) of the last event to emit.
 func EmitToIndex(i int) EmissionOption {
+	log.Debug().
+		Interface("toIndex", i).
+		Msg("Applying emission option")
+
 	return func(ctx *EmissionContext) { ctx.toIndex = i }
 }
 
@@ -56,7 +81,13 @@ func EmitToIndex(i int) EmissionOption {
 // for this is REPL usage, where a score is built up incrementally as the score
 // is being played.
 func SyncOffsets(syncOffsets map[*model.Part]float64) EmissionOption {
-	return func(ctx *EmissionContext) { ctx.syncOffsets = syncOffsets }
+	return func(ctx *EmissionContext) {
+		log.Debug().
+			Str("syncOffsets", fmt.Sprintf("%#v", syncOffsets)).
+			Msg("Applying emission option")
+
+		ctx.syncOffsets = syncOffsets
+	}
 }
 
 // OneOff specifies that no further emissions are expected for this particular
@@ -66,7 +97,13 @@ func SyncOffsets(syncOffsets map[*model.Part]float64) EmissionOption {
 // means that we append a "shutdown" message at the end of the OSC bundle, which
 // tells the player process to shut down after playing the score.
 func OneOff() EmissionOption {
-	return func(ctx *EmissionContext) { ctx.oneOff = true }
+	return func(ctx *EmissionContext) {
+		log.Debug().
+			Bool("oneOff", true).
+			Msg("Applying emission option")
+
+		ctx.oneOff = true
+	}
 }
 
 // An Emitter sends score data somewhere for performance, visualization, etc.

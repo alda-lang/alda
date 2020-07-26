@@ -6,6 +6,7 @@ import (
 	"sort"
 	"time"
 
+	log "alda.io/client/logging"
 	"alda.io/client/model"
 	"github.com/daveyarwood/go-osc/osc"
 )
@@ -13,6 +14,10 @@ import (
 // OSCEmitter sends OSC messages to a player process.
 type OSCEmitter struct {
 	Port int
+}
+
+func pingMsg() *osc.Message {
+	return osc.NewMessage("/ping")
 }
 
 func systemPlayMsg() *osc.Message {
@@ -73,6 +78,11 @@ func oscClient(port int) *osc.Client {
 	return osc.NewClient("localhost", int(port), osc.ClientProtocol(osc.TCP))
 }
 
+// EmitPingMessage sends a "ping" message to a player process.
+func (oe OSCEmitter) EmitPingMessage() error {
+	return oscClient(oe.Port).Send(pingMsg())
+}
+
 // EmitPlayMessage sends a "play" message to a player process.
 func (oe OSCEmitter) EmitPlayMessage() error {
 	return oscClient(oe.Port).Send(systemPlayMsg())
@@ -101,6 +111,10 @@ func (oe OSCEmitter) EmitScore(
 	if ctx.toIndex == -1 {
 		ctx.toIndex = len(score.Events)
 	}
+
+	log.Debug().
+		Str("ctx", fmt.Sprintf("%#v", ctx)).
+		Msg("Emission options applied.")
 
 	events := score.Events[ctx.fromIndex:ctx.toIndex]
 

@@ -75,6 +75,55 @@ also shut down the player process it was using and obtain a new one. At that
 point, a new player process will need to be spawned, so this background routine
 would take care of that the next time it comes around.
 
+=== Challenges
+
+==== What if the player process dies during live-coding?
+
+Ignoring the live-coding use case, we can already recover well from the scenario
+where the REPL server is using a player process and the player process suddenly
+dies for some reason. The server is able to realize when it can't talk to the
+player process anymore and it will quickly replace the player process with a new
+one.
+
+At the moment, we don't need to do anything special to prepare a new player
+process; the server has all of the context about the score and it can send the
+player everything the player needs to know, right when it's telling the player
+what to play. This is one of the advantages of doing all of the work of parsing,
+evaluating, and tracking score state on the client (well, server, in this case)
+side.
+
+However, When we're ready to support live coding, the state of the player
+process will become more important. We will be sending patterns to the player
+and having the player loop the patterns and update them on demand. At that
+point, it will be more noticeable and problematic if a player unexpectedly dies.
+
+We might need to "bootstrap" the new player process so that we can attempt to
+recover from this disastrous scenario and maybe try to resume playing from where
+we left off?  I don't think there would be any way of knowing definitively, from
+the server side, what offset the player had gotten to when it died, but it
+should at least be possible for us to know, from the state of the score, the
+current definition of each pattern, which pattern(s) are looping, and for how
+long they are supposed to loop. Then we can send the player process any messages
+it would take to get the player process into the desired state to resume looping
+the pattern that it was probably looping, etc. and then include a final
+`/system/play` message that will tell the new player to start playing from that
+point.
+
+...of course, there's another problem here, which is that I don't think we can
+assume that the player process was at the end of the score and looping a
+pattern, if the player died. For all we know, it only got to play a couple notes
+of a long score and then it died, and the user might prefer to have the score
+play again from the beginning. Or the user might prefer not to start playing at
+all.
+
+Maybe the best thing to do in this scenario is just to print a warning when the
+player becomes unreachable and give the user some tools to deal with that
+scenario. The `:play` command is actually a pretty good tool already, in that
+the live-coding user can place markers every so often and if the player dies,
+they can resume from the marker by running `:play from some-marker`. Or they can
+run `:play` without arguments if they want to play the entire score again from
+the beginning.
+
 == REPL differences, v1 vs. v2
 
 * In the Alda v1 REPL, if you provide two lines of input in quick succession,
@@ -95,20 +144,68 @@ line of input is parsed, evaluated into events, and those events are intuitively
 scheduled right after the last note on the first line, so you end up hearing the
 8 notes played in time.
 
+== Alda REPL server API
+
+NOTE: I haven't decided yet what protocol to use for communication between the
+client and server. I'm leaning towards nREPL, so I'm designing this with nREPL
+tentatively in mind.
+
+=== Operations
+
+==== `eval-and-play`
+
+Parses the provided input in the context of the current score, updates the score
+with the parse results, and plays any new events that were added to the score.
+
+This is the operation that occurs in an Alda REPL session each time you enter a
+line of Alda code and press Enter.
+
+Required parameters::
+* Either `code` (a string of Alda code) or `file` (the absolute path to a file
+on the server's file system containing Alda code)
+
+Optional parameters::
+{blank}
+
+Returns::
+* TODO
+
+==== `load`
+
+Parses the provided input as a new score and loads the score into the REPL
+server.
+
+Required parameters::
+* Either `code` (a string of Alda code) or `file` (the absolute path to a file
+on the server's file system containing Alda code)
+
+Optional parameters::
+{blank}
+
+Returns::
+* TODO
+
+==== `replay`
+
+Plays back the score currently loaded into the REPL server.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+* `from` - a string that is either a minute-second marking (e.g. `0:30`) or a
+marker name (e.g. `verse`), representing where in the score to start playing
+* `to` - a string that is either a minute-second marking (e.g. `1:00`) or a
+marker name (e.g. `chorus`), representing where in the score to stop playing
+
+Returns::
+* TODO
+
 == TODO
 
-* MVP of the implementation described above.
-** Interactive REPL prompt
-** Keeps track of successful lines of input (for `:save` and `:load`)
-** Keeps track of state in a `*Score` object
-** Parses each successive line of input as updates and applies them to the score
-object in memory
-
-* Implement player spawning routine (see "Player management" above)
-
-* Implement REPL server.
+* Implement REPL client/server communication.
 ** Investigate the options for a communication protocol.
-*** I'm curious to see if nREPL would be a good fit.
+*** I think nREPL might be a good fit.
 ** `alda repl` should both start an interactive prompt and run a REPL server
 that is listening for messages coming from outside the process. Both the prompt
 and the server should be interacting with the same `*Score` object.
