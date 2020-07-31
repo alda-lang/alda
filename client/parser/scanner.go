@@ -305,7 +305,7 @@ func (s *scanner) parseString() error {
 }
 
 func (s *scanner) consumeWhile(pred func(rune) bool) {
-	for c := s.peek(); pred(c); c = s.peek() {
+	for c := s.peek(); !s.reachedEOF() && pred(c); c = s.peek() {
 		s.advance()
 	}
 }
