@@ -228,7 +228,7 @@ func (s *scanner) peek() rune {
 }
 
 func (s *scanner) peekNext() rune {
-	if s.current+1 >= len(s.input) {
+	if s.eofIsNext() {
 		return 0
 	}
 
