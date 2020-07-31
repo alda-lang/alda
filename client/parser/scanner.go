@@ -220,7 +220,7 @@ func (s *scanner) eofIsNext() bool {
 }
 
 func (s *scanner) peek() rune {
-	if s.current >= len(s.input) {
+	if s.reachedEOF() {
 		return 0
 	}
 
@@ -250,7 +250,7 @@ func (s *scanner) advance() rune {
 }
 
 func (s *scanner) match(expected rune) bool {
-	if s.current >= len(s.input) {
+	if s.reachedEOF() {
 		return false
 	}
 
