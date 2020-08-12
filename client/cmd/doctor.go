@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"io/ioutil"
-	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -34,25 +33,6 @@ func step(action string, test func() error) {
 	}
 
 	fmt.Printf("%s %s\n", aurora.Green("OK "), action)
-}
-
-func findOpenPort() (int, error) {
-	listener, err := net.Listen("tcp", ":0")
-	defer listener.Close()
-
-	if err != nil {
-		return 0, err
-	}
-
-	address := listener.Addr().String()
-	portStr := address[strings.LastIndex(address, ":")+1 : len(address)]
-	port, err := strconv.ParseInt(portStr, 10, 32)
-	if err != nil {
-		fmt.Printf("Failed to find open port. Address: %s\n", address)
-		return 0, err
-	}
-
-	return int(port), nil
 }
 
 func ping(port int) (*osc.Client, error) {
@@ -138,7 +118,7 @@ var doctorCmd = &cobra.Command{
 		step(
 			"Find an open port",
 			func() error {
-				p, err := findOpenPort()
+				p, err := system.FindOpenPort()
 				if err != nil {
 					return err
 				}
@@ -216,7 +196,7 @@ var doctorCmd = &cobra.Command{
 		step(
 			"Spawn a player process",
 			func() error {
-				p, err := findOpenPort()
+				p, err := system.FindOpenPort()
 				if err != nil {
 					return err
 				}
