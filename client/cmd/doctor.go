@@ -6,13 +6,16 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"alda.io/client/model"
 	"alda.io/client/parser"
+	"alda.io/client/repl"
 	"alda.io/client/system"
 	"alda.io/client/transmitter"
 	"alda.io/client/util"
@@ -113,7 +116,7 @@ var doctorCmd = &cobra.Command{
 
 		//////////////////////////////////////////////////
 
-		var port int
+		var playerPort int
 
 		step(
 			"Find an open port",
@@ -124,7 +127,7 @@ var doctorCmd = &cobra.Command{
 				}
 
 				// Use this port in subsequent steps.
-				port = p
+				playerPort = p
 				return nil
 			},
 		)
@@ -142,7 +145,7 @@ var doctorCmd = &cobra.Command{
 				errors := make(chan error)
 
 				server := osc.NewServer(
-					fmt.Sprintf("localhost:%d", port),
+					fmt.Sprintf("localhost:%d", playerPort),
 					OSCPacketForwarder{channel: packetsReceived},
 					0,
 					osc.ServerProtocol(osc.TCP),
@@ -158,7 +161,8 @@ var doctorCmd = &cobra.Command{
 
 				if err := util.Await(
 					func() error {
-						return transmitter.OSCTransmitter{Port: port}.TransmitScore(score)
+						transmitter := transmitter.OSCTransmitter{Port: playerPort}
+						return transmitter.TransmitScore(score)
 					},
 					reasonableTimeout,
 				); err != nil {
@@ -202,9 +206,9 @@ var doctorCmd = &cobra.Command{
 				}
 
 				// Use this port in subsequent steps.
-				port = p
+				playerPort = p
 
-				playerArgs := []string{"-v", "run", "-p", strconv.Itoa(port)}
+				playerArgs := []string{"-v", "run", "-p", strconv.Itoa(playerPort)}
 				if noAudio {
 					playerArgs = append(playerArgs, "--lazy-audio")
 				}
@@ -229,7 +233,7 @@ var doctorCmd = &cobra.Command{
 		step(
 			"Ping player process",
 			func() error {
-				pingClient, err := ping(port)
+				pingClient, err := ping(playerPort)
 				if err != nil {
 					return err
 				}
@@ -246,7 +250,8 @@ var doctorCmd = &cobra.Command{
 			step(
 				"Play score",
 				func() error {
-					return (transmitter.OSCTransmitter{Port: port}).TransmitScore(score)
+					transmitter := transmitter.OSCTransmitter{Port: playerPort}
+					return transmitter.TransmitScore(score)
 				},
 			)
 		}
@@ -455,7 +460,7 @@ var doctorCmd = &cobra.Command{
 						// To avoid this, we check the port of the player we just found
 						// and consider it a failure condition. This will cue `util.Await`
 						// to keep checking until it finds a player that isn't that one.
-						if player.Port == port {
+						if player.Port == playerPort {
 							return fmt.Errorf(
 								"only found the player from before (%s/%d)",
 								player.ID, player.Port,
@@ -491,6 +496,59 @@ var doctorCmd = &cobra.Command{
 			"Shut the player down",
 			func() error {
 				return sendShutdownMessage(client)
+			},
+		)
+
+		//////////////////////////////////////////////////
+
+		var replServer *repl.Server
+
+		step(
+			"Start a REPL server",
+			func() error {
+				port, err := system.FindOpenPort()
+				if err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
+
+				server, err := repl.RunServer(port)
+				if err != nil {
+					return err
+				}
+
+				replServer = server
+				return nil
+			},
+		)
+
+		// Ensure that the server is closed on normal exit.
+		defer replServer.Close()
+
+		// Ensure that the server is closed if the process is interrupted or
+		// terminated.
+		signals := make(chan os.Signal, 1)
+		signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
+		go func() {
+			<-signals
+			replServer.Close()
+		}()
+
+		//////////////////////////////////////////////////
+
+		step(
+			"Interact with the REPL server",
+			func() error {
+				client, err := repl.NewClient("localhost", replServer.Port)
+				if err != nil {
+					return err
+				}
+				defer client.Disconnect()
+
+				// This sends "clone" and "describe" messages and relies on specific
+				// values in the responses. This in itself is a good test of the
+				// communication between an Alda REPL server and client.
+				return client.StartSession()
 			},
 		)
 	},

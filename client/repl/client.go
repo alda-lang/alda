@@ -108,7 +108,8 @@ func (client *Client) handleCommand(name string, args string) error {
 	return command.run(client, args)
 }
 
-func (client *Client) disconnect() {
+// Disconnect closes the client's connection with the server.
+func (client *Client) Disconnect() {
 	if client.serverConn != nil {
 		client.serverConn.Close()
 	}
@@ -116,7 +117,7 @@ func (client *Client) disconnect() {
 
 func (client *Client) connect() error {
 	// First, close any existing connection to avoid a memory leak.
-	client.disconnect()
+	client.Disconnect()
 
 	if err := util.Await(
 		func() error {
@@ -268,14 +269,12 @@ func NewClient(host string, port int) (*Client, error) {
 	return client, nil
 }
 
-// RunClient runs an Alda REPL client session in the foreground.
-func RunClient(serverHost string, serverPort int) error {
-	client, err := NewClient(serverHost, serverPort)
-	if err != nil {
-		return err
-	}
-	defer client.disconnect()
-
+// StartSession starts an nREPL session by sending a "clone" request and keeping
+// track of the session ID sent by the server in the response.
+//
+// Also sends a "describe" request and examines the response to ensure that the
+// server is an Alda server.
+func (client *Client) StartSession() error {
 	req := map[string]interface{}{"op": "clone"}
 	res, err := client.sendRequest(req)
 	if err != nil {
@@ -341,6 +340,21 @@ func RunClient(serverHost string, serverPort int) error {
 	_, supported := ops["eval-and-play"]
 	if !supported {
 		return errEvalAndPlayNotSupported
+	}
+
+	return nil
+}
+
+// RunClient runs an Alda REPL client session in the foreground.
+func RunClient(serverHost string, serverPort int) error {
+	client, err := NewClient(serverHost, serverPort)
+	if err != nil {
+		return err
+	}
+	defer client.Disconnect()
+
+	if err := client.StartSession(); err != nil {
+		return err
 	}
 
 	fmt.Printf(
