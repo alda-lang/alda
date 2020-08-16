@@ -142,7 +142,7 @@ var doctorCmd = &cobra.Command{
 				errors := make(chan error)
 
 				server := osc.NewServer(
-					fmt.Sprintf("127.0.0.1:%d", port),
+					fmt.Sprintf("localhost:%d", port),
 					OSCPacketForwarder{channel: packetsReceived},
 					0,
 					osc.ServerProtocol(osc.TCP),
