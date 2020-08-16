@@ -5,15 +5,20 @@ package repl
 import (
 	"fmt"
 	"io"
+	"net"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
 	"alda.io/client/generated"
 	log "alda.io/client/logging"
 	"alda.io/client/system"
+	"alda.io/client/util"
 	"github.com/chzyer/readline"
+	"github.com/google/uuid"
+	bencode "github.com/jackpal/bencode-go"
 	"github.com/logrusorgru/aurora"
 )
 
@@ -31,15 +36,20 @@ const aldaVersionText = `
          repl session
 `
 
+const serverConnectTimeout = 5 * time.Second
+
 // Client is a stateful Alda REPL client object.
 type Client struct {
-	// TODO: The end goal is to have the client send the input over the network to
-	// a server (which could potentially be in another process or on another
-	// machine) and print feedback based on the response from the server.
-	//
-	// For now, just to get something working, I'm implementing this all in one
-	// process, using stuff in repl/server.go directly.
-	server *Server
+	// The TCP address of the server with which the client will communicate.
+	serverAddr *net.TCPAddr
+	// The current connection to the server with which the client is
+	// communicating.
+	serverConn net.Conn
+	// The current session ID that is sent to the server on every request.
+	// Following the nREPL protocol, the client makes an initial "clone" request
+	// to the server and the response from the server contains the session ID that
+	// the client will use for the rest of the session.
+	sessionID string
 }
 
 type replCommand struct {
@@ -76,20 +86,16 @@ Example usage:
   :play to verse
   :play from verse to bridge`,
 		run: func(client *Client, args string) error {
-			// TODO: send a message over the network instead
-			//       * I need to think about the parameters that the message allows.
-			//         It might look something like the EmissionContext, but it
-			//         doesn't necessarily have to be the same.
-			//
-			//         UPDATE: I was tempted to just use EmissionContext and make sure
-			//         that we keep it serializable, because that would be one less
-			//         set of options to worry about. But then, thinking about it
-			//         more, I decided it would be better to keep the two things
-			//         separate, because one is user-facing (the REPL server API) and
-			//         the other is an implementation detail (EmissionContext).
-			//
 			// TODO: parse and handle "from" and "to" options
-			return client.server.replay()
+			req := map[string]interface{}{"op": "replay"}
+			res, err := client.sendRequest(req)
+			if err != nil {
+				return err
+			}
+
+			printResponseErrors(res)
+
+			return nil
 		}},
 }
 
@@ -102,22 +108,240 @@ func (client *Client) handleCommand(name string, args string) error {
 	return command.run(client, args)
 }
 
+func (client *Client) disconnect() {
+	if client.serverConn != nil {
+		client.serverConn.Close()
+	}
+}
+
+func (client *Client) connect() error {
+	// First, close any existing connection to avoid a memory leak.
+	client.disconnect()
+
+	if err := util.Await(
+		func() error {
+			conn, err := net.DialTCP("tcp", nil, client.serverAddr)
+			if err != nil {
+				return err
+			}
+
+			client.serverConn = conn
+			return nil
+		},
+		serverConnectTimeout,
+	); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Sends a request as a bencoded payload to the server, awaits a response from
+// the server, and returns the bdecoded response.
+//
+// Returns an error if there is some networking problem, if the request can't be
+// bencoded, if the response can't be bdecoded, or if the response CAN be
+// bdecoded but the resulting data structure is not of the type we expect.
+//
+// NOTE: The nREPL design actually specifies that a server may send more than
+// one response. The last response's "status" value (a list) typically includes
+// "done", but even then, the design specifies that a server may continue to
+// send additional responses after that.
+//
+// This will need to be refactored if/when we want the server to send multiple
+// responses to a request. Perhaps this function could return a `chan
+// map[string]interface{}` and it could continuously receive responses from the
+// server and put them onto the channel until it encounters a response whose
+// "status" value includes "done". At the moment, we don't have that need, so
+// we're keeping it simple.
+func (client *Client) sendRequest(
+	req map[string]interface{},
+) (map[string]interface{}, error) {
+	if client.sessionID != "" {
+		req["session"] = client.sessionID
+	}
+
+	messageID := uuid.New().String()
+	req["id"] = messageID
+
+	log.Debug().Interface("request", req).Msg("Sending request.")
+
+	if err := bencode.Marshal(client.serverConn, req); err != nil {
+		return nil, err
+	}
+
+	// Avoid hanging forever if the server doesn't respond.
+	client.serverConn.SetReadDeadline(time.Now().Add(30 * time.Second))
+
+	response, err := bencode.Decode(client.serverConn)
+	if err != nil {
+		return nil, err
+	}
+
+	switch response.(type) {
+	case map[string]interface{}: // OK to continue
+	default:
+		return nil,
+			fmt.Errorf("response could not be decoded into the expected type")
+	}
+	res := response.(map[string]interface{})
+
+	log.Debug().Interface("response", res).Msg("Received response.")
+
+	if res["id"] != messageID {
+		return nil,
+			fmt.Errorf(
+				"unexpected \"id\" in response. Expected %s, got %s",
+				messageID,
+				res["id"],
+			)
+	}
+
+	return res, nil
+}
+
+func printResponseErrors(res map[string]interface{}) {
+	switch res["status"].(type) {
+	case []interface{}: // OK to proceed
+	default:
+		fmt.Printf("ERROR: %#v\n", res)
+		return
+	}
+	statuses := res["status"].([]interface{})
+
+	errorStatus := false
+	for _, status := range statuses {
+		if status == "error" {
+			errorStatus = true
+		}
+	}
+	if !errorStatus {
+		return
+	}
+
+	switch res["problems"].(type) {
+	case []interface{}: // OK to proceed
+	default:
+		fmt.Printf("ERROR: %#v\n", res)
+		return
+	}
+	problems := res["problems"].([]interface{})
+
+	switch len(problems) {
+	case 0:
+		fmt.Printf("ERROR: %#v\n", res)
+	case 1:
+		switch problem := problems[0].(type) {
+		case string:
+			fmt.Printf("ERROR: %s\n", problem)
+		default:
+			fmt.Printf("ERROR: %#v\n", problem)
+		}
+	default:
+		fmt.Println("ERRORS:")
+		for _, problem := range problems {
+			switch p := problem.(type) {
+			case string:
+				fmt.Println(p)
+			default:
+				fmt.Printf("%#v\n", p)
+			}
+		}
+	}
+}
+
 var replHistoryFilepath = system.CachePath("history", "alda-repl-history")
 
+// NewClient returns an initialized instance of an Alda REPL client.
+func NewClient(host string, port int) (*Client, error) {
+	addr, err := net.ResolveTCPAddr(
+		"tcp",
+		fmt.Sprintf("%s:%d", host, port),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	client := &Client{serverAddr: addr}
+	client.connect()
+
+	return client, nil
+}
+
 // RunClient runs an Alda REPL client session in the foreground.
-func RunClient() error {
-	// TODO: The end goal is to have the client send the input to a server (which
-	// could potentially be in another process or on another machine) and print
-	// feedback based on the response from the server.
-	//
-	// For now, just to get something working, I'm implementing this all in one
-	// process, using stuff in repl/server.go directly.
-	server, err := RunServer()
+func RunClient(serverHost string, serverPort int) error {
+	client, err := NewClient(serverHost, serverPort)
+	if err != nil {
+		return err
+	}
+	defer client.disconnect()
+
+	req := map[string]interface{}{"op": "clone"}
+	res, err := client.sendRequest(req)
 	if err != nil {
 		return err
 	}
 
-	client := &Client{server: server}
+	// We could consider it an error if the "clone" response doesn't contain a new
+	// session ID, because the consequence of not including a session ID on
+	// requests is that on the server, every request is executed in a one-off
+	// session context.
+	//
+	// At the moment, it's not a problem if we don't have a session ID, because
+	// every request is executed in the same global context. If that ever stops
+	// being the case, then it would probably make sense to bomb out here (i.e.
+	// return an error, causing the program to print the message and exit)
+	printResponseErrors(res)
+	switch newSession := res["new-session"].(type) {
+	case string:
+		log.Info().Str("sessionID", newSession).Msg("Started nREPL session.")
+		client.sessionID = newSession
+	}
+
+	req = map[string]interface{}{"op": "describe"}
+	res, err = client.sendRequest(req)
+	if err != nil {
+		return err
+	}
+	printResponseErrors(res)
+
+	errNotAnAldaServer := fmt.Errorf(
+		"the server does not appear to be an Alda server",
+	)
+
+	switch res["versions"].(type) {
+	case map[string]interface{}: // OK to proceed
+	default:
+		return errNotAnAldaServer
+	}
+	versions := res["versions"].(map[string]interface{})
+
+	switch versions["alda"].(type) {
+	case map[string]interface{}: // OK to proceed
+	default:
+		return errNotAnAldaServer
+	}
+	aldaVersion := versions["alda"].(map[string]interface{})
+
+	// NOTE: We don't currently need to use the server's Alda version for
+	// anything, so we're just logging it for informational purposes.
+	log.Info().Interface("version", aldaVersion).Msg("Alda REPL server version")
+
+	errEvalAndPlayNotSupported := fmt.Errorf(
+		"the server does not appear to support the `eval-and-play` op",
+	)
+
+	switch res["ops"].(type) {
+	case map[string]interface{}: // OK to proceed
+	default:
+		return errEvalAndPlayNotSupported
+	}
+	ops := res["ops"].(map[string]interface{})
+
+	_, supported := ops["eval-and-play"]
+	if !supported {
+		return errEvalAndPlayNotSupported
+	}
 
 	fmt.Printf(
 		"%s\n\n%s\n\n%s\n\n",
@@ -188,11 +412,14 @@ ReplLoop:
 		case "quit", "exit", "bye":
 			break ReplLoop
 		default:
-			// FIXME: see comment at the top of RunClient about communicating with a
-			// server process instead of doing this all in one client+server process
-			if err := server.evalAndPlay(input); err != nil {
+			req := map[string]interface{}{"op": "eval-and-play", "code": input}
+			res, err := client.sendRequest(req)
+			if err != nil {
 				fmt.Printf("ERROR: %s\n", err)
+				continue
 			}
+
+			printResponseErrors(res)
 		}
 	}
 

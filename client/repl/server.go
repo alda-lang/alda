@@ -1,6 +1,16 @@
 package repl
 
 import (
+	"fmt"
+	"io/ioutil"
+	"net"
+	"os"
+	"strconv"
+
+	"github.com/google/uuid"
+	bencode "github.com/jackpal/bencode-go"
+
+	"alda.io/client/generated"
 	log "alda.io/client/logging"
 	"alda.io/client/model"
 	"alda.io/client/parser"
@@ -8,12 +18,78 @@ import (
 	"alda.io/client/transmitter"
 )
 
+type nREPLRequest struct {
+	conn net.Conn
+	msg  map[string]interface{}
+}
+
 // Server is a stateful Alda REPL server object.
 type Server struct {
-	input      string
-	score      *model.Score
+	// The Port on which the server listens for nREPL messages from clients.
+	Port int
+	// The string of input that is built up over time as clients submit code, line
+	// by line, to be evaluated and added to the score.
+	input string
+	// The stateful score object that should correspond to the input received so
+	// far.
+	score *model.Score
+	// The current index into `score.Events`, representing where to start playing
+	// any new events that are added to the score when input is added.
 	eventIndex int
-	player     system.PlayerState
+	// The server's most recent information about the player process it is using.
+	player system.PlayerState
+	// A queue onto which bdecoded messages from clients are placed in one
+	// routine. In another routine, the messages are handled synchronously, one at
+	// a time. Therefore, messages can be received asynchronously, but results are
+	// processed synchronously to avoid concurrency issues due to global state.
+	requestQueue chan nREPLRequest
+}
+
+func (server *Server) respond(
+	req nREPLRequest, status []string, data map[string]interface{},
+) {
+	if data == nil {
+		data = make(map[string]interface{})
+	}
+
+	data["status"] = status
+
+	if session, present := req.msg["session"]; present {
+		data["session"] = session
+	}
+
+	if id, present := req.msg["id"]; present {
+		data["id"] = id
+	}
+
+	log.Info().Interface("data", data).Msg("Sending response.")
+
+	if err := bencode.Marshal(req.conn, data); err != nil {
+		log.Warn().Interface("data", data).Msg("Failed to send response.")
+	}
+}
+
+func (server *Server) respondDone(
+	req nREPLRequest, data map[string]interface{},
+) {
+	server.respond(req, []string{"done"}, data)
+}
+
+func (server *Server) respondErrors(
+	req nREPLRequest, problems []string, data map[string]interface{},
+) {
+	if data == nil {
+		data = make(map[string]interface{})
+	}
+	data["problems"] = problems
+
+	server.respond(req, []string{"done", "error"}, data)
+}
+
+func (server *Server) respondError(
+	req nREPLRequest, problem string, data map[string]interface{},
+) {
+	server.respondErrors(req, []string{problem}, data)
 }
 
 func (server *Server) resetState() error {
@@ -30,17 +106,231 @@ func (server *Server) resetState() error {
 	return nil
 }
 
+// NewServer returns an initialized instance of an Alda REPL server.
+func NewServer(port int) *Server {
+	server := &Server{Port: port, requestQueue: make(chan nREPLRequest)}
+	server.resetState()
+	return server
+}
+
+const nREPLPortFile = ".nrepl-port"
+
+// The nREPL server writes a file called ".nrepl-port" into the current
+// directory. This makes it easy for a client started in the same directory to
+// discover what port the server is running on.
+func (server *Server) writePortFile() {
+	ioutil.WriteFile(nREPLPortFile, []byte(strconv.Itoa(server.Port)), 0644)
+}
+
+func (server *Server) removePortFile() {
+	os.Remove(nREPLPortFile)
+}
+
+// Close cleans up after a server is done serving.
+//
+// This includes actions like removing the nREPL port file.
+func (server *Server) Close() {
+	server.removePortFile()
+}
+
 // RunServer creates a running Alda REPL server instance and returns it.
 //
 // Returns an error if something goes wrong.
-func RunServer() (*Server, error) {
-	server := &Server{}
-	server.resetState()
+//
+// NOTE: The caller is responsible for calling `Close()` on the server instance
+// when it is no longer needed. Otherwise, resources like the .nrepl-port file
+// will not be cleaned up.
+func RunServer(port int) (*Server, error) {
+	server := NewServer(port)
+
+	l, err := net.Listen("tcp", "localhost:"+strconv.Itoa(server.Port))
+	if err != nil {
+		return nil, err
+	}
+
+	// This writes an .nrepl-port file, which gets cleaned up when `Close()` is
+	// invoked.
+	server.writePortFile()
 
 	// See repl/player_management.go
 	go server.managePlayers()
 
+	go server.listen(l)
+	go server.handleRequests()
+
 	return server, nil
+}
+
+// Runs in a loop, listening for bencoded messages from clients, "bdecoding"
+// them, and putting them on a channel to be handled by another routine.
+//
+// The processing of messages must be synchronous in order to avoid concurrency
+// issues because all clients share the same (global) server state. The
+// receiving of messages, however, is asynchronous, so that the transmission of
+// the next message isn't blocked by the handling of the previous one.
+func (server *Server) listen(l net.Listener) {
+	defer l.Close()
+
+	fmt.Printf(
+		"nREPL server started on port %d on host %s - nrepl://%s:%d\n",
+		server.Port,
+		"localhost",
+		"localhost",
+		server.Port,
+	)
+
+	for {
+		conn, err := l.Accept()
+		if err != nil {
+			log.Warn().Int("port", server.Port).Msg("Failed to accept connection.")
+			continue
+		}
+
+		// We do this part (receiving and bdecoding bytes from the connection) in a
+		// goroutine so that we can avoid blocking and immediately start waiting for
+		// the next connection. That way, the message receiving part can be
+		// asynchronous, even though we proceed to process the messages
+		// synchronously by putting them onto a queue.
+		go func() {
+			defer conn.Close()
+
+			for {
+				decoded, err := bencode.Decode(conn)
+				if err != nil {
+					log.Warn().
+						Int("port", server.Port).
+						Msg("Failed to bdecode message from connection.")
+
+					// If we fail to bdecode a message from the connection, then we bail
+					// out and close the connection. I'm not 100% sure if this is the
+					// right thing to do, but it seems reasonable, I guess.
+					return
+				}
+
+				switch msg := decoded.(type) {
+				default:
+					log.Warn().
+						Msg("Unable to process request; it isn't a map[string]interface{}")
+
+				case map[string]interface{}:
+					// Strings seem to become byte arrays somewhere in the process of
+					// marshaling and unmarshaling to bencode. I don't have a use-case for
+					// dealing with byte arrays, I only want to deal with strings, so
+					// let's go ahead and do the conversion here.
+					for k, v := range msg {
+						switch vv := v.(type) {
+						case []byte:
+							msg[k] = string(vv)
+						}
+					}
+
+					log.Info().
+						Interface("decodedRequest", msg).
+						Msg("Request received.")
+
+					server.requestQueue <- nREPLRequest{conn: conn, msg: msg}
+				}
+			}
+		}()
+	}
+}
+
+var describeResponse = map[string]interface{}{
+	"versions": map[string]interface{}{
+		"alda": map[string]interface{}{
+			"version-string": generated.ClientVersion,
+		},
+	},
+}
+
+func init() {
+	describedOps := map[string]interface{}{}
+
+	for op := range ops {
+		// It isn't clear what information we should include in the value, so we're
+		// just making it an empty map. I noticed that the Clojure nREPL server does
+		// the same thing.
+		describedOps[op] = map[string]interface{}{}
+	}
+
+	describeResponse["ops"] = describedOps
+}
+
+var ops = map[string]func(*Server, nREPLRequest){
+	// NOTE: This is mostly for general nREPL protocol adherence. Sessions don't
+	// have much meaning to an Alda REPL server. For now, we just fake it by
+	// generating a session ID and giving it to the client.
+	"clone": func(server *Server, req nREPLRequest) {
+		server.respondDone(req, map[string]interface{}{
+			"new-session": uuid.New().String(),
+		})
+	},
+
+	// NOTE: This is for nREPL protocol adherence.
+	"describe": func(server *Server, req nREPLRequest) {
+		server.respondDone(req, describeResponse)
+	},
+
+	// NOTE: This is just for nREPL protocol adherence. It isn't clear to me yet
+	// if there should be a distinct "eval" operation that does something
+	// meaningful. So for now, we're just responding with a shrug.
+	"eval": func(server *Server, req nREPLRequest) {
+		server.respondDone(req, map[string]interface{}{"value": "¯\\_(ツ)_/¯"})
+	},
+
+	"eval-and-play": func(server *Server, req nREPLRequest) {
+		errors := validateRequest(
+			req.msg,
+			requestFieldSpec{name: "code", valueType: typeString, required: true},
+		)
+		if len(errors) > 0 {
+			server.respondErrors(req, errors, nil)
+			return
+		}
+
+		input := req.msg["code"].(string)
+
+		if err := server.evalAndPlay(input); err != nil {
+			server.respondError(req, err.Error(), nil)
+			return
+		}
+
+		server.respondDone(req, nil)
+	},
+
+	"replay": func(server *Server, req nREPLRequest) {
+		if err := server.replay(); err != nil {
+			server.respondError(req, err.Error(), nil)
+			return
+		}
+
+		server.respondDone(req, nil)
+	},
+}
+
+// Runs in a loop, handling requests from the queue as they come in in a
+// synchronous fashion, one at a time.
+func (server *Server) handleRequests() {
+	for req := range server.requestQueue {
+		errors := validateRequest(
+			req.msg,
+			requestFieldSpec{name: "op", valueType: typeString, required: true},
+		)
+		if len(errors) > 0 {
+			server.respondErrors(req, errors, nil)
+			continue
+		}
+
+		op := req.msg["op"].(string)
+
+		handler, supported := ops[op]
+		if !supported {
+			server.respond(req, []string{"done", "error", "unknown-op"}, nil)
+			continue
+		}
+
+		handler(server, req)
+	}
 }
 
 // Parses a string of `input`, updates the server's score and related state, and

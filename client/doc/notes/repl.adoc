@@ -146,9 +146,9 @@ scheduled right after the last note on the first line, so you end up hearing the
 
 == Alda REPL server API
 
-NOTE: I haven't decided yet what protocol to use for communication between the
-client and server. I'm leaning towards nREPL, so I'm designing this with nREPL
-tentatively in mind.
+Alda REPL clients and servers communicate using the https://nrepl.org[nREPL]
+protocol, with https://en.wikipedia.org/wiki/Bencode[bencode] over TCP as the
+transport.
 
 === Operations
 
@@ -161,14 +161,14 @@ This is the operation that occurs in an Alda REPL session each time you enter a
 line of Alda code and press Enter.
 
 Required parameters::
-* Either `code` (a string of Alda code) or `file` (the absolute path to a file
-on the server's file system containing Alda code)
+* `code` - a string of Alda code
 
 Optional parameters::
 {blank}
 
 Returns::
-* TODO
+* `status`
+* `problems` if there was an error
 
 ==== `load`
 
@@ -199,18 +199,10 @@ marker name (e.g. `verse`), representing where in the score to start playing
 marker name (e.g. `chorus`), representing where in the score to stop playing
 
 Returns::
-* TODO
+* `status`
+* `problems` if there was an error
 
 == TODO
-
-* Implement REPL client/server communication.
-** Investigate the options for a communication protocol.
-*** I think nREPL might be a good fit.
-** `alda repl` should both start an interactive prompt and run a REPL server
-that is listening for messages coming from outside the process. Both the prompt
-and the server should be interacting with the same `*Score` object.
-*** Updates should be queued up in a synchronous fashion to avoid issues with
-concurrency and mutable state.
 
 * Command line options
 ** `alda repl --client` starts just the client

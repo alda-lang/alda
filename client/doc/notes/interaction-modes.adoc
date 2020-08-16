@@ -51,8 +51,6 @@ data representation to play the score.
   would be convenient for scenarios where you start to tinker in a REPL session,
   and then want to switch to your editor and continue from there. Or if you want
   to give a friend the port number and start to collaborate.
-** Open question about what transport protocol to use.
-*** I wonder if the nREPL protocol would work?
 
 === For live coding
 
