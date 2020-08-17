@@ -77,7 +77,7 @@ func init() {
 		"no-audio",
 		"",
 		false,
-		"disable checks that require an audio device",
+		"Disable checks that require an audio device",
 	)
 }
 
