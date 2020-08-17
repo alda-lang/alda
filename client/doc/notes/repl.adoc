@@ -202,13 +202,3 @@ Returns::
 * `status`
 * `problems` if there was an error
 
-== TODO
-
-* Command line options
-** `alda repl --client` starts just the client
-** `alda repl --server` starts just the server
-** `alda repl --client --server` (or just `alda repl`) starts both
-** `--host` and `--port` options
-
-* Implement the various REPL commands for parity with Alda v1
-
