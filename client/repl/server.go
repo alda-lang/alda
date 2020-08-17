@@ -2,6 +2,7 @@ package repl
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net"
 	"os"
@@ -196,9 +197,17 @@ func (server *Server) listen(l net.Listener) {
 
 			for {
 				decoded, err := bencode.Decode(conn)
+
+				// I think this means the client disconnected? So assuming I'm right
+				// about that, we should stop reading and close the connection.
+				if err == io.EOF {
+					break
+				}
+
 				if err != nil {
 					log.Warn().
 						Int("port", server.Port).
+						Err(err).
 						Msg("Failed to bdecode message from connection.")
 
 					// If we fail to bdecode a message from the connection, then we bail
