@@ -264,7 +264,9 @@ func NewClient(host string, port int) (*Client, error) {
 	}
 
 	client := &Client{serverAddr: addr}
-	client.connect()
+	if err := client.connect(); err != nil {
+		return nil, err
+	}
 
 	return client, nil
 }
