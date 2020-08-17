@@ -84,9 +84,10 @@ type NoteLengthMs struct {
 // Beats implements DurationComponent.Beats by returning an error.
 //
 // NB: It is mathematically possible to convert a number of milliseconds into a
-// number of beats, given a tempo. TODO: Consider whether Beats() should take a
-// tempo argument and NoteLengthMs.Beats(tempo float64) should be implemented.
-// At this point, I'm not sure if that functionality is needed.
+// number of beats, given a tempo. Beats() could conceivably take a tempo
+// argument and NoteLengthMs.Beats(tempo float64) could be implemented. However,
+// I'm not sure if that functionality is needed, so I'm opting to keep things
+// simple.
 func (nl NoteLengthMs) Beats() (float64, error) {
 	return 0, fmt.Errorf("A millisecond note length cannot be expressed in beats")
 }
