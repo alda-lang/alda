@@ -12,11 +12,19 @@ import (
 
 func init() {
 	stopCmd.Flags().StringVarP(
-		&playerID, "player-id", "i", "", "The ID of the player process to tell to stop playback",
+		&playerID,
+		"player-id",
+		"i",
+		"",
+		"The ID of the player process to tell to stop playback",
 	)
 
 	stopCmd.Flags().IntVarP(
-		&port, "port", "p", -1, "The port of the player process to tell to stop playback",
+		&playerPort,
+		"port",
+		"p",
+		-1,
+		"The port of the player process to tell to stop playback",
 	)
 }
 
@@ -30,9 +38,9 @@ var stopCmd = &cobra.Command{
 		// provided CLI options.
 		switch {
 		// Port is explicitly specified, so use that port.
-		case port != -1:
+		case playerPort != -1:
 			players = append(players, system.PlayerState{
-				ID: "unknown", State: "unknown", Port: port,
+				ID: "unknown", State: "unknown", Port: playerPort,
 			})
 		// Player ID is specified; look up the player by ID and use its port.
 		case playerID != "":

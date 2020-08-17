@@ -16,7 +16,7 @@ import (
 )
 
 var playerID string
-var port int
+var playerPort int
 var file string
 var code string
 var playFrom string
@@ -28,7 +28,7 @@ func init() {
 	)
 
 	playCmd.Flags().IntVarP(
-		&port, "port", "p", -1, "The port of the player process to use",
+		&playerPort, "port", "p", -1, "The port of the player process to use",
 	)
 
 	playCmd.Flags().StringVarP(
@@ -175,8 +175,12 @@ Text piped into the process on stdin:
 		switch {
 
 		// Port is explicitly specified, so use that port.
-		case port != -1:
-			player := system.PlayerState{ID: "unknown", State: "unknown", Port: port}
+		case playerPort != -1:
+			player := system.PlayerState{
+				ID:    "unknown",
+				State: "unknown",
+				Port:  playerPort,
+			}
 			players = []system.PlayerState{player}
 
 		// Player ID is specified; look up the player by ID and use its port.
