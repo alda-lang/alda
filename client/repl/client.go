@@ -17,6 +17,7 @@ import (
 	"alda.io/client/system"
 	"alda.io/client/util"
 	"github.com/chzyer/readline"
+	"github.com/google/shlex"
 	"github.com/google/uuid"
 	bencode "github.com/jackpal/bencode-go"
 	"github.com/logrusorgru/aurora"
@@ -85,9 +86,44 @@ Example usage:
   :play from guitarIn
   :play to verse
   :play from verse to bridge`,
-		run: func(client *Client, args string) error {
-			// TODO: parse and handle "from" and "to" options
+		run: func(client *Client, argsString string) error {
+			args, err := shlex.Split(argsString)
+			if err != nil {
+				return err
+			}
+
+			errInvalidArgs := fmt.Errorf("invalid arguments: %#v", args)
+
 			req := map[string]interface{}{"op": "replay"}
+
+			for i := 0; i < len(args); i++ {
+				// If this is the last argument, that means there are an odd number of
+				// arguments, which is invalid because we are expecting an even number
+				// of arguments.
+				if i == len(args)-1 {
+					return errInvalidArgs
+				}
+
+				switch args[i] {
+				case "from":
+					_, hit := req["from"]
+					if hit {
+						return errInvalidArgs
+					}
+					i++
+					req["from"] = args[i]
+				case "to":
+					_, hit := req["to"]
+					if hit {
+						return errInvalidArgs
+					}
+					i++
+					req["to"] = args[i]
+				default:
+					return errInvalidArgs
+				}
+			}
+
 			res, err := client.sendRequest(req)
 			if err != nil {
 				return err

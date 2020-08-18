@@ -308,7 +308,25 @@ var ops = map[string]func(*Server, nREPLRequest){
 	},
 
 	"replay": func(server *Server, req nREPLRequest) {
-		if err := server.replay(); err != nil {
+		transmitOpts := []transmitter.TransmissionOption{}
+
+		from, hit := req.msg["from"]
+		if hit {
+			switch f := from.(type) {
+			case string:
+				transmitOpts = append(transmitOpts, transmitter.TransmitFrom(f))
+			}
+		}
+
+		to, hit := req.msg["to"]
+		if hit {
+			switch t := to.(type) {
+			case string:
+				transmitOpts = append(transmitOpts, transmitter.TransmitTo(t))
+			}
+		}
+
+		if err := server.replay(transmitOpts...); err != nil {
 			server.respondError(req, err.Error(), nil)
 			return
 		}
@@ -394,7 +412,9 @@ func (server *Server) updateScoreWithInput(
 	}, nil
 }
 
-func (server *Server) evalAndPlay(input string) error {
+func (server *Server) evalAndPlay(
+	input string, additionalTransmitOpts ...transmitter.TransmissionOption,
+) error {
 	return server.withTransmitter(
 		func(transmitter transmitter.OSCTransmitter) error {
 			transmitOpts, err := server.updateScoreWithInput(input)
@@ -406,13 +426,17 @@ func (server *Server) evalAndPlay(input string) error {
 				Interface("player", server.player).
 				Msg("Sending OSC messages to player.")
 
-			return transmitter.TransmitScore(server.score, transmitOpts...)
+			return transmitter.TransmitScore(
+				server.score,
+				(append(transmitOpts, additionalTransmitOpts...))...,
+			)
 		},
 	)
 }
 
-// TODO: support `from` and `to` parameters, when provided in the message
-func (server *Server) replay() error {
+func (server *Server) replay(
+	transmitOpts ...transmitter.TransmissionOption,
+) error {
 	// `input` is the one thing about the server state that we DON'T want to
 	// reset, so we keep track of it here. After we reset the state, we invoke
 	// `server.evalAndPlay` on this input, which has the effect of both playing it
@@ -437,5 +461,5 @@ func (server *Server) replay() error {
 	// player, and this should generally happen quickly. `server.evalAndPlay` will
 	// handle the case that a player process isn't immediately available, so it's
 	// OK for us to call it immediately after resetting the state.
-	return server.evalAndPlay(input)
+	return server.evalAndPlay(input, transmitOpts...)
 }
