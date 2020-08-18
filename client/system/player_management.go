@@ -176,7 +176,7 @@ func FillPlayerPool() error {
 		}
 	}
 
-	desiredAvailablePlayers := 2
+	desiredAvailablePlayers := 3
 	playersToStart := desiredAvailablePlayers - availablePlayers
 
 	log.Debug().

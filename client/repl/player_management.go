@@ -12,7 +12,7 @@ import (
 )
 
 const findPlayerTimeout = 20 * time.Second
-const playerPoolFillInterval = 15 * time.Second
+const playerPoolFillInterval = 10 * time.Second
 const pingTimeout = 5 * time.Second
 const pingInterval = 1 * time.Second
 const failedPingThreshold = 3
