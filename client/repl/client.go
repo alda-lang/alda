@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -59,20 +60,66 @@ type replCommand struct {
 	run         func(client *Client, args string) error
 }
 
-// TODO: implement the rest for parity with v1
-var replCommands = map[string]replCommand{
-	"help": {
-		helpSummary: "Display this help text.",
-		helpDetails: `Usage:
+var replCommands map[string]replCommand
+var commandsSummmary string
+
+func invalidArgsError(args []string) error {
+	return fmt.Errorf("invalid arguments: %#v", args)
+}
+
+func init() {
+	// TODO: implement the rest for parity with v1
+	replCommands = map[string]replCommand{
+		"help": {
+			helpSummary: "Display this help text.",
+			helpDetails: `Usage:
+
   :help help
   :help new`,
-		run: func(client *Client, args string) error {
-			return fmt.Errorf("not yet implemented")
-		}},
+			run: func(client *Client, argsString string) error {
+				args, err := shlex.Split(argsString)
+				if err != nil {
+					return err
+				}
 
-	"play": {
-		helpSummary: "Plays the current score.",
-		helpDetails: `Can take optional ` + "`from`" + `and ` + "`to`" + `arguments, in the form of markers or mm:ss
+				if len(args) == 0 {
+					fmt.Println(`For commands marked with (*), more detailed information about the command is
+available via the :help command.
+
+e.g. :help play
+
+Available commands:
+
+` + commandsSummmary)
+
+					return nil
+				}
+
+				// Right now, :help only supports looking up documentation for a
+				// command, so we only ever expect there to be a single argument like
+				// "play" (i.e. `:help play`).
+				//
+				// In the future, we might want to provide help for a variety of topics,
+				// so I'm going ahead and setting it up so that something like
+				// `:help key signature` could work.
+				subject := strings.Join(args, " ")
+
+				cmd, hit := replCommands[subject]
+				if !hit {
+					return fmt.Errorf("no documentation available for '%s'", subject)
+				}
+
+				fmt.Println(cmd.helpSummary + "\n")
+				if cmd.helpDetails != "" {
+					fmt.Println(cmd.helpDetails + "\n")
+				}
+
+				return nil
+			}},
+
+		"play": {
+			helpSummary: "Plays the current score.",
+			helpDetails: `Can take optional ` + "`from`" + `and ` + "`to`" + `arguments, in the form of markers or mm:ss
 times.
 
 Without arguments, will play the entire score from beginning to end.
@@ -86,53 +133,84 @@ Example usage:
   :play from guitarIn
   :play to verse
   :play from verse to bridge`,
-		run: func(client *Client, argsString string) error {
-			args, err := shlex.Split(argsString)
-			if err != nil {
-				return err
-			}
-
-			errInvalidArgs := fmt.Errorf("invalid arguments: %#v", args)
-
-			req := map[string]interface{}{"op": "replay"}
-
-			for i := 0; i < len(args); i++ {
-				// If this is the last argument, that means there are an odd number of
-				// arguments, which is invalid because we are expecting an even number
-				// of arguments.
-				if i == len(args)-1 {
-					return errInvalidArgs
+			run: func(client *Client, argsString string) error {
+				args, err := shlex.Split(argsString)
+				if err != nil {
+					return err
 				}
 
-				switch args[i] {
-				case "from":
-					_, hit := req["from"]
-					if hit {
-						return errInvalidArgs
+				req := map[string]interface{}{"op": "replay"}
+
+				for i := 0; i < len(args); i++ {
+					// If this is the last argument, that means there are an odd number of
+					// arguments, which is invalid because we are expecting an even number
+					// of arguments.
+					if i == len(args)-1 {
+						return invalidArgsError(args)
 					}
-					i++
-					req["from"] = args[i]
-				case "to":
-					_, hit := req["to"]
-					if hit {
-						return errInvalidArgs
+
+					switch args[i] {
+					case "from":
+						_, hit := req["from"]
+						if hit {
+							return invalidArgsError(args)
+						}
+						i++
+						req["from"] = args[i]
+					case "to":
+						_, hit := req["to"]
+						if hit {
+							return invalidArgsError(args)
+						}
+						i++
+						req["to"] = args[i]
+					default:
+						return invalidArgsError(args)
 					}
-					i++
-					req["to"] = args[i]
-				default:
-					return errInvalidArgs
 				}
-			}
 
-			res, err := client.sendRequest(req)
-			if err != nil {
-				return err
-			}
+				res, err := client.sendRequest(req)
+				if err != nil {
+					return err
+				}
 
-			printResponseErrors(res)
+				printResponseErrors(res)
 
-			return nil
-		}},
+				return nil
+			},
+		},
+	}
+
+	sortedKeys := []string{}
+	maxKeyLength := 0
+	for k := range replCommands {
+		sortedKeys = append(sortedKeys, k)
+		if len(k) > maxKeyLength {
+			maxKeyLength = len(k)
+		}
+	}
+	sort.Strings(sortedKeys)
+
+	var builder strings.Builder
+	for _, k := range sortedKeys {
+		cmd := replCommands[k]
+
+		detailIndicator := ""
+		if cmd.helpDetails != "" {
+			detailIndicator = " (*)"
+		}
+
+		fmt.Fprintf(
+			&builder,
+			"    :%s%s%s%s\n",
+			k,
+			strings.Repeat(" ", maxKeyLength-len(k)+2),
+			cmd.helpSummary,
+			detailIndicator,
+		)
+	}
+
+	commandsSummmary = builder.String()
 }
 
 func (client *Client) handleCommand(name string, args string) error {
