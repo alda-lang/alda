@@ -33,10 +33,12 @@ const aldaASCIILogo = `
 ╚═╝  ╚═╝╚══════╝╚═════╝ ╚═╝  ╚═╝
 `
 
-const aldaVersionText = `
-             ` + generated.ClientVersion + `
-         repl session
+func aldaVersionText(serverVersion string) string {
+	return `
+    Client version: ` + generated.ClientVersion + `
+    Server version: ` + serverVersion + `
 `
+}
 
 const serverConnectTimeout = 5 * time.Second
 
@@ -189,6 +191,35 @@ Example usage:
 				}
 
 				printResponseErrors(res)
+
+				return nil
+			},
+		},
+
+		"version": {
+			helpSummary: "Displays the version numbers of the Alda server and client.",
+			run: func(client *Client, argsString string) error {
+				fmt.Printf("Client version: %s\n", generated.ClientVersion)
+
+				res, err := client.sendRequest(map[string]interface{}{"op": "describe"})
+				if err != nil {
+					return err
+				}
+				printResponseErrors(res)
+
+				serverVersionInfo, err := serverVersion(res)
+				if err != nil {
+					return err
+				}
+
+				switch serverVersionInfo["version-string"].(type) {
+				case string: // OK to proceed
+				default:
+					return fmt.Errorf("server response is missing version string")
+				}
+				serverVersion := serverVersionInfo["version-string"].(string)
+
+				fmt.Printf("Server version: %s\n", serverVersion)
 
 				return nil
 			},
@@ -399,16 +430,44 @@ func NewClient(host string, port int) (*Client, error) {
 	return client, nil
 }
 
+var errNotAnAldaServer = fmt.Errorf(
+	"the server does not appear to be an Alda server",
+)
+
+var errEvalAndPlayNotSupported = fmt.Errorf(
+	"the server does not appear to support the `eval-and-play` op",
+)
+
+func serverVersion(res map[string]interface{}) (map[string]interface{}, error) {
+	switch res["versions"].(type) {
+	case map[string]interface{}: // OK to proceed
+	default:
+		return nil, errNotAnAldaServer
+	}
+	versions := res["versions"].(map[string]interface{})
+
+	switch versions["alda"].(type) {
+	case map[string]interface{}: // OK to proceed
+	default:
+		return nil, errNotAnAldaServer
+	}
+	return versions["alda"].(map[string]interface{}), nil
+}
+
 // StartSession starts an nREPL session by sending a "clone" request and keeping
 // track of the session ID sent by the server in the response.
 //
 // Also sends a "describe" request and examines the response to ensure that the
 // server is an Alda server.
-func (client *Client) StartSession() error {
+//
+// Returns the "describe" response, or an error if something went wrong. (One
+// example of something going wrong is that the response doesn't appear to be
+// from an Alda server.)
+func (client *Client) StartSession() (map[string]interface{}, error) {
 	req := map[string]interface{}{"op": "clone"}
 	res, err := client.sendRequest(req)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// We could consider it an error if the "clone" response doesn't contain a new
@@ -430,49 +489,32 @@ func (client *Client) StartSession() error {
 	req = map[string]interface{}{"op": "describe"}
 	res, err = client.sendRequest(req)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	printResponseErrors(res)
 
-	errNotAnAldaServer := fmt.Errorf(
-		"the server does not appear to be an Alda server",
-	)
-
-	switch res["versions"].(type) {
-	case map[string]interface{}: // OK to proceed
-	default:
-		return errNotAnAldaServer
+	serverVersion, err := serverVersion(res)
+	if err != nil {
+		return nil, err
 	}
-	versions := res["versions"].(map[string]interface{})
-
-	switch versions["alda"].(type) {
-	case map[string]interface{}: // OK to proceed
-	default:
-		return errNotAnAldaServer
-	}
-	aldaVersion := versions["alda"].(map[string]interface{})
 
 	// NOTE: We don't currently need to use the server's Alda version for
 	// anything, so we're just logging it for informational purposes.
-	log.Info().Interface("version", aldaVersion).Msg("Alda REPL server version")
-
-	errEvalAndPlayNotSupported := fmt.Errorf(
-		"the server does not appear to support the `eval-and-play` op",
-	)
+	log.Info().Interface("version", serverVersion).Msg("Alda REPL server version")
 
 	switch res["ops"].(type) {
 	case map[string]interface{}: // OK to proceed
 	default:
-		return errEvalAndPlayNotSupported
+		return nil, errEvalAndPlayNotSupported
 	}
 	ops := res["ops"].(map[string]interface{})
 
 	_, supported := ops["eval-and-play"]
 	if !supported {
-		return errEvalAndPlayNotSupported
+		return nil, errEvalAndPlayNotSupported
 	}
 
-	return nil
+	return res, nil
 }
 
 // RunClient runs an Alda REPL client session in the foreground.
@@ -483,14 +525,28 @@ func RunClient(serverHost string, serverPort int) error {
 	}
 	defer client.Disconnect()
 
-	if err := client.StartSession(); err != nil {
+	describeResponse, err := client.StartSession()
+	if err != nil {
 		return err
+	}
+
+	serverVersionInfo, err := serverVersion(describeResponse)
+	if err != nil {
+		return err
+	}
+
+	var serverVersion string
+	switch versionString := serverVersionInfo["version-string"].(type) {
+	case string:
+		serverVersion = versionString
+	default:
+		serverVersion = fmt.Sprintf("%#v", serverVersionInfo)
 	}
 
 	fmt.Printf(
 		"%s\n\n%s\n\n%s\n\n",
 		aurora.Blue(strings.Trim(aldaASCIILogo, "\n")),
-		aurora.Cyan(strings.Trim(aldaVersionText, "\n")),
+		aurora.Cyan(strings.Trim(aldaVersionText(serverVersion), "\n")),
 		aurora.Bold("Type :help for a list of available commands."),
 	)
 

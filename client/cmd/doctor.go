@@ -548,7 +548,8 @@ var doctorCmd = &cobra.Command{
 				// This sends "clone" and "describe" messages and relies on specific
 				// values in the responses. This in itself is a good test of the
 				// communication between an Alda REPL server and client.
-				return client.StartSession()
+				_, err = client.StartSession()
+				return err
 			},
 		)
 	},
