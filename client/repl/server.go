@@ -333,6 +333,22 @@ var ops = map[string]func(*Server, nREPLRequest){
 
 		server.respondDone(req, nil)
 	},
+
+	"stop": func(server *Server, req nREPLRequest) {
+		if err := server.withTransmitter(
+			func(transmitter transmitter.OSCTransmitter) error {
+				log.Info().
+					Interface("player", server.player).
+					Msg("Sending \"stop\" message to player process.")
+				return transmitter.TransmitStopMessage()
+			},
+		); err != nil {
+			server.respondError(req, err.Error(), nil)
+			return
+		}
+
+		server.respondDone(req, nil)
+	},
 }
 
 // Runs in a loop, handling requests from the queue as they come in in a

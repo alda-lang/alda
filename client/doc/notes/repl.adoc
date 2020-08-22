@@ -202,3 +202,17 @@ Returns::
 * `status`
 * `problems` if there was an error
 
+==== `stop`
+
+Stops playback.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+{blank}
+
+Returns::
+* `status`
+* `problems` if there was an error
+

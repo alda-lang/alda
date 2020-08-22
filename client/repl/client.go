@@ -71,7 +71,7 @@ func init() {
 	// TODO: implement the rest for parity with v1
 	replCommands = map[string]replCommand{
 		"help": {
-			helpSummary: "Display this help text.",
+			helpSummary: "Displays this help text.",
 			helpDetails: `Usage:
 
   :help help
@@ -170,6 +170,20 @@ Example usage:
 				}
 
 				res, err := client.sendRequest(req)
+				if err != nil {
+					return err
+				}
+
+				printResponseErrors(res)
+
+				return nil
+			},
+		},
+
+		"stop": {
+			helpSummary: "Stops playback.",
+			run: func(client *Client, argsString string) error {
+				res, err := client.sendRequest(map[string]interface{}{"op": "stop"})
 				if err != nil {
 					return err
 				}
