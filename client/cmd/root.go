@@ -109,11 +109,11 @@ func Execute() error {
 				level = 3
 			}
 		}
+	}
 
-		if err := handleVerbosity(level); err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
+	if err := handleVerbosity(level); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
 	}
 
 	// Unless the command is one of the exceptions below, Alda will preemptively
