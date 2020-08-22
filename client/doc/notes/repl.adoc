@@ -144,6 +144,29 @@ line of input is parsed, evaluated into events, and those events are intuitively
 scheduled right after the last note on the first line, so you end up hearing the
 8 notes played in time.
 
+* Alda v1 had a `:debug` command that allowed you to toggle on/off "debug mode"
+which included printing responses from the server. Alda v2 gives you more
+flexibility in general about the amount of logging, so instead of enabling a
+special "debug mode" in the REPL, you can set the verbosity level to 2 (INFO) or
+higher, e.g. `alda -v2 repl`, and that will allow you to see requests and
+responses to/from the server, which are logged at the INFO level.
+
+* Alda v1 server/worker management commands are no longer present in Alda v2
+because there are no longer server and worker processes to be managed. Removed
+commands:
+** `:down`
+** `:downup`
+** `:list`
+** `:status`
+** `:up`
+
+* In Alda v2, the commands related to printing information about the score are
+better organized and in some cases renamed:
+** (v1) `:score` => (v2) `:score text` or just `:score`
+** (v1) `:info` => (v2) `:score info`
+** (v1) `:map` => (v2) `:score data`
+** (available in v2 only) `:score events`
+
 == Alda REPL server API
 
 Alda REPL clients and servers communicate using the https://nrepl.org[nREPL]
