@@ -199,14 +199,14 @@ Parses the provided input as a new score and loads the score into the REPL
 server.
 
 Required parameters::
-* Either `code` (a string of Alda code) or `file` (the absolute path to a file
-on the server's file system containing Alda code)
+* `code` - a string of Alda code
 
 Optional parameters::
 {blank}
 
 Returns::
-* TODO
+* `status`
+* `problems` if there was an error
 
 ==== `replay`
 

@@ -307,6 +307,26 @@ var ops = map[string]func(*Server, nREPLRequest){
 		server.respondDone(req, nil)
 	},
 
+	"load": func(server *Server, req nREPLRequest) {
+		errors := validateRequest(
+			req.msg,
+			requestFieldSpec{name: "code", valueType: typeString, required: true},
+		)
+		if len(errors) > 0 {
+			server.respondErrors(req, errors, nil)
+			return
+		}
+
+		input := req.msg["code"].(string)
+
+		if err := server.load(input); err != nil {
+			server.respondError(req, err.Error(), nil)
+			return
+		}
+
+		server.respondDone(req, nil)
+	},
+
 	"replay": func(server *Server, req nREPLRequest) {
 		transmitOpts := []transmitter.TransmissionOption{}
 
@@ -446,6 +466,29 @@ func (server *Server) evalAndPlay(
 				server.score,
 				(append(transmitOpts, additionalTransmitOpts...))...,
 			)
+		},
+	)
+}
+
+func (server *Server) load(input string) error {
+	if err := server.resetState(); err != nil {
+		return err
+	}
+
+	return server.withTransmitter(
+		func(t transmitter.OSCTransmitter) error {
+			transmitOpts, err := server.updateScoreWithInput(input)
+			if err != nil {
+				return err
+			}
+
+			transmitOpts = append(transmitOpts, transmitter.LoadOnly())
+
+			log.Info().
+				Interface("player", server.player).
+				Msg("Sending OSC messages to player.")
+
+			return t.TransmitScore(server.score, transmitOpts...)
 		},
 	)
 }

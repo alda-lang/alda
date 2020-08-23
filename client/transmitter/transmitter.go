@@ -31,6 +31,9 @@ type TransmissionContext struct {
 	// OSC bundle, which tells the player process to shut down after playing the
 	// score.
 	oneOff bool
+	// When true, the score will only be loaded, as opposed to being played,
+	// displayed, performed, etc.
+	loadOnly bool
 }
 
 // TransmissionOption is a function that customizes an TransmissionContext
@@ -106,6 +109,18 @@ func OneOff() TransmissionOption {
 			Msg("Applying transmission option")
 
 		ctx.oneOff = true
+	}
+}
+
+// LoadOnly specifies that the score is to be loaded only, as opposed to being
+// played, displayed, performed, etc.
+func LoadOnly() TransmissionOption {
+	return func(ctx *TransmissionContext) {
+		log.Debug().
+			Bool("loadOnly", true).
+			Msg("Applying transmission option")
+
+		ctx.loadOnly = true
 	}
 }
 

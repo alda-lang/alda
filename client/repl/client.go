@@ -5,6 +5,7 @@ package repl
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net"
 	"os"
 	"path/filepath"
@@ -54,6 +55,10 @@ type Client struct {
 	// to the server and the response from the server contains the session ID that
 	// the client will use for the rest of the session.
 	sessionID string
+	// The (optional) filepath to a file containing Alda source code. The contents
+	// of the file can be loaded into the REPL server via the `:load` command. The
+	// `:save` command creates/updates this file.
+	inputFilepath string
 }
 
 type replCommand struct {
@@ -118,6 +123,53 @@ Available commands:
 
 				return nil
 			}},
+
+		"load": {
+			helpSummary: "Loads an Alda score into the current REPL session.",
+			helpDetails: `Usage:
+
+  :load test/examples/bach_cello_suite_no_1.alda
+  :load /Users/rick/Scores/love_is_alright_tonite.alda
+
+After using :load <filename> to load a file, or after using :save to save the
+working score to a file, running :load without arguments will reload the score
+file into the REPL server.`,
+			run: func(client *Client, argsString string) error {
+				args, err := shlex.Split(argsString)
+				if err != nil {
+					return err
+				}
+
+				switch len(args) {
+				case 0:
+					if client.inputFilepath == "" {
+						return fmt.Errorf("please specify the path to a file to load")
+					}
+				case 1:
+					client.inputFilepath = args[0]
+				default:
+					return invalidArgsError(args)
+				}
+
+				contents, err := ioutil.ReadFile(client.inputFilepath)
+				if err != nil {
+					return err
+				}
+
+				res, err := client.sendRequest(
+					map[string]interface{}{
+						"op":   "load",
+						"code": string(contents)},
+				)
+				if err != nil {
+					return err
+				}
+
+				printResponseErrors(res)
+
+				return nil
+			},
+		},
 
 		"play": {
 			helpSummary: "Plays the current score.",

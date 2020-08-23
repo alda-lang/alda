@@ -275,7 +275,9 @@ func (oe OSCTransmitter) TransmitScore(
 		}
 	}
 
-	bundle.Append(systemPlayMsg())
+	if !ctx.loadOnly {
+		bundle.Append(systemPlayMsg())
+	}
 
 	if ctx.oneOff {
 		bundle.Append(systemShutdownMsg(int32(math.Round(scoreLength + 1000))))
