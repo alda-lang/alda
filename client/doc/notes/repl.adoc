@@ -208,6 +208,20 @@ Returns::
 * `status`
 * `problems` if there was an error
 
+==== `new-score`
+
+Resets the REPL server state and initializes a new score.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+{blank}
+
+Returns::
+* `status`
+* `problems` if there was an error
+
 ==== `replay`
 
 Plays back the score currently loaded into the REPL server.

@@ -327,6 +327,15 @@ var ops = map[string]func(*Server, nREPLRequest){
 		server.respondDone(req, nil)
 	},
 
+	"new-score": func(server *Server, req nREPLRequest) {
+		if err := server.resetState(); err != nil {
+			server.respondError(req, err.Error(), nil)
+			return
+		}
+
+		server.respondDone(req, nil)
+	},
+
 	"replay": func(server *Server, req nREPLRequest) {
 		transmitOpts := []transmitter.TransmissionOption{}
 

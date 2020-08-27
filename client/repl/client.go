@@ -171,6 +171,22 @@ file into the REPL server.`,
 			},
 		},
 
+		"new": {
+			helpSummary: "Resets the REPL server state and initializes a new score.",
+			run: func(client *Client, argsString string) error {
+				res, err := client.sendRequest(
+					map[string]interface{}{"op": "new-score"},
+				)
+				if err != nil {
+					return err
+				}
+
+				printResponseErrors(res)
+
+				return nil
+			},
+		},
+
 		"play": {
 			helpSummary: "Plays the current score.",
 			helpDetails: `Can take optional ` + "`from`" + `and ` + "`to`" + `arguments, in the form of markers or mm:ss
