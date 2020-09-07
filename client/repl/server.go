@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/google/uuid"
 	bencode "github.com/jackpal/bencode-go"
