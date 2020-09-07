@@ -431,7 +431,7 @@ func (server *Server) updateScoreWithInput(
 
 	// Add the provided `input` to our total string of input representing the
 	// entire score.
-	server.input += input + "\n"
+	server.input += strings.TrimSpace(input) + "\n"
 
 	// Update the starting index so that the next invocation of `evalAndPlay` for
 	// this same score will result in only playing newly added events.
