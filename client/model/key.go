@@ -2,6 +2,8 @@ package model
 
 import (
 	"math"
+
+	"alda.io/client/json"
 )
 
 // ScaleType represents a type of scale or mode, e.g. major, minor.
@@ -42,6 +44,22 @@ const (
 //
 //   {B: [flat, flat], G: [sharp], E: [flat]}
 type KeySignature map[NoteLetter][]Accidental
+
+// JSON implements RepresentableAsJSON.JSON.
+func (ks KeySignature) JSON() *json.Container {
+	object := json.Object()
+
+	for letter, accidentals := range ks {
+		accidentalsArray := json.Array()
+		for _, accidental := range accidentals {
+			accidentalsArray.ArrayAppend(accidental.String())
+		}
+
+		object.Set(accidentalsArray, letter.String())
+	}
+
+	return object
+}
 
 func shiftKey(k KeySignature, this Accidental, that Accidental) KeySignature {
 	result := KeySignature{}

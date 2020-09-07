@@ -3,6 +3,7 @@ package model
 import (
 	"fmt"
 
+	"alda.io/client/json"
 	log "alda.io/client/logging"
 	"github.com/mohae/deepcopy"
 )
@@ -33,6 +34,19 @@ func (score *Score) SetVariable(name string, value []ScoreUpdate) {
 type VariableDefinition struct {
 	VariableName string
 	Events       []ScoreUpdate
+}
+
+// JSON implements RepresentableAsJSON.JSON.
+func (vd VariableDefinition) JSON() *json.Container {
+	events := json.Array()
+	for _, event := range vd.Events {
+		events.ArrayAppend(event.JSON())
+	}
+
+	return json.Object(
+		"type", "variable-definition",
+		"value", json.Object("events", events),
+	)
 }
 
 // UpdateScore implements ScoreUpdate.UpdateScore by defining a variable.
@@ -82,6 +96,14 @@ func (vd VariableDefinition) VariableValue(score *Score) (ScoreUpdate, error) {
 // corresponding sequence of events defined is used to update the score.
 type VariableReference struct {
 	VariableName string
+}
+
+// JSON implements RepresentableAsJSON.JSON.
+func (vr VariableReference) JSON() *json.Container {
+	return json.Object(
+		"type", "variable-reference",
+		"value", json.Object("name", vr.VariableName),
+	)
 }
 
 // UpdateScore implements ScoreUpdate.UpdateScore by looking up a variable and

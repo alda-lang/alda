@@ -1,10 +1,27 @@
 package model
 
-import "github.com/mohae/deepcopy"
+import (
+	"alda.io/client/json"
+
+	"github.com/mohae/deepcopy"
+)
 
 // An EventSequence is an ordered sequence of events.
 type EventSequence struct {
 	Events []ScoreUpdate
+}
+
+// JSON implements RepresentableAsJSON.JSON.
+func (es EventSequence) JSON() *json.Container {
+	events := json.Array()
+	for _, event := range es.Events {
+		events.ArrayAppend(event.JSON())
+	}
+
+	return json.Object(
+		"type", "event-sequence",
+		"value", json.Object("events", events),
+	)
 }
 
 // UpdateScore implements ScoreUpdate.UpdateScore by updating the score with

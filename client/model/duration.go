@@ -3,16 +3,21 @@ package model
 import (
 	"fmt"
 	"math"
+
+	"alda.io/client/json"
 )
 
 // DurationComponent instances are added together and the sum is the total
 // duration of the Duration.
 type DurationComponent interface {
+	json.RepresentableAsJSON
+
 	// Beats returns the number of beats represented by a DurationComponent.
 	//
 	// An error is returned if the component's duration cannot be expressed in
 	// beats.
 	Beats() (float64, error)
+
 	// Ms returns the duration of a DurationComponent in milliseconds.
 	Ms(tempo float64) float64
 }
@@ -46,6 +51,14 @@ type NoteLength struct {
 	Dots int32
 }
 
+// JSON implements RepresentableAsJSON.JSON.
+func (nl NoteLength) JSON() *json.Container {
+	return json.Object(
+		"denominator", nl.Denominator,
+		"dots", nl.Dots,
+	)
+}
+
 // Beats implements DurationComponent.Beats by calculating the number of beats
 // represented by a standard note length.
 func (nl NoteLength) Beats() (float64, error) {
@@ -64,6 +77,11 @@ type NoteLengthBeats struct {
 	Quantity float64
 }
 
+// JSON implements RepresentableAsJSON.JSON.
+func (nl NoteLengthBeats) JSON() *json.Container {
+	return json.Object("beats", nl.Quantity)
+}
+
 // Beats implements DurationComponent.Beats by describing a specific number of
 // beats.
 func (nl NoteLengthBeats) Beats() (float64, error) {
@@ -79,6 +97,11 @@ func (nl NoteLengthBeats) Ms(tempo float64) float64 {
 // NoteLengthMs expresses a duration as a specific number of milliseconds.
 type NoteLengthMs struct {
 	Quantity float64
+}
+
+// JSON implements RepresentableAsJSON.JSON.
+func (nl NoteLengthMs) JSON() *json.Container {
+	return json.Object("ms", nl.Quantity)
 }
 
 // Beats implements DurationComponent.Beats by returning an error.
@@ -101,6 +124,17 @@ func (nl NoteLengthMs) Ms(tempo float64) float64 {
 // Duration describes the length of time occupied by a note or other event.
 type Duration struct {
 	Components []DurationComponent
+}
+
+// JSON implements RepresentableAsJSON.JSON.
+func (d Duration) JSON() *json.Container {
+	components := json.Array()
+
+	for _, component := range d.Components {
+		components.ArrayAppend(component.JSON())
+	}
+
+	return json.Object("components", components)
 }
 
 // Beats implements DurationComponent.Beats by summing the beats of the
@@ -145,3 +179,14 @@ const (
 	// as a whole.
 	TempoRoleMaster TempoRole = 1
 )
+
+func (tr TempoRole) String() string {
+	switch tr {
+	case TempoRoleUnspecified:
+		return "unspecified"
+	case TempoRoleMaster:
+		return "master"
+	default:
+		panic(fmt.Sprintf("Unrecognized tempo role: %d\n", tr))
+	}
+}

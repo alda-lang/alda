@@ -2,11 +2,21 @@ package model
 
 import (
 	"fmt"
+
+	"alda.io/client/json"
 )
 
 // A Marker gives a name to a point in time in a score.
 type Marker struct {
 	Name string
+}
+
+// JSON implements RepresentableAsJSON.JSON.
+func (marker Marker) JSON() *json.Container {
+	return json.Object(
+		"type", "marker",
+		"value", json.Object("name", marker.Name),
+	)
 }
 
 // UpdateScore implements ScoreUpdate.UpdateScore by storing the current point
@@ -52,6 +62,14 @@ func (marker Marker) VariableValue(score *Score) (ScoreUpdate, error) {
 // denoted previously by a Marker.
 type AtMarker struct {
 	Name string
+}
+
+// JSON implements RepresentableAsJSON.JSON.
+func (atMarker AtMarker) JSON() *json.Container {
+	return json.Object(
+		"type", "at-marker",
+		"value", json.Object("name", atMarker.Name),
+	)
 }
 
 // UpdateScore implements ScoreUpdate.UpdateScore by setting the current offset

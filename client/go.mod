@@ -1,6 +1,7 @@
 module alda.io/client
 
 require (
+	github.com/Jeffail/gabs/v2 v2.6.0
 	github.com/OpenPeeDeeP/xdg v0.2.0
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e
 	github.com/davecgh/go-spew v1.1.1

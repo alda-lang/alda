@@ -3,6 +3,7 @@ package model
 import (
 	"math"
 
+	"alda.io/client/json"
 	"github.com/mohae/deepcopy"
 )
 
@@ -13,6 +14,19 @@ import (
 // rests, e.g. octave and other attribute changes.
 type Chord struct {
 	Events []ScoreUpdate
+}
+
+// JSON implements RepresentableAsJSON.JSON.
+func (chord Chord) JSON() *json.Container {
+	events := json.Array()
+	for _, event := range chord.Events {
+		events.ArrayAppend(event.JSON())
+	}
+
+	return json.Object(
+		"type", "chord",
+		"value", json.Object("events", events),
+	)
 }
 
 // UpdateScore implements ScoreUpdate.UpdateScore by adding multiple notes to

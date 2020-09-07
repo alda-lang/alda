@@ -1,11 +1,25 @@
 package model
 
-import "github.com/mohae/deepcopy"
+import (
+	"alda.io/client/json"
+	"github.com/mohae/deepcopy"
+)
 
 // A Repeat expression repeats an event a number of times.
 type Repeat struct {
 	Event ScoreUpdate
 	Times int32
+}
+
+// JSON implements RepresentableAsJSON.JSON.
+func (repeat Repeat) JSON() *json.Container {
+	return json.Object(
+		"type", "repeat",
+		"value", json.Object(
+			"event", repeat.Event.JSON(),
+			"times", repeat.Times,
+		),
+	)
 }
 
 // UpdateScore implements ScoreUpdate.UpdateScore by repeatedly updating the

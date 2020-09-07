@@ -2,6 +2,8 @@ package model
 
 import (
 	"fmt"
+
+	"alda.io/client/json"
 )
 
 // NoteLetter represents a note letter in Western standard musical notation.
@@ -23,6 +25,27 @@ const (
 	// G is the note "G" in Western standard musical notation.
 	G
 )
+
+func (nl NoteLetter) String() string {
+	switch nl {
+	case A:
+		return "A"
+	case B:
+		return "B"
+	case C:
+		return "C"
+	case D:
+		return "D"
+	case E:
+		return "E"
+	case F:
+		return "F"
+	case G:
+		return "G"
+	default:
+		panic(fmt.Sprintf("Unexpected note letter value: %d", nl))
+	}
+}
 
 // NewNoteLetter returns the NoteLetter that corresponds to the provided
 // character. e.g. 'a' => A
@@ -62,6 +85,19 @@ const (
 	Sharp
 )
 
+func (acc Accidental) String() string {
+	switch acc {
+	case Flat:
+		return "flat"
+	case Natural:
+		return "natural"
+	case Sharp:
+		return "sharp"
+	default:
+		panic(fmt.Sprintf("Unexpected accidental value: %d", acc))
+	}
+}
+
 // NewAccidental returns the Accidental that corresponds to the provided string.
 // e.g. "flat" => Flat
 //
@@ -88,6 +124,8 @@ func NewAccidental(accidental string) (Accidental, error) {
 // AST, and the methods of this interface are used to determine the precise
 // pitch of the note.
 type PitchIdentifier interface {
+	json.RepresentableAsJSON
+
 	// CalculateMidiNote returns the MIDI note number of a note, given contextual
 	// information about the part playing the note (e.g. octave, key signature,
 	// transposition).
@@ -101,6 +139,19 @@ type PitchIdentifier interface {
 type LetterAndAccidentals struct {
 	NoteLetter  NoteLetter
 	Accidentals []Accidental
+}
+
+// JSON implements RepresentableAsJSON.JSON.
+func (laa LetterAndAccidentals) JSON() *json.Container {
+	accidentals := json.Array()
+	for _, accidental := range laa.Accidentals {
+		accidentals.ArrayAppend(accidental.String())
+	}
+
+	return json.Object(
+		"letter", laa.NoteLetter.String(),
+		"accidentals", accidentals,
+	)
 }
 
 // CalculateMidiNote implements PitchIdentifier.CalculateMidiNote by placing the
@@ -137,6 +188,11 @@ func (laa LetterAndAccidentals) CalculateMidiNote(
 // MidiNoteNumber specifies a pitch as a MIDI note number.
 type MidiNoteNumber struct {
 	MidiNote int32
+}
+
+// JSON implements RepresentableAsJSON.JSON.
+func (mnn MidiNoteNumber) JSON() *json.Container {
+	return json.Object("midi-note", mnn.MidiNote)
 }
 
 // CalculateMidiNote implements PitchIdentifier.CalculateMidiNote by returning

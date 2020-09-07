@@ -1,6 +1,9 @@
 package model
 
-import "github.com/mohae/deepcopy"
+import (
+	"alda.io/client/json"
+	"github.com/mohae/deepcopy"
+)
 
 // A Cram expression fits a variable number of events into a fixed duration.
 //
@@ -10,6 +13,22 @@ import "github.com/mohae/deepcopy"
 type Cram struct {
 	Events   []ScoreUpdate
 	Duration Duration
+}
+
+// JSON implements RepresentableAsJSON.JSON.
+func (cram Cram) JSON() *json.Container {
+	events := json.Array()
+	for _, event := range cram.Events {
+		events.ArrayAppend(event.JSON())
+	}
+
+	return json.Object(
+		"type", "cram",
+		"value", json.Object(
+			"events", events,
+			"duration", cram.Duration.JSON(),
+		),
+	)
 }
 
 // Within the context of a part, the "inner duration" of the events in a cram

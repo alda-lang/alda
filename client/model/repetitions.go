@@ -1,6 +1,9 @@
 package model
 
-import "github.com/mohae/deepcopy"
+import (
+	"alda.io/client/json"
+	"github.com/mohae/deepcopy"
+)
 
 // RepetitionRange represents a single, inclusive range of repetition numbers,
 // e.g. 1-4.
@@ -16,6 +19,24 @@ type RepetitionRange struct {
 type OnRepetitions struct {
 	Repetitions []RepetitionRange
 	Event       ScoreUpdate
+}
+
+// JSON implements RepresentableAsJSON.JSON.
+func (or OnRepetitions) JSON() *json.Container {
+	repetitions := json.Array()
+	for _, repetition := range or.Repetitions {
+		repetitions.ArrayAppend(
+			json.Object("first", repetition.First, "last", repetition.Last),
+		)
+	}
+
+	return json.Object(
+		"type", "on-repetitions",
+		"value", json.Object(
+			"repetitions", repetitions,
+			"event", or.Event.JSON(),
+		),
+	)
 }
 
 // AppliesTo returns true if a particular repetition number belongs to one of

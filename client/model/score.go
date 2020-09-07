@@ -4,13 +4,18 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
+
+	"alda.io/client/json"
 )
 
 // The ScoreUpdate interface is implemented by events that update a score.
 type ScoreUpdate interface {
+	json.RepresentableAsJSON
+
 	// UpdateScore modifies a score and returns nil, or returns an error if
 	// something went wrong.
 	UpdateScore(score *Score) error
+
 	// DurationMs returns a number of milliseconds representing how long an event
 	// takes. For events where duration is not relevant (e.g. an octave change
 	// event), this can return 0.
@@ -29,6 +34,8 @@ type ScoreUpdate interface {
 // The ScoreEvent interface is implemented by events that occur at moments of
 // time in a score.
 type ScoreEvent interface {
+	json.RepresentableAsJSON
+
 	// EventOffset returns the offset of the event, represented as a number of
 	// milliseconds after the beginning of the score.
 	EventOffset() float64
@@ -50,6 +57,54 @@ type Score struct {
 	Markers          map[string]float64
 	Variables        map[string][]ScoreUpdate
 	chordMode        bool
+}
+
+// JSON implements RepresentableAsJSON.JSON.
+func (score *Score) JSON() *json.Container {
+	parts := json.Object()
+	for _, part := range score.Parts {
+		parts.Set(part.JSON(), part.ID())
+	}
+
+	currentParts := json.Array()
+	for _, part := range score.CurrentParts {
+		currentParts.ArrayAppend(part.ID())
+	}
+
+	aliases := json.Object()
+	for alias, parts := range score.Aliases {
+		partIDs := json.Array()
+		for _, part := range parts {
+			partIDs.ArrayAppend(part.ID())
+		}
+
+		aliases.Set(partIDs, alias)
+	}
+
+	events := json.Array()
+	for _, event := range score.Events {
+		events.ArrayAppend(event.JSON())
+	}
+
+	variables := json.Object()
+	for name, events := range score.Variables {
+		eventsArray := json.Array()
+		for _, event := range events {
+			eventsArray.ArrayAppend(event.JSON())
+		}
+
+		variables.Set(eventsArray, name)
+	}
+
+	return json.Object(
+		"parts", parts,
+		"current-parts", currentParts,
+		"aliases", aliases,
+		"events", events,
+		"global-attributes", score.GlobalAttributes.JSON(),
+		"markers", score.Markers,
+		"variables", variables,
+	)
 }
 
 // NewScore returns an initialized score.

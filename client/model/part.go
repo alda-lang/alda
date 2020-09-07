@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"alda.io/client/json"
 	log "alda.io/client/logging"
 	"github.com/mohae/deepcopy"
 )
@@ -13,6 +14,20 @@ import (
 type PartDeclaration struct {
 	Names []string
 	Alias string
+}
+
+// JSON implements RepresentableAsJSON.JSON.
+func (decl PartDeclaration) JSON() *json.Container {
+	object := json.Object(
+		"type", "part-declaration",
+		"value", json.Object("names", decl.Names),
+	)
+
+	if decl.Alias != "" {
+		object.Set(decl.Alias, "alias")
+	}
+
+	return object
 }
 
 // A Part is a single instance of an instrument used within a score.
@@ -51,6 +66,33 @@ type Part struct {
 	score *Score
 }
 
+// ID returns a unique identifier to the part.
+func (part *Part) ID() string {
+	return fmt.Sprintf("%p", part)
+}
+
+// JSON implements RepresentableAsJSON.JSON.
+func (part *Part) JSON() *json.Container {
+	return json.Object(
+		"name", part.Name,
+		"stock-instrument", part.StockInstrument.Name(),
+		"tempo-role", part.TempoRole.String(),
+		"tempo", part.Tempo,
+		"key-signature", part.KeySignature.JSON(),
+		"transposition", part.Transposition,
+		"reference-pitch", part.ReferencePitch,
+		"current-offset", part.CurrentOffset,
+		"last-offset", part.LastOffset,
+		"octave", part.Octave,
+		"volume", part.Volume,
+		"track-volume", part.TrackVolume,
+		"panning", part.Panning,
+		"quantization", part.Quantization,
+		"duration", part.Duration.JSON(),
+		"time-scale", part.TimeScale,
+	)
+}
+
 // Clone returns a copy of a part.
 func (part *Part) Clone() *Part {
 	// mohae/deepcopy doesn't copy private fields.
@@ -78,16 +120,6 @@ func (score *Score) NewPart(name string) (*Part, error) {
 		return nil, err
 	}
 
-	// NB: In Alda v1, the implementation of `new-part` also included:
-	//
-	// * a randomly generated ID
-	// * base initial attribute values (*initial-attr-vals*)
-	// * Initial values specific to the stock instrument (`initial-vals`)
-	// * Additional attribute values optionally passed into `new-part`.
-	//
-	// I'm not sure how much of this actually needs to be ported. I think I might
-	// be able to get some mileage out of using a part's pointer as its ID, for
-	// example.
 	part := &Part{
 		Name:            name,
 		StockInstrument: stock,
@@ -199,6 +231,8 @@ func (score *Score) AliasesFor(part *Part) []string {
 
 // The PartUpdate interface defines how something updates a part.
 type PartUpdate interface {
+	json.RepresentableAsJSON
+
 	updatePart(*Part)
 }
 

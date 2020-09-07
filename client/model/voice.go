@@ -3,6 +3,7 @@ package model
 import (
 	"fmt"
 
+	"alda.io/client/json"
 	log "alda.io/client/logging"
 )
 
@@ -67,6 +68,14 @@ type VoiceMarker struct {
 	VoiceNumber int32
 }
 
+// JSON implements RepresentableAsJSON.JSON.
+func (vm VoiceMarker) JSON() *json.Container {
+	return json.Object(
+		"type", "voice-marker",
+		"value", json.Object("number", vm.VoiceNumber),
+	)
+}
+
 // UpdateScore implements ScoreUpdate.UpdateScore by initializing a voice for
 // each current part. This initiates a "voice group" if it wasn't already done
 // previously.
@@ -105,6 +114,11 @@ func (vm VoiceMarker) VariableValue(score *Score) (ScoreUpdate, error) {
 // A VoiceGroupEndMarker denotes the end of a voice group, i.e. the point at
 // which we are just dealing with a single voice.
 type VoiceGroupEndMarker struct{}
+
+// JSON implements RepresentableAsJSON.JSON.
+func (VoiceGroupEndMarker) JSON() *json.Container {
+	return json.Object("type", "voice-group-end-marker")
+}
 
 // UpdateScore implements ScoreUpdate.UpdateScore by updating the "origin" part
 // of each current part (i.e. the part that was forked into N voices) to be

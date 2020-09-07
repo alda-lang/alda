@@ -4,12 +4,20 @@ import (
 	"fmt"
 	"sort"
 
+	"alda.io/client/json"
 	log "alda.io/client/logging"
 )
 
 // AttributeUpdate updates the value of an attribute for all current parts.
 type AttributeUpdate struct {
 	PartUpdate PartUpdate
+}
+
+// JSON implements RepresentableAsJSON.JSON.
+func (au AttributeUpdate) JSON() *json.Container {
+	object := au.PartUpdate.JSON()
+	object.Set("attribute-update", "type")
+	return object
 }
 
 // UpdateScore implements ScoreUpdate.UpdateScore by updating an attribute value
@@ -43,6 +51,21 @@ type GlobalAttributes struct {
 	// so that we can easily traverse the map in order.
 	itinerary map[float64][]PartUpdate
 	offsets   []float64
+}
+
+// JSON implements RepresentableAsJSON.JSON.
+func (ga *GlobalAttributes) JSON() *json.Container {
+	object := json.Object()
+	for offset, updates := range ga.itinerary {
+		updatesArray := json.Array()
+		for _, update := range updates {
+			updatesArray.ArrayAppend(update.JSON())
+		}
+
+		object.Set(updatesArray, fmt.Sprintf("%f", offset))
+	}
+
+	return object
 }
 
 // NewGlobalAttributes returns an initialized GlobalAttributes structure.
@@ -121,6 +144,13 @@ type GlobalAttributeUpdate struct {
 	PartUpdate PartUpdate
 }
 
+// JSON implements RepresentableAsJSON.JSON.
+func (gau GlobalAttributeUpdate) JSON() *json.Container {
+	object := gau.PartUpdate.JSON()
+	object.Set("global-attribute-update", "type")
+	return object
+}
+
 // UpdateScore implements ScoreUpdate.UpdateScore by recording that at a point
 // in time, an attribute update should be applied for all parts.
 //
@@ -175,6 +205,11 @@ type TempoSet struct {
 	Tempo float64
 }
 
+// JSON implements RepresentableAsJSON.JSON.
+func (ts TempoSet) JSON() *json.Container {
+	return json.Object("attribute", "tempo", "value", ts.Tempo)
+}
+
 func (ts TempoSet) updatePart(part *Part) {
 	part.Tempo = ts.Tempo
 }
@@ -183,6 +218,14 @@ func (ts TempoSet) updatePart(part *Part) {
 // ratio of new tempo : old tempo.
 type MetricModulation struct {
 	Ratio float64
+}
+
+// JSON implements RepresentableAsJSON.JSON.
+func (mm MetricModulation) JSON() *json.Container {
+	return json.Object(
+		"attribute", "tempo",
+		"value", json.Object("ratio", mm.Ratio),
+	)
 }
 
 func (mm MetricModulation) updatePart(part *Part) {
@@ -194,12 +237,22 @@ type OctaveSet struct {
 	OctaveNumber int32
 }
 
+// JSON implements RepresentableAsJSON.JSON.
+func (os OctaveSet) JSON() *json.Container {
+	return json.Object("attribute", "octave", "value", os.OctaveNumber)
+}
+
 func (os OctaveSet) updatePart(part *Part) {
 	part.Octave = os.OctaveNumber
 }
 
 // OctaveUp increments the octave of all active parts.
 type OctaveUp struct{}
+
+// JSON implements RepresentableAsJSON.JSON.
+func (os OctaveUp) JSON() *json.Container {
+	return json.Object("attribute", "octave", "value", "up")
+}
 
 func (OctaveUp) updatePart(part *Part) {
 	part.Octave++
@@ -208,6 +261,11 @@ func (OctaveUp) updatePart(part *Part) {
 // OctaveDown decrements the octave of all active parts.
 type OctaveDown struct{}
 
+// JSON implements RepresentableAsJSON.JSON.
+func (os OctaveDown) JSON() *json.Container {
+	return json.Object("attribute", "octave", "value", "down")
+}
+
 func (OctaveDown) updatePart(part *Part) {
 	part.Octave--
 }
@@ -215,6 +273,11 @@ func (OctaveDown) updatePart(part *Part) {
 // VolumeSet sets the volume of all active parts.
 type VolumeSet struct {
 	Volume float64
+}
+
+// JSON implements RepresentableAsJSON.JSON.
+func (vs VolumeSet) JSON() *json.Container {
+	return json.Object("attribute", "volume", "value", vs.Volume)
 }
 
 func (vs VolumeSet) updatePart(part *Part) {
@@ -226,6 +289,11 @@ type TrackVolumeSet struct {
 	TrackVolume float64
 }
 
+// JSON implements RepresentableAsJSON.JSON.
+func (tvs TrackVolumeSet) JSON() *json.Container {
+	return json.Object("attribute", "track-volume", "value", tvs.TrackVolume)
+}
+
 func (tvs TrackVolumeSet) updatePart(part *Part) {
 	part.TrackVolume = tvs.TrackVolume
 }
@@ -233,6 +301,11 @@ func (tvs TrackVolumeSet) updatePart(part *Part) {
 // PanningSet sets the panning of all active parts.
 type PanningSet struct {
 	Panning float64
+}
+
+// JSON implements RepresentableAsJSON.JSON.
+func (ps PanningSet) JSON() *json.Container {
+	return json.Object("attribute", "panning", "value", ps.Panning)
 }
 
 func (ps PanningSet) updatePart(part *Part) {
@@ -244,6 +317,11 @@ type QuantizationSet struct {
 	Quantization float64
 }
 
+// JSON implements RepresentableAsJSON.JSON.
+func (qs QuantizationSet) JSON() *json.Container {
+	return json.Object("attribute", "quantization", "value", qs.Quantization)
+}
+
 func (qs QuantizationSet) updatePart(part *Part) {
 	part.Quantization = qs.Quantization
 }
@@ -251,6 +329,13 @@ func (qs QuantizationSet) updatePart(part *Part) {
 // DurationSet sets the quantization of all active parts.
 type DurationSet struct {
 	Duration Duration
+}
+
+// JSON implements RepresentableAsJSON.JSON.
+func (ds DurationSet) JSON() *json.Container {
+	object := ds.Duration.JSON()
+	object.Set("duration", "attribute")
+	return object
 }
 
 func (ds DurationSet) updatePart(part *Part) {
@@ -262,6 +347,14 @@ type KeySignatureSet struct {
 	KeySignature KeySignature
 }
 
+// JSON implements RepresentableAsJSON.JSON.
+func (kss KeySignatureSet) JSON() *json.Container {
+	return json.Object(
+		"attribute", "key-signature",
+		"value", kss.KeySignature.JSON(),
+	)
+}
+
 func (kss KeySignatureSet) updatePart(part *Part) {
 	part.KeySignature = kss.KeySignature
 }
@@ -269,6 +362,14 @@ func (kss KeySignatureSet) updatePart(part *Part) {
 // TranspositionSet sets the transposition of all active parts.
 type TranspositionSet struct {
 	Semitones int32
+}
+
+// JSON implements RepresentableAsJSON.JSON.
+func (ts TranspositionSet) JSON() *json.Container {
+	return json.Object(
+		"attribute", "transposition",
+		"value", ts.Semitones,
+	)
 }
 
 func (ts TranspositionSet) updatePart(part *Part) {
@@ -279,6 +380,14 @@ func (ts TranspositionSet) updatePart(part *Part) {
 // pitch is represented as the frequency of A4.
 type ReferencePitchSet struct {
 	Frequency float64
+}
+
+// JSON implements RepresentableAsJSON.JSON.
+func (rps ReferencePitchSet) JSON() *json.Container {
+	return json.Object(
+		"attribute", "reference-pitch",
+		"value", rps.Frequency,
+	)
 }
 
 func (rps ReferencePitchSet) updatePart(part *Part) {

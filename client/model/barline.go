@@ -1,8 +1,17 @@
 package model
 
+import (
+	"alda.io/client/json"
+)
+
 // A Barline has no audible effect on a score. Its purpose is to visually
 // separate elements in an Alda source file.
 type Barline struct{}
+
+// JSON implements RepresentableAsJSON.JSON.
+func (Barline) JSON() *json.Container {
+	return json.Object("type", "barline")
+}
 
 // Beats implements DurationComponent.Beats by returning 0.
 //

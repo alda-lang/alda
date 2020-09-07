@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"alda.io/client/json"
 	log "alda.io/client/logging"
 )
 
@@ -20,8 +21,11 @@ import (
 // The LispForm interface is implemented by the various types available in
 // alda-lisp.
 type LispForm interface {
+	json.RepresentableAsJSON
+
 	// TypeString returns a human-readable name of a form's type.
 	TypeString() string
+
 	// Eval returns the value of a form when evaluated, or an error if
 	// evaluation is unsuccessful.
 	Eval() (LispForm, error)
@@ -52,6 +56,16 @@ type LispVariadic struct {
 	Type LispForm
 }
 
+// JSON implements LispForm.JSON.
+//
+// Note that this should never get called, as LispVariadic should never occur as
+// a value. I'm implementing it here simply because the compiler is forcing me
+// to! (And so that if it does, for some weird reason, occur as a value, at
+// least it will be represented as JSON in a sensible way.)
+func (v LispVariadic) JSON() *json.Container {
+	return json.Object("type", "variadic-indicator", "value", v.Type.JSON())
+}
+
 // TypeString implements LispForm.TypeString.
 func (v LispVariadic) TypeString() string {
 	return v.Type.TypeString() + "*"
@@ -67,6 +81,17 @@ func (v LispVariadic) Eval() (LispForm, error) {
 type LispFunction struct {
 	Name       string
 	Signatures []FunctionSignature
+}
+
+// JSON implements RepresentableAsJSON.JSON.
+func (f LispFunction) JSON() *json.Container {
+	return json.Object(
+		"type", "function",
+		// We could represent the signatures here, too, but at some point, we are
+		// not feasibly able to serialize the value of the function, so we have to
+		// draw a line somewhere.
+		"value", fmt.Sprintf("<fn %s>", f.Name),
+	)
 }
 
 // TypeString implements LispForm.TypeString.
@@ -1149,6 +1174,11 @@ func init() {
 // LispNil is the value nil.
 type LispNil struct{}
 
+// JSON implements RepresentableAsJSON.JSON.
+func (LispNil) JSON() *json.Container {
+	return json.Object("type", "nil")
+}
+
 // TypeString implements LispForm.TypeString.
 func (LispNil) TypeString() string {
 	return "nil"
@@ -1179,6 +1209,11 @@ type LispQuotedForm struct {
 	Form LispForm
 }
 
+// JSON implements RepresentableAsJSON.JSON.
+func (qf LispQuotedForm) JSON() *json.Container {
+	return json.Object("type", "quoted-form", "value", qf.Form.JSON())
+}
+
 // TypeString implements LispForm.TypeString.
 func (LispQuotedForm) TypeString() string {
 	return "quoted form"
@@ -1192,6 +1227,11 @@ func (qf LispQuotedForm) Eval() (LispForm, error) {
 // LispSymbol is a Lisp symbol.
 type LispSymbol struct {
 	Name string
+}
+
+// JSON implements RepresentableAsJSON.JSON.
+func (sym LispSymbol) JSON() *json.Container {
+	return json.Object("type", "symbol", "value", sym.Name)
 }
 
 // TypeString implements LispForm.TypeString.
@@ -1222,6 +1262,11 @@ type LispNumber struct {
 	Value float64
 }
 
+// JSON implements RepresentableAsJSON.JSON.
+func (n LispNumber) JSON() *json.Container {
+	return json.Object("type", "number", "value", n.Value)
+}
+
 // TypeString implements LispForm.TypeString.
 func (LispNumber) TypeString() string {
 	return "number"
@@ -1235,6 +1280,11 @@ func (n LispNumber) Eval() (LispForm, error) {
 // LispString is a string value.
 type LispString struct {
 	Value string
+}
+
+// JSON implements RepresentableAsJSON.JSON.
+func (s LispString) JSON() *json.Container {
+	return json.Object("type", "string", "value", s.Value)
 }
 
 // TypeString implements LispForm.TypeString.
@@ -1252,6 +1302,11 @@ type LispScoreUpdate struct {
 	ScoreUpdate ScoreUpdate
 }
 
+// JSON implements RepresentableAsJSON.JSON.
+func (su LispScoreUpdate) JSON() *json.Container {
+	return json.Object("type", "score-update", "value", su.ScoreUpdate.JSON())
+}
+
 // TypeString implements LispForm.TypeString.
 func (su LispScoreUpdate) TypeString() string {
 	return "score update"
@@ -1265,6 +1320,11 @@ func (su LispScoreUpdate) Eval() (LispForm, error) {
 // LispPitch is a PitchIdentifier value.
 type LispPitch struct {
 	PitchIdentifier PitchIdentifier
+}
+
+// JSON implements RepresentableAsJSON.JSON.
+func (p LispPitch) JSON() *json.Container {
+	return json.Object("type", "pitch", "value", p.PitchIdentifier.JSON())
 }
 
 // TypeString implements LispForm.TypeString.
@@ -1282,6 +1342,11 @@ type LispDuration struct {
 	DurationComponent DurationComponent
 }
 
+// JSON implements RepresentableAsJSON.JSON.
+func (d LispDuration) JSON() *json.Container {
+	return json.Object("type", "duration", "value", d.DurationComponent.JSON())
+}
+
 // TypeString implements LispForm.TypeString.
 func (d LispDuration) TypeString() string {
 	return "duration"
@@ -1295,6 +1360,16 @@ func (d LispDuration) Eval() (LispForm, error) {
 // LispList is a list of forms.
 type LispList struct {
 	Elements []LispForm
+}
+
+// JSON implements RepresentableAsJSON.JSON.
+func (l LispList) JSON() *json.Container {
+	elements := json.Array()
+	for _, element := range l.Elements {
+		elements.ArrayAppend(element.JSON())
+	}
+
+	return json.Object("type", "list", "value", elements)
 }
 
 // TypeString implements LispForm.TypeString.

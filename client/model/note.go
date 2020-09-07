@@ -1,6 +1,9 @@
 package model
 
-import log "alda.io/client/logging"
+import (
+	"alda.io/client/json"
+	log "alda.io/client/logging"
+)
 
 // A Note represents a single pitch being sustained for a period of time.
 type Note struct {
@@ -9,6 +12,18 @@ type Note struct {
 	// When a note is slurred, it means there is minimal space between that note
 	// and the next.
 	Slurred bool
+}
+
+// JSON implements RepresentableAsJSON.JSON.
+func (note Note) JSON() *json.Container {
+	return json.Object(
+		"type", "note",
+		"value", json.Object(
+			"pitch", note.Pitch.JSON(),
+			"duration", note.Duration.JSON(),
+			"slurred?", note.Slurred,
+		),
+	)
 }
 
 // A NoteEvent is a Note expressed in absolute terms with the goal of performing
@@ -22,6 +37,20 @@ type NoteEvent struct {
 	Volume          float64
 	TrackVolume     float64
 	Panning         float64
+}
+
+// JSON implements RepresentableAsJSON.JSON.
+func (note NoteEvent) JSON() *json.Container {
+	return json.Object(
+		"part", note.Part.ID(),
+		"midi-note", note.MidiNote,
+		"offset", note.Offset,
+		"duration", note.Duration,
+		"audible-duration", note.AudibleDuration,
+		"volume", note.Volume,
+		"track-volume", note.TrackVolume,
+		"panning", note.Panning,
+	)
 }
 
 // EventOffset implements ScoreEvent.EventOffset by returning the offset of the
@@ -138,6 +167,14 @@ func (note Note) VariableValue(score *Score) (ScoreUpdate, error) {
 // at a particular point in time.
 type Rest struct {
 	Duration Duration
+}
+
+// JSON implements RepresentableAsJSON.JSON.
+func (rest Rest) JSON() *json.Container {
+	return json.Object(
+		"type", "rest",
+		"value", json.Object("duration", rest.Duration.JSON()),
+	)
 }
 
 // UpdateScore implements ScoreUpdate.UpdateScore by adjusting the
