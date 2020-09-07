@@ -24,7 +24,7 @@ func (decl PartDeclaration) JSON() *json.Container {
 	)
 
 	if decl.Alias != "" {
-		object.Set(decl.Alias, "alias")
+		object.Set(decl.Alias, "value", "alias")
 	}
 
 	return object
