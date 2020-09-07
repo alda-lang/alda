@@ -36,7 +36,7 @@ type TransmissionContext struct {
 	loadOnly bool
 }
 
-// TransmissionOption is a function that customizes an TransmissionContext
+// TransmissionOption is a function that customizes a TransmissionContext
 // instance.
 type TransmissionOption func(*TransmissionContext)
 
@@ -124,7 +124,7 @@ func LoadOnly() TransmissionOption {
 	}
 }
 
-// An Transmitter sends score data somewhere for performance, visualization,
+// A Transmitter sends score data somewhere for performance, visualization,
 // etc.
 type Transmitter interface {
 	// TransmitScore sends score data somewhere.
