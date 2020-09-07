@@ -13,7 +13,7 @@ type Repeat struct {
 func (repeat Repeat) UpdateScore(score *Score) error {
 	for repetition := int32(1); repetition <= repeat.Times; repetition++ {
 		for _, part := range score.CurrentParts {
-			part.CurrentRepetition = repetition
+			part.currentRepetition = repetition
 		}
 
 		if err := repeat.Event.UpdateScore(score); err != nil {
@@ -30,7 +30,7 @@ func (repeat Repeat) DurationMs(part *Part) float64 {
 	durationMs := 0.0
 
 	for repetition := int32(1); repetition <= repeat.Times; repetition++ {
-		part.CurrentRepetition = repetition
+		part.currentRepetition = repetition
 		durationMs += repeat.Event.DurationMs(part)
 	}
 

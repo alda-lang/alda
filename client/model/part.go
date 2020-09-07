@@ -19,23 +19,27 @@ type PartDeclaration struct {
 //
 // A score can include multiple instances of the same type of instrument.
 type Part struct {
-	Name              string
-	StockInstrument   Instrument
-	TempoRole         TempoRole
-	Tempo             float64
-	KeySignature      KeySignature
-	Transposition     int32
-	ReferencePitch    float64
-	CurrentOffset     float64
-	LastOffset        float64
-	Octave            int32
-	Volume            float64
-	TrackVolume       float64
-	Panning           float64
-	Quantization      float64
-	Duration          Duration
-	TimeScale         float64
-	CurrentRepetition int32
+	Name            string
+	StockInstrument Instrument
+	TempoRole       TempoRole
+	Tempo           float64
+	KeySignature    KeySignature
+	Transposition   int32
+	ReferencePitch  float64
+	CurrentOffset   float64
+	LastOffset      float64
+	Octave          int32
+	Volume          float64
+	TrackVolume     float64
+	Panning         float64
+	Quantization    float64
+	Duration        Duration
+	TimeScale       float64
+	// Used for conditionally playing or not playing an event based on how many
+	// times through a repeated sequence the part has played so far.
+	//
+	// See repetitions.go.
+	currentRepetition int32
 	// A snapshot copy of the part at the point in time when a voice group starts.
 	// This is used as a template for each new voice.
 	voiceTemplate *Part
@@ -53,10 +57,12 @@ func (part *Part) Clone() *Part {
 	//
 	// Some fields of Part are deliberately private because if we make them
 	// public, deepcopy recurses infinitely through the part copies until the
-	// stack overflows.
+	// stack overflows. (Some of these are also private just for logical reasons,
+	// e.g. implementation details.)
 	clone := deepcopy.Copy(part).(*Part)
 
 	// Instead, we manually copy the fields here.
+	clone.currentRepetition = part.currentRepetition
 	clone.origin = part.origin
 	clone.voiceTemplate = part.voiceTemplate
 	clone.voices = part.voices

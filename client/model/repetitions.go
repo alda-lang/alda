@@ -35,7 +35,7 @@ func (or OnRepetitions) AppliesTo(repetition int32) bool {
 // on a relevant repetition.
 func (or OnRepetitions) UpdateScore(score *Score) error {
 	for _, part := range score.CurrentParts {
-		if or.AppliesTo(part.CurrentRepetition) {
+		if or.AppliesTo(part.currentRepetition) {
 			if err := or.Event.UpdateScore(score); err != nil {
 				return err
 			}
@@ -48,7 +48,7 @@ func (or OnRepetitions) UpdateScore(score *Score) error {
 // DurationMs implements ScoreUpdate.DurationMs by returning the duration of the
 // event on the current repetition.
 func (or OnRepetitions) DurationMs(part *Part) float64 {
-	if or.AppliesTo(part.CurrentRepetition) {
+	if or.AppliesTo(part.currentRepetition) {
 		return or.Event.DurationMs(part)
 	}
 
