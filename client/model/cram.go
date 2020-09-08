@@ -22,13 +22,13 @@ func (cram Cram) JSON() *json.Container {
 		events.ArrayAppend(event.JSON())
 	}
 
-	return json.Object(
-		"type", "cram",
-		"value", json.Object(
-			"events", events,
-			"duration", cram.Duration.JSON(),
-		),
-	)
+	value := json.Object("events", events)
+
+	if cram.Duration.Components != nil {
+		value.Set(cram.Duration.JSON(), "duration")
+	}
+
+	return json.Object("type", "cram", "value", value)
 }
 
 // Within the context of a part, the "inner duration" of the events in a cram

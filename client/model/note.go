@@ -16,14 +16,17 @@ type Note struct {
 
 // JSON implements RepresentableAsJSON.JSON.
 func (note Note) JSON() *json.Container {
-	return json.Object(
-		"type", "note",
-		"value", json.Object(
-			"pitch", note.Pitch.JSON(),
-			"duration", note.Duration.JSON(),
-			"slurred?", note.Slurred,
-		),
-	)
+	value := json.Object("pitch", note.Pitch.JSON())
+
+	if note.Duration.Components != nil {
+		value.Set(note.Duration.JSON(), "duration")
+	}
+
+	if note.Slurred {
+		value.Set(true, "slurred?")
+	}
+
+	return json.Object("type", "note", "value", value)
 }
 
 // A NoteEvent is a Note expressed in absolute terms with the goal of performing
@@ -171,10 +174,13 @@ type Rest struct {
 
 // JSON implements RepresentableAsJSON.JSON.
 func (rest Rest) JSON() *json.Container {
-	return json.Object(
-		"type", "rest",
-		"value", json.Object("duration", rest.Duration.JSON()),
-	)
+	value := json.Object()
+
+	if rest.Duration.Components != nil {
+		value.Set(rest.Duration.JSON(), "duration")
+	}
+
+	return json.Object("type", "rest", "value", value)
 }
 
 // UpdateScore implements ScoreUpdate.UpdateScore by adjusting the

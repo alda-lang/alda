@@ -18,16 +18,12 @@ type PartDeclaration struct {
 
 // JSON implements RepresentableAsJSON.JSON.
 func (decl PartDeclaration) JSON() *json.Container {
-	object := json.Object(
-		"type", "part-declaration",
-		"value", json.Object("names", decl.Names),
-	)
-
+	value := json.Object("names", decl.Names)
 	if decl.Alias != "" {
-		object.Set(decl.Alias, "value", "alias")
+		value.Set(decl.Alias, "alias")
 	}
 
-	return object
+	return json.Object("type", "part-declaration", "value", value)
 }
 
 // A Part is a single instance of an instrument used within a score.
