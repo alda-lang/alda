@@ -4,7 +4,9 @@ import (
 	"github.com/Jeffail/gabs/v2"
 )
 
-// Array is the JSON array constructor that gabs is bizarrely missing.
+// Array is the JSON array constructor that gabs is missing. It's a function
+// that takes 0 or more elements and returns a *gabs.Container representing a
+// JSON array containing those elements.
 //
 // gabs is the only Go library I could find that comes close to correctly
 // modeling JSON by using types and allowing you to construct and manage JSON
@@ -15,8 +17,11 @@ import (
 // field values is an array, and then use `Search` to obtain a reference to the
 // array.
 //
-// I just want a function that takes 0 or more elements and returns a
-// *gabs.Container whose value is a JSON array. So that's what this is.
+// NOTE: There is gabs.Wrap, which takes any value and returns a *gabs.Container
+// representing the JSON version of that value. That almost behaves correctly if
+// you pass it a slice, but (probably because of Go's zero value semantics where
+// an empty slice is equivalent to nil...) if you pass it an empty slice, it
+// serializes the JSON value as null instead of [], which is just wrong.
 func Array(elements ...interface{}) *Container {
 	wrapperObject := gabs.New()
 	wrapperObject.Array("theArray")
