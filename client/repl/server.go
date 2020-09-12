@@ -13,6 +13,7 @@ import (
 	bencode "github.com/jackpal/bencode-go"
 
 	"alda.io/client/generated"
+	"alda.io/client/json"
 	log "alda.io/client/logging"
 	"alda.io/client/model"
 	"alda.io/client/parser"
@@ -362,6 +363,31 @@ var ops = map[string]func(*Server, nREPLRequest){
 		}
 
 		server.respondDone(req, nil)
+	},
+
+	"score-data": func(server *Server, req nREPLRequest) {
+		server.respondDone(req, map[string]interface{}{
+			"data": server.score.JSON().String(),
+		})
+	},
+
+	"score-events": func(server *Server, req nREPLRequest) {
+		scoreUpdates, err := parser.ParseString(server.input)
+		if err != nil {
+			server.respondError(req, err.Error(), nil)
+			return
+		}
+
+		updates := json.Array()
+		for _, update := range scoreUpdates {
+			updates.ArrayAppend(update.JSON())
+		}
+
+		server.respondDone(req, map[string]interface{}{"events": updates.String()})
+	},
+
+	"score-text": func(server *Server, req nREPLRequest) {
+		server.respondDone(req, map[string]interface{}{"text": server.input})
 	},
 
 	"stop": func(server *Server, req nREPLRequest) {

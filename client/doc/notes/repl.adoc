@@ -239,6 +239,53 @@ Returns::
 * `status`
 * `problems` if there was an error
 
+==== `score-data`
+
+Returns a data representation of the current score. (This is the output that you
+get when you run `alda parse -o data ...` at the command line.)
+
+Required parameters::
+{blank}
+
+Optional parameters::
+{blank}
+
+Returns::
+* `status`
+* `problems` if there was an error
+* `data` - a data representation of the current score
+
+==== `score-events`
+
+Returns the parsed events output of the score. (This is the output that you get
+when you run `alda parse -o events ...` at the command line.)
+
+Required parameters::
+{blank}
+
+Optional parameters::
+{blank}
+
+Returns::
+* `status`
+* `problems` if there was an error
+* `events` - the parsed events output of the current score
+
+==== `score-text`
+
+Returns the text (Alda code) of the current score.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+{blank}
+
+Returns::
+* `status`
+* `problems` if there was an error
+* `text` - the Alda code of the current score
+
 ==== `stop`
 
 Stops playback.

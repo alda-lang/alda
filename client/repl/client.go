@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"alda.io/client/generated"
+	"alda.io/client/json"
 	log "alda.io/client/logging"
 	"alda.io/client/system"
 	"alda.io/client/util"
@@ -75,7 +76,11 @@ func invalidArgsError(args []string) error {
 }
 
 func init() {
-	// TODO: implement the rest for parity with v1
+	// TODO:
+	// * :export
+	// * :instruments
+	// * :quit
+	// * :save
 	replCommands = map[string]replCommand{
 		"help": {
 			helpSummary: "Displays this help text.",
@@ -245,6 +250,93 @@ Example usage:
 				}
 
 				printResponseErrors(res)
+
+				return nil
+			},
+		},
+
+		"score": {
+			helpSummary: "Prints information about the current score.",
+			helpDetails: `Example usage:
+
+  Print the text (Alda code) of the score (both commands are equivalent):
+    :score
+    :score text
+
+  Print a summary of the score, including information about instruments and
+  markers:
+    :score info
+
+  Print a data representation of the score (This is the output that you get
+  when you run ` + "`alda parse -o data ...`" + ` at the command line.):
+    :score data
+
+  Print the parsed events output of the score (This is the output that you get
+  when you run ` + "`alda parse -o events ...`" + ` at the command line.):
+    :score events`,
+			run: func(client *Client, argsString string) error {
+				args, err := shlex.Split(argsString)
+				if err != nil {
+					return err
+				}
+
+				var subcommand string
+				switch len(args) {
+				case 0:
+					subcommand = "text"
+				case 1:
+					subcommand = args[0]
+				default:
+					return invalidArgsError(args)
+				}
+
+				switch subcommand {
+				default:
+					return invalidArgsError(args)
+				case "text":
+					res, err := client.sendRequest(
+						map[string]interface{}{"op": "score-text"},
+					)
+					if err != nil {
+						return err
+					}
+					printResponseErrors(res)
+
+					switch res["text"].(type) {
+					case string: // OK to proceed
+					default:
+						return fmt.Errorf(
+							"the response from the REPL server did not contain the score " +
+								"text",
+						)
+					}
+					scoreText := res["text"].(string)
+					fmt.Println(scoreText)
+
+				case "data":
+					scoreData, err := client.scoreData()
+					if err != nil {
+						return err
+					}
+
+					fmt.Println(scoreData.StringIndent("", "  "))
+
+				case "events":
+					scoreEvents, err := client.scoreEvents()
+					if err != nil {
+						return err
+					}
+
+					fmt.Println(scoreEvents.StringIndent("", "  "))
+
+				case "info":
+					scoreData, err := client.scoreData()
+					if err != nil {
+						return err
+					}
+
+					return printScoreInfo(scoreData)
+				}
 
 				return nil
 			},
@@ -520,6 +612,143 @@ func serverVersion(res map[string]interface{}) (map[string]interface{}, error) {
 		return nil, errNotAnAldaServer
 	}
 	return versions["alda"].(map[string]interface{}), nil
+}
+
+func (client *Client) scoreData() (*json.Container, error) {
+	res, err := client.sendRequest(
+		map[string]interface{}{"op": "score-data"},
+	)
+	if err != nil {
+		return nil, err
+	}
+	printResponseErrors(res)
+
+	switch res["data"].(type) {
+	case string: // OK to proceed
+	default:
+		return nil, fmt.Errorf(
+			"the response from the REPL server did not contain the score data",
+		)
+	}
+
+	return json.ParseJSON([]byte(res["data"].(string)))
+}
+
+func (client *Client) scoreEvents() (*json.Container, error) {
+	res, err := client.sendRequest(
+		map[string]interface{}{"op": "score-events"},
+	)
+	if err != nil {
+		return nil, err
+	}
+	printResponseErrors(res)
+
+	switch res["events"].(type) {
+	case string: // OK to proceed
+	default:
+		return nil, fmt.Errorf(
+			"the response from the REPL server did not contain the score events",
+		)
+	}
+
+	return json.ParseJSON([]byte(res["events"].(string)))
+}
+
+func printScoreInfo(scoreData *json.Container) error {
+	parts := scoreData.Search("parts")
+	if parts.Data() == nil {
+		return fmt.Errorf("server response missing information about parts")
+	}
+
+	fmt.Println("Parts:")
+
+	if len(parts.ChildrenMap()) == 0 {
+		fmt.Println("  (none)")
+	} else {
+		for id, part := range parts.ChildrenMap() {
+			fmt.Printf(
+				"  %s (%s)\n",
+				id,
+				part.Search("stock-instrument").Data(),
+			)
+		}
+	}
+
+	fmt.Println()
+
+	currentParts := scoreData.Search("current-parts")
+	if currentParts.Data() == nil {
+		return fmt.Errorf(
+			"server response missing information about current parts",
+		)
+	}
+
+	fmt.Println("Current parts:")
+
+	if len(currentParts.Children()) == 0 {
+		fmt.Println("  (none)")
+	} else {
+		for _, id := range currentParts.Children() {
+			fmt.Printf(
+				"  %s (%s)\n",
+				id.Data(),
+				parts.Search(id.Data().(string), "stock-instrument").Data(),
+			)
+		}
+	}
+
+	fmt.Println()
+
+	events := scoreData.Search("events")
+	if events.Data() == nil {
+		return fmt.Errorf(
+			"server response missing information about events",
+		)
+	}
+
+	fmt.Printf("Events:\n  %d\n\n", len(events.Children()))
+
+	markers := scoreData.Search("markers")
+	if markers.Data() == nil {
+		return fmt.Errorf(
+			"server response missing information about markers",
+		)
+	}
+
+	fmt.Println("Markers:")
+
+	if len(markers.ChildrenMap()) == 0 {
+		fmt.Println("  (none)")
+	} else {
+		type markerEntry struct {
+			name   string
+			offset float64
+		}
+
+		markerEntries := []markerEntry{}
+		for name, offset := range markers.ChildrenMap() {
+			markerEntries = append(markerEntries, markerEntry{
+				name: name,
+				// We could do a type switch here instead and return an error if
+				// the value isn't a float, but that would be really weird if it
+				// wasn't a float. If we've gotten this far and the offset value isn't a
+				// float, let's just panic.
+				offset: offset.Data().(float64),
+			})
+		}
+
+		sort.Slice(markerEntries, func(i, j int) bool {
+			return markerEntries[i].offset < markerEntries[j].offset
+		})
+
+		for _, marker := range markerEntries {
+			fmt.Printf("  %s (%f)\n", marker.name, marker.offset)
+		}
+	}
+
+	fmt.Println()
+
+	return nil
 }
 
 // StartSession starts an nREPL session by sending a "clone" request and keeping
