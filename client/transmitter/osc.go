@@ -20,6 +20,12 @@ func pingMsg() *osc.Message {
 	return osc.NewMessage("/ping")
 }
 
+func systemMidiExportMsg(filename string) *osc.Message {
+	msg := osc.NewMessage("/system/midi/export")
+	msg.Append(filename)
+	return msg
+}
+
 func systemPlayMsg() *osc.Message {
 	return osc.NewMessage("/system/play")
 }
@@ -82,6 +88,11 @@ func midiPanningMsg(track int32, offset int32, panning int32) *osc.Message {
 
 func oscClient(port int) *osc.Client {
 	return osc.NewClient("localhost", int(port), osc.ClientProtocol(osc.TCP))
+}
+
+// TransmitMidiExportMessage sends a "MIDI export" message to a player process.
+func (oe OSCTransmitter) TransmitMidiExportMessage(filename string) error {
+	return oscClient(oe.Port).Send(systemMidiExportMsg(filename))
 }
 
 // TransmitPingMessage sends a "ping" message to a player process.

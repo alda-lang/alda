@@ -5,10 +5,13 @@ import (
 	"io"
 	"io/ioutil"
 	"math"
+	"math/rand"
 	"net"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	bencode "github.com/jackpal/bencode-go"
@@ -20,7 +23,10 @@ import (
 	"alda.io/client/parser"
 	"alda.io/client/system"
 	"alda.io/client/transmitter"
+	"alda.io/client/util"
 )
+
+const midiExportTimeout = 20 * time.Second
 
 type nREPLRequest struct {
 	conn net.Conn
@@ -308,6 +314,57 @@ var ops = map[string]func(*Server, nREPLRequest){
 		}
 
 		server.respondDone(req, nil)
+	},
+
+	"export": func(server *Server, req nREPLRequest) {
+		tmpdir, err := ioutil.TempDir("", "alda-repl-server")
+		if err != nil {
+			server.respondError(req, err.Error(), nil)
+			return
+		}
+
+		midiFilename := filepath.Join(
+			tmpdir, fmt.Sprintf(
+				"export-%d-%d.mid",
+				time.Now().Unix(),
+				rand.Intn(10000),
+			),
+		)
+
+		if err := server.withTransmitter(
+			func(transmitter transmitter.OSCTransmitter) error {
+				return transmitter.TransmitMidiExportMessage(midiFilename)
+			},
+		); err != nil {
+			server.respondError(req, err.Error(), nil)
+			return
+		}
+
+		var midiFile *os.File
+
+		if err := util.Await(
+			func() error {
+				mf, err := os.Open(midiFilename)
+				if err != nil {
+					return err
+				}
+
+				midiFile = mf
+				return nil
+			},
+			midiExportTimeout,
+		); err != nil {
+			server.respondError(req, err.Error(), nil)
+			return
+		}
+
+		binaryData, err := ioutil.ReadAll(midiFile)
+		if err != nil {
+			server.respondError(req, err.Error(), nil)
+			return
+		}
+
+		server.respondDone(req, map[string]interface{}{"binary-data": binaryData})
 	},
 
 	"load": func(server *Server, req nREPLRequest) {

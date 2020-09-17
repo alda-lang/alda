@@ -82,6 +82,46 @@ func init() {
 	// * :quit
 	// * :save
 	replCommands = map[string]replCommand{
+		"export": {
+			helpSummary: "Exports the current score as a MIDI file.",
+			helpDetails: `Example usage:
+
+  :export my-score.mid`,
+			run: func(client *Client, argsString string) error {
+				args, err := shlex.Split(argsString)
+				if err != nil {
+					return err
+				}
+
+				if len(args) != 1 {
+					return invalidArgsError(args)
+				}
+
+				filename := args[0]
+
+				res, err := client.sendRequest(map[string]interface{}{"op": "export"})
+				if err != nil {
+					return err
+				}
+				printResponseErrors(res)
+
+				switch res["binary-data"].(type) {
+				// It's a little weird that this is coming through as a string and not a
+				// byte array, but it seems to work if we convert the string to a byte
+				// array ¯\_(ツ)_/¯
+				case string: // OK to proceed
+				default:
+					return fmt.Errorf(
+						"the response from the REPL server did not contain the exported " +
+							"score",
+					)
+				}
+				binaryData := []byte(res["binary-data"].(string))
+
+				return ioutil.WriteFile(filename, binaryData, 0644)
+			},
+		},
+
 		"help": {
 			helpSummary: "Displays this help text.",
 			helpDetails: `Usage:

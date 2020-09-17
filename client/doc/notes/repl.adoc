@@ -191,7 +191,23 @@ Optional parameters::
 
 Returns::
 * `status`
-* `problems` if there was an error
+* `problems` if there were any
+
+==== `export`
+
+Exports the current score to MIDI and returns the binary data to be saved as a
+MIDI file.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+{blank}
+
+Returns::
+* `status`
+* `problems` if there were any
+* `binary-data` - exported MIDI binary data for the current score
 
 ==== `load`
 
@@ -206,7 +222,7 @@ Optional parameters::
 
 Returns::
 * `status`
-* `problems` if there was an error
+* `problems` if there were any
 
 ==== `new-score`
 
@@ -220,7 +236,7 @@ Optional parameters::
 
 Returns::
 * `status`
-* `problems` if there was an error
+* `problems` if there were any
 
 ==== `replay`
 
@@ -237,7 +253,7 @@ marker name (e.g. `chorus`), representing where in the score to stop playing
 
 Returns::
 * `status`
-* `problems` if there was an error
+* `problems` if there were any
 
 ==== `score-data`
 
@@ -252,7 +268,7 @@ Optional parameters::
 
 Returns::
 * `status`
-* `problems` if there was an error
+* `problems` if there were any
 * `data` - a data representation of the current score
 
 ==== `score-events`
@@ -268,7 +284,7 @@ Optional parameters::
 
 Returns::
 * `status`
-* `problems` if there was an error
+* `problems` if there were any
 * `events` - the parsed events output of the current score
 
 ==== `score-text`
@@ -283,7 +299,7 @@ Optional parameters::
 
 Returns::
 * `status`
-* `problems` if there was an error
+* `problems` if there were any
 * `text` - the Alda code of the current score
 
 ==== `stop`
@@ -298,5 +314,5 @@ Optional parameters::
 
 Returns::
 * `status`
-* `problems` if there was an error
+* `problems` if there were any
 
