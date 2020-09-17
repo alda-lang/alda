@@ -427,6 +427,7 @@ private fun applyUpdates(updates : Updates) {
 
   updates.systemEvents.filter { it is SetOffsetEvent }.forEach {
     val setOffsetEvent = it as SetOffsetEvent
+    awaitActiveTasks()
     midi().setSequencerOffset(setOffsetEvent.offset)
   }
 

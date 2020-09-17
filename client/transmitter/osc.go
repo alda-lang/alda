@@ -34,6 +34,12 @@ func systemShutdownMsg(offset int32) *osc.Message {
 	return msg
 }
 
+func systemOffsetMsg(offset int32) *osc.Message {
+	msg := osc.NewMessage("/system/offset")
+	msg.Append(offset)
+	return msg
+}
+
 func midiPatchMsg(track int32, offset int32, patch int32) *osc.Message {
 	msg := osc.NewMessage(fmt.Sprintf("/track/%d/midi/patch", track))
 	msg.Append(offset)
@@ -96,6 +102,11 @@ func (oe OSCTransmitter) TransmitStopMessage() error {
 // TransmitShutdownMessage sends a "shutdown" message to a player process.
 func (oe OSCTransmitter) TransmitShutdownMessage(offset int32) error {
 	return oscClient(oe.Port).Send(systemShutdownMsg(offset))
+}
+
+// TransmitOffsetMessage sends an "offset" message to a player process.
+func (oe OSCTransmitter) TransmitOffsetMessage(offset int32) error {
+	return oscClient(oe.Port).Send(systemOffsetMsg(offset))
 }
 
 // TransmitScore implements Transmitter.TransmitScore by sending OSC messages to
@@ -282,6 +293,10 @@ func (oe OSCTransmitter) TransmitScore(
 	if ctx.oneOff {
 		bundle.Append(systemShutdownMsg(int32(math.Round(scoreLength + 1000))))
 	}
+
+	log.Debug().
+		Interface("bundle", bundle).
+		Msg("Sending OSC bundle.")
 
 	return oscClient(oe.Port).Send(bundle)
 }

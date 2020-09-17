@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"math"
 	"net"
 	"os"
 	"strconv"
@@ -522,9 +523,27 @@ func (server *Server) load(input string) error {
 
 			log.Info().
 				Interface("player", server.player).
-				Msg("Sending OSC messages to player.")
+				Msg("Transmitting score to player.")
 
-			return t.TransmitScore(server.score, transmitOpts...)
+			err = t.TransmitScore(server.score, transmitOpts...)
+			if err != nil {
+				return err
+			}
+
+			newOffset := int32(0)
+			for _, offset := range server.score.PartOffsets() {
+				offsetRounded := int32(math.Round(offset))
+				if offsetRounded > newOffset {
+					newOffset = offsetRounded
+				}
+			}
+
+			log.Info().
+				Interface("player", server.player).
+				Int32("newOffset", newOffset).
+				Msg("Transmitting new offset to player.")
+
+			return t.TransmitOffsetMessage(newOffset)
 		},
 	)
 }

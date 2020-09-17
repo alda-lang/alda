@@ -377,6 +377,7 @@ class MidiEngine {
   }
 
   fun setSequencerOffset(offsetMs : Int) {
+    log.trace { "setting offset to ${offsetMs}" }
     sequencer.setTickPosition(msToTicks(offsetMs * 1.0))
   }
 
