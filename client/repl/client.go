@@ -77,7 +77,6 @@ func invalidArgsError(args []string) error {
 
 func init() {
 	// TODO:
-	// * :export
 	// * :instruments
 	// * :quit
 	// * :save
