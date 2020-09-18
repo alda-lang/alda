@@ -367,6 +367,12 @@ var ops = map[string]func(*Server, nREPLRequest){
 		server.respondDone(req, map[string]interface{}{"binary-data": binaryData})
 	},
 
+	"instruments": func(server *Server, req nREPLRequest) {
+		server.respondDone(req, map[string]interface{}{
+			"instruments": model.InstrumentsList(),
+		})
+	},
+
 	"load": func(server *Server, req nREPLRequest) {
 		errors := validateRequest(
 			req.msg,

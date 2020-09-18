@@ -209,6 +209,21 @@ Returns::
 * `problems` if there were any
 * `binary-data` - exported MIDI binary data for the current score
 
+==== `instruments`
+
+Returns the list of instruments available to use in an Alda score.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+{blank}
+
+Returns::
+* `status`
+* `problems` if there were any
+* `instruments` - the list of available instruments
+
 ==== `load`
 
 Parses the provided input as a new score and loads the score into the REPL

@@ -215,6 +215,22 @@ var midiPercussionInstruments = []midiInstrumentNames{
 	mi("midi-percussion", "percussion"),
 }
 
+// InstrumentsList returns the list of instruments available to use in an Alda
+// score.
+func InstrumentsList() []string {
+	list := []string{}
+
+	for _, instrument := range midiNonPercussionInstruments {
+		list = append(list, instrument.name)
+	}
+
+	for _, instrument := range midiPercussionInstruments {
+		list = append(list, instrument.name)
+	}
+
+	return list
+}
+
 var stockInstruments = map[string]Instrument{}
 
 func init() {

@@ -77,7 +77,6 @@ func invalidArgsError(args []string) error {
 
 func init() {
 	// TODO:
-	// * :instruments
 	// * :quit
 	// * :save
 	replCommands = map[string]replCommand{
@@ -167,6 +166,38 @@ Available commands:
 
 				return nil
 			}},
+
+		"instruments": {
+			helpSummary: "Displays the list of available instruments.",
+			run: func(client *Client, argsString string) error {
+				res, err := client.sendRequest(
+					map[string]interface{}{"op": "instruments"},
+				)
+				if err != nil {
+					return err
+				}
+				printResponseErrors(res)
+
+				switch res["instruments"].(type) {
+				// For some reason, Go isn't recognizing the list of strings as a list
+				// of strings, so I have to treat it like a list of anythings. OK,
+				// whatever.
+				case []interface{}: // OK to proceed
+				default:
+					return fmt.Errorf(
+						"the response from the REPL server did not contain the list of " +
+							"available instruments",
+					)
+				}
+				instruments := res["instruments"].([]interface{})
+
+				for _, instrument := range instruments {
+					fmt.Println(instrument)
+				}
+
+				return nil
+			},
+		},
 
 		"load": {
 			helpSummary: "Loads an Alda score into the current REPL session.",
