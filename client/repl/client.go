@@ -46,6 +46,8 @@ const serverConnectTimeout = 5 * time.Second
 
 // Client is a stateful Alda REPL client object.
 type Client struct {
+	// Whether or not the client should continue the REPL session.
+	running bool
 	// The TCP address of the server with which the client will communicate.
 	serverAddr *net.TCPAddr
 	// The current connection to the server with which the client is
@@ -77,7 +79,6 @@ func invalidArgsError(args []string) error {
 
 func init() {
 	// TODO:
-	// * :quit
 	// * :save
 	replCommands = map[string]replCommand{
 		"export": {
@@ -321,6 +322,14 @@ Example usage:
 
 				printResponseErrors(res)
 
+				return nil
+			},
+		},
+
+		"quit": {
+			helpSummary: "Exits the Alda REPL session.",
+			run: func(client *Client, argsString string) error {
+				client.running = false
 				return nil
 			},
 		},
@@ -652,7 +661,7 @@ func NewClient(host string, port int) (*Client, error) {
 		return nil, err
 	}
 
-	client := &Client{serverAddr: addr}
+	client := &Client{serverAddr: addr, running: true}
 	if err := client.connect(); err != nil {
 		return nil, err
 	}
@@ -933,8 +942,7 @@ func RunClient(serverHost string, serverPort int) error {
 
 	log.SetOutput(console.Stderr())
 
-ReplLoop:
-	for {
+	for client.running {
 		line, err := console.Readline()
 
 		if err == readline.ErrInterrupt {
@@ -977,7 +985,7 @@ ReplLoop:
 
 		switch input {
 		case "quit", "exit", "bye":
-			break ReplLoop
+			client.running = false
 		default:
 			req := map[string]interface{}{"op": "eval-and-play", "code": input}
 			res, err := client.sendRequest(req)
