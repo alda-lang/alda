@@ -78,8 +78,6 @@ func invalidArgsError(args []string) error {
 }
 
 func init() {
-	// TODO:
-	// * :save
 	replCommands = map[string]replCommand{
 		"export": {
 			helpSummary: "Exports the current score as a MIDI file.",
@@ -201,7 +199,7 @@ Available commands:
 		},
 
 		"load": {
-			helpSummary: "Loads an Alda score into the current REPL session.",
+			helpSummary: "Loads a score file (*.alda) into the current REPL session.",
 			helpDetails: `Usage:
 
   :load test/examples/bach_cello_suite_no_1.alda
@@ -334,6 +332,41 @@ Example usage:
 			},
 		},
 
+		"save": {
+			helpSummary: "Saves the current score into a file (*.alda).",
+			helpDetails: `Usage:
+
+  :save test/examples/bach_cello_suite_no_1.alda
+  :save /Users/rick/Scores/love_is_alright_tonite.alda
+
+After using :save <filename> to save a file, running :save again without
+arguments will save the updated score to the same file.`,
+			run: func(client *Client, argsString string) error {
+				args, err := shlex.Split(argsString)
+				if err != nil {
+					return err
+				}
+
+				switch len(args) {
+				case 0:
+					if client.inputFilepath == "" {
+						return fmt.Errorf("please specify the path to a file")
+					}
+				case 1:
+					client.inputFilepath = args[0]
+				default:
+					return invalidArgsError(args)
+				}
+
+				scoreText, err := client.scoreText()
+				if err != nil {
+					return err
+				}
+
+				return ioutil.WriteFile(client.inputFilepath, []byte(scoreText), 0644)
+			},
+		},
+
 		"score": {
 			helpSummary: "Prints information about the current score.",
 			helpDetails: `Example usage:
@@ -373,23 +406,11 @@ Example usage:
 				default:
 					return invalidArgsError(args)
 				case "text":
-					res, err := client.sendRequest(
-						map[string]interface{}{"op": "score-text"},
-					)
+					scoreText, err := client.scoreText()
 					if err != nil {
 						return err
 					}
-					printResponseErrors(res)
 
-					switch res["text"].(type) {
-					case string: // OK to proceed
-					default:
-						return fmt.Errorf(
-							"the response from the REPL server did not contain the score " +
-								"text",
-						)
-					}
-					scoreText := res["text"].(string)
 					fmt.Println(scoreText)
 
 				case "data":
@@ -691,6 +712,26 @@ func serverVersion(res map[string]interface{}) (map[string]interface{}, error) {
 		return nil, errNotAnAldaServer
 	}
 	return versions["alda"].(map[string]interface{}), nil
+}
+
+func (client *Client) scoreText() (string, error) {
+	res, err := client.sendRequest(
+		map[string]interface{}{"op": "score-text"},
+	)
+	if err != nil {
+		return "", err
+	}
+	printResponseErrors(res)
+
+	switch res["text"].(type) {
+	case string: // OK to proceed
+	default:
+		return "", fmt.Errorf(
+			"the response from the REPL server did not contain the score " +
+				"text",
+		)
+	}
+	return res["text"].(string), nil
 }
 
 func (client *Client) scoreData() (*json.Container, error) {
