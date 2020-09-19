@@ -97,8 +97,8 @@ This will download FluidR3 and replace `~/.gervill/soundbank-emg.sf2` (your JVM'
 
 To replace the default soundfont on a Windows OS:
 
-1. Locate your Java Runtime (JRE) folder and navigate into the `lib` folder. 
-   * If you have JDK 8 or earlier installed, locate your JDK folder instead and navigate into the `jre\lib` folder. 
+1. Locate your Java Runtime (JRE) folder and navigate into the `lib` folder.
+   * If you have JDK 8 or earlier installed, locate your JDK folder instead and navigate into the `jre\lib` folder.
 2. Make a new folder named `audio`.
 3. Copy any `.sf2` file into this folder.
 
