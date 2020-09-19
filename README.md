@@ -108,6 +108,14 @@ For more examples, see these [example scores](https://github.com/alda-lang/alda-
 
 You will now be able to run Alda from anywhere in the command prompt by typing `alda`, but note that command prompts that were already open will need to be restarted before they will pick up on the new PATH value.
 
+### Nix
+
+`alda` is available on [nixpkgs](https://github.com/NixOS/nixpkgs):
+
+```bash
+nix-shell -p alda
+```
+
 ### Updating Alda
 
 Once you have Alda installed, you can update to the latest version at any time by running:
