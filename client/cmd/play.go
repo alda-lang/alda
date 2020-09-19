@@ -19,8 +19,8 @@ var playerID string
 var playerPort int
 var file string
 var code string
-var playFrom string
-var playTo string
+var optionFrom string
+var optionTo string
 
 func init() {
 	playCmd.Flags().StringVarP(
@@ -40,7 +40,7 @@ func init() {
 	)
 
 	playCmd.Flags().StringVarP(
-		&playFrom,
+		&optionFrom,
 		"from",
 		"F",
 		"",
@@ -48,7 +48,7 @@ func init() {
 	)
 
 	playCmd.Flags().StringVarP(
-		&playTo,
+		&optionTo,
 		"to",
 		"T",
 		"",
@@ -228,8 +228,8 @@ Text piped into the process on stdin:
 		}
 
 		transmitOpts := []transmitter.TransmissionOption{
-			transmitter.TransmitFrom(playFrom),
-			transmitter.TransmitTo(playTo),
+			transmitter.TransmitFrom(optionFrom),
+			transmitter.TransmitTo(optionTo),
 		}
 
 		if action == "play" {

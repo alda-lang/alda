@@ -18,6 +18,7 @@ func init() {
 
 	for _, cmd := range []*cobra.Command{
 		doctorCmd,
+		exportCmd,
 		instrumentsCmd,
 		playCmd,
 		psCmd,
