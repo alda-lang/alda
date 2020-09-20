@@ -94,6 +94,11 @@ output formats like MusicXML.
 
 ---`,
 	Run: func(_ *cobra.Command, args []string) {
+		if outputFormat != "midi" {
+			fmt.Printf("Invalid output format: %s\n", outputFormat)
+			os.Exit(1)
+		}
+
 		var scoreUpdates []model.ScoreUpdate
 		var err error
 
