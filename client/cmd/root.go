@@ -20,6 +20,7 @@ func init() {
 		doctorCmd,
 		exportCmd,
 		instrumentsCmd,
+		parseCmd,
 		playCmd,
 		psCmd,
 		replCmd,
