@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## 1.4.3 (2020-09-29)
+
+* Fixed the formatting of the `:help load` command (help text for the `:load`
+  command) in the REPL. There were a couple of newlines missing.
+
+* Fixed string formatting in the error message that you get when you place a
+  marker at an unclear location. (See [alda-core PR #85][alda-core-pr-85]).
+  Thanks, [dhpiggott], for the contribution!
+
+[alda-core-pr-85]: https://github.com/alda-lang/alda-core/pull/85
+
 ## 1.4.2 (2020-06-15)
 
 * Fixed a bug where in some cases, a global attribute can be recorded a fraction
@@ -1767,6 +1778,7 @@ Shout-out to [elyisgreat] for finding all these bugs!
 [Hemaolle]: https://github.com/Hemaolle
 [TBuc]: https://github.com/TBuc
 [truj]: https://github.com/truj
+[dhpiggott]: https://github.com/dhpiggott
 
 [slack]: http://slack.alda.io
 [jq]: https://stedolan.github.io/jq/
