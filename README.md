@@ -26,6 +26,8 @@
 
 *New to Alda? You may be interested in reading [this blog post][alda-blog-post] as an introduction.*
 
+**Alda is a text-based programming language for music composition. It allows you to write and play back music using nothing but a text editor. The language's design equally favors aesthetics, flexibility and ease of use.**
+
 Inspired by other music/audio programming languages such as [PPMCK][ppmck],
 [LilyPond][lilypond] and [ChucK][chuck], Alda aims to be a powerful and flexible
 programming language for the musician who wants to easily compose and generate
@@ -41,17 +43,17 @@ for the text-based creation of all manner of music: classical, popular,
 
 ## Features
 
-* Easy to understand, markup-like syntax
-* Designed for musicians who don't know how to program, and programmers who
-  don't know how to music
-* A score is a text file that can be played using the `alda` command-line tool
-* [Interactive REPL](doc/alda-repl.md) lets you enter Alda code and hear the
-  results in real time
-* Supports [writing music
-  programmatically](doc/writing-music-programmatically.md) (for algorithmic
-  composition, live coding, etc.)
-* Create MIDI music using any of the instruments in the [General MIDI Sound
-  Set][gm-sound-set]
+* **Easy to understand, markup-like syntax**
+* **Designed for musicians who don't know how to program, and programmers who
+  don't know how to music**
+* **A score is a text file that can be played using the `alda` command-line tool**
+* **[Interactive REPL](doc/alda-repl.md) lets you enter Alda code and hear the**
+  **results in real time**
+* **Supports [writing music**
+  **programmatically](doc/writing-music-programmatically.md) (for algorithmic**
+  **composition, live coding, etc.)**
+* **Create MIDI music using any of the instruments in the [General MIDI Sound**
+  **Set][gm-sound-set]**
 
 [gm-sound-set]: http://www.midi.org/techspecs/gm1sound.php
 
