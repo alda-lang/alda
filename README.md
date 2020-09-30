@@ -49,9 +49,9 @@ for the text-based creation of all manner of music: classical, popular,
 * **A score is a text file that can be played using the `alda` command-line tool**
 * **[Interactive REPL](doc/alda-repl.md) lets you enter Alda code and hear the**
   **results in real time**
-* **Supports [writing music**
-  **programmatically](doc/writing-music-programmatically.md) (for algorithmic**
-  **composition, live coding, etc.)**
+* **Supports [writing music
+  programmatically](doc/writing-music-programmatically.md) (for algorithmic
+  composition, live coding, etc.)**
 * **Create MIDI music using any of the instruments in the [General MIDI Sound**
   **Set][gm-sound-set]**
 
