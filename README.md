@@ -52,8 +52,8 @@ for the text-based creation of all manner of music: classical, popular,
 * **Supports [writing music
   programmatically](doc/writing-music-programmatically.md) (for algorithmic
   composition, live coding, etc.)**
-* **Create MIDI music using any of the instruments in the [General MIDI Sound**
-  **Set][gm-sound-set]**
+* **Create MIDI music using any of the instruments in the [General MIDI Sound
+  Set][gm-sound-set]**
 
 [gm-sound-set]: http://www.midi.org/techspecs/gm1sound.php
 
