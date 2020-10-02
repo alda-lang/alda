@@ -439,7 +439,7 @@ let myChord = chord(note1, note2);
 
 console.log(stringify(note1)); // c
 console.log(stringify(note2)); // e-
-console.log(stringify(note3)); // c / e-
+console.log(stringify(myChord)); // c / e-
 ```
 
 A simple way to do this in JavaScript is to just write a function that includes
