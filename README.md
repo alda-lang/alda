@@ -194,10 +194,14 @@ own GitHub repository within the [alda-lang][gh-org] organization.
 For a top-level overview of things we're talking about and working on across all
 of the subprojects, check out the [Alda GitHub Project board][gh-project].
 
+For more details on how you can contribute to Alda, see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+> Another way you can contribute is by [sponsoring Dave][gh-sponsor] in the
+> future development of Alda.
+
 [gh-org]: https://github.com/alda-lang
 [gh-project]: https://github.com/orgs/alda-lang/projects/1
-
-For more details on how you can contribute to Alda, see [CONTRIBUTING.md](CONTRIBUTING.md).
+[gh-sponsor]: https://github.com/sponsors/daveyarwood
 
 ## Support, Discussion, Comaraderie
 
