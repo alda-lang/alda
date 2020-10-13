@@ -248,7 +248,7 @@ func loopPattern(pattern string) *osc.Bundle {
 	return bundle
 }
 
-func tempoMsg(offset int, bpm float64) *osc.Message {
+func tempoMsg(offset int, bpm float32) *osc.Message {
 	msg := osc.NewMessage("/system/tempo")
 	msg.Append(int32(offset))
 	msg.Append(bpm)
