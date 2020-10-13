@@ -106,8 +106,8 @@ class Track(val trackNumber : Int) {
    * loop. We accomplish this by scheduling each iteration in a "just in time"
    * manner, i.e. shortly before it is due to be played.
    *
-   * @param patternEvent An event that specifies a pattern, a relative offset where it
-   * should begin, and a number of times to play it.
+   * @param patternEvent An event that specifies a pattern, a relative offset
+   * where it should begin, and a number of times to play it.
    * @param _startOffset The absolute offset to which the relative offset is
    * added.
    * @return The list of scheduled events across all iterations of the pattern.

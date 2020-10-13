@@ -350,7 +350,10 @@ class Updates() {
         Regex("/track/\\d+/pattern-loop").matches(address) -> {
           val offset      = args.get(0) as Int
           val patternName = args.get(1) as String
-          addTrackEvent(trackNumber(address), PatternLoopEvent(offset, patternName))
+          addTrackEvent(
+            trackNumber(address),
+            PatternLoopEvent(offset, patternName)
+          )
         }
 
         Regex("/track/\\d+/finish-loop").matches(address) -> {

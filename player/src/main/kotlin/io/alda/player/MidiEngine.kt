@@ -345,7 +345,11 @@ class MidiEngine {
     thread {
       while (!Thread.currentThread().isInterrupted()) {
         try {
-          log.trace { "${if (isPlaying) "PLAYING; " else ""}current offset: ${currentOffset()}" }
+          log.trace {
+            "${if (isPlaying)
+                 "PLAYING; "
+               else ""}current offset: ${currentOffset()}"
+          }
           Thread.sleep(500)
         } catch (iex : InterruptedException) {
           Thread.currentThread().interrupt()
@@ -406,7 +410,9 @@ class MidiEngine {
     startOffset : Int, endOffset : Int, channel : Int, noteNumber : Int,
     velocity : Int
   ) {
-    log.trace { "channel ${channel}: scheduling note from ${startOffset} to ${endOffset}" }
+    log.trace {
+      "channel ${channel}: scheduling note from ${startOffset} to ${endOffset}"
+    }
 
     scheduleShortMsg(
       startOffset, ShortMessage.NOTE_ON, channel, noteNumber, velocity
