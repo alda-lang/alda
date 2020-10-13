@@ -1,9 +1,10 @@
 <p align="center">
   <a href="http://alda.io">
-    <img src="alda-logo.png" alt="alda logo">
+    <img src="alda-logo-horizontal.svg"
+         alt="alda logo"
+         width=360
+         height=128>
   </a>
-
-  <h2 align=center>a music programming language for musicians</h2>
 
   <p align="center">
   <b><a href="#installation">Installation</a></b>
@@ -24,29 +25,34 @@
   </p>
 </p>
 
-*New to Alda? You may be interested in reading [this blog post][alda-blog-post] as an introduction.*
+> New to Alda? You may be interested in reading [this blog post][alda-blog-post] as an introduction.
 
-Inspired by other music/audio programming languages such as [PPMCK][ppmck],
-[LilyPond][lilypond] and [ChucK][chuck], Alda aims to be a powerful and flexible
-programming language for the musician who wants to easily compose and generate
-music on the fly, using only a text editor.  Alda is designed in a way that
-equally favors aesthetics, flexibility and ease of use, with (eventual) support
-for the text-based creation of all manner of music: classical, popular,
-  chiptune, electroacoustic, and more!
+
+Alda is a text-based programming language for music composition. It allows you
+to write and play back music using only a text editor and the command line.
+
+```alda
+piano:
+  o3
+  g8 a b > c d e f+ g | a b > c d e f+ g4
+  g8 f+ e d c < b a g | f+ e d c < b a g4
+  << g1/>g/>g/b/>d/g
+```
+
+> For more examples, see these [example scores](https://github.com/alda-lang/alda-core/tree/master/examples).
+
+The language's design equally favors aesthetics, flexibility and ease of use.
 
 [alda-blog-post]: https://blog.djy.io/alda-a-manifesto-and-gentle-introduction/
-[ppmck]: http://ppmck.wikidot.com/what-is-ppmck
-[lilypond]: http://www.lilypond.org
-[chuck]: http://chuck.cs.princeton.edu
 
 ## Features
 
-* Easy to understand, markup-like syntax
-* Designed for musicians who don't know how to program, and programmers who
-  don't know how to music
-* A score is a text file that can be played using the `alda` command-line tool
+* Easy to understand, markup-like syntax.
+* Designed for musicians who don't know how to program, as well as programmers
+  who don't know how to music.
+* A score is a text file that can be played using the `alda` command-line tool.
 * [Interactive REPL](doc/alda-repl.md) lets you enter Alda code and hear the
-  results in real time
+  results in real time.
 * Supports [writing music
   programmatically](doc/writing-music-programmatically.md) (for algorithmic
   composition, live coding, etc.)
@@ -57,21 +63,12 @@ for the text-based creation of all manner of music: classical, popular,
 
 ### Planned
 
+> If you'd like to help, come on in -- [the water's fine](#contributing)!
+
 * [Define and use waveform synthesis instruments](https://github.com/alda-lang/alda/issues/100)
 * [Import MIDI files](https://github.com/alda-lang/alda-core/issues/25)
 * [Export to MusicXML](https://github.com/alda-lang/alda-core/issues/3) for inter-operability with other music software
 * [A more robust REPL](https://github.com/alda-lang/alda-client-java/issues/2), tailor-made for editing scores interactively
-
-If you're a developer and you'd like to help, come on in -- [the water's fine](#contributing)!
-
-## Syntax example
-
-    piano: o3
-    g8 a b > c d e f+ g | a b > c d e f+ g4
-    g8 f+ e d c < b a g | f+ e d c < b a g4
-    << g1/>g/>g/b/>d/g
-
-For more examples, see these [example scores](https://github.com/alda-lang/alda-core/tree/master/examples).
 
 ## Installation
 
@@ -149,16 +146,22 @@ We'd love your help -- Pull Requests welcome!
 For a top-level overview of things we're talking about and working on, check out
 the [Alda GitHub Project board][gh-project].
 
+For more details on how you can contribute to Alda, see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+> Another way you can contribute is by [sponsoring Dave][gh-sponsor] in the
+> future development of Alda.
+
 [gh-org]: https://github.com/alda-lang
 [gh-project]: https://github.com/orgs/alda-lang/projects/1
-
-For more details on how you can contribute to Alda, see [CONTRIBUTING.md](CONTRIBUTING.md).
+[gh-sponsor]: https://github.com/sponsors/daveyarwood
 
 ## Support, Discussion, Comaraderie
 
-**Slack**: Joining the [Alda Slack group](http://slack.alda.io) is quick and painless. Come say hi!
+**Slack**: Joining the [Alda Slack group](https://slack.alda.io) is quick and
+painless. Come say hi!
 
-**Reddit**: Subscribe to the [/r/alda](https://www.reddit.com/r/alda/) subreddit, where you can discuss all things Alda and share your Alda scores!
+**Reddit**: Subscribe to the [/r/alda](https://www.reddit.com/r/alda/)
+subreddit, where you can discuss all things Alda and share your Alda scores!
 
 ## License
 
