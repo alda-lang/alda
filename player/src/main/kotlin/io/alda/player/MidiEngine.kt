@@ -216,6 +216,7 @@ class MidiEngine {
   }
 
   fun setTempo(offsetMs : Int, bpm : Float) {
+    log.trace { "Setting tempo to ${bpm} BPM at offset: ${offsetMs}" }
     val ticks = msToTicks(offsetMs * 1.0)
     addTempoEntry(TempoEntry(offsetMs, bpm, ticks))
     track.add(MidiEvent(setTempoMessage(bpm), ticks))
