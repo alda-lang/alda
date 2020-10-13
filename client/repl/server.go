@@ -317,48 +317,7 @@ var ops = map[string]func(*Server, nREPLRequest){
 	},
 
 	"export": func(server *Server, req nREPLRequest) {
-		tmpdir, err := ioutil.TempDir("", "alda-repl-server")
-		if err != nil {
-			server.respondError(req, err.Error(), nil)
-			return
-		}
-
-		midiFilename := filepath.Join(
-			tmpdir, fmt.Sprintf(
-				"export-%d-%d.mid",
-				time.Now().Unix(),
-				rand.Intn(10000),
-			),
-		)
-
-		if err := server.withTransmitter(
-			func(transmitter transmitter.OSCTransmitter) error {
-				return transmitter.TransmitMidiExportMessage(midiFilename)
-			},
-		); err != nil {
-			server.respondError(req, err.Error(), nil)
-			return
-		}
-
-		var midiFile *os.File
-
-		if err := util.Await(
-			func() error {
-				mf, err := os.Open(midiFilename)
-				if err != nil {
-					return err
-				}
-
-				midiFile = mf
-				return nil
-			},
-			midiExportTimeout,
-		); err != nil {
-			server.respondError(req, err.Error(), nil)
-			return
-		}
-
-		binaryData, err := ioutil.ReadAll(midiFile)
+		binaryData, err := server.export()
 		if err != nil {
 			server.respondError(req, err.Error(), nil)
 			return
@@ -611,6 +570,10 @@ func (server *Server) load(input string) error {
 	)
 }
 
+func (server *Server) reload() error {
+	return server.load(server.input)
+}
+
 func (server *Server) replay(
 	transmitOpts ...transmitter.TransmissionOption,
 ) error {
@@ -639,4 +602,64 @@ func (server *Server) replay(
 	// handle the case that a player process isn't immediately available, so it's
 	// OK for us to call it immediately after resetting the state.
 	return server.evalAndPlay(input, transmitOpts...)
+}
+
+// Reloads the score into a fresh player, sends a "MIDI export" message to the
+// player, waits for the player to write the MIDI file, reads the file, and
+// returns the bytes in the file.
+//
+// Returns an error if something goes wrong somewhere along the way.
+func (server *Server) export() ([]byte, error) {
+	// Reloading the score is important because of the subtleties of the tempo
+	// messages in the MIDI sequence.
+	//
+	// When we're evaluating Alda code interactively at the REPL, we suppress
+	// tempo messages because they serve no immediate purpose.
+	//
+	// When it comes time to export the score, we reload the input into the MIDI
+	// sequencer, which does include sending tempo messages, so that the MIDI
+	// sequence includes tempo changes in the places where we want them.
+	if err := server.reload(); err != nil {
+		return nil, err
+	}
+
+	tmpdir, err := ioutil.TempDir("", "alda-repl-server")
+	if err != nil {
+		return nil, err
+	}
+
+	midiFilename := filepath.Join(
+		tmpdir, fmt.Sprintf(
+			"export-%d-%d.mid",
+			time.Now().Unix(),
+			rand.Intn(10000),
+		),
+	)
+
+	if err := server.withTransmitter(
+		func(transmitter transmitter.OSCTransmitter) error {
+			return transmitter.TransmitMidiExportMessage(midiFilename)
+		},
+	); err != nil {
+		return nil, err
+	}
+
+	var midiFile *os.File
+
+	if err := util.Await(
+		func() error {
+			mf, err := os.Open(midiFilename)
+			if err != nil {
+				return err
+			}
+
+			midiFile = mf
+			return nil
+		},
+		midiExportTimeout,
+	); err != nil {
+		return nil, err
+	}
+
+	return ioutil.ReadAll(midiFile)
 }

@@ -46,6 +46,13 @@ func systemOffsetMsg(offset int32) *osc.Message {
 	return msg
 }
 
+func systemTempoMsg(offset int32, tempo float32) *osc.Message {
+	msg := osc.NewMessage("/system/tempo")
+	msg.Append(offset)
+	msg.Append(tempo)
+	return msg
+}
+
 func midiPatchMsg(track int32, offset int32, patch int32) *osc.Message {
 	msg := osc.NewMessage(fmt.Sprintf("/track/%d/midi/patch", track))
 	msg.Append(offset)
@@ -118,6 +125,77 @@ func (oe OSCTransmitter) TransmitShutdownMessage(offset int32) error {
 // TransmitOffsetMessage sends an "offset" message to a player process.
 func (oe OSCTransmitter) TransmitOffsetMessage(offset int32) error {
 	return oscClient(oe.Port).Send(systemOffsetMsg(offset))
+}
+
+func tempoMessages(
+	score *model.Score, startOffset float64, endOffset float64,
+) []*osc.Message {
+	tempoItinerary := score.TempoItinerary()
+
+	tempoOffsets := []float64{}
+	for offset := range tempoItinerary {
+		tempoOffsets = append(tempoOffsets, offset)
+	}
+	sort.Float64s(tempoOffsets)
+
+	// In the case where we're starting a ways into the score (i.e. if the
+	// `--from` option is supplied), we want to skip any extraneous tempo changes
+	// that happened before that point in the score. Except we do want the last
+	// one before or at the start offset, so that the initial tempo is correct.
+	firstTempoOffset := 0.0
+	for _, tempoOffset := range tempoOffsets {
+		if tempoOffset > startOffset {
+			break
+		}
+
+		// Keep going until we reach a tempo offset past the start offset. At that
+		// point, we'll use the previous tempo offset recorded here, because that
+		// would be the last tempo change before the start offset.
+		firstTempoOffset = tempoOffset
+	}
+
+	messages := []*osc.Message{}
+
+	// Now, we want to emit tempo messages for each tempo change within the time
+	// range of the excerpt of the score that we're playing.
+	for _, tempoOffset := range tempoOffsets {
+		// Filter out any tempo changes prior to the `--from` time marking / marker,
+		// when supplied. (...except for the last tempo offset prior to that point
+		// in time; see the comment where we defined `firstTempoOffset` above.)
+		if tempoOffset < firstTempoOffset {
+			continue
+		}
+
+		// Filter out any tempo changes after the `--to` time marking / marker, when
+		// supplied.
+		if tempoOffset >= endOffset {
+			break
+		}
+
+		tempo := tempoItinerary[tempoOffset]
+
+		// We subtract `startOffset` from the offset because we're about to do the
+		// same thing to the offset of every note event, for reasons that are
+		// explained below.
+		//
+		// By default, `startOffset` is 0, so the usual scenario is that the offset
+		// is not adjusted.
+		offset := tempoOffset - startOffset
+
+		// If the effective offset is earlier than the notional start offset (0),
+		// then we'll place the tempo change right at the beginning (0).
+		if offset < 0 {
+			offset = 0
+		}
+
+		// The OSC API works with int offsets and float tempos, so we do the
+		// necessary conversions here.
+		offsetRounded := int32(math.Round(offset))
+		tempo32 := float32(tempo)
+		messages = append(messages, systemTempoMsg(offsetRounded, tempo32))
+	}
+
+	return messages
 }
 
 // TransmitScore implements Transmitter.TransmitScore by sending OSC messages to
@@ -204,6 +282,26 @@ func (oe OSCTransmitter) TransmitScore(
 
 		if stockInstrument.IsPercussion {
 			bundle.Append(midiPercussionMsg(trackNumber, 0))
+		}
+	}
+
+	// Append tempo messages to the score, based on the tempo changes in the
+	// score. (See *Score.TempoItinerary.)
+	//
+	// We avoid doing this if there are any sync offsets, which is the case if the
+	// score is being emitted as an incremental update in an Alda REPL session. It
+	// would be complicated (maybe even impossible?) to get tempo messages right
+	// in this context, so we punt on it.
+	//
+	// NOTE: We _do_ include tempo messages in every other context, including
+	// playing an entire score from the REPL via the :play command, or exporting a
+	// score via the :export command. It is important especially for the MIDI
+	// export use case that we include tempo messages in the MIDI sequence, so
+	// that the MIDI file can include context about the tempo when it's imported
+	// into other tools.
+	if len(ctx.syncOffsets) == 0 {
+		for _, tempoMsg := range tempoMessages(score, startOffset, endOffset) {
+			bundle.Append(tempoMsg)
 		}
 	}
 

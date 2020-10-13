@@ -46,6 +46,9 @@ type Part struct {
 	Quantization    float64
 	Duration        Duration
 	TimeScale       float64
+	// A map of offset to the tempo value that should be applied at that offset.
+	// See *Part.RecordTempoValue.
+	TempoValues map[float64]float64
 	// Used for conditionally playing or not playing an event based on how many
 	// times through a repeated sequence the part has played so far.
 	//
@@ -62,6 +65,15 @@ type Part struct {
 	score *Score
 }
 
+// RecordTempoValue records an entry in the part's history of tempo values.
+//
+// We keep a comprehensive history of each part's tempo and every time it
+// changes during a score so that we can generate the MIDI sequence correctly,
+// including tempo change messages.
+func (part *Part) RecordTempoValue() {
+	part.TempoValues[part.CurrentOffset] = part.Tempo
+}
+
 // ID returns a unique identifier to the part.
 func (part *Part) ID() string {
 	return fmt.Sprintf("%p", part)
@@ -69,6 +81,11 @@ func (part *Part) ID() string {
 
 // JSON implements RepresentableAsJSON.JSON.
 func (part *Part) JSON() *json.Container {
+	tempoValues := json.Object()
+	for offset, tempo := range part.TempoValues {
+		tempoValues.Set(tempo, fmt.Sprintf("%f", offset))
+	}
+
 	return json.Object(
 		"name", part.Name,
 		"stock-instrument", part.StockInstrument.Name(),
@@ -86,6 +103,7 @@ func (part *Part) JSON() *json.Container {
 		"quantization", part.Quantization,
 		"duration", part.Duration.JSON(),
 		"time-scale", part.TimeScale,
+		"tempo-values", tempoValues,
 	)
 }
 
@@ -123,6 +141,7 @@ func (score *Score) NewPart(name string) (*Part, error) {
 		LastOffset:      -1,
 		Octave:          4,
 		Tempo:           120,
+		TempoValues:     map[float64]float64{},
 		Volume:          1.0,
 		TrackVolume:     100.0 / 127,
 		Panning:         0.5,
@@ -229,7 +248,7 @@ func (score *Score) AliasesFor(part *Part) []string {
 type PartUpdate interface {
 	json.RepresentableAsJSON
 
-	updatePart(*Part)
+	updatePart(part *Part, globalUpdate bool)
 }
 
 // Once an alias is defined for a group, its individual parts can be accessed by

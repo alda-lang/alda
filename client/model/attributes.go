@@ -24,7 +24,7 @@ func (au AttributeUpdate) JSON() *json.Container {
 // for all current parts.
 func (au AttributeUpdate) UpdateScore(score *Score) error {
 	for _, part := range score.CurrentParts {
-		au.PartUpdate.updatePart(part)
+		au.PartUpdate.updatePart(part, false)
 	}
 
 	return nil
@@ -133,7 +133,7 @@ func (score *Score) ApplyGlobalAttributes() {
 					Interface("update", update).
 					Msg("Applying global attribute update.")
 
-				update.updatePart(part)
+				update.updatePart(part, true)
 			}
 		}
 	}
@@ -181,7 +181,13 @@ func (gau GlobalAttributeUpdate) UpdateScore(score *Score) error {
 
 	// Immediately apply the attribute update to the current parts.
 	for _, part := range score.CurrentParts {
-		gau.PartUpdate.updatePart(part)
+		// We're passing in `false` as the `globalUpdate` argument here, which might
+		// seem confusing because this is a global attribute update. However, in
+		// this particular line of code, the global attribute update is being
+		// applied locally. It's important that this context is captured because in
+		// the case of a global tempo update, we do want the tempo value to be
+		// recorded (See *Part.RecordTempoValue for more context.)
+		gau.PartUpdate.updatePart(part, false)
 	}
 
 	return nil
@@ -210,8 +216,16 @@ func (ts TempoSet) JSON() *json.Container {
 	return json.Object("attribute", "tempo", "value", ts.Tempo)
 }
 
-func (ts TempoSet) updatePart(part *Part) {
+func (ts TempoSet) updatePart(part *Part, globalUpdate bool) {
 	part.Tempo = ts.Tempo
+
+	// Global updates are recorded separately, and we would end up getting
+	// incorrect results anyway if we recorded the tempo at the part's current
+	// offset, because it might be different than the offset at which the global
+	// attribute change was actually placed.
+	if !globalUpdate {
+		part.RecordTempoValue()
+	}
 }
 
 // MetricModulation sets the tempo of all active parts, defining the tempo as a
@@ -228,8 +242,16 @@ func (mm MetricModulation) JSON() *json.Container {
 	)
 }
 
-func (mm MetricModulation) updatePart(part *Part) {
+func (mm MetricModulation) updatePart(part *Part, globalUpdate bool) {
 	part.Tempo *= mm.Ratio
+
+	// Global updates are recorded separately, and we would end up getting
+	// incorrect results anyway if we recorded the tempo at the part's current
+	// offset, because it might be different than the offset at which the global
+	// attribute change was actually placed.
+	if !globalUpdate {
+		part.RecordTempoValue()
+	}
 }
 
 // OctaveSet sets the octave of all active parts.
@@ -242,7 +264,7 @@ func (os OctaveSet) JSON() *json.Container {
 	return json.Object("attribute", "octave", "value", os.OctaveNumber)
 }
 
-func (os OctaveSet) updatePart(part *Part) {
+func (os OctaveSet) updatePart(part *Part, globalUpdate bool) {
 	part.Octave = os.OctaveNumber
 }
 
@@ -254,7 +276,7 @@ func (os OctaveUp) JSON() *json.Container {
 	return json.Object("attribute", "octave", "value", "up")
 }
 
-func (OctaveUp) updatePart(part *Part) {
+func (OctaveUp) updatePart(part *Part, globalUpdate bool) {
 	part.Octave++
 }
 
@@ -266,7 +288,7 @@ func (os OctaveDown) JSON() *json.Container {
 	return json.Object("attribute", "octave", "value", "down")
 }
 
-func (OctaveDown) updatePart(part *Part) {
+func (OctaveDown) updatePart(part *Part, globalUpdate bool) {
 	part.Octave--
 }
 
@@ -280,7 +302,7 @@ func (vs VolumeSet) JSON() *json.Container {
 	return json.Object("attribute", "volume", "value", vs.Volume)
 }
 
-func (vs VolumeSet) updatePart(part *Part) {
+func (vs VolumeSet) updatePart(part *Part, globalUpdate bool) {
 	part.Volume = vs.Volume
 }
 
@@ -294,7 +316,7 @@ func (tvs TrackVolumeSet) JSON() *json.Container {
 	return json.Object("attribute", "track-volume", "value", tvs.TrackVolume)
 }
 
-func (tvs TrackVolumeSet) updatePart(part *Part) {
+func (tvs TrackVolumeSet) updatePart(part *Part, globalUpdate bool) {
 	part.TrackVolume = tvs.TrackVolume
 }
 
@@ -308,7 +330,7 @@ func (ps PanningSet) JSON() *json.Container {
 	return json.Object("attribute", "panning", "value", ps.Panning)
 }
 
-func (ps PanningSet) updatePart(part *Part) {
+func (ps PanningSet) updatePart(part *Part, globalUpdate bool) {
 	part.Panning = ps.Panning
 }
 
@@ -322,7 +344,7 @@ func (qs QuantizationSet) JSON() *json.Container {
 	return json.Object("attribute", "quantization", "value", qs.Quantization)
 }
 
-func (qs QuantizationSet) updatePart(part *Part) {
+func (qs QuantizationSet) updatePart(part *Part, globalUpdate bool) {
 	part.Quantization = qs.Quantization
 }
 
@@ -338,7 +360,7 @@ func (ds DurationSet) JSON() *json.Container {
 	return object
 }
 
-func (ds DurationSet) updatePart(part *Part) {
+func (ds DurationSet) updatePart(part *Part, globalUpdate bool) {
 	part.Duration = ds.Duration
 }
 
@@ -355,7 +377,7 @@ func (kss KeySignatureSet) JSON() *json.Container {
 	)
 }
 
-func (kss KeySignatureSet) updatePart(part *Part) {
+func (kss KeySignatureSet) updatePart(part *Part, globalUpdate bool) {
 	part.KeySignature = kss.KeySignature
 }
 
@@ -372,7 +394,7 @@ func (ts TranspositionSet) JSON() *json.Container {
 	)
 }
 
-func (ts TranspositionSet) updatePart(part *Part) {
+func (ts TranspositionSet) updatePart(part *Part, globalUpdate bool) {
 	part.Transposition = ts.Semitones
 }
 
@@ -390,6 +412,6 @@ func (rps ReferencePitchSet) JSON() *json.Container {
 	)
 }
 
-func (rps ReferencePitchSet) updatePart(part *Part) {
+func (rps ReferencePitchSet) updatePart(part *Part, globalUpdate bool) {
 	part.ReferencePitch = rps.Frequency
 }

@@ -183,3 +183,59 @@ func (score *Score) InterpretOffsetReference(
 
 	return offset, nil
 }
+
+// TempoItinerary returns a map of offsets to the tempo value that starts at
+// that offset.
+//
+// In an Alda score, each part has its own tempo and it can differ from the
+// other parts' tempos.
+//
+// Nonetheless, we need to maintain a notion of a single "master" tempo in order
+// to support features like MIDI export.
+//
+// A score has exactly one part whose role is the tempo "master". The "master
+// tempo" is derived from local tempo attribute changes for that part, as well
+// as global tempo attribute changes.
+func (score *Score) TempoItinerary() map[float64]float64 {
+	itinerary := map[float64]float64{0: 120}
+
+	for _, part := range score.Parts {
+		if part.TempoRole != TempoRoleMaster {
+			continue
+		}
+
+		for offset, tempo := range part.TempoValues {
+			itinerary[offset] = tempo
+		}
+	}
+
+	// Global metric modulation is kind of awkward to deal with for our purposes
+	// here, because the tempo that ends up getting set can vary from part to part
+	// if the parts happen to be playing at different tempos. Unlike a global
+	// tempo change, it isn't clear what tempo to record in the tempo itinerary.
+	//
+	// This isn't an amazing solution, but it's the best thing I could come up
+	// with, and I think it will work in 99% of use cases where this is likely to
+	// come up. In scores where there is a global metric modulation, it's probably
+	// pretty safe to assume that there was a preceding global tempo update
+	// earlier in the score, and that that's probably the tempo that all of the
+	// parts are at at the point in the score when the metric modulation occurs.
+	// So, if we're operating under that assumption, then we can just keep track
+	// of the last global tempo change that we saw and apply the metric modulation
+	// to that tempo, and we'll probably be right. Hopefully.
+	lastGlobalTempo := 120.0
+
+	for _, offset := range score.GlobalAttributes.offsets {
+		for _, update := range score.GlobalAttributes.itinerary[offset] {
+			switch update := update.(type) {
+			case TempoSet:
+				lastGlobalTempo = update.Tempo
+				itinerary[offset] = update.Tempo
+			case MetricModulation:
+				itinerary[offset] = lastGlobalTempo * update.Ratio
+			}
+		}
+	}
+
+	return itinerary
+}
