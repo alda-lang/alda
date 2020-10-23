@@ -99,11 +99,13 @@ const (
 	VoiceMarker
 )
 
+// A Token is a result of lexical analysis done by the scanner.
 type Token struct {
 	tokenType TokenType
 	text      string
 	literal   interface{}
 	line      int
+	column    int
 }
 
 func (tt TokenType) String() string {
@@ -188,14 +190,16 @@ func (t Token) String() string {
 }
 
 type scanner struct {
-	filename  string
-	input     []rune
-	tokens    []Token
-	start     int
-	current   int
-	line      int
-	column    int
-	sexpLevel int
+	filename    string
+	input       []rune
+	tokens      []Token
+	start       int
+	current     int
+	line        int
+	column      int
+	startLine   int
+	startColumn int
+	sexpLevel   int
 }
 
 func newScanner(filename string, input string) *scanner {
@@ -270,7 +274,8 @@ func (s *scanner) addToken(tokenType TokenType, literal interface{}) {
 		tokenType: tokenType,
 		text:      text,
 		literal:   literal,
-		line:      s.line,
+		line:      s.startLine,
+		column:    s.startColumn,
 	}
 
 	log.Debug().Str("token", token.String()).Msg("Adding token.")
@@ -769,6 +774,9 @@ func Scan(filename string, input string) ([]Token, error) {
 	for !s.reachedEOF() {
 		// We are at the beginning of the next lexeme.
 		s.start = s.current
+		s.startLine = s.line
+		s.startColumn = s.column
+
 		// log.Debug().
 		// 	Int("line", s.line).
 		// 	Int("column", s.column).
@@ -786,6 +794,7 @@ func Scan(filename string, input string) ([]Token, error) {
 		text:      "",
 		literal:   nil,
 		line:      s.line,
+		column:    s.column,
 	})
 
 	return s.tokens, nil

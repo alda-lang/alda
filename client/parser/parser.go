@@ -75,7 +75,10 @@ type parseError struct {
 
 // Should e.token.tokenType be included too?
 func (e *parseError) Error() string {
-	return fmt.Sprintf("%s:%d %s", e.filename, e.token.line, e.msg)
+	return fmt.Sprintf(
+		"%s:%d:%d %s",
+		e.filename, e.token.line, e.token.column, e.msg,
+	)
 }
 
 func (p *parser) errorAtToken(token Token, msg string) *parseError {
