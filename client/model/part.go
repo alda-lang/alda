@@ -287,10 +287,18 @@ func determineParts(decl PartDeclaration, score *Score) ([]*Part, error) {
 		// Can't use both unnamed and named instances of the same instrument.
 		if (decl.Alias != "" && len(unnamedParts) > 0) ||
 			(decl.Alias == "" && len(aliasedStockInstruments) > 0 && !dotAccess(name)) {
+
+			var reference string
+			if decl.Alias != "" {
+				reference = decl.Alias
+			} else {
+				reference = name
+			}
+
 			return nil, fmt.Errorf(
 				"ambiguous instrument reference \"%s\": can't use both unnamed and "+
 					"named instances of the same instrument in a score",
-				decl.Alias,
+				reference,
 			)
 		}
 
