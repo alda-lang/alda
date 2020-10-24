@@ -39,7 +39,7 @@ piano:
   << g1/>g/>g/b/>d/g
 ```
 
-> For more examples, see these [example scores](https://github.com/alda-lang/alda-core/tree/master/examples).
+> For more examples, see these [example scores](./examples/).
 
 The language's design equally favors aesthetics, flexibility and ease of use.
 
@@ -131,7 +131,7 @@ To play arbitrary code at the command line:
 
     alda play --code "piano: c6 d12 e6 g12~4"
 
-To start an [Alda REPL](doc/alda-repl.md):
+To start an interactive [Alda REPL](doc/alda-repl.md) session:
 
     alda repl
 

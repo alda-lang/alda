@@ -10,19 +10,24 @@ The player process is agnostic of the Alda language. It simply receives and
 handles OSC messages containing lower-level instructions pertaining to audio
 playback.
 
-The player supports live coding in that it allows one to define, modify, and
+The player supports live coding in that it allows you to define, modify, and
 loop patterns during playback.
 
 ## Development
 
 ### Requirements
 
-None, besides Java 8+, which you probably already have installed.
+* Java 8+
+  * You probably already have Java 8 or higher installed.
 
-> Gradle is used to build/run the player, however there is a `gradlew` wrapper
-> checked into the repo that makes it so that you don't need to have Gradle
-> installed. You can replace `gradle` below with `./gradlew` and it should work
-> the same as if you had Gradle installed.
+    To check what version of Java you have, you can run `java -version`.
+
+* Gradle (optional)
+  * There is a `gradlew` wrapper script checked into the repo that makes it so
+    that you don't need to have Gradle installed.
+
+    In the commands below, you can replace `gradle` with `./gradlew` and it
+    should work the same as if you had Gradle installed.
 
 ### Running a player process
 

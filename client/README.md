@@ -8,8 +8,10 @@ process to perform the score.
 
 ### Requirements
 
-You'll need to have Go installed in order to run the client locally. I'm using
-version 1.11.4.
+You'll need to have Go installed in order to run the client locally.
+
+I'm not sure about the minimum required version, but as a point of reference,
+I've been using Go 1.11.4.
 
 ### Setting up your PATH
 

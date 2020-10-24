@@ -25,13 +25,13 @@ the [Alda GitHub Project board][gh-project].
 ## General Instructions
 
 - Fork the repository and make changes on your fork.
-- Test your changes and make sure everything is working. Please add to the unit
-  tests whenever it is appropriate.
+- Test your changes and make sure everything is working. Please add test cases
+  to the unit tests whenever possible.
 - Submit a Pull Request.
 - Your Pull Request should get the Dave Yarwood Seal of Approval™ before being
   merged. (Don't worry, he's not hard to win over!)
 
-If you need help understanding how the code works or you have any other
+If you need help understanding how something works or if you have any other
 questions, stop by the `#development` channel in the [Alda Slack
 group](http://slack.alda.io) and say hi. We'll be happy to help!
 
@@ -43,7 +43,8 @@ The Alda client is a Go program that parses input (Alda code), turns it into a
 data representation of a musical score, and sends instructions to an Alda player
 process to perform the score.
 
-For more info, see the [README](client) in the `client/` folder of this repo.
+For more info, see the [README](client/README.md) in the `client/` folder of
+this repo.
 
 ### Player
 
@@ -55,10 +56,11 @@ The player process is agnostic of the Alda language. It simply receives and
 handles OSC messages containing lower-level instructions pertaining to audio
 playback.
 
-The player supports live coding in that it allows one to define, modify, and
+The player supports live coding in that it allows you to define, modify, and
 loop patterns during playback.
 
-For more info, see the [README](player) in the `player/` folder of this repo.
+For more info, see the [README](player/README.md) in the `player/` folder of
+this repo.
 
 [osc-intro]: http://opensoundcontrol.org/introduction-osc
 
