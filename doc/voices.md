@@ -13,7 +13,7 @@ piano:
   V2: e f g a b1
   V3: g a b > c d1
 
-  V0: c e g > c2.
+  V0: c4 e g > c2.
 ```
 
 Each voice is its own sequence of note events. The first note/[rest](rests.md)
