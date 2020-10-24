@@ -1,6 +1,6 @@
-# CRAM
+# Cram expressions
 
-**Crazy Rhythm Alda Magic (C.R.A.M.)** is an alternative way of representing rhythms in Alda. It can be useful for n-tuplets and polyrhythms.
+A **cram expression** is an alternative way of representing rhythms in Alda. It can be useful for n-tuplets and polyrhythms.
 
 The idea is that you're "cramming" a bunch of [notes](notes.md) into a single note [duration](notes.md#duration). For example, you may want 5 notes "crammed" into the duration of a half note:
 

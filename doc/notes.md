@@ -42,7 +42,7 @@ Alda keeps track of both the current octave and the current default note duratio
 
   The numbers do not need to be powers of 2. For example, `c2.4` is valid.
 
-* Alda also has an alternate way of specifying rhythms called [CRAM](cram.md).
+* Alda also has an alternate way of specifying rhythms called a [cram expression](cram-expressions.md).
 
 * Note lengths can also be expressed in milliseconds and seconds, which can optionally be mixed and matched with standard note lengths:
 

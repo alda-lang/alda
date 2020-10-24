@@ -50,7 +50,7 @@ For recent versions, see [CHANGELOG](CHANGELOG.md).
 
 ## 0.12.0 (2015-10-06)
 
-* [CRAM](doc/cram.md), a fun way to represent advanced rhythms ([crisptrutski]/[daveyarwood])
+* [Cram expressions](doc/cram-expressions.md), a fun way to represent advanced rhythms ([crisptrutski]/[daveyarwood])
 
 ---
 
