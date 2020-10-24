@@ -21,8 +21,6 @@ Hello! I'm an introductory paragraph, and this is the landing page for Alda's of
 
   * [Editor plugins](../README.md#editor-plugins)
 
-* Learn about the [etymology](etymology.md) behind the name Alda.
-
 * The article on [scores and parts](scores-and-parts.md) provides some good general information on what an Alda score is. After that, you may be interested in learning more about the fundamental pieces of an Alda score:
   * [notes](notes.md)
   * [rests](rests.md)
