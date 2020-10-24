@@ -22,9 +22,11 @@ Any number of dots can be added to a note duration, which has the same effect as
 
 e.g.
 
-    2 = half note, 2 beats
-    2. = dotted half note, 3 beats (2 + 1)
-    2.. = double-dotted half note, 3-1/2 beats (2 + 1 + 1/2)
+```
+2 = half note, 2 beats
+2. = dotted half note, 3 beats (2 + 1)
+2.. = double-dotted half note, 3-1/2 beats (2 + 1 + 1/2)
+```
 
 Note durations can also be added together using the tie syntax, `~`. (`4~4` = two quarter notes tied together, 2 beats total.)
 
@@ -46,10 +48,12 @@ Alda keeps track of both the current octave and the current default note duratio
 
 * Note lengths can also be expressed in milliseconds and seconds, which can optionally be mixed and matched with standard note lengths:
 
-        c350ms    # a C note lasting 350 milliseconds
-        d2s       # a D note lasting 2 seconds
-        e2s~200ms # an E note lasting 2 seconds + 200 milliseconds
-        f300ms~4. # an F note lasting 300 milliseconds + a dotted quarter note
+    ```alda
+    c350ms    # a C note lasting 350 milliseconds
+    d2s       # a D note lasting 2 seconds
+    e2s~200ms # an E note lasting 2 seconds + 200 milliseconds
+    f300ms~4. # an F note lasting 300 milliseconds + a dotted quarter note
+    ```
 
 ### Letter pitch
 
@@ -65,11 +69,15 @@ To overwrite the flat/sharp specified by a key signature, you can include an acc
 
 The following is a 1-octave B major scale, ascending and descending, starting in octave 4:
 
-    o4 b4 > c+8 d+ e f+ g+ a+ b4
-    a+8 g+ f+ e d+ c+ < b2.
+```alda
+o4 b4 > c+8 d+ e f+ g+ a+ b4
+a+8 g+ f+ e d+ c+ < b2.
+```
 
 Here is the same example, using a key signature in order to avoid having to include all of the sharps:
 
-    (key-signature "f+ c+ g+ d+ a+")
-    o4 b4 > c8 d e f g a b4
-    a8 g f e d c < b2.
+```alda
+(key-signature "f+ c+ g+ d+ a+")
+o4 b4 > c8 d e f g a b4
+a8 g f e d c < b2.
+```

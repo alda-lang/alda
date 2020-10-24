@@ -8,19 +8,23 @@ Alda is designed to be flexible about how a score is organized. For the same pie
 
 **Ex. 1**
 
-    trumpet:
-    o4 c d e f g a b > c d e f g a b > c
+```alda
+trumpet:
+o4 c d e f g a b > c d e f g a b > c
 
-    trombone:
-    o3 e f g a b > c d e f g a b > c d e
+trombone:
+o3 e f g a b > c d e f g a b > c d e
+```
 
 **Ex. 2**
 
-    trumpet: o4 c d e f g a b > c
-    trombone: o3 e f g a b > c d e
+```alda
+trumpet: o4 c d e f g a b > c
+trombone: o3 e f g a b > c d e
 
-    trumpet: d e f g a b > c
-    trombone: f g a b > c d e
+trumpet: d e f g a b > c
+trombone: f g a b > c d e
+```
 
 Under the hood, Alda processes a score sequentially, keeping track of information about each instrument, including the instrument's volume, tempo, duration, offset, and octave. The nice thing about this is that, when switching to another instrument and then switching back, you don't have to worry about changing the volume, tempo, octave, etc. back to what they were when you were last using the instrument - Alda keeps track of that for you.
 
@@ -28,42 +32,56 @@ Under the hood, Alda processes a score sequentially, keeping track of informatio
 
 It's possible in Alda to use the same note events for multiple instruments at once by grouping them, e.g.:
 
-    trumpet/trombone: c d e f g f e d c
+```alda
+trumpet/trombone: c d e f g f e d c
+```
 
 Keep in mind that Alda is still keeping track of each instrument's volume, tempo, octave, offset, etc. separately, which means it is up to the composer to ensure that the instruments are playing in sync, if that's what the composer wants. In ex. 3, the trumpet plays some repeated D notes at the start of the score, then an ascending D minor scale; the trombone also plays the D minor scale, however it starts at the beginning of the score, so it beats the trumpet to the punch. Ex. 4 shows a way to remedy this situation, in cases where the really want both instruments playing in unison. Ex. 5 shows another way to achieve the same effect using [markers](markers.md).
 
 **Ex. 3**
 
-    trumpet: d d d d d d d d
+```alda
+trumpet: d d d d d d d d
 
-    # not in sync, trombone starts earlier
-    trumpet/trombone: d e f g a b- > c d
+# not in sync, trombone starts earlier
+trumpet/trombone: d e f g a b- > c d
+```
 
 **Ex. 4**
 
-    trumpet: d d d d d d d d
-    trombone: r1~1 # (rest for 8 beats)
+```alda
+trumpet: d d d d d d d d
+trombone: r1~1 # (rest for 8 beats)
 
-    # in sync
-    trumpet/trombone: d e f g a b- > c d
+# in sync
+trumpet/trombone: d e f g a b- > c d
+```
 
 **Ex. 5**
 
-    trumpet:
-    d d d d d d d d %scaleTime
+```alda
+trumpet:
+d d d d d d d d %scaleTime
 
-    trumpet/trombone:
-    @scaleTime d e f g a b- > c d
+trumpet/trombone:
+@scaleTime d e f g a b- > c d
+```
 
-Alda chooses not to force instrument parts to sync up when used as a group in order to allow composers the freedom to experiment with multiple instruments playing the same notes in different ways. For example, you could give the instruments different tempos and/or note durations and have them play the same notes:
+Alda chooses not to force instrument parts to sync up when used as a group in
+order to allow composers the freedom to experiment with multiple instruments
+playing the same notes in different ways. For example, you could give the
+instruments different tempos and/or note durations and have them play the same
+notes:
 
 **Ex. 6**
 
-    violin: (tempo 100)
-    viola: (tempo 112)
-    cello: (tempo 124)
+```alda
+violin: (tempo 100)
+viola: (tempo 112)
+cello: (tempo 124)
 
-    violin/viola/cello: e f g e f g e f g e f g e f g
+violin/viola/cello: e f g e f g e f g e f g e f g
+```
 
 ## Aliases
 
@@ -111,12 +129,14 @@ Instrument names and aliases must adhere to the following rules:
 
 ### How instances are assigned
 
-The details of how Alda creates and assigns instrument instances are [complicated](instance-and-group-assignment.md), but for practical purposes, you can avoid errors by following these simple rules:
+The details of how Alda creates and assigns instrument instances are
+[complicated](instance-and-group-assignment.md), but for practical purposes, you
+can avoid errors by following these simple rules:
 
 - If you assign an alias to one instance of an instrument, then any other
   instance of that same instrument in your score must also have an alias.
 
-  ```
+  ```alda
   # ERROR
   piano "foo": c8 d e f g2
   piano: e8 f g a b2
@@ -132,7 +152,7 @@ The details of how Alda creates and assigns instrument instances are [complicate
 
 - Once an instance is aliased, you cannot give it a new alias.
 
-  ```
+  ```alda
   # ERROR
   piano "foo": c8 d e f g
   foo "bar": a b > c
@@ -144,7 +164,7 @@ The details of how Alda creates and assigns instrument instances are [complicate
 
 - You cannot reassign an alias to another instance.
 
-  ```
+  ```alda
   # ERROR
   piano "foo": c8 d e f g2
   clarinet "foo": e8 f g a b2
@@ -159,7 +179,7 @@ The details of how Alda creates and assigns instrument instances are [complicate
 
   Combining the two is not allowed because it can lead to situations where it isn't clear which instrument instance should be used.
 
-  ```
+  ```alda
   # ERROR
   piano "foo": c8 d e
   foo/trumpet: g1

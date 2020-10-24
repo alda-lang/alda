@@ -4,7 +4,7 @@ Currently, only General MIDI instruments are supported. In the future, we plan t
 
 Any of the instrument names below, as well as their aliases, can be used as instruments in an Alda score, e.g.:
 
-```
+```alda
 midi-harpsichord: c8 d e f g a b > c
 ```
 
@@ -197,7 +197,7 @@ There is a special `midi-percussion` instrument (alias: `percussion`) which prov
 
 Drum set example:
 
-```
+```alda
 (tempo! 150)
 
 midi-percussion:

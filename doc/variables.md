@@ -6,7 +6,7 @@ Repetition is an important aspect of music. In addition to repeating notes and p
 
 To define a variable, use the syntax `variableName = events go here`, for example:
 
-```
+```alda
 motif = b-8 a g f e g a4
 ```
 
@@ -14,7 +14,7 @@ This defines a variable called `motif` that can be used at any time afterward in
 
 You can use multiple lines when defining a variable, if you'd prefer; the trick is to use a multi-line event sequence:
 
-```
+```alda
 motif = [
   b-8 a g f
   e g a4
@@ -25,14 +25,14 @@ motif = [
 
 To use a variable in your score after defining it, simply use its name inside of an instrument part:
 
-```
+```alda
 piano:
   o2 motif < motif d1
 ```
 
 Note that variables can be repeated in the same way as events and event sequences:
 
-```
+```alda
 piano:
   motif *3
 ```
@@ -41,7 +41,7 @@ piano:
 
 Strictly speaking, the value of a variable does not need to be an event sequence; it can be an individual event. Why would you do this? You may find it convenient to create aliases for [attribute](attributes.md) changes to specific values:
 
-```
+```alda
 quiet  = (vol 25)
 loud   = (vol 50)
 louder = (vol 75)
@@ -58,7 +58,7 @@ piano:
 
 Previously defined variables can be used in the definition of other variables. This concept allows you to build up scores from smaller components.
 
-```
+```alda
 notes = c d e
 moreNotes = f g a b
 lastOne = > c

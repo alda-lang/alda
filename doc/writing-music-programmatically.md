@@ -8,7 +8,7 @@ classes, and types.
 For example, a C major scale played on an acoustic guitar in eighth notes,
 starting on C3 _(that's the note C in octave number 3)_ is written like this:
 
-```
+```alda
 acoustic-guitar:
   o3 c8 d e f g a b > c
 ```

@@ -125,13 +125,13 @@ In the current version of Alda (v1), there is no out-of-the-box way to
 "continue" a score once we've started it. By that, I mean, if we evaluate the
 following Alda code:
 
-```
+```alda
 harmonica: o5 c8 d e
 ```
 
 And then we want to have the harmonica play some additional notes:
 
-```
+```alda
 f g a b > c
 ```
 

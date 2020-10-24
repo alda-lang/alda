@@ -4,7 +4,7 @@
 
 For example:
 
-```
+```alda
 piano:
   # repeating single notes
   c *4 c2 *2
@@ -19,7 +19,7 @@ The Alda language has a feature that can be used to implement the ["alternate
 endings"](http://dictionary.onmusic.org/terms/4798-second_ending_735) often
 found in Western musical notation:
 
-```
+```alda
 piano:
   [ c8 d e f
     [g f e4]'1-3
@@ -38,7 +38,7 @@ necessarily at the end, making this feature of Alda more flexible than the
 another example where the phrase has what you might describe as an "alternate
 beginning" and an "alternate middle":
 
-```
+```alda
 piano:
   [ [c8 d e]'1,3 [e8 d c]'2,4
     f

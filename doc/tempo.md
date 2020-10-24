@@ -13,7 +13,7 @@ the length of a quarter note.
 
 For example, to specify a tempo of 180 BPM (♩ = 180):
 
-```clojure
+```alda
 (tempo! 180)
 ```
 
@@ -26,7 +26,7 @@ that the notes are played at a speed where a half note lasts for one beat.
 Alda's `tempo` function is flexible in that it allows you to specify the note
 length that gets the beat:
 
-```clojure
+```alda
 (tempo! 2 100)
 ```
 
@@ -39,7 +39,7 @@ The note value argument to the `tempo` attribute must be a valid number or
 string. Because e.g. `4.` is not a valid number, you must use a string to
 represent a dotted note:
 
-```clojure
+```alda
 # ♩. = 100
 (tempo! "4." 100)
 ```
@@ -69,6 +69,6 @@ of 3 eighth notes.
 
 In Alda, you can express a metric modulation like "♩. = 𝅗𝅥 " as:
 
-```
+```alda
 (metric-modulation! "4." 2)
 ```

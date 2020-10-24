@@ -534,7 +534,7 @@ with other music software (e.g. sheet music notation programs).
 
   In Alda notation, this might look roughly like:
 
-  ```
+  ```alda
   (tempo! 120)
   bar = c8/e/g
   foo = bar g8 g+ a

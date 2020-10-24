@@ -10,23 +10,23 @@ Different attributes take different kinds of values. A lot of the time, the valu
 
 ### Examples
 
-```
+```alda
 (volume 50)
 ```
 
-```
+```alda
 (quant 85)
 ```
 
-```
+```alda
 (octave :up)
 ```
 
-```
+```alda
 (tempo 240)
 ```
 
-```
+```alda
 (key-signature "f+ c+ g+")
 ```
 
@@ -36,7 +36,7 @@ See [below](#list-of-attributes) for more information about the different kinds 
 
 By default, an attribute change event is only applied to the instrument(s) that you're currently working with. For instance, in a score with four instruments:
 
-```
+```alda
 violin "violin-1":
   o4 f2   g4 a   b-2   a
 
@@ -52,7 +52,7 @@ cello:
 
 Changing an attribute will only affect the instrument(s) whose part you are currently editing:
 
-```
+```alda
 violin "violin-1":
   o4 f2   g4 a   b-2   a
 
@@ -69,7 +69,7 @@ cello:
 
 To change an attribute **globally** (i.e. for every instrument in the score), add an exclamation mark (`!`) after the name of the attribute:
 
-```
+```alda
 violin "violin-1":
   (tempo! 80)
   o4 f2   g4 a   b-2   a
@@ -86,7 +86,7 @@ cello:
 
 Attributes can also be set globally at the beginning of a score, before you start writing out any instrument parts. The attributes will still be set for every instrument at the beginning of the score.
 
-```
+```alda
 (tempo! 80)
 
 violin "violin-1":
@@ -122,19 +122,19 @@ cello:
 
   Note that this value is a different number than the note value. For example, to set the duration to a quarter note, the value is `1`, not `4`, because a quarter note is 1 beat long:
 
-  ```
+  ```alda
   (set-duration 1)
   ```
 
   You can use the `note-length` function to translate a note value (e.g. `4` for a quarter note) into the right number of beats:
 
-  ```
+  ```alda
   (set-duration (note-length 4))
   ```
 
   To specify the duration as a number of milliseconds, use the `ms` function:
 
-  ```
+  ```alda
   (set-duration (ms 2000))
   ```
 

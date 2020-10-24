@@ -27,7 +27,7 @@ For recent versions, see [CHANGELOG](CHANGELOG.md).
 * Fixed a minor bug related to alternate endings / repetitions, where input like
   the following would fail to parse correctly:
 
-  ```
+  ```alda
   [[c] [d]'1]*1
   ```
 
@@ -99,7 +99,7 @@ For recent versions, see [CHANGELOG](CHANGELOG.md).
   parse`: by specifying either a `-f / --file`, a string of `-c / --code`, or
   piping in the code via STDIN.
 
-  ```
+  ```bash
   alda export -f my-score.alda -F midi -o my-score.alda
   alda export -c 'piano: c8 d e f' -o piano-notes.mid
   echo 'piano: c8 d e f' | alda export -o piano-notes.mid
@@ -140,7 +140,7 @@ An ["alternate
 ending"](http://dictionary.onmusic.org/terms/4798-second_ending_735)-like
 feature has been added to the Alda language. The syntax looks like this:
 
-```
+```alda
 piano:
   [ c8 d e f
     [g f e4]'1-3
@@ -159,7 +159,7 @@ necessarily at the end, making this feature of Alda more flexible than the
 another example where the phrase has what you might describe as an "alternate
 beginning" and an "alternate middle":
 
-```
+```alda
 piano:
   [ [c8 d e]'1,3 [e8 d c]'2,4
     f
@@ -346,7 +346,7 @@ Thanks, [pzxwang], for implementing these new features!
   function: the supplied note-length can be a string representing multiple note
   lengths tied together, e.g.:
 
-  ```
+  ```alda
   (tempo "4~16" 120)
   ```
 
@@ -393,7 +393,7 @@ Thanks, [pzxwang], for implementing these new features!
 
   For example, "♩. = 150" can be expressed as:
 
-  ```
+  ```alda
   (tempo! "4." 150)
   ```
 
@@ -403,7 +403,7 @@ Thanks, [pzxwang], for implementing these new features!
   It is still OK to leave out the note value; the default behavior is to set the
   tempo relative to a quarter note. "♩ = 60" can still be expressed as:
 
-  ```
+  ```alda
   (tempo! 60)
   ```
 
@@ -430,7 +430,7 @@ Thanks, [pzxwang], for implementing these new features!
 
   In Alda, you can now express a metric modulation like "♩. = 𝅗𝅥 " as:
 
-  ```
+  ```alda
   (metric-modulation! "4." 2)
   ```
 
@@ -610,7 +610,7 @@ behaving as expected.
 
   For example:
 
-  ```
+  ```alda
   piano:
     (key-sig [:d :locrian])
     d8 e f g a b > c d8~1
@@ -802,7 +802,7 @@ improving, and we're getting ever closer to a 1.0.0 release!
 
   For example:
 
-  ```
+  ```bash
   $ alda play --history "trumpet: (tempo 200) c8 d e" --code "f g a b > c"
   ```
 
@@ -938,7 +938,7 @@ This release includes improvements to the system that assigns instrument parts a
 
 * There is a new dot (`.`) operator for accessing members of groups:
 
-  ```
+  ```alda
   violin/viola/cello "strings": c8 d e f
   strings.cello: g1
   ```
@@ -1080,7 +1080,7 @@ The focus of this release is to use less CPU when starting an Alda server and wo
 
   To opt in, include the `--cycle-workers` option when starting the server:
 
-  ```
+  ```bash
   alda --cycle-workers up
   ```
 
@@ -1382,7 +1382,7 @@ Shout-out to [elyisgreat] for finding all these bugs!
 
 * Trying to define a variable where the value includes an undefined variable now throws an error immediately, instead of waiting until you get the value of the variable. For example, the following score will now fail immediately because `bar` isn't defined:
 
-  ```
+  ```alda
   foo = bar
   ```
 
@@ -1402,7 +1402,7 @@ Shout-out to [elyisgreat] for finding all these bugs!
 
 * There was a breaking change in one of the last few versions that may not have been documented, where it is no longer acceptable to place barlines in between notes instead of whitespace, like this:
 
-  ```
+  ```alda
   c|d|e
   ```
 
@@ -1410,13 +1410,13 @@ Shout-out to [elyisgreat] for finding all these bugs!
 
 * As of this release, it is no longer valid to end a note duration with a barline, e.g.:
 
-  ```
+  ```alda
   c1| d
   ```
 
   The correct way to write the above is:
 
-  ```
+  ```alda
   c1 | d
   ```
 
@@ -1424,7 +1424,7 @@ Shout-out to [elyisgreat] for finding all these bugs!
 
 * Note that there is one situation that is a minor exception where it is acceptable for a barline to not be preceded/succeeded by whitespace:
 
-  ```
+  ```alda
   c1~|1~|1 d
   ```
 
@@ -1432,7 +1432,7 @@ Shout-out to [elyisgreat] for finding all these bugs!
 
   If this is confusing, note that it is also acceptable to put spaces in between the barlines:
 
-  ```
+  ```alda
   c1 | ~1 | ~1 d
   ```
 
@@ -1442,7 +1442,7 @@ Shout-out to [elyisgreat] for finding all these bugs!
 
 * Refines the behavior of variables when used within the definitions of other variables. The "scope" of a variable is now tracked when it is defined. This makes it possible to do things like this:
 
-  ```
+  ```alda
   foo = c d e
   foo = foo f g
 
@@ -1451,7 +1451,7 @@ Shout-out to [elyisgreat] for finding all these bugs!
 
   It also makes it so that you won't run into unexpected bugs when redefining a variable that another variable depends on, as in this example:
 
-  ```
+  ```alda
   foo = c d e
   bar = foo f g
 
@@ -1472,7 +1472,7 @@ Shout-out to [elyisgreat] for finding all these bugs!
 
 * An Alda score containing only Clojure code (i.e. no instrument parts) is now considered a valid score. For example, the following is a valid Alda score:
 
-  ```
+  ```clojure
   (part "bassoon"
     (for [x (map (comp keyword str) "cdefgab")]
       (note (pitch x) (ms 100))))
@@ -1502,13 +1502,13 @@ Shout-out to [elyisgreat] for finding all these bugs!
 
   A couple of Alda example scores contained examples that broke the "mandatory space between notes" rule, and had to be changed. For example, `awobmolg.alda` contained the following snippet representing 5 notes under a slur:
 
-  ```
+  ```alda
   b4.~b16~a~g~a
   ```
 
   The parser was trying to read this as the (legato/slurred) note `b4.~` followed immediately by another note, `b16`. This is now explicitly not allowed. The example was changed to the following (valid) syntax:
 
-  ```
+  ```alda
   b4.~ b16~ a~ g~ a
   ```
 
@@ -1532,7 +1532,7 @@ Shout-out to [elyisgreat] for finding all these bugs!
 
   In other words, when writing alda.lisp code, whereas it used to be possible to do things like this:
 
-  ```
+  ```clojure
   (note (pitch :c)
         (duration (note-length 4)
                   (barline)))
@@ -1544,7 +1544,7 @@ Shout-out to [elyisgreat] for finding all these bugs!
 
   Now you can only do it like this:
 
-  ```
+  ```clojure
   (note (pitch :c)
         (duration (note-length 4)))
   (barline)
@@ -1592,7 +1592,7 @@ Shout-out to [elyisgreat] for finding all these bugs!
 
 * Creating scores in a Clojure REPL now involves working with immutable data structures instead of mutating top-level dynamic vars. Whereas before, Alda event functions like `score`, `part` and `note` relied on side effects to modify the state of your score environment, now you create a new score via `score` (or the slightly lower-level `new-score`) and update it using the `continue` function. To better illustrate this, this is how you used to do it **before**:
 
-  ```
+  ```clojure
   (score*)
   (part* "piano")
   (note (pitch :c))

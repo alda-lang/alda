@@ -6,7 +6,9 @@ enter into the REPL prompt, you will hear the result.
 
 To start the Alda REPL, run:
 
-    alda repl
+```bash
+alda repl
+```
 
 At the REPL prompt, you can either enter Alda code, or use one of the available
 built-in commands, which start with a colon.
