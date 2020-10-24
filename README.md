@@ -117,11 +117,9 @@ For the best experience when editing Alda score files, install the Alda file-typ
 
 ## Demo
 
-> **TODO**: Update this for Alda 2.0.
+For an overview of available commands and options:
 
-First start the Alda server (this may take a minute):
-
-    alda up
+    alda --help
 
 To play a file containing Alda code:
 
