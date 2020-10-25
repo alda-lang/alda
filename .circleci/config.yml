@@ -33,7 +33,7 @@ workflows:
 jobs:
   build_client:
     docker:
-      - image: circleci/golang:1.12.9
+      - image: circleci/golang:1.15.3
 
     steps:
       - checkout
