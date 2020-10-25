@@ -11,12 +11,14 @@ import (
 	//
 	// Someone pointed out that explicitly initiating the testing package would
 	// fix the issue, so that's what this import is doing.
-	_ "testing"
+	"testing"
 
 	log "alda.io/client/logging"
 )
 
 func init() {
+	testing.Init()
+
 	level := flag.String("log-level", "", "Logging level")
 	flag.Parse()
 	if *level != "" {
