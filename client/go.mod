@@ -1,5 +1,7 @@
 module alda.io/client
 
+go 1.15
+
 require (
 	github.com/Jeffail/gabs/v2 v2.6.0
 	github.com/OpenPeeDeeP/xdg v0.2.0
