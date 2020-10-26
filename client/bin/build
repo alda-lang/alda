@@ -53,6 +53,11 @@ function build() {
 
 for os in windows darwin linux; do
   for arch in 386 amd64; do
+    # Support for darwin/386 was apparently removed around Go 1.13.
+    if [[ "$os" == darwin ]] && [[ "$arch" == 386 ]]; then
+      continue
+    fi
+
     build $os $arch
   done
 done
