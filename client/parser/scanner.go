@@ -60,6 +60,7 @@ func (s *scanner) unexpectedCharError(
 	return s.errorAtPosition(line, column, msg)
 }
 
+// A TokenType is a type of token output by the scanner.
 type TokenType int
 
 const (
@@ -111,73 +112,73 @@ type Token struct {
 func (tt TokenType) String() string {
 	switch tt {
 	case Alias:
-		return "Alias"
+		return "alias"
 	case AtMarker:
-		return "AtMarker"
+		return "at-marker"
 	case Barline:
-		return "Barline"
+		return "barline"
 	case Colon:
-		return "Colon"
+		return "colon"
 	case CramClose:
-		return "CramClose"
+		return "end of cram expression"
 	case CramOpen:
-		return "CramOpen"
+		return "start of cram expression"
 	case EOF:
 		return "EOF"
 	case Equals:
-		return "Equals"
+		return "equals sign"
 	case EventSeqClose:
-		return "EventSeqClose"
+		return "end of event sequence"
 	case EventSeqOpen:
-		return "EventSeqOpen"
+		return "start of event sequence"
 	case Flat:
-		return "Flat"
+		return "flat"
 	case Integer:
-		return "Integer"
+		return "integer"
 	case LeftParen:
-		return "LeftParen"
+		return "open parenthesis"
 	case Marker:
-		return "Marker"
+		return "marker"
 	case Name:
-		return "Name"
+		return "name"
 	case Natural:
-		return "Natural"
+		return "natural"
 	case NoteLength:
-		return "NoteLength"
+		return "note length"
 	case NoteLengthMs:
-		return "NoteLengthMs"
+		return "note length (ms)"
 	case NoteLetter:
-		return "NoteLetter"
+		return "note letter"
 	case Number:
-		return "Number"
+		return "number"
 	case OctaveDown:
-		return "OctaveDown"
+		return "octave down instruction"
 	case OctaveSet:
-		return "OctaveSet"
+		return "octave instruction"
 	case OctaveUp:
-		return "OctaveUp"
+		return "octave up instruction"
 	case Repeat:
-		return "Repeat"
+		return "repeat operator"
 	case Repetitions:
-		return "Repetitions"
+		return "repetitions"
 	case RestLetter:
-		return "RestLetter"
+		return "rest indicator"
 	case RightParen:
-		return "RightParen"
+		return "close parenthesis"
 	case Separator:
-		return "Separator"
+		return "separator"
 	case Sharp:
-		return "Sharp"
+		return "sharp"
 	case SingleQuote:
-		return "SingleQuote"
+		return "single quote"
 	case String:
-		return "String"
+		return "string"
 	case Symbol:
-		return "Symbol"
+		return "symbol"
 	case Tie:
-		return "Tie"
+		return "tie"
 	case VoiceMarker:
-		return "VoiceMarker"
+		return "voice marker"
 	default:
 		return fmt.Sprintf("%d (String not implemented)", tt)
 	}
