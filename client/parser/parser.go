@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"time"
 
+	err "alda.io/client/errors"
 	log "alda.io/client/logging"
 	model "alda.io/client/model"
 )
@@ -67,29 +68,18 @@ func (p *parser) addUpdate(update model.ScoreUpdate) {
 	p.updates = append(p.updates, update)
 }
 
-type parseError struct {
-	filename string
-	token    Token
-	msg      string
-}
-
-// Should e.token.tokenType be included too?
-func (e *parseError) Error() string {
-	return fmt.Sprintf(
-		"%s:%d:%d %s",
-		e.filename, e.token.line, e.token.column, e.msg,
-	)
-}
-
-func (p *parser) errorAtToken(token Token, msg string) *parseError {
-	return &parseError{
-		filename: p.filename,
-		token:    token,
-		msg:      msg,
+func (p *parser) errorAtToken(token Token, msg string) *err.AldaSourceError {
+	return &err.AldaSourceError{
+		Filename: p.filename,
+		Line:     token.line,
+		Column:   token.column,
+		Err:      fmt.Errorf("%s", msg),
 	}
 }
 
-func (p *parser) unexpectedTokenError(token Token, context string) *parseError {
+func (p *parser) unexpectedTokenError(
+	token Token, context string,
+) *err.AldaSourceError {
 	if context != "" {
 		context = " " + context
 	}
