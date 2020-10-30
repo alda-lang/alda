@@ -7,8 +7,7 @@ import (
 	"unicode"
 
 	log "alda.io/client/logging"
-
-	err "alda.io/client/errors"
+	model "alda.io/client/model"
 )
 
 func isDigit(c rune) bool {
@@ -21,17 +20,19 @@ func isLetter(c rune) bool {
 
 func (s *scanner) errorAtPosition(
 	line int, column int, msg string,
-) *err.AldaSourceError {
-	return &err.AldaSourceError{
-		Filename: s.filename,
-		Line:     line,
-		Column:   column,
-		Err:      fmt.Errorf("%s", msg),
+) *model.AldaSourceError {
+	return &model.AldaSourceError{
+		Context: model.AldaSourceContext{
+			Filename: s.filename,
+			Line:     line,
+			Column:   column,
+		},
+		Err: fmt.Errorf("%s", msg),
 	}
 }
 
 func (s *scanner) unexpectedCharError(
-	c rune, context string, line int, column int) *err.AldaSourceError {
+	c rune, context string, line int, column int) *model.AldaSourceError {
 	if context != "" {
 		context = " " + context
 	}

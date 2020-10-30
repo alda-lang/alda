@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"time"
 
-	err "alda.io/client/errors"
 	log "alda.io/client/logging"
 	model "alda.io/client/model"
 )
@@ -68,18 +67,20 @@ func (p *parser) addUpdate(update model.ScoreUpdate) {
 	p.updates = append(p.updates, update)
 }
 
-func (p *parser) errorAtToken(token Token, msg string) *err.AldaSourceError {
-	return &err.AldaSourceError{
-		Filename: p.filename,
-		Line:     token.line,
-		Column:   token.column,
-		Err:      fmt.Errorf("%s", msg),
+func (p *parser) errorAtToken(token Token, msg string) *model.AldaSourceError {
+	return &model.AldaSourceError{
+		Context: model.AldaSourceContext{
+			Filename: p.filename,
+			Line:     token.line,
+			Column:   token.column,
+		},
+		Err: fmt.Errorf("%s", msg),
 	}
 }
 
 func (p *parser) unexpectedTokenError(
 	token Token, context string,
-) *err.AldaSourceError {
+) *model.AldaSourceError {
 	if context != "" {
 		context = " " + context
 	}
