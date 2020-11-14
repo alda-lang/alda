@@ -682,10 +682,7 @@ func init() {
 					return nil, err
 				}
 
-				beats, err := NoteLength{Denominator: noteLength}.Beats()
-				if err != nil {
-					return nil, err
-				}
+				beats := NoteLength{Denominator: noteLength}.Beats()
 
 				return TempoSet{Tempo: beats * pseudoBpm}, nil
 			},
@@ -703,10 +700,7 @@ func init() {
 					return nil, err
 				}
 
-				beats, err := duration.Beats()
-				if err != nil {
-					return nil, err
-				}
+				beats := duration.Beats()
 
 				return TempoSet{Tempo: beats * pseudoBpm}, nil
 			},
@@ -732,15 +726,8 @@ func init() {
 					return nil, err
 				}
 
-				oldBeats, err := NoteLength{Denominator: oldValue}.Beats()
-				if err != nil {
-					return nil, err
-				}
-
-				newBeats, err := NoteLength{Denominator: newValue}.Beats()
-				if err != nil {
-					return nil, err
-				}
+				oldBeats := NoteLength{Denominator: oldValue}.Beats()
+				newBeats := NoteLength{Denominator: newValue}.Beats()
 
 				return MetricModulation{Ratio: newBeats / oldBeats}, nil
 			},
@@ -758,15 +745,8 @@ func init() {
 					return nil, err
 				}
 
-				oldBeats, err := NoteLength{Denominator: oldValue}.Beats()
-				if err != nil {
-					return nil, err
-				}
-
-				newBeats, err := newValue.Beats()
-				if err != nil {
-					return nil, err
-				}
+				oldBeats := NoteLength{Denominator: oldValue}.Beats()
+				newBeats := newValue.Beats()
 
 				return MetricModulation{Ratio: newBeats / oldBeats}, nil
 			},
@@ -784,15 +764,8 @@ func init() {
 					return nil, err
 				}
 
-				oldBeats, err := oldValue.Beats()
-				if err != nil {
-					return nil, err
-				}
-
-				newBeats, err := NoteLength{Denominator: newValue}.Beats()
-				if err != nil {
-					return nil, err
-				}
+				oldBeats := oldValue.Beats()
+				newBeats := NoteLength{Denominator: newValue}.Beats()
 
 				return MetricModulation{Ratio: newBeats / oldBeats}, nil
 			},
@@ -810,15 +783,8 @@ func init() {
 					return nil, err
 				}
 
-				oldBeats, err := oldValue.Beats()
-				if err != nil {
-					return nil, err
-				}
-
-				newBeats, err := newValue.Beats()
-				if err != nil {
-					return nil, err
-				}
+				oldBeats := oldValue.Beats()
+				newBeats := newValue.Beats()
 
 				return MetricModulation{Ratio: newBeats / oldBeats}, nil
 			},

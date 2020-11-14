@@ -41,13 +41,7 @@ func TestDuration(t *testing.T) {
 	} {
 		label := "Note length => beats conversion"
 
-		actualBeats, err := testCase.noteLength.Beats()
-
-		if err != nil {
-			t.Error(label)
-			t.Error(err)
-			return
-		}
+		actualBeats := testCase.noteLength.Beats()
 
 		if !equalish(actualBeats, testCase.expectedBeats) {
 			t.Error(label)

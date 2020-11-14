@@ -13,10 +13,7 @@ type DurationComponent interface {
 	json.RepresentableAsJSON
 
 	// Beats returns the number of beats represented by a DurationComponent.
-	//
-	// An error is returned if the component's duration cannot be expressed in
-	// beats.
-	Beats() (float64, error)
+	Beats() float64
 
 	// Ms returns the duration of a DurationComponent in milliseconds.
 	Ms(tempo float64) float64
@@ -61,15 +58,14 @@ func (nl NoteLength) JSON() *json.Container {
 
 // Beats implements DurationComponent.Beats by calculating the number of beats
 // represented by a standard note length.
-func (nl NoteLength) Beats() (float64, error) {
-	return (4 / nl.Denominator) * (2 - math.Pow(2, float64(-nl.Dots))), nil
+func (nl NoteLength) Beats() float64 {
+	return (4 / nl.Denominator) * (2 - math.Pow(2, float64(-nl.Dots)))
 }
 
 // Ms implements DurationComponent.Ms by calculating the duration in
 // milliseconds within the context of a tempo.
 func (nl NoteLength) Ms(tempo float64) float64 {
-	beats, _ := nl.Beats()
-	return NoteLengthBeats{Quantity: beats}.Ms(tempo)
+	return NoteLengthBeats{Quantity: nl.Beats()}.Ms(tempo)
 }
 
 // NoteLengthBeats expresses a duration as a specific number of beats.
@@ -84,8 +80,8 @@ func (nl NoteLengthBeats) JSON() *json.Container {
 
 // Beats implements DurationComponent.Beats by describing a specific number of
 // beats.
-func (nl NoteLengthBeats) Beats() (float64, error) {
-	return nl.Quantity, nil
+func (nl NoteLengthBeats) Beats() float64 {
+	return nl.Quantity
 }
 
 // Ms implements DurationComponent.Ms by calculating the duration in
@@ -104,15 +100,15 @@ func (nl NoteLengthMs) JSON() *json.Container {
 	return json.Object("ms", nl.Quantity)
 }
 
-// Beats implements DurationComponent.Beats by returning an error.
+// Beats implements DurationComponent.Beats.
 //
 // NB: It is mathematically possible to convert a number of milliseconds into a
 // number of beats, given a tempo. Beats() could conceivably take a tempo
 // argument and NoteLengthMs.Beats(tempo float64) could be implemented. However,
 // I'm not sure if that functionality is needed, so I'm opting to keep things
 // simple.
-func (nl NoteLengthMs) Beats() (float64, error) {
-	return 0, fmt.Errorf("A millisecond note length cannot be expressed in beats")
+func (nl NoteLengthMs) Beats() float64 {
+	panic("A millisecond note length cannot be expressed in beats")
 }
 
 // Ms implements DurationComponent.Ms by describing a specific number of
@@ -139,20 +135,14 @@ func (d Duration) JSON() *json.Container {
 
 // Beats implements DurationComponent.Beats by summing the beats of the
 // components.
-func (d Duration) Beats() (float64, error) {
+func (d Duration) Beats() float64 {
 	beats := 0.0
 
 	for _, component := range d.Components {
-		componentBeats, err := component.Beats()
-
-		if err != nil {
-			return 0, err
-		}
-
-		beats += componentBeats
+		beats += component.Beats()
 	}
 
-	return beats, nil
+	return beats
 }
 
 // Ms implements DurationComponent.Ms by summing the millisecond durations of

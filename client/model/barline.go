@@ -17,8 +17,8 @@ func (Barline) JSON() *json.Container {
 //
 // A barline is considered a DurationComponent purely for syntactic reasons, for
 // better or for worse.
-func (Barline) Beats() (float64, error) {
-	return 0, nil
+func (Barline) Beats() float64 {
+	return 0
 }
 
 // Ms implements DurationComponent.Ms by returning 0.

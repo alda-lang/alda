@@ -168,10 +168,7 @@ func expectPartDurationBeats(
 	instrument string, expected float64,
 ) func(s *Score) error {
 	return expectPart(instrument, func(part *Part) error {
-		actual, err := part.Duration.Beats()
-		if err != nil {
-			return err
-		}
+		actual := part.Duration.Beats()
 
 		if actual != expected {
 			return fmt.Errorf(
