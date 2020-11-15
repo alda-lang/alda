@@ -37,16 +37,18 @@ func (s *scanner) unexpectedCharError(
 		context = " " + context
 	}
 
-	// FIXME: This presents e.g. newlines in a way that is opaque to the average
-	// user. It would be better to see a message like "Unexpected newline" instead
-	// of "Unexpected control character (10)."
-	//
-	// TODO: Write a helper function that switches on the numeric value of the
-	// rune and returns a string like "newline", "'w'", "control character (13)",
-	// etc.
-	charStr := fmt.Sprintf("'%c'", c)
-	if unicode.IsControl(c) {
+	var charStr string
+	switch {
+	case c == 9:
+		charStr = "tab"
+	case c == 10:
+		charStr = "newline"
+	case c == 13:
+		charStr = "carriage return"
+	case unicode.IsControl(c):
 		charStr = fmt.Sprintf("control character (%d)", c)
+	default:
+		charStr = fmt.Sprintf("'%c'", c)
 	}
 
 	msg := fmt.Sprintf("Unexpected %s%s", charStr, context)
