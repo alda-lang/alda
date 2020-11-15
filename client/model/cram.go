@@ -11,8 +11,14 @@ import (
 // that the total duration is equal to the "outer" duration of the Cram
 // expression.
 type Cram struct {
-	Events   []ScoreUpdate
-	Duration Duration
+	SourceContext AldaSourceContext
+	Events        []ScoreUpdate
+	Duration      Duration
+}
+
+// GetSourceContext implements HasSourceContext.GetSourceContext.
+func (cram Cram) GetSourceContext() AldaSourceContext {
+	return cram.SourceContext
 }
 
 // JSON implements RepresentableAsJSON.JSON.

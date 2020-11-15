@@ -8,7 +8,13 @@ import (
 
 // A Marker gives a name to a point in time in a score.
 type Marker struct {
-	Name string
+	SourceContext AldaSourceContext
+	Name          string
+}
+
+// GetSourceContext implements HasSourceContext.GetSourceContext.
+func (marker Marker) GetSourceContext() AldaSourceContext {
+	return marker.SourceContext
 }
 
 // JSON implements RepresentableAsJSON.JSON.
@@ -61,7 +67,13 @@ func (marker Marker) VariableValue(score *Score) (ScoreUpdate, error) {
 // AtMarker is an action where a part's offset gets set to a point in time
 // denoted previously by a Marker.
 type AtMarker struct {
-	Name string
+	SourceContext AldaSourceContext
+	Name          string
+}
+
+// GetSourceContext implements HasSourceContext.GetSourceContext.
+func (atMarker AtMarker) GetSourceContext() AldaSourceContext {
+	return atMarker.SourceContext
 }
 
 // JSON implements RepresentableAsJSON.JSON.

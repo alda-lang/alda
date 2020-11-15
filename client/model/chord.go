@@ -13,7 +13,13 @@ import (
 // Certain other types of events are allowed to occur between the notes and
 // rests, e.g. octave and other attribute changes.
 type Chord struct {
-	Events []ScoreUpdate
+	SourceContext AldaSourceContext
+	Events        []ScoreUpdate
+}
+
+// GetSourceContext implements HasSourceContext.GetSourceContext.
+func (chord Chord) GetSourceContext() AldaSourceContext {
+	return chord.SourceContext
 }
 
 // JSON implements RepresentableAsJSON.JSON.

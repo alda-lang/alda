@@ -6,7 +6,14 @@ import (
 
 // A Barline has no audible effect on a score. Its purpose is to visually
 // separate elements in an Alda source file.
-type Barline struct{}
+type Barline struct {
+	SourceContext AldaSourceContext
+}
+
+// GetSourceContext implements HasSourceContext.GetSourceContext.
+func (barline Barline) GetSourceContext() AldaSourceContext {
+	return barline.SourceContext
+}
 
 // JSON implements RepresentableAsJSON.JSON.
 func (Barline) JSON() *json.Container {

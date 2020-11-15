@@ -8,7 +8,13 @@ import (
 
 // An EventSequence is an ordered sequence of events.
 type EventSequence struct {
-	Events []ScoreUpdate
+	SourceContext AldaSourceContext
+	Events        []ScoreUpdate
+}
+
+// GetSourceContext implements HasSourceContext.GetSourceContext.
+func (es EventSequence) GetSourceContext() AldaSourceContext {
+	return es.SourceContext
 }
 
 // JSON implements RepresentableAsJSON.JSON.

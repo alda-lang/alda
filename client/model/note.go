@@ -7,11 +7,17 @@ import (
 
 // A Note represents a single pitch being sustained for a period of time.
 type Note struct {
-	Pitch    PitchIdentifier
-	Duration Duration
+	SourceContext AldaSourceContext
+	Pitch         PitchIdentifier
+	Duration      Duration
 	// When a note is slurred, it means there is minimal space between that note
 	// and the next.
 	Slurred bool
+}
+
+// GetSourceContext implements HasSourceContext.GetSourceContext.
+func (note Note) GetSourceContext() AldaSourceContext {
+	return note.SourceContext
 }
 
 // JSON implements RepresentableAsJSON.JSON.
@@ -169,7 +175,13 @@ func (note Note) VariableValue(score *Score) (ScoreUpdate, error) {
 // The function of a rest is to synchronize the following note so that it starts
 // at a particular point in time.
 type Rest struct {
-	Duration Duration
+	SourceContext AldaSourceContext
+	Duration      Duration
+}
+
+// GetSourceContext implements HasSourceContext.GetSourceContext.
+func (rest Rest) GetSourceContext() AldaSourceContext {
+	return rest.SourceContext
 }
 
 // JSON implements RepresentableAsJSON.JSON.

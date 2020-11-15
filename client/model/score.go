@@ -11,6 +11,7 @@ import (
 // The ScoreUpdate interface is implemented by events that update a score.
 type ScoreUpdate interface {
 	json.RepresentableAsJSON
+	HasSourceContext
 
 	// UpdateScore modifies a score and returns nil, or returns an error if
 	// something went wrong.
@@ -125,7 +126,7 @@ func NewScore() *Score {
 func (score *Score) Update(updates ...ScoreUpdate) error {
 	for _, update := range updates {
 		if err := update.UpdateScore(score); err != nil {
-			return err
+			return &AldaSourceError{Context: update.GetSourceContext(), Err: err}
 		}
 	}
 

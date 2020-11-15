@@ -17,8 +17,14 @@ type RepetitionRange struct {
 // to specify that it should only occur on certain repetition numbers through a
 // repeated pattern.
 type OnRepetitions struct {
-	Repetitions []RepetitionRange
-	Event       ScoreUpdate
+	SourceContext AldaSourceContext
+	Repetitions   []RepetitionRange
+	Event         ScoreUpdate
+}
+
+// GetSourceContext implements HasSourceContext.GetSourceContext.
+func (or OnRepetitions) GetSourceContext() AldaSourceContext {
+	return or.SourceContext
 }
 
 // JSON implements RepresentableAsJSON.JSON.
@@ -57,7 +63,7 @@ func (or OnRepetitions) AppliesTo(repetition int32) bool {
 func (or OnRepetitions) UpdateScore(score *Score) error {
 	for _, part := range score.CurrentParts {
 		if or.AppliesTo(part.currentRepetition) {
-			if err := or.Event.UpdateScore(score); err != nil {
+			if err := score.Update(or.Event); err != nil {
 				return err
 			}
 		}

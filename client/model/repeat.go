@@ -7,8 +7,14 @@ import (
 
 // A Repeat expression repeats an event a number of times.
 type Repeat struct {
-	Event ScoreUpdate
-	Times int32
+	SourceContext AldaSourceContext
+	Event         ScoreUpdate
+	Times         int32
+}
+
+// GetSourceContext implements HasSourceContext.GetSourceContext.
+func (repeat Repeat) GetSourceContext() AldaSourceContext {
+	return repeat.SourceContext
 }
 
 // JSON implements RepresentableAsJSON.JSON.
@@ -30,7 +36,7 @@ func (repeat Repeat) UpdateScore(score *Score) error {
 			part.currentRepetition = repetition
 		}
 
-		if err := repeat.Event.UpdateScore(score); err != nil {
+		if err := score.Update(repeat.Event); err != nil {
 			return err
 		}
 	}

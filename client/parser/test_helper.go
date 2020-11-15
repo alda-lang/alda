@@ -1,9 +1,10 @@
 package parser
 
 import (
+	"testing"
+
 	"alda.io/client/model"
 	"github.com/go-test/deep"
-	"testing"
 )
 
 // A parseTestCase models the score updates that should result from parsing a
@@ -18,7 +19,16 @@ type parseTestCase struct {
 // compares the result with the expected sequence of score updates.
 func executeParseTestCases(t *testing.T, testCases ...parseTestCase) {
 	for _, testCase := range testCases {
-		actual, err := Parse(testCase.label, testCase.given)
+		// We're suppressing the source context here because we're about to do a
+		// deep diff of our expected list of score updates (which are all devoid of
+		// source context) and the actual list of score updates that result from
+		// parsing the score, and we need them to be considered the same even if the
+		// source context differs.
+		//
+		// By default, the actual list of updates will include source context, which
+		// would cause an avalanche of spurious test failures because the diff would
+		// show numerous differences in the source contexts.
+		actual, err := Parse(testCase.label, testCase.given, suppressSourceContext)
 		if err != nil {
 			t.Errorf("%v\n", err)
 			return

@@ -71,10 +71,20 @@ func (v LispVariadic) TypeString() string {
 	return v.Type.TypeString() + "*"
 }
 
+// GetSourceContext implements HasSourceContext.GetSourceContext.
+func (v LispVariadic) GetSourceContext() AldaSourceContext {
+	// It isn't possible to parse a LispVariadic instance from an Alda score, so
+	// there is no way we can provide source context.
+	return AldaSourceContext{}
+}
+
 // Eval implements LispForm.Eval by returning an error, because LispVariadic is
 // not meant to be used as an argument or return type.
 func (v LispVariadic) Eval() (LispForm, error) {
-	return nil, fmt.Errorf("LispVariadic is not a valid value type")
+	return nil, &AldaSourceError{
+		Context: v.GetSourceContext(),
+		Err:     fmt.Errorf("LispVariadic is not a valid value type"),
+	}
 }
 
 // A LispFunction is a function.
@@ -97,6 +107,17 @@ func (f LispFunction) JSON() *json.Container {
 // TypeString implements LispForm.TypeString.
 func (LispFunction) TypeString() string {
 	return "function"
+}
+
+// GetSourceContext implements HasSourceContext.GetSourceContext.
+func (LispFunction) GetSourceContext() AldaSourceContext {
+	// It isn't possible to parse a LispFunction instance* from an Alda score, so
+	// there is no way we can provide source context.
+	//
+	// *At some point in the future, we may add a `fn` special form, but even
+	// then, the thing that has the source context is the LispList that represents
+	// the S-expression `(fn ...)`
+	return AldaSourceContext{}
 }
 
 // Eval implements LispForm.Eval by returning the function.
@@ -303,43 +324,55 @@ func defattribute(names []string, signatures ...attributeFunctionSignature) {
 }
 
 func positiveNumber(form LispForm) (float64, error) {
-	value := form.(LispNumber).Value
+	number := form.(LispNumber)
 
-	if value < 1 {
-		return 0, fmt.Errorf("Expected positive number, got %f", value)
+	if number.Value < 1 {
+		return 0, &AldaSourceError{
+			Context: number.SourceContext,
+			Err:     fmt.Errorf("Expected positive number, got %f", number.Value),
+		}
 	}
 
-	return value, nil
+	return number.Value, nil
 }
 
 func nonNegativeNumber(form LispForm) (float64, error) {
-	value := form.(LispNumber).Value
+	number := form.(LispNumber)
 
-	if value < 0 {
-		return 0, fmt.Errorf("Expected non-negative number, got %f", value)
+	if number.Value < 0 {
+		return 0, &AldaSourceError{
+			Context: number.SourceContext,
+			Err:     fmt.Errorf("Expected non-negative number, got %f", number.Value),
+		}
 	}
 
-	return value / 100, nil
+	return number.Value / 100, nil
 }
 
 func integer(form LispForm) (int32, error) {
-	value := form.(LispNumber).Value
+	number := form.(LispNumber)
 
-	if value != float64(int32(value)) {
-		return 0, fmt.Errorf("Expected integer, got %f", value)
+	if number.Value != float64(int32(number.Value)) {
+		return 0, &AldaSourceError{
+			Context: number.SourceContext,
+			Err:     fmt.Errorf("Expected integer, got %f", number.Value),
+		}
 	}
 
-	return int32(value), nil
+	return int32(number.Value), nil
 }
 
 func percentage(form LispForm) (float64, error) {
-	value := form.(LispNumber).Value
+	number := form.(LispNumber)
 
-	if value < 0 || value > 100 {
-		return 0, fmt.Errorf("Value not between 0 and 100: %f", value)
+	if number.Value < 0 || number.Value > 100 {
+		return 0, &AldaSourceError{
+			Context: number.SourceContext,
+			Err:     fmt.Errorf("Value not between 0 and 100: %f", number.Value),
+		}
 	}
 
-	return value / 100, nil
+	return number.Value / 100, nil
 }
 
 func isDigit(c rune) bool {
@@ -396,14 +429,19 @@ func noteLength(str string) (NoteLength, error) {
 }
 
 func duration(form LispForm) (Duration, error) {
-	strs := strings.Split(form.(LispString).Value, "~")
+	stringLiteral := form.(LispString)
+
+	strs := strings.Split(stringLiteral.Value, "~")
 
 	duration := Duration{}
 
 	for _, str := range strs {
 		noteLength, err := noteLength(str)
 		if err != nil {
-			return Duration{}, err
+			return Duration{}, &AldaSourceError{
+				Context: stringLiteral.SourceContext,
+				Err:     err,
+			}
 		}
 
 		duration.Components = append(duration.Components, noteLength)
@@ -449,14 +487,19 @@ func letterAndAccidentals(str string) (NoteLetter, []Accidental, error) {
 }
 
 func keySignatureFromString(form LispForm) (KeySignature, error) {
-	strs := strings.Fields(form.(LispString).Value)
+	stringLiteral := form.(LispString)
+
+	strs := strings.Fields(stringLiteral.Value)
 
 	keySig := KeySignature{}
 
 	for _, str := range strs {
 		letter, accidentals, err := letterAndAccidentals(str)
 		if err != nil {
-			return KeySignature{}, err
+			return KeySignature{}, &AldaSourceError{
+				Context: stringLiteral.SourceContext,
+				Err:     err,
+			}
 		}
 
 		keySig[letter] = accidentals
@@ -609,8 +652,17 @@ func keySignatureFromAccidentals(forms []LispForm) (KeySignature, error) {
 }
 
 func keySignatureFromList(form LispForm) (KeySignature, error) {
-	forms := form.(LispList).Elements
-	validityError := fmt.Errorf("Invalid key signature: %#v", forms)
+	list := form.(LispList)
+
+	sourceError := func(err error) error {
+		return &AldaSourceError{
+			Context: list.SourceContext,
+			Err:     err,
+		}
+	}
+
+	forms := list.Elements
+	validityError := sourceError(fmt.Errorf("Invalid key signature: %#v", forms))
 
 	if len(forms) < 2 {
 		return KeySignature{}, validityError
@@ -618,9 +670,17 @@ func keySignatureFromList(form LispForm) (KeySignature, error) {
 
 	switch forms[1].(type) {
 	case LispSymbol:
-		return keySignatureFromScaleName(forms)
+		keySig, err := keySignatureFromScaleName(forms)
+		if err != nil {
+			return KeySignature{}, sourceError(err)
+		}
+		return keySig, nil
 	case LispList:
-		return keySignatureFromAccidentals(forms)
+		keySig, err := keySignatureFromAccidentals(forms)
+		if err != nil {
+			return KeySignature{}, sourceError(err)
+		}
+		return keySig, nil
 	default:
 		return KeySignature{}, validityError
 	}
@@ -651,7 +711,12 @@ func init() {
 				case "down":
 					return OctaveDown{}, nil
 				default:
-					return nil, fmt.Errorf("Invalid argument to `octave`: %s", symbol.String())
+					return nil, &AldaSourceError{
+						Context: symbol.SourceContext,
+						Err: fmt.Errorf(
+							"Invalid argument to `octave`: %s", symbol.String(),
+						),
+					}
 				}
 			},
 		},
@@ -1138,7 +1203,14 @@ func init() {
 }
 
 // LispNil is the value nil.
-type LispNil struct{}
+type LispNil struct {
+	SourceContext AldaSourceContext
+}
+
+// GetSourceContext implements HasSourceContext.GetSourceContext.
+func (n LispNil) GetSourceContext() AldaSourceContext {
+	return n.SourceContext
+}
 
 // JSON implements RepresentableAsJSON.JSON.
 func (LispNil) JSON() *json.Container {
@@ -1172,7 +1244,8 @@ func (n LispNil) VariableValue(score *Score) (ScoreUpdate, error) {
 
 // LispQuotedForm wraps a form by quoting it.
 type LispQuotedForm struct {
-	Form LispForm
+	SourceContext AldaSourceContext
+	Form          LispForm
 }
 
 // JSON implements RepresentableAsJSON.JSON.
@@ -1185,6 +1258,11 @@ func (LispQuotedForm) TypeString() string {
 	return "quoted form"
 }
 
+// GetSourceContext implements HasSourceContext.GetSourceContext.
+func (qf LispQuotedForm) GetSourceContext() AldaSourceContext {
+	return qf.SourceContext
+}
+
 // Eval implements LispForm.Eval by returning the unquoted form.
 func (qf LispQuotedForm) Eval() (LispForm, error) {
 	return qf.Form, nil
@@ -1192,7 +1270,13 @@ func (qf LispQuotedForm) Eval() (LispForm, error) {
 
 // LispSymbol is a Lisp symbol.
 type LispSymbol struct {
-	Name string
+	SourceContext AldaSourceContext
+	Name          string
+}
+
+// GetSourceContext implements HasSourceContext.GetSourceContext.
+func (sym LispSymbol) GetSourceContext() AldaSourceContext {
+	return sym.SourceContext
 }
 
 // JSON implements RepresentableAsJSON.JSON.
@@ -1217,7 +1301,10 @@ func (sym LispSymbol) Eval() (LispForm, error) {
 	value, hit := environment[sym.Name]
 
 	if !hit {
-		return nil, fmt.Errorf("Unresolvable symbol: %s", sym.Name)
+		return nil, &AldaSourceError{
+			Context: sym.SourceContext,
+			Err:     fmt.Errorf("Unresolvable symbol: %s", sym.Name),
+		}
 	}
 
 	return value, nil
@@ -1225,7 +1312,13 @@ func (sym LispSymbol) Eval() (LispForm, error) {
 
 // LispNumber is a floating point number.
 type LispNumber struct {
-	Value float64
+	SourceContext AldaSourceContext
+	Value         float64
+}
+
+// GetSourceContext implements HasSourceContext.GetSourceContext.
+func (n LispNumber) GetSourceContext() AldaSourceContext {
+	return n.SourceContext
 }
 
 // JSON implements RepresentableAsJSON.JSON.
@@ -1245,7 +1338,13 @@ func (n LispNumber) Eval() (LispForm, error) {
 
 // LispString is a string value.
 type LispString struct {
-	Value string
+	SourceContext AldaSourceContext
+	Value         string
+}
+
+// GetSourceContext implements HasSourceContext.GetSourceContext.
+func (s LispString) GetSourceContext() AldaSourceContext {
+	return s.SourceContext
 }
 
 // JSON implements RepresentableAsJSON.JSON.
@@ -1278,6 +1377,11 @@ func (su LispScoreUpdate) TypeString() string {
 	return "score update"
 }
 
+// GetSourceContext implements HasSourceContext.GetSourceContext.
+func (su LispScoreUpdate) GetSourceContext() AldaSourceContext {
+	return su.ScoreUpdate.GetSourceContext()
+}
+
 // Eval implements LispForm.Eval by returning the score update.
 func (su LispScoreUpdate) Eval() (LispForm, error) {
 	return su, nil
@@ -1296,6 +1400,18 @@ func (p LispPitch) JSON() *json.Container {
 // TypeString implements LispForm.TypeString.
 func (p LispPitch) TypeString() string {
 	return "pitch"
+}
+
+// GetSourceContext implements HasSourceContext.GetSourceContext.
+func (LispPitch) GetSourceContext() AldaSourceContext {
+	// It isn't possible to parse a LispPitch instance* from an Alda score, so
+	// there is no way we can provide source context.
+	//
+	// *You _can_ write an S-expression that returns a LispPitch, like
+	// `(pitch ...)`, but the LispPitch itself is only used internally. The thing
+	// that has the source context is the LispList that represents the
+	// S-expression `(pitch ...)`.
+	return AldaSourceContext{}
 }
 
 // Eval implements LispForm.Eval by returning the pitch.
@@ -1318,6 +1434,18 @@ func (d LispDuration) TypeString() string {
 	return "duration"
 }
 
+// GetSourceContext implements HasSourceContext.GetSourceContext.
+func (LispDuration) GetSourceContext() AldaSourceContext {
+	// It isn't possible to parse a LispDuration instance* from an Alda score, so
+	// there is no way we can provide source context.
+	//
+	// *You _can_ write an S-expression that returns a LispDuration, like
+	// `(duration ...)`, but the LispDuration itself is only used internally. The
+	// thing that has the source context is the LispList that represents the
+	// S-expression `(duration ...)`.
+	return AldaSourceContext{}
+}
+
 // Eval implements LispForm.Eval by returning the pitch.
 func (d LispDuration) Eval() (LispForm, error) {
 	return d, nil
@@ -1325,7 +1453,13 @@ func (d LispDuration) Eval() (LispForm, error) {
 
 // LispList is a list of forms.
 type LispList struct {
-	Elements []LispForm
+	SourceContext AldaSourceContext
+	Elements      []LispForm
+}
+
+// GetSourceContext implements HasSourceContext.GetSourceContext.
+func (l LispList) GetSourceContext() AldaSourceContext {
+	return l.SourceContext
 }
 
 // JSON implements RepresentableAsJSON.JSON.
@@ -1347,6 +1481,13 @@ func (LispList) TypeString() string {
 // S-expression. All forms in the list are evaluated. The first form is treated
 // as an operator and the remaining forms are treated as arguments.
 func (l LispList) Eval() (LispForm, error) {
+	sourceError := func(err error) error {
+		return &AldaSourceError{
+			Context: l.SourceContext,
+			Err:     err,
+		}
+	}
+
 	operator, err := l.Elements[0].Eval()
 	if err != nil {
 		return nil, err
@@ -1363,9 +1504,15 @@ func (l LispList) Eval() (LispForm, error) {
 
 	switch operator.(type) {
 	case Operator:
-		return operator.(Operator).Operate(arguments)
+		result, err := operator.(Operator).Operate(arguments)
+		if err != nil {
+			return nil, sourceError(err)
+		}
+		return result, nil
 	default:
-		return nil, fmt.Errorf("Value is not an Operator: %#v", operator)
+		return nil, sourceError(
+			fmt.Errorf("Value is not an Operator: %#v", operator),
+		)
 	}
 }
 
@@ -1389,7 +1536,7 @@ func (l LispList) UpdateScore(score *Score) error {
 		return err
 	}
 
-	return unpackScoreUpdate(result).UpdateScore(score)
+	return score.Update(unpackScoreUpdate(result))
 }
 
 // DurationMs implements ScoreUpdate.DurationMs by evaluating the S-expression

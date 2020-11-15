@@ -65,7 +65,13 @@ func (part *Part) GetVoice(voiceNumber int32) *Part {
 // A VoiceMarker indicates that the following events belong to one voice in a
 // group of voices.
 type VoiceMarker struct {
-	VoiceNumber int32
+	SourceContext AldaSourceContext
+	VoiceNumber   int32
+}
+
+// GetSourceContext implements HasSourceContext.GetSourceContext.
+func (vm VoiceMarker) GetSourceContext() AldaSourceContext {
+	return vm.SourceContext
 }
 
 // JSON implements RepresentableAsJSON.JSON.
@@ -113,7 +119,14 @@ func (vm VoiceMarker) VariableValue(score *Score) (ScoreUpdate, error) {
 
 // A VoiceGroupEndMarker denotes the end of a voice group, i.e. the point at
 // which we are just dealing with a single voice.
-type VoiceGroupEndMarker struct{}
+type VoiceGroupEndMarker struct {
+	SourceContext AldaSourceContext
+}
+
+// GetSourceContext implements HasSourceContext.GetSourceContext.
+func (vgem VoiceGroupEndMarker) GetSourceContext() AldaSourceContext {
+	return vgem.SourceContext
+}
 
 // JSON implements RepresentableAsJSON.JSON.
 func (VoiceGroupEndMarker) JSON() *json.Container {

@@ -12,8 +12,14 @@ import (
 // A PartDeclaration sets the current instruments of the score, creating them if
 // necessary.
 type PartDeclaration struct {
-	Names []string
-	Alias string
+	SourceContext AldaSourceContext
+	Names         []string
+	Alias         string
+}
+
+// GetSourceContext implements HasSourceContext.GetSourceContext.
+func (decl PartDeclaration) GetSourceContext() AldaSourceContext {
+	return decl.SourceContext
 }
 
 // JSON implements RepresentableAsJSON.JSON.

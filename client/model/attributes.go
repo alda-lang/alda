@@ -10,7 +10,13 @@ import (
 
 // AttributeUpdate updates the value of an attribute for all current parts.
 type AttributeUpdate struct {
-	PartUpdate PartUpdate
+	SourceContext AldaSourceContext
+	PartUpdate    PartUpdate
+}
+
+// GetSourceContext implements HasSourceContext.GetSourceContext.
+func (au AttributeUpdate) GetSourceContext() AldaSourceContext {
+	return au.SourceContext
 }
 
 // JSON implements RepresentableAsJSON.JSON.
@@ -141,7 +147,13 @@ func (score *Score) ApplyGlobalAttributes() {
 
 // GlobalAttributeUpdate updates the value of an attribute for all parts.
 type GlobalAttributeUpdate struct {
-	PartUpdate PartUpdate
+	SourceContext AldaSourceContext
+	PartUpdate    PartUpdate
+}
+
+// GetSourceContext implements HasSourceContext.GetSourceContext.
+func (gau GlobalAttributeUpdate) GetSourceContext() AldaSourceContext {
+	return gau.SourceContext
 }
 
 // JSON implements RepresentableAsJSON.JSON.

@@ -32,8 +32,14 @@ func (score *Score) SetVariable(name string, value []ScoreUpdate) {
 // A VariableDefinition stores a sequence of ScoreUpdates, using the provided
 // variable name as a lookup key.
 type VariableDefinition struct {
-	VariableName string
-	Events       []ScoreUpdate
+	SourceContext AldaSourceContext
+	VariableName  string
+	Events        []ScoreUpdate
+}
+
+// GetSourceContext implements HasSourceContext.GetSourceContext.
+func (vd VariableDefinition) GetSourceContext() AldaSourceContext {
+	return vd.SourceContext
 }
 
 // JSON implements RepresentableAsJSON.JSON.
@@ -95,7 +101,13 @@ func (vd VariableDefinition) VariableValue(score *Score) (ScoreUpdate, error) {
 // provided name is looked up, and assuming that it was previously defined, the
 // corresponding sequence of events defined is used to update the score.
 type VariableReference struct {
-	VariableName string
+	SourceContext AldaSourceContext
+	VariableName  string
+}
+
+// GetSourceContext implements HasSourceContext.GetSourceContext.
+func (vr VariableReference) GetSourceContext() AldaSourceContext {
+	return vr.SourceContext
 }
 
 // JSON implements RepresentableAsJSON.JSON.

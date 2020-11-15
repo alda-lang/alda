@@ -95,11 +95,10 @@ const (
 
 // A Token is a result of lexical analysis done by the scanner.
 type Token struct {
-	tokenType TokenType
-	text      string
-	literal   interface{}
-	line      int
-	column    int
+	sourceContext model.AldaSourceContext
+	tokenType     TokenType
+	text          string
+	literal       interface{}
 }
 
 func (tt TokenType) String() string {
@@ -179,7 +178,12 @@ func (tt TokenType) String() string {
 
 func (t Token) String() string {
 	return fmt.Sprintf(
-		"[line %d] %s | %#q | %#v", t.line, t.tokenType.String(), t.text, t.literal,
+		"[%d:%d] %s | %#q | %#v",
+		t.sourceContext.Line,
+		t.sourceContext.Column,
+		t.tokenType.String(),
+		t.text,
+		t.literal,
 	)
 }
 
@@ -268,8 +272,11 @@ func (s *scanner) addToken(tokenType TokenType, literal interface{}) {
 		tokenType: tokenType,
 		text:      text,
 		literal:   literal,
-		line:      s.startLine,
-		column:    s.startColumn,
+		sourceContext: model.AldaSourceContext{
+			Filename: s.filename,
+			Line:     s.startLine,
+			Column:   s.startColumn,
+		},
 	}
 
 	log.Debug().Str("token", token.String()).Msg("Adding token.")
@@ -787,8 +794,11 @@ func Scan(filename string, input string) ([]Token, error) {
 		tokenType: EOF,
 		text:      "",
 		literal:   nil,
-		line:      s.line,
-		column:    s.column,
+		sourceContext: model.AldaSourceContext{
+			Filename: s.filename,
+			Line:     s.line,
+			Column:   s.column,
+		},
 	})
 
 	return s.tokens, nil
