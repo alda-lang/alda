@@ -241,7 +241,7 @@ func (p *parser) variableDefinition() ([]model.ScoreUpdate, error) {
 		return nil, err
 	}
 
-	if p.peek().sourceContext.Line > definitionLine {
+	if p.peek().tokenType == EOF || p.peek().sourceContext.Line > definitionLine {
 		return nil, &model.AldaSourceError{
 			Context: nameToken.sourceContext,
 			Err: fmt.Errorf(
