@@ -3,28 +3,67 @@ version: 2.1
 orbs:
   win: circleci/windows@2.2.0
 
+# All of the jobs below have filters that appear superfluous, but the filters
+# are actually required because if one job has tag filters, then every job
+# upstream (i.e.  directly or transitively required by said job) is required to
+# have filters.
+#
+# See: https://circleci.com/docs/2.0/workflows/#using-contexts-and-filtering-in-your-workflows
+
 workflows:
   version: 2
   build_and_test:
     jobs:
-      - build_client
-      - build_player
+      - build_client:
+          filters:
+            tags:
+              only: /^release-.*/
+      - build_player:
+          filters:
+            tags:
+              only: /^release-.*/
       - test_ubuntu_18_04:
           requires:
             - build_client
             - build_player
+          filters:
+            tags:
+              only: /^release-.*/
       - test_macos:
           requires:
             - build_client
             - build_player
+          filters:
+            tags:
+              only: /^release-.*/
       - test_windows:
           requires:
             - build_client
             - build_player
+          filters:
+            tags:
+              only: /^release-.*/
+      # Stores artifacts in CircleCI. Artifacts are only accessible for 30 days,
+      # so we have a separate job, `upload_artifacts`, that also uploads them to
+      # a more permanent location in the case of tagged releases.
       - store_artifacts:
           filters:
+            tags:
+              only: /^release-.*/
             branches:
               only: v2
+          requires:
+            - test_ubuntu_18_04
+            - test_macos
+            - test_windows
+      # When a tag is pushed, this job uploads the artifacts to a permanent
+      # storage location where end users can download them.
+      - upload_artifacts:
+          filters:
+            tags:
+              only: /^release-.*/
+            branches:
+              ignore: /.*/
           requires:
             - test_ubuntu_18_04
             - test_macos
@@ -215,3 +254,23 @@ jobs:
       - store_artifacts:
           path: /tmp/workspace/build/player
           destination: player
+
+  upload_artifacts:
+    docker:
+      - image: circleci/buildpack-deps:bionic
+
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+
+      - run:
+          name: "TODO: upload artifacts"
+          working_directory: /tmp/workspace
+          command: |
+            echo "TODO: upload artifacts for tag: $CIRCLE_TAG"
+            pwd
+            ls .
+            ls build/
+            ls build/client/
+            ls build/player/
+
