@@ -9,7 +9,13 @@ mkdir -p target
 # Keep the target folder from getting too big by deleting any builds older than
 # 7 days.
 if [ -d target/ ]; then
-  find target/ -maxdepth 1 -type d -mtime +7 -exec rm -vrf {} \;
+  find \
+    target/ \
+    -maxdepth 1 \
+    -not -path target/ \
+    -type d \
+    -mtime +7 \
+    -exec rm -vrf {} \;
 fi
 
 build_sha="$(../bin/current-content-sha player)"
