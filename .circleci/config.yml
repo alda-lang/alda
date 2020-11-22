@@ -258,7 +258,7 @@ jobs:
 
   upload_artifacts:
     docker:
-      - image: amazon/aws-cli:2.1.3
+      - image: daveyarwood/alda-artifact-uploader:latest
 
     steps:
       - attach_workspace:
