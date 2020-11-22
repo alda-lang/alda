@@ -274,5 +274,5 @@ jobs:
       - run:
           name: "Upload release artifacts"
           command: |
-            bin/upload-release ${CIRCLE_TAG#release-} /tmp/workspace
+            bin/upload-release ${CIRCLE_TAG#release-} /tmp/workspace/build
 
