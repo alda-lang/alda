@@ -258,7 +258,7 @@ jobs:
 
   upload_artifacts:
     docker:
-      - image: circleci/buildpack-deps:bionic
+      - image: amazon/aws-cli:2.1.3
 
     steps:
       - attach_workspace:
