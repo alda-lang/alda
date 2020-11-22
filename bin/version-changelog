@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+
+version="$1"
+
+if [[ -z "$version" ]]; then
+  echo "Usage: $0 VERSION" > /dev/stderr
+  exit 1
+fi
+
+output="$(mktemp)"
+
+found_version=no
+
+while read line; do
+  # Skip all lines before the heading for the version we're looking for.
+  if [[ "$found_version" != yes ]]; then
+    if [[ "$line" == "## $version" ]]; then
+      found_version=yes
+    fi
+
+    continue
+  fi
+
+  # Skip any blank lines between the version heading and the content.
+  if ! [[ -s "$output" ]] && [[ -z "$line" ]]; then
+    continue
+  fi
+
+  # Stop when we've encountered the next version heading below the one that we
+  # care about.
+  if [[ "$line" =~ ^##\ .* ]]; then
+    break
+  fi
+
+  echo "$line" >> "$output"
+done < "$(dirname "$0")/../CHANGELOG.md"
+
+if ! [[ -s "$output" ]]; then
+  echo "No changelog found for version $version." > /dev/stderr
+  exit 1
+fi
+
+cat "$output"

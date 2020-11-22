@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+
+set -e
+
+function print_usage() {
+  cat <<EOF
+$(basename "$0") VERSION ARTIFACTS_DIR
+
+This script uploads the artifacts and changelog entry for a release to a
+permanent storage location where end users can download them.
+
+Requires the \`aws\` CLI to be installed and configured to be able to use
+DigitalOcean. Also requires access to the Alda releases DigitalOcean Space,
+obviously.
+EOF
+}
+
+release_version="$1"
+artifacts_dir="$2"
+
+if [[ -z "$release_version" ]] || [[ -z "$artifacts_dir" ]]; then
+  print_usage
+  exit 1
+fi
+
+if ! which aws > /dev/null; then
+  echo "This script requires the \`aws\` CLI."
+  exit 1
+fi
+
+spaces_endpoint="https://nyc3.digitaloceanspaces.com"
+
+function spaces_s3() {
+  aws "--endpoint=$spaces_endpoint" s3 "$@"
+}
+
+releases_bucket="s3://alda-releases"
+
+release_s3_url="$releases_bucket/$release_version"
+
+# Verify that a release with this version number wasn't already uploaded.
+if spaces_s3 ls "$release_s3_url" > /dev/null; then
+  echo "Release already uploaded: $release_s3_url"
+  exit 1
+fi
+
+echo "Generating version changelog..."
+version_changelog="$(mktemp)"
+"$(dirname "$0")/version-changelog" "$release_version" > "$version_changelog"
+
+echo "Uploading $artifacts_dir to $release_s3_url..."
+spaces_s3 sync "$artifacts_dir" "$release_s3_url"
+spaces_s3 cp "$version_changelog" "$release_s3_url/CHANGELOG.md"
+

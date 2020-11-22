@@ -1,32 +1,34 @@
 #!/usr/bin/env bash
 
-# This script is a placeholder for now.
+set -e
 
-release_version="$("$(dirname $0)/version")"
+version="$(cat "$(dirname "$0")/../VERSION")"
+
+echo "--- Release version: $version ---"
+echo
+
+version_changelog="$($(dirname "$0")/version-changelog "$version")"
+
+echo "========================================"
+echo "$version_changelog"
+echo "========================================"
+echo
+read -p "Is this changelog correct? [yN] "
+
+if [[ "$REPLY" != "y" ]]; then
+  echo "Aborting."
+  exit 1
+fi
+
+# Pushing a tag whose name starts with "release-" causes CircleCI to do a build
+# and upload the artifacts (via `bin/upload-release`).
+release_tag="release-$version"
+git tag -a "$release_tag" -m "$release_tag"
+git push --tags
 
 # TODO:
 #
-# * Verify that a release with the current version number doesn't already exist.
-#   * Could use the GitHub API for this.
-#
-# * Look for current build in the `target/` directory.
-#   * Can tag the builds by git SHA. I think enforcing that every build
-#     corresponds to a git SHA (even if it's on a local-only branch) is a good
-#     thing.
-#   * Maybe I can tag the builds by both git SHA and a checksum of the current
-#     contents of the directory? That way, I could do local builds that I don't
-#     intend to release, and when it comes time to release, this script could
-#     enforce that the git state is clean and that there is a current build.
-#
-# * Push a new git version tag.
-#
-# * Create a new release via the GitHub API.
-#
-# * Generate a release description from the CHANGELOG.
-#
-# * Upload the builds to the release.
-#
 # * Post to Alda slack #general about the new release.
+# ** To get the timing right, it would be better to configure CircleCI to post
+# to Slack once a release build succeeds.
 
-echo Not yet implemented.
-exit 1

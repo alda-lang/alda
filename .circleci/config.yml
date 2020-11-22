@@ -2,6 +2,7 @@ version: 2.1
 
 orbs:
   win: circleci/windows@2.2.0
+  # aws-cli: circleci/aws-cli@1.3.1
 
 # All of the jobs below have filters that appear superfluous, but the filters
 # are actually required because if one job has tag filters, then every job
@@ -263,14 +264,19 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
 
+      - checkout
+
+      # - aws-cli/setup:
+      #     ...
+
       - run:
-          name: "TODO: upload artifacts"
-          working_directory: /tmp/workspace
+          name: "Configure AWS CLI for use with DigitalOcean Spaces"
           command: |
-            echo "TODO: upload artifacts for tag: $CIRCLE_TAG"
-            pwd
-            ls .
-            ls build/
-            ls build/client/
-            ls build/player/
+            aws configure set aws_access_key_id $DO_ACCESS_KEY_ID
+            aws configure set aws_secret_access_key $DO_SECRET_ACCESS_KEY
+
+      - run:
+          name: "Upload release artifacts"
+          command: |
+            bin/upload-release ${CIRCLE_TAG#release-} /tmp/workspace
 
