@@ -215,13 +215,13 @@ jobs:
             Copy-Item -Path "client\windows-amd64\alda.exe" -Destination "C:\Program Files\Alda\bin"
             Copy-Item -Path "player\windows\alda-player.exe" -Destination "C:\Program Files\Alda\bin"
             $env:PATH = "$env:PATH;C:\Program Files\Alda\bin"
-            # alda version
+            alda version
             alda-player info
             # Work around a bug in CircleCI Windows builds where it apparently
             # hangs forever if there are any background processes, e.g. the
             # player processes that `alda` spawns.
-            # Stop-Process -Name "alda-player"
-            # Stop-Process -Name "java"
+            Start-Sleep -Seconds 5 # give the players time to register
+            alda shutdown # shut down all registered players
 
       - run:
           name: alda doctor
@@ -237,8 +237,8 @@ jobs:
             # I'm curious if maybe CircleCI is ignoring the non-zero exit code
             # and using the (presumably zero) exit code of the last command
             # here. So, I'm commenting these out in order to test my theory.
-            # Stop-Process -Name "alda-player"
-            # Stop-Process -Name "java"
+            Start-Sleep -Seconds 5 # give the players time to register
+            alda shutdown # shut down all registered players
 
       - run:
           name: "Troubleshooting: player logs"
