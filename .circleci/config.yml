@@ -220,8 +220,8 @@ jobs:
             # Work around a bug in CircleCI Windows builds where it apparently
             # hangs forever if there are any background processes, e.g. the
             # player processes that `alda` spawns.
-            Stop-Process -Name "alda-player"
-            Stop-Process -Name "java"
+            # Stop-Process -Name "alda-player"
+            # Stop-Process -Name "java"
 
       - run:
           name: alda doctor
