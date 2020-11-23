@@ -215,7 +215,7 @@ jobs:
             Copy-Item -Path "client\windows-amd64\alda.exe" -Destination "C:\Program Files\Alda\bin"
             Copy-Item -Path "player\windows\alda-player.exe" -Destination "C:\Program Files\Alda\bin"
             $env:PATH = "$env:PATH;C:\Program Files\Alda\bin"
-            alda version
+            # alda version
             alda-player info
             # Work around a bug in CircleCI Windows builds where it apparently
             # hangs forever if there are any background processes, e.g. the
