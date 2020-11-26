@@ -221,7 +221,8 @@ jobs:
             # hangs forever if there are any background processes, e.g. the
             # player processes that `alda` spawns.
             Start-Sleep -Seconds 5 # give the players time to register
-            alda shutdown # shut down all registered players
+            Stop-Process -Name "alda-player"
+            Stop-Process -Name "java"
 
       - run:
           name: alda doctor
@@ -238,7 +239,8 @@ jobs:
             # and using the (presumably zero) exit code of the last command
             # here. So, I'm commenting these out in order to test my theory.
             Start-Sleep -Seconds 5 # give the players time to register
-            alda shutdown # shut down all registered players
+            Stop-Process -Name "alda-player"
+            Stop-Process -Name "java"
 
       - run:
           name: "Troubleshooting: player logs"
