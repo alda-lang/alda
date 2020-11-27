@@ -224,11 +224,6 @@ jobs:
             $env:ALDA_DISABLE_SPAWNING = "yes"
             alda version
             alda-player info
-            # Work around a bug in CircleCI Windows builds where it apparently
-            # hangs forever if there are any background processes, e.g. the
-            # player processes that `alda` spawns.
-            Start-Sleep -Seconds 5 # give the players time to register
-            alda shutdown
 
       - run:
           name: alda doctor
@@ -236,17 +231,6 @@ jobs:
             $env:PATH = "$env:PATH;C:\Program Files\Alda\bin"
             $env:ALDA_DISABLE_SPAWNING = "yes"
             alda -v3 doctor --no-audio
-            # Work around a bug in CircleCI Windows builds where it apparently
-            # hangs forever if there are any background processes, e.g. the
-            # player processes that `alda` spawns.
-            #
-            # Update 2020-11-22: I think there might be _another_ issue where
-            # the build passes even if the `alda doctor` command above fails.
-            # I'm curious if maybe CircleCI is ignoring the non-zero exit code
-            # and using the (presumably zero) exit code of the last command
-            # here. So, I'm commenting these out in order to test my theory.
-            Start-Sleep -Seconds 5 # give the players time to register
-            alda shutdown
 
       - run:
           name: "Troubleshooting: player logs"
