@@ -164,6 +164,17 @@ func spawnPlayer() error {
 //
 // Returns an error if something goes wrong.
 func FillPlayerPool() error {
+	// If ALDA_DISABLE_SPAWNING is set to true, we do nothing.
+	//
+	// This is useful for CI/CD purposes. (See .circleci/config.yml.)
+	if os.Getenv("ALDA_DISABLE_SPAWNING") == "yes" {
+		log.Info().
+			Str("ALDA_DISABLE_SPAWNING", "yes").
+			Msg("Skipping filling the player pool.")
+
+		return nil
+	}
+
 	players, err := ReadPlayerStates()
 	if err != nil {
 		return err

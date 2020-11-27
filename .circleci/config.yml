@@ -159,12 +159,15 @@ jobs:
             cp player/non-windows/alda-player /home/circleci/bin/
             chmod +x /home/circleci/bin/alda
             chmod +x /home/circleci/bin/alda-player
+            export ALDA_DISABLE_SPAWNING=yes
             alda version
             alda-player info
 
       - run:
           name: alda doctor
-          command: alda -v3 doctor --no-audio
+          command: |
+            export ALDA_DISABLE_SPAWNING=yes
+            alda -v3 doctor --no-audio
 
       - run:
           name: "Troubleshooting: player logs"
@@ -188,12 +191,15 @@ jobs:
             cp player/non-windows/alda-player /usr/local/bin/
             chmod +x /usr/local/bin/alda
             chmod +x /usr/local/bin/alda-player
+            export ALDA_DISABLE_SPAWNING=yes
             alda version
             alda-player info
 
       - run:
           name: alda doctor
-          command: alda -v3 doctor --no-audio
+          command: |
+            export ALDA_DISABLE_SPAWNING=yes
+            alda -v3 doctor --no-audio
 
       - run:
           name: "Troubleshooting: player logs"
@@ -215,6 +221,7 @@ jobs:
             Copy-Item -Path "client\windows-amd64\alda.exe" -Destination "C:\Program Files\Alda\bin"
             Copy-Item -Path "player\windows\alda-player.exe" -Destination "C:\Program Files\Alda\bin"
             $env:PATH = "$env:PATH;C:\Program Files\Alda\bin"
+            $env:ALDA_DISABLE_SPAWNING = "yes"
             alda version
             alda-player info
             # Work around a bug in CircleCI Windows builds where it apparently
@@ -227,6 +234,7 @@ jobs:
           name: alda doctor
           command: |
             $env:PATH = "$env:PATH;C:\Program Files\Alda\bin"
+            $env:ALDA_DISABLE_SPAWNING = "yes"
             alda -v3 doctor --no-audio
             # Work around a bug in CircleCI Windows builds where it apparently
             # hangs forever if there are any background processes, e.g. the
