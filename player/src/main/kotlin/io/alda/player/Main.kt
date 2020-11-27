@@ -78,7 +78,11 @@ class Run : CliktCommand(
     val receiver = receiver(port)
     receiver.startListening()
 
-    if (!lazyAudio) {
+    if (lazyAudio) {
+      log.info {
+        "Deferring audio initialization; --lazy-audio flag was provided."
+      }
+    } else {
       midi()
     }
 
