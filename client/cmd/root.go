@@ -142,9 +142,10 @@ func Execute() error {
 	// pool, so with typical usage, the odds are high that there will be at least
 	// one player process available when you need it.
 	for _, arg := range os.Args {
-		// temporarily adding "doctor" as an experimental attempt to fix the windows
-		// CI build
-		if arg == "doctor" || arg == "ps" || arg == "shutdown" {
+		// temporarily adding "doctor" and "version" as an experimental attempt to
+		// fix the windows CI build
+		// TODO: remove "doctor" and "version" when done experimenting
+		if arg == "doctor" || arg == "ps" || arg == "shutdown" || arg == "version" {
 			commandIsAnException = true
 		}
 	}
