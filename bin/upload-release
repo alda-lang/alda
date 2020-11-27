@@ -49,6 +49,14 @@ version_changelog="$(mktemp)"
 "$(dirname "$0")/version-changelog" "$release_version" > "$version_changelog"
 
 echo "Uploading $artifacts_dir to $release_s3_url..."
-spaces_s3 sync "$artifacts_dir" "$release_s3_url"
-spaces_s3 cp "$version_changelog" "$release_s3_url/CHANGELOG.md"
+
+spaces_s3 sync \
+  --acl public-read \
+  "$artifacts_dir" \
+  "$release_s3_url"
+
+spaces_s3 cp \
+  --acl public-read \
+  "$version_changelog" \
+  "$release_s3_url/CHANGELOG.md"
 
