@@ -274,3 +274,15 @@ jobs:
           command: |
             bin/upload-release ${CIRCLE_TAG#release-} /tmp/workspace/build
 
+  announce_release:
+    docker:
+      - image: daveyarwood/alda-release-announcer:latest
+
+    steps:
+      - checkout
+
+      - run:
+          name: "Announce release on Slack"
+          command: |
+            bin/announce-release ${CIRCLE_TAG#release-}
+

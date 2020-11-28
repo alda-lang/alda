@@ -25,10 +25,3 @@ fi
 release_tag="release-$version"
 git tag -a "$release_tag" -m "$release_tag"
 git push --tags
-
-# TODO:
-#
-# * Post to Alda slack #general about the new release.
-# ** To get the timing right, it would be better to configure CircleCI to post
-# to Slack once a release build succeeds.
-

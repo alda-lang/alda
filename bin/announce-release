@@ -1,0 +1,93 @@
+#!/usr/bin/env bash
+
+set -e
+
+function print_usage() {
+  cat <<EOF
+$(basename "$0") VERSION
+
+This script announces the release of a new version of Alda on Slack.
+
+The announcement includes the changelog that was uploaded along with the release
+executables.
+
+EOF
+}
+
+release_version="$1"
+
+if [[ -z "$release_version" ]]; then
+  print_usage
+  exit 1
+fi
+
+if [[ -z "$ALDA_SLACK_WEBHOOK_URL" ]]; then
+  echo "ALDA_SLACK_WEBHOOK_URL must be set."
+  exit 1
+fi
+
+if ! which jo > /dev/null; then
+  echo "This script requires \`jo\` to be installed."
+  exit 1
+fi
+
+################################################################################
+# Fetch release notes
+################################################################################
+
+releases_url="https://nyc3.digitaloceanspaces.com/alda-releases"
+changelog_url="$releases_url/$release_version/CHANGELOG.md"
+
+changelog="$(mktemp)"
+
+curl -s --fail "$changelog_url" \
+  >> "$changelog" \
+  || (echo "404: $changelog_url"; exit 1) \
+
+################################################################################
+# Announce release on Slack
+################################################################################
+
+release_now_available="*Alda version $release_version is now available!*"
+
+release_notes="$(cat \
+                   <(echo -e "_Release notes:_\n") \
+                   "$changelog")"
+
+instructions="$(cat <<EOF
+_To download the latest version of Alda, go to https://alda.io/install or run \`alda update\`._
+EOF
+)"
+
+# TODO: Change this to "general" when we're ready to start announcing releases
+# this way.
+slack_channel="dave-testing"
+
+curl \
+  -X POST \
+  -H Content-Type:application/json \
+  "$ALDA_SLACK_WEBHOOK_URL" \
+  --data "$(jo \
+              channel="$slack_channel" \
+              icon_emoji="alda" \
+              username="Release announcement" \
+              text="$(cat "$changelog")" \
+              blocks="$(jo -a \
+                          "$(jo \
+                               type="section" \
+                               text="$(jo \
+                                         type="mrkdwn" \
+                                         text="$release_now_available")")" \
+                          "$(jo type="divider")" \
+                          "$(jo \
+                               type="section" \
+                               text="$(jo \
+                                         type="mrkdwn" \
+                                         text="$release_notes")")" \
+                          "$(jo type="divider")" \
+                          "$(jo \
+                               type="section" \
+                               text="$(jo \
+                                         type="mrkdwn" \
+                                         text="$instructions")")")")"
+
