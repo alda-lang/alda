@@ -55,7 +55,7 @@ release_notes="$(cat \
                    "$changelog")"
 
 instructions="$(cat <<EOF
-_To download the latest version of Alda, go to https://alda.io/install or run \`alda update\`._
+_To get the latest version of Alda, go to https://alda.io/install or run \`alda update\`._
 EOF
 )"
 
