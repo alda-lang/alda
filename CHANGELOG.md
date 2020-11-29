@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 1.99.2
+
+</placeholder>
+  Testing, 1 2 3!
+</placeholder>
+
 ## 1.99.1
 
 This is a placeholder release version changelog.
