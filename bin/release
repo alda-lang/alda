@@ -2,6 +2,11 @@
 
 set -e
 
+if [[ -z "$CIRCLECI_API_TOKEN" ]]; then
+  echo "CIRCLECI_API_TOKEN must be set."
+  exit 1
+fi
+
 version="$(cat "$(dirname "$0")/../VERSION")"
 
 echo "--- Release version: $version ---"
@@ -25,3 +30,10 @@ fi
 release_tag="release-$version"
 git tag -a "$release_tag" -m "$release_tag"
 git push --tags
+
+# HACK: Wait for a bit for CircleCI to create the build pipeline.
+# TODO: Maybe `watch-circleci-pipeline` should check in a loop whether the
+# pipeline exists.
+sleep 5
+
+"$(dirname "$0")/watch-circleci-pipeline"

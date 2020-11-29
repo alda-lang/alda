@@ -1,0 +1,105 @@
+#!/usr/bin/env bash
+
+# This script finds the CircleCI build pipeline for the current commit and
+# repeatedly prints a concise summary of the status until the pipeline
+# completes.
+
+set -e
+
+if [[ -z "$CIRCLECI_API_TOKEN" ]]; then
+  echo "CIRCLECI_API_TOKEN must be set."
+  exit 1
+fi
+
+if ! which jq > /dev/null; then
+  echo "jq must be on the PATH."
+  exit 1
+fi
+
+circleci_api_base_url="https://circleci.com/api/v2"
+circleci_project="gh/alda-lang/alda"
+
+current_commit="$(git rev-parse HEAD)"
+
+echo \
+  "Finding the most recent build pipeline for git commit $current_commit..."
+
+pipeline="$(curl -Ls --fail \
+    -H "Circle-Token: $CIRCLECI_API_TOKEN" \
+    "$circleci_api_base_url/project/$circleci_project/pipeline" \
+    | jq "[.items[]
+           | select(.vcs.revision == \"$current_commit\")][0]")"
+
+pipeline_id="$(jq -r ".id" <(echo "$pipeline"))"
+pipeline_number="$(jq -r ".number" <(echo "$pipeline"))"
+
+if [[ -z "$pipeline_id" ]]; then
+  echo "No build pipeline found."
+  exit 1
+fi
+
+echo "Pipeline: $pipeline_id"
+
+workflows="$(curl -Ls --fail \
+              -H "Circle-Token: $CIRCLECI_API_TOKEN" \
+              "$circleci_api_base_url/pipeline/$pipeline_id/workflow" \
+              | jq ".items")"
+
+# NOTE: This assumes that our build pipeline only has a single workflow, which
+# it currently does. If that ever changes, this will need to be adjusted.
+workflow_id="$(jq -r ".[0] | .id" <(echo "$workflows"))"
+
+echo "Workflow: $workflow_id"
+
+# reference: https://apihandyman.io/api-toolbox-jq-and-openapi-part-4-bonus-coloring-jqs-raw-output/
+escape="\\u001b"
+reset="$escape[0m"
+red="$escape[31m"
+green="$escape[32m"
+gray="$escape[30;1m" # technically "bold black"
+bold_white="$escape[37;1m"
+
+while true; do
+  jobs="$(curl -Ls --fail \
+            -H "Circle-Token: $CIRCLECI_API_TOKEN" \
+            "$circleci_api_base_url/workflow/$workflow_id/job")"
+
+  clear
+
+  date
+  echo "Build pipeline status:"
+  echo
+
+  jq -r \
+    ".items[]
+       | if .status == \"blocked\" then
+           \"\(.name)\t$gray\(.status)$reset\"
+         elif .status == \"success\" then
+           \"\(.name)\t$green\(.status)$reset\"
+         elif .status == \"failed\" then
+           \"\(.name)\t$red\(.status)$reset\"
+         elif .status == \"running\" then
+           \"\(.name)\t$bold_white\(.status)$reset\"
+         else
+           \"\(.name)\t\(.status)\"
+         end" \
+    <(echo "$jobs") \
+    | column -t
+
+  echo
+  echo \
+    "https://app.circleci.com/pipelines/github/alda-lang/alda/$pipeline_number/workflows/$workflow_id"
+
+  overall_status="$(jq -r '.items[].status' <(echo "$jobs") | uniq)"
+
+  if [[ "$overall_status" == "success" ]]; then
+    exit 0
+  fi
+
+  if grep -q "failed" <(echo "$overall_status"); then
+    exit 1
+  fi
+
+  sleep 2
+done
+
