@@ -2,11 +2,6 @@
 
 # This script locates CircleCI build artifacts for the current commit and
 # downloads them to the specified target directory.
-#
-# NB: We're going to want to store these somewhere public at some point, and
-# it's not clear yet where that should be. Once that place has been determined,
-# we should add a step to the CircleCI build pipeline that uploads the artifacts
-# there.
 
 set -e
 
