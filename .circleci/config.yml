@@ -68,6 +68,15 @@ workflows:
             - test_ubuntu_18_04
             - test_macos
             - test_windows
+      # Announces releases on Slack.
+      - announce_release:
+          filters:
+            tags:
+              only: /^release-.*/
+            branches:
+              ignore: /.*/
+          requires:
+            - upload_artifacts
 
 jobs:
   build_client:
