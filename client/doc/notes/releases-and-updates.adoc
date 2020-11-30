@@ -1,0 +1,131 @@
+= Releases and updates
+
+== The v1 setup
+
+I painted myself into a corner with the Alda v1 `alda update` mechanism. It uses
+the GitHub API to inspect the latest release and downloads the first asset it
+finds where the filename ends with `alda`.
+
+If Alda v2 executables were to be uploaded to GitHub releases, then when Alda v1
+users use `alda update`, they would end up with an `alda`(or `alda.exe`)
+executable that won't work. At best, the downloaded executable wouldn't be able
+to play anything because Alda v2 introduces a second executable that's also
+required, `alda-player`, and at worst, the `alda` executable that `alda update`
+finds might not run at all because it might not even be for the right OS/arch!
+
+== The v2 setup
+
+The suboptimal nature of the v1 setup made me realize that I'd really like for
+something server-side (controlled by the maintainers of Alda) to decide which
+release a user should download, based on context provided by the user, such as
+what version of Alda (if any) the user currently has installed.
+
+For example, if a user has Alda 1.4.0 installed, and there is a newer Alda 1.x
+version available, as well as a 2.x version, then an API could tell the user
+about these two recommended releases, and include an explanation about why the
+user might choose one vs. the other.
+
+If a user has Alda 2.0.1 installed and version 2.0.7 is available, then the API
+could tell the user about version 2.0.7.
+
+In addition to providing information about releases, the Release API would also
+provide users with download URLs for specific releases. The typical workflow
+(handled under the hood by the `alda` CLI) would be:
+
+* User runs `alda update`.
+
+* Alda CLI makes a request to the Releases API for information about recommended
+  versions, providing the currently installed Alda version for context.
+
+* The Releases API response includes:
+** a list of releases, with release notes and download URLs for each release
+** (optional) an explanation of why there are multiple version options
+
+* If there is only one version option, the Alda CLI prompts the user to confirm
+  whether they want to install that version.
+
+* If there are multiple version options, the Alda CLI presents the above
+  information to the user and asks the user to choose which release version
+  they'd like to install.
+
+* The Alda CLI downloads each of the executables for the user's OS/arch into the
+  same directory as the currently running executable (`alda`), and (for
+  non-Windows) marks them as executable.
+** To replace `alda.exe` on Windows systems, we can use this trick: https://stackoverflow.com/a/7198760/2338327
+
+=== Migration path for Alda v1 users
+
+We will release one final 1.x version of Alda as a GitHub release, so that when
+Alda v1 users run `alda update`, they will get that version.
+
+This last version will still be functional (so as to avoid surprises or make
+the user feel like they have no choice but to upgrade to Alda v2 in order to
+continue using Alda), but any time it is run, the very first thing it will do is
+print a message explaining that Alda 2.0 is now available, and to update to Alda
+v2, the user can run `alda update`.
+
+`alda update` will be reimplemented to follow the same process described above,
+using the Releases API to get information about the latest release and allowing
+the user to install the latest Alda version (i.e. in the 2.x series).
+
+== Release storage
+
+Alda release assets are now stored in a DigitalOcean Space.
+
+A CI/CD pipeline has been set up to automate the process of building the release
+executables for Alda v2 and uploading them to the DigitalOcean Space.
+
+The releases API is basically just a thin façade over the DigitalOcean Space,
+which is a big ol' folder full of release assets.
+
+== Releases API
+
+This will be an everyday, boring, JSON over HTTP API. No need to get fancy.
+
+=== Objects
+
+==== Release
+
+A release is represented as an object containing the following keys:
+
+* `version` (string) - the version number
+* `date` (string) - the release date, in `YYYY-MM-DD` format
+* `changelog` (string) - a string of Markdown detailing changes in this release
+* `assets` - an object mapping OS/arch strings to the list of Assets to be
+downloaded for that OS/arch
+
+==== Asset
+
+* `type` (string) one of: `executable`, _(more in the future, if needed)_
+* `name` (string) the name of the file, e.g. `alda`,  `alda.exe`, `alda-player`
+* `url` (string) the public URL where the asset can be downloaded
+
+=== Endpoints
+
+NOTE: I can imagine other useful endpoints this API could have, such as an
+endpoint that lists _all_ releases, or all releases within a date range, etc.
+but initially, we will only implement the minimum viable API that can support
+the new `alda update` process used by the Alda CLI.
+
+==== `GET /latest`
+
+Success response::
+An object with the following entries:
++
+* `releases` - A list of Release objects, each describing a newer version of
+Alda that the user can download.
++
+If there are no releases available newer than the version provided in the
+`from-version` query parameter, the list will be empty.
+* `explanation` (optional) - A string describing why there are multiple version
+choices and why the user might want to download one vs. another.
+
+Error responses::
+* If the version provided in the `from-version` query parameter cannot be parsed
+as a (semantic) version string, this endpoint returns a 400 response.
+
+Query parameters::
+* `from-version=1.4.3` (optional) - the version of Alda that the user currently
+has installed
++
+When not provided, this endpoint will return _the_ latest version of Alda.
