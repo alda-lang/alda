@@ -60,3 +60,8 @@ spaces_s3 cp \
   "$version_changelog" \
   "$release_s3_url/CHANGELOG.md"
 
+date '+%Y-%m-%d' \
+  | spaces_s3 cp \
+      --acl public-read \
+      - \
+      "$release_s3_url/date.txt"
