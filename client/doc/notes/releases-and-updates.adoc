@@ -129,3 +129,13 @@ Query parameters::
 has installed
 +
 When not provided, this endpoint will return _the_ latest version of Alda.
+
+==== `GET /release/1.2.3`
+
+Success response::
+A Release object.
+
+Error responses::
+* If no release is found with the provided version number, this endpoint returns
+a 404 response.
+
