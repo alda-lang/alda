@@ -102,11 +102,6 @@ downloaded for that OS/arch
 
 === Endpoints
 
-NOTE: I can imagine other useful endpoints this API could have, such as an
-endpoint that lists _all_ releases, or all releases within a date range, etc.
-but initially, we will only implement the minimum viable API that can support
-the new `alda update` process used by the Alda CLI.
-
 ==== `GET /latest`
 
 Success response::
@@ -129,6 +124,14 @@ Query parameters::
 has installed
 +
 When not provided, this endpoint will return _the_ latest version of Alda.
+
+==== `GET /releases`
+
+Success response::
+An object with the following entries:
++
+* `releases` - A list of Release objects representing all available Alda
+releases.
 
 ==== `GET /release/1.2.3`
 
