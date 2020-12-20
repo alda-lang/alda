@@ -49,7 +49,7 @@ The language's design equally favors aesthetics, flexibility and ease of use.
 
 * Easy to understand, markup-like syntax.
 * Designed for musicians who don't know how to program, as well as programmers
-  who don't know how to music.
+  who don't know how to write music.
 * A score is a text file that can be played using the `alda` command-line tool.
 * [Interactive REPL](doc/alda-repl.md) lets you enter Alda code and hear the
   results in real time.
