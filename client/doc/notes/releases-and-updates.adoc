@@ -28,16 +28,16 @@ user might choose one vs. the other.
 If a user has Alda 2.0.1 installed and version 2.0.7 is available, then the API
 could tell the user about version 2.0.7.
 
-In addition to providing information about releases, the Release API would also
+In addition to providing information about releases, the releases API would also
 provide users with download URLs for specific releases. The typical workflow
 (handled under the hood by the `alda` CLI) would be:
 
 * User runs `alda update`.
 
-* Alda CLI makes a request to the Releases API for information about recommended
+* Alda CLI makes a request to the releases API for information about recommended
   versions, providing the currently installed Alda version for context.
 
-* The Releases API response includes:
+* The releases API response includes:
 ** a list of releases, with release notes and download URLs for each release
 ** (optional) an explanation of why there are multiple version options
 
@@ -65,7 +65,7 @@ print a message explaining that Alda 2.0 is now available, and to update to Alda
 v2, the user can run `alda update`.
 
 `alda update` will be reimplemented to follow the same process described above,
-using the Releases API to get information about the latest release and allowing
+using the releases API to get information about the latest release and allowing
 the user to install the latest Alda version (i.e. in the 2.x series).
 
 == Release storage
@@ -102,7 +102,7 @@ downloaded for that OS/arch
 
 === Endpoints
 
-==== `GET /latest`
+==== `GET /releases/latest`
 
 Success response::
 An object with the following entries:
