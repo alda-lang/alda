@@ -210,6 +210,24 @@ Text piped into the process on stdin:
 
 		// Find an available player process to use.
 		default:
+			// Alda starts player processes in the background as needed when running
+			// (almost) any command. Most of the time, this is totally transparent to
+			// the user, as when we get to this point, there is already a player
+			// process available, so playback is immediate.
+			//
+			// However, on the very first run (or the first run after a period of
+			// inactivity), it's easy for there not to be any Alda player processes
+			// available yet, so there is a brief (but noticeable) pause before
+			// playback starts.
+			//
+			// To avoid making it look like Alda is "hanging" here while we wait for
+			// player processes come up, we print a message to make it clear what
+			// we're waiting for.
+			_, err := system.FindAvailablePlayer()
+			if err == system.ErrNoPlayersAvailable {
+				fmt.Fprintln(os.Stderr, "Starting player processes...")
+			}
+
 			if err := util.Await(
 				func() error {
 					player, err := system.FindAvailablePlayer()
@@ -269,5 +287,12 @@ Text piped into the process on stdin:
 				Interface("player", player).
 				Msg("Sent OSC messages to player.")
 		}
+
+		// We don't have to print something here, but it's a good idea because it
+		// indicates to the user that we did what they asked. Otherwise, it might
+		// not be obvious that we did anything, especially in cases where there is
+		// no audible output, e.g. `alda play -c "c d e"` (valid syntax, but no
+		// audible output because no part was indicated).
+		fmt.Fprintln(os.Stderr, "Playing...")
 	},
 }
