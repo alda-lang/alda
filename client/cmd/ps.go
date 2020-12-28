@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	log "alda.io/client/logging"
 	"alda.io/client/system"
 	"github.com/dustin/go-humanize"
 	"github.com/spf13/cobra"
@@ -24,7 +25,7 @@ var psCmd = &cobra.Command{
 
 		for _, state := range states {
 			if state.ReadError != nil {
-				fmt.Fprintln(os.Stderr, state.ReadError)
+				log.Warn().Err(state.ReadError).Msg("Failed to read player state")
 				continue
 			}
 
