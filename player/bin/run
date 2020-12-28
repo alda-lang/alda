@@ -2,7 +2,7 @@
 
 set -e
 
-scriptdir="$(dirname $0)"
+scriptdir="$(dirname "$0")"
 
 ### BUILD ####################
 

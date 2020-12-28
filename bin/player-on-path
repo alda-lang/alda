@@ -22,9 +22,9 @@
 #   $ bin/run examples/phase.alda
 #   # etc.
 
-set -e
+set -eo pipefail
 
-pushd "$(dirname $0)/../" >/dev/null
+pushd "$(dirname "$0")/../" >/dev/null
 
 build_sha="$(bin/current-content-sha player)"
 
@@ -35,6 +35,11 @@ if [[ ! -d "player/target/$build_sha" ]]; then
 fi
 
 player_path="$PWD/player/target/$build_sha/non-windows"
+
+if which -a alda-player | head -n1 | grep -q "$player_path"; then
+  echo "Current build of \`alda-player\` found on PATH." >/dev/stderr
+  player_already_on_path="yes"
+fi
 
 popd >/dev/null
 
@@ -51,10 +56,12 @@ else
   export PATH="$player_path:$PATH"
 fi
 
-if [[ $# == 0 ]]; then
-  shell_args=("${shell_args[@]}" "-i")
-else
+if [[ $# -gt 0 ]]; then
   shell_args=("${shell_args[@]}" "-c" "$(printf " %q" "$@")")
+elif [[ "$player_already_on_path" == "yes" ]]; then
+  exit 0
+else
+  shell_args=("${shell_args[@]}" "-i")
 fi
 
 "$SHELL" "${shell_args[@]}"

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-set -e
+set -eo pipefail
 
-scriptdir="$(dirname $0)"
+scriptdir="$(dirname "$0")"
 
 ### BUILD ####################
 
@@ -45,5 +45,6 @@ popd >/dev/null
 
 ### RUN ####################
 
-"$scriptdir/../target/$build_sha/$os-$arch/alda" "$@"
+"$scriptdir/../../bin/player-on-path" \
+  "$scriptdir/../target/$build_sha/$os-$arch/alda" "$@"
 

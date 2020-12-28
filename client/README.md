@@ -8,12 +8,30 @@ process to perform the score.
 
 ### Requirements
 
-You'll need to have Go installed in order to run the client locally.
+You'll need to have Go installed in order to build and run the client locally.
 
 I'm not sure about the minimum required version, but as a point of reference,
 I've been using Go 1.15.3.
 
-### Setting up your PATH
+### tl;dr
+
+Use `bin/run` to run both the Alda client and player locally.
+
+Examples:
+
+```bash
+# equivalent to running `alda --help`
+bin/run --help
+
+# equivalent to running `alda doctor`
+bin/run doctor
+
+# equivalent to running `alda play -f ../examples/hello_world.alda`
+# (Alda player processes are started in the background)
+bin/run play -f ../examples/hello_world.alda
+```
+
+### `alda-player` and your PATH
 
 > If you're already running an Alda player process locally (let's say on port
 > 27278), then you can specify that port via the `-p, --port` option and the
@@ -22,7 +40,9 @@ I've been using Go 1.15.3.
 > ```bash
 > bin/run play -p 27278 -f ../examples/hello_world.alda
 > ```
-
+>
+> If you're developing this way, then you don't need to do anything special with
+> your PATH.
 
 The client expects to find the executable for the [Alda player](../player)
 (`alda-player`) on your PATH. To make this easy when developing, there is a
@@ -31,21 +51,30 @@ player executable if necessary, and then run its arguments as a command in a
 subshell where the directory containing the current build of `alda-player` is
 first on the PATH.
 
+To make this _even easier_, the `bin/run` convenience script already includes an
+invocation of `bin/player-on-path`, so you don't even need to remember to use
+`bin/player-on-path`. **You can just use `bin/run` and the current build of the
+player will be available on your PATH automatically.**
+
 For example:
 
 ```bash
 # NB: These commands are all run from inside the `client` directory.
 
 # This doesn't work unless you have `alda-player` on your PATH:
-$ bin/run play -f ../examples/hello_world.alda
-Jun 21 19:56:51 WRN cmd/root.go:148 > Failed to fill player pool. error="exec: \"alda-player\": executable file not found in $PATH"
+$ go run main.go play -f ../examples/hello_world.alda
+Starting player processes...
+Dec 27 21:41:17 WRN cmd/root.go:159 > Failed to fill player pool. error="exec: \"alda-player\": executable file not found in $PATH"
 no players available
+exit status 1
 
 # This works - a player process is spawned for you, using the current build of
 # the player.
-$ ../bin/player-on-path bin/run play -f ../examples/hello_world.alda
+$ bin/run play -f ../examples/hello_world.alda
 # ... output elided, building player ...
 # ... output elided, building client ...
+Starting player processes...
+Playing...
 # 🎵 music 🎶
 
 # Alternatively, you can start an interactive subshell that's set up so that the
@@ -55,26 +84,27 @@ $ ../bin/player-on-path
 
 # Now we're in a subshell with a modified PATH:
 $ echo $PATH
-/home/dave/code/alda/player/target/1.99.0-1e33bd7fcf91c5384d916bb030b918d6e7e20441/non-windows:/home/dave/.local/bin:/home/dave/bin:/home/dave/.bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/games
+/home/dave/code/alda/player/target/1.99.2-d31454955bdee26b844224b7a090d3a06d744090/non-windows:/home/dave/.local/bin:/home/dave/bin:/home/dave/.bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/games
 
 # Now this works, because the directory with the current build of `alda-player`
 # is on the PATH.
-$ bin/run play -f ../examples/hello_world.alda
-# ... output elided, building client ...
+$ go run main.go play -f ../examples/hello_world.alda
+Playing...
 # 🎵 music 🎶
 ```
 
-### Running the client locally
+### `bin/play` vs. `go run`
 
 There are two ways to run the client locally:
 
 * **Basic**: run a script and pass it arguments as if you're running `alda` on
-  your PATH. Takes a little bit longer sometimes, but is more convenient most of
-  the time and it's exactly like running a release executable.
+  your PATH. This takes a little bit longer sometimes, but it's more convenient
+  most of the time and it's exactly like running a release executable.
 
 * **Go toolchain**: use `go run` for faster builds (no need to fully compile the
-  executable) and more control over build options. Useful if you're handy with
-  Go and you know what you're doing.
+  executable) and more control over build options. This is useful if you're more
+  comfortable with the Go CLI, or if you'd prefer not to wait for a full build
+  every time you want to run the client locally after making changes.
 
 #### Basic
 
