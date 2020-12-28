@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-
-set -e
-
-rootdir="$(dirname $0)/../"
-"$rootdir/client/bin/build"
-"$rootdir/player/bin/build"
-
