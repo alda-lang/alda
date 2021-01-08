@@ -51,7 +51,7 @@ func handleVerbosity(level int) error {
 
 var rootCmd = &cobra.Command{
 	Use:   "alda",
-	Short: "alda: a text-based language for music composition",
+	Short: "alda: a text-based language for music composition (https://alda.io)",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if err := handleVerbosity(verbosity); err != nil {
 			fmt.Println(err)
