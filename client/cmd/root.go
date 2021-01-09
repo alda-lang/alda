@@ -99,7 +99,9 @@ func Execute() error {
 			level = 2
 		case "-v3", "-v=3", "--verbosity=3":
 			level = 3
-		case "-v", "--verbosity":
+		}
+
+		if (arg == "-v" || arg == "--verbosity") && (i+1) < len(os.Args) {
 			i++
 			switch os.Args[i] {
 			case "0":
