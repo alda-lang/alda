@@ -18,7 +18,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const midiExportTimeout = 20 * time.Second
+const midiExportTimeout = 60 * time.Second
 
 var outputFilename string
 var outputFormat string
