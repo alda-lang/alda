@@ -213,3 +213,23 @@ func FillPlayerPool() error {
 
 	return nil
 }
+
+// Alda starts player processes in the background as needed when running
+// (almost) any command. Most of the time, this is totally transparent to the
+// user, as when we get to this point, there is already a player process
+// available, so playback is immediate.
+//
+// However, on the very first run (or the first run after a period of
+// inactivity), it's easy for there not to be any Alda player processes
+// available yet, so there is a brief (but noticeable) pause before playback
+// starts.
+//
+// To avoid making it look like Alda is "hanging" here while we wait for player
+// processes come up, we print a message to make it clear what we're waiting
+// for.
+func StartingPlayerProcesses() {
+	_, err := FindAvailablePlayer()
+	if err == ErrNoPlayersAvailable {
+		fmt.Fprintln(os.Stderr, "Starting player processes...")
+	}
+}

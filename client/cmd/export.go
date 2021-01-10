@@ -132,6 +132,7 @@ output formats like MusicXML.
 		var player system.PlayerState
 
 		// Find an available player process to use.
+		system.StartingPlayerProcesses()
 		if err := util.Await(
 			func() error {
 				foundPlayer, err := system.FindAvailablePlayer()
@@ -215,6 +216,12 @@ output formats like MusicXML.
 			Str("targetFilename", targetFilename).
 			Msg("Waiting for target file to be written.")
 
+		// There can be a noticeable delay while we wait for the player process to
+		// finish writing the target file. So, we display a message here to give the
+		// user some incremental feedback and avoid making it look like Alda is
+		// "hanging."
+		fmt.Fprintln(os.Stderr, "Exporting...")
+
 		var midiFile *os.File
 
 		if err := util.Await(
@@ -233,16 +240,9 @@ output formats like MusicXML.
 			os.Exit(1)
 		}
 
-		log.Debug().
-			Str("targetFilename", targetFilename).
-			Msg("Printing result to stdout.")
-
-		// If we've gotten this far, and an output filename was specified, then
-		// we're done; that file has been written.
-		//
-		// If no output filename was specified, then we print the result (which the
-		// player process has written to a temp file) to stdout.
-		if tmpFilename != "" {
+		if outputFilename != "" {
+			fmt.Fprintf(os.Stderr, "Exported score to %s\n", outputFilename)
+		} else {
 			_, err = io.Copy(os.Stdout, midiFile)
 			if err != nil {
 				fmt.Println(err)
