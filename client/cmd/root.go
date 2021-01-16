@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"alda.io/client/help"
 	log "alda.io/client/logging"
 	"alda.io/client/system"
 	"github.com/spf13/cobra"
@@ -53,10 +54,7 @@ var rootCmd = &cobra.Command{
 	Use:   "alda",
 	Short: "alda: a text-based language for music composition (https://alda.io)",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if err := handleVerbosity(verbosity); err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
+		help.ExitOnError(handleVerbosity(verbosity))
 	},
 }
 
@@ -116,10 +114,7 @@ func Execute() error {
 		}
 	}
 
-	if err := handleVerbosity(level); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+	help.ExitOnError(handleVerbosity(level))
 
 	// Unless the command is one of the exceptions below, Alda will preemptively
 	// spawn player processes in the background, up to a desired amount. This

@@ -60,6 +60,10 @@ func (ase *AldaSourceError) Error() string {
 		err = bottom.Err
 	}
 
+	if bottom.Context.Filename == "" {
+		bottom.Context.Filename = "<no file>"
+	}
+
 	return fmt.Sprintf(
 		"%s:%d:%d %s",
 		bottom.Context.Filename,

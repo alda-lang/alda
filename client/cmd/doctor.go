@@ -13,6 +13,7 @@ import (
 	"syscall"
 	"time"
 
+	"alda.io/client/help"
 	"alda.io/client/model"
 	"alda.io/client/parser"
 	"alda.io/client/repl"
@@ -31,8 +32,7 @@ const reasonableTimeout = 20 * time.Second
 func step(action string, test func() error) {
 	if err := test(); err != nil {
 		fmt.Printf("%s %s\n", aurora.Red("ERR"), action)
-		fmt.Println(err)
-		os.Exit(1)
+		help.ExitOnError(err)
 	}
 
 	fmt.Printf("%s %s\n", aurora.Green("OK "), action)
@@ -507,10 +507,7 @@ var doctorCmd = &cobra.Command{
 			"Start a REPL server",
 			func() error {
 				port, err := system.FindOpenPort()
-				if err != nil {
-					fmt.Println(err)
-					os.Exit(1)
-				}
+				help.ExitOnError(err)
 
 				server, err := repl.RunServer(port)
 				if err != nil {

@@ -1,9 +1,7 @@
 package cmd
 
 import (
-	"fmt"
-	"os"
-
+	"alda.io/client/help"
 	log "alda.io/client/logging"
 	"alda.io/client/system"
 	"alda.io/client/transmitter"
@@ -45,29 +43,18 @@ var stopCmd = &cobra.Command{
 		// Player ID is specified; look up the player by ID and use its port.
 		case playerID != "":
 			player, err := system.FindPlayerByID(playerID)
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
-			}
+			help.ExitOnError(err)
 			players = append(players, player)
 		// Send a "stop" message to all known players.
 		default:
 			knownPlayers, err := system.ReadPlayerStates()
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
-			}
-
+			help.ExitOnError(err)
 			players = append(players, knownPlayers...)
 		}
 
 		for _, player := range players {
 			transmitter := transmitter.OSCTransmitter{Port: player.Port}
-			err := transmitter.TransmitStopMessage()
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
-			}
+			help.ExitOnError(transmitter.TransmitStopMessage())
 
 			log.Info().
 				Interface("player", player).

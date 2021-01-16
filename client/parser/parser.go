@@ -811,7 +811,7 @@ func Parse(
 
 // ParseString reads and parses a string of input.
 func ParseString(input string) ([]model.ScoreUpdate, error) {
-	return Parse("<no file>", input)
+	return Parse("", input)
 }
 
 // ParseFile reads a file and parses the input.

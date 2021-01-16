@@ -2,9 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"time"
 
+	"alda.io/client/help"
 	log "alda.io/client/logging"
 	"alda.io/client/system"
 	"github.com/dustin/go-humanize"
@@ -16,10 +16,7 @@ var psCmd = &cobra.Command{
 	Short: "List background processes",
 	Run: func(_ *cobra.Command, args []string) {
 		states, err := system.ReadPlayerStates()
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
+		help.ExitOnError(err)
 
 		fmt.Println("id\tport\tstate\texpiry")
 

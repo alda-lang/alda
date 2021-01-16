@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"alda.io/client/help"
 	log "alda.io/client/logging"
 	"alda.io/client/model"
 	"alda.io/client/parser"
@@ -95,8 +96,10 @@ output formats like MusicXML.
 ---`,
 	Run: func(_ *cobra.Command, args []string) {
 		if outputFormat != "midi" {
-			fmt.Printf("Invalid output format: %s\n", outputFormat)
-			os.Exit(1)
+			// TODO: user facing error
+			help.ExitOnError(
+				fmt.Errorf("Invalid output format: %s\n", outputFormat),
+			)
 		}
 
 		var scoreUpdates []model.ScoreUpdate
@@ -113,17 +116,11 @@ output formats like MusicXML.
 			scoreUpdates, err = parseStdin()
 		}
 
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
+		help.ExitOnError(err)
 
 		score := model.NewScore()
 		start := time.Now()
-		if err := score.Update(scoreUpdates...); err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
+		help.ExitOnError(score.Update(scoreUpdates...))
 		log.Info().
 			Int("updates", len(scoreUpdates)).
 			Str("took", fmt.Sprintf("%s", time.Since(start))).
@@ -133,21 +130,20 @@ output formats like MusicXML.
 
 		// Find an available player process to use.
 		system.StartingPlayerProcesses()
-		if err := util.Await(
-			func() error {
-				foundPlayer, err := system.FindAvailablePlayer()
-				if err != nil {
-					return err
-				}
+		help.ExitOnError(
+			util.Await(
+				func() error {
+					foundPlayer, err := system.FindAvailablePlayer()
+					if err != nil {
+						return err
+					}
 
-				player = foundPlayer
-				return nil
-			},
-			reasonableTimeout,
-		); err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
+					player = foundPlayer
+					return nil
+				},
+				reasonableTimeout,
+			),
+		)
 
 		transmitOpts := []transmitter.TransmissionOption{
 			transmitter.TransmitFrom(optionFrom),
@@ -159,17 +155,12 @@ output formats like MusicXML.
 			Interface("player", player).
 			Msg("Waiting for player to respond to ping.")
 
-		if _, err := ping(player.Port); err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
+		_, err = ping(player.Port)
+		help.ExitOnError(err)
 
 		transmitter := transmitter.OSCTransmitter{Port: player.Port}
 
-		if err := transmitter.TransmitScore(score, transmitOpts...); err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
+		help.ExitOnError(transmitter.TransmitScore(score, transmitOpts...))
 
 		log.Info().
 			Interface("player", player).
@@ -181,10 +172,7 @@ output formats like MusicXML.
 		tmpFilename := ""
 		if outputFilename == "" {
 			tmpdir, err := ioutil.TempDir("", "alda-export")
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
-			}
+			help.ExitOnError(err)
 
 			tmpFilename = filepath.Join(
 				tmpdir, fmt.Sprintf(
@@ -202,11 +190,7 @@ output formats like MusicXML.
 			targetFilename = tmpFilename
 		}
 
-		err = transmitter.TransmitMidiExportMessage(targetFilename)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
+		help.ExitOnError(transmitter.TransmitMidiExportMessage(targetFilename))
 
 		log.Info().
 			Interface("player", player).
@@ -224,30 +208,26 @@ output formats like MusicXML.
 
 		var midiFile *os.File
 
-		if err := util.Await(
-			func() error {
-				mf, err := os.Open(targetFilename)
-				if err != nil {
-					return err
-				}
+		help.ExitOnError(
+			util.Await(
+				func() error {
+					mf, err := os.Open(targetFilename)
+					if err != nil {
+						return err
+					}
 
-				midiFile = mf
-				return nil
-			},
-			midiExportTimeout,
-		); err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
+					midiFile = mf
+					return nil
+				},
+				midiExportTimeout,
+			),
+		)
 
 		if outputFilename != "" {
 			fmt.Fprintf(os.Stderr, "Exported score to %s\n", outputFilename)
 		} else {
 			_, err = io.Copy(os.Stdout, midiFile)
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
-			}
+			help.ExitOnError(err)
 		}
 	},
 }

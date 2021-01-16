@@ -6,6 +6,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"alda.io/client/help"
 	"alda.io/client/repl"
 	"alda.io/client/system"
 	"github.com/spf13/cobra"
@@ -70,19 +71,12 @@ Examples:
 			// If --port isn't specified, pick an arbitrary port that's available.
 			if replPort == -1 {
 				port, err := system.FindOpenPort()
-				if err != nil {
-					fmt.Println(err)
-					os.Exit(1)
-				}
-
+				help.ExitOnError(err)
 				replPort = port
 			}
 
 			server, err := repl.RunServer(replPort)
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
-			}
+			help.ExitOnError(err)
 
 			// Ensure that the server is closed on normal exit.
 			defer server.Close()
@@ -109,16 +103,15 @@ Examples:
 
 		if startREPLClient {
 			if replPort == -1 {
-				fmt.Println(
-					"You must specify the --port of a running Alda REPL server.",
+				help.ExitOnError(
+					// TODO: user-facing error
+					fmt.Errorf(
+						"You must specify the --port of a running Alda REPL server.",
+					),
 				)
-				os.Exit(1)
 			}
 
-			if err := repl.RunClient(replHost, replPort); err != nil {
-				fmt.Println(err)
-				os.Exit(1)
-			}
+			help.ExitOnError(repl.RunClient(replHost, replPort))
 		}
 	},
 }

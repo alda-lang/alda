@@ -1,10 +1,8 @@
 package main
 
 import (
-	"fmt"
-	"os"
-
 	"alda.io/client/cmd"
+	"alda.io/client/help"
 )
 
 // This directive makes it so that when you run `go generate`, it runs some Go
@@ -24,8 +22,5 @@ import (
 //go:generate go run gen/version/main.go
 
 func main() {
-	if err := cmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+	help.ExitOnError(cmd.Execute())
 }

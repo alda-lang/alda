@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"alda.io/client/help"
 	log "alda.io/client/logging"
 	"alda.io/client/model"
 	"alda.io/client/parser"
@@ -153,17 +154,11 @@ Text piped into the process on stdin:
 			}
 		}
 
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
+		help.ExitOnError(err)
 
 		score := model.NewScore()
 		start := time.Now()
-		if err := score.Update(scoreUpdates...); err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
+		help.ExitOnError(score.Update(scoreUpdates...))
 		log.Info().
 			Int("updates", len(scoreUpdates)).
 			Str("took", fmt.Sprintf("%s", time.Since(start))).
@@ -186,10 +181,7 @@ Text piped into the process on stdin:
 		// Player ID is specified; look up the player by ID and use its port.
 		case playerID != "":
 			player, err := system.FindPlayerByID(playerID)
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
-			}
+			help.ExitOnError(err)
 			players = []system.PlayerState{player}
 
 		// We're actually unpausing, not playing, so send the message to all active
@@ -197,10 +189,7 @@ Text piped into the process on stdin:
 		// playing.
 		case action == "unpause":
 			allPlayers, err := system.ReadPlayerStates()
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
-			}
+			help.ExitOnError(err)
 			players = []system.PlayerState{}
 			for _, player := range allPlayers {
 				if player.State == "active" {
@@ -212,21 +201,20 @@ Text piped into the process on stdin:
 		default:
 			system.StartingPlayerProcesses()
 
-			if err := util.Await(
-				func() error {
-					player, err := system.FindAvailablePlayer()
-					if err != nil {
-						return err
-					}
+			help.ExitOnError(
+				util.Await(
+					func() error {
+						player, err := system.FindAvailablePlayer()
+						if err != nil {
+							return err
+						}
 
-					players = []system.PlayerState{player}
-					return nil
-				},
-				reasonableTimeout,
-			); err != nil {
-				fmt.Println(err)
-				os.Exit(1)
-			}
+						players = []system.PlayerState{player}
+						return nil
+					},
+					reasonableTimeout,
+				),
+			)
 		}
 
 		transmitOpts := []transmitter.TransmissionOption{
@@ -248,24 +236,18 @@ Text piped into the process on stdin:
 				Interface("player", player).
 				Msg("Waiting for player to respond to ping.")
 
-			if _, err := ping(player.Port); err != nil {
-				fmt.Println(err)
-				os.Exit(1)
-			}
+			_, err := ping(player.Port)
+			help.ExitOnError(err)
 
 			transmitter := transmitter.OSCTransmitter{Port: player.Port}
 
 			var transmissionError error
-
 			if action == "unpause" {
 				transmissionError = transmitter.TransmitPlayMessage()
 			} else {
 				transmissionError = transmitter.TransmitScore(score, transmitOpts...)
 			}
-			if transmissionError != nil {
-				fmt.Println(transmissionError)
-				os.Exit(1)
-			}
+			help.ExitOnError(transmissionError)
 
 			log.Info().
 				Interface("player", player).

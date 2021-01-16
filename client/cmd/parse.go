@@ -2,9 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"time"
 
+	"alda.io/client/help"
 	"alda.io/client/json"
 	log "alda.io/client/logging"
 	"alda.io/client/model"
@@ -66,8 +66,10 @@ data:
 		switch outputType {
 		case "events", "data": // OK to proceed
 		default:
-			fmt.Printf("Invalid output type: %s\n", outputType)
-			os.Exit(1)
+			// TODO: user-facing error
+			help.ExitOnError(
+				fmt.Errorf("Invalid output type: %s\n", outputType),
+			)
 		}
 
 		var scoreUpdates []model.ScoreUpdate
@@ -84,10 +86,24 @@ data:
 			scoreUpdates, err = parseStdin()
 		}
 
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+		// Errors with source context are presented to the user as-is.
+		//
+		// TODO: Consider writing better user-facing error messages with suggestions
+		// for the users to try, etc. The Elm compiler is a good source of
+		// inspiration.
+		//
+		// TODO: If we do the above, we should also consider providing a flag that
+		// keeps the error messages terse/parseable, the way they are now. That way,
+		// tooling can be built around the parseable error messages with source
+		// context, e.g. an editor plugin can easily parse out the line and column
+		// number and display the error message at the relevant position in the
+		// file.
+		switch err.(type) {
+		case *model.AldaSourceError:
+			err = &help.UserFacingError{Err: err}
 		}
+
+		help.ExitOnError(err)
 
 		if outputType == "events" {
 			updates := json.Array()
@@ -102,10 +118,19 @@ data:
 
 		score := model.NewScore()
 		start := time.Now()
-		if err := score.Update(scoreUpdates...); err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+		err = score.Update(scoreUpdates...)
+
+		// Errors with source context are presented to the user as-is.
+		//
+		// TODO: See TODO comment above about writing better user-facing error
+		// messages.
+		switch err.(type) {
+		case *model.AldaSourceError:
+			err = &help.UserFacingError{Err: err}
 		}
+
+		help.ExitOnError(err)
+
 		log.Info().
 			Int("updates", len(scoreUpdates)).
 			Str("took", fmt.Sprintf("%s", time.Since(start))).
