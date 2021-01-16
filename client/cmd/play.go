@@ -154,11 +154,32 @@ Text piped into the process on stdin:
 			}
 		}
 
+		// Errors with source context are presented to the user as-is.
+		//
+		// TODO: See TODO comment in cmd/parse.go about writing better user-facing
+		// error messages.
+		switch err.(type) {
+		case *model.AldaSourceError:
+			err = &help.UserFacingError{Err: err}
+		}
+
 		help.ExitOnError(err)
 
 		score := model.NewScore()
 		start := time.Now()
-		help.ExitOnError(score.Update(scoreUpdates...))
+		err = score.Update(scoreUpdates...)
+
+		// Errors with source context are presented to the user as-is.
+		//
+		// TODO: See TODO comment in cmd/parse.go about writing better user-facing
+		// error messages.
+		switch err.(type) {
+		case *model.AldaSourceError:
+			err = &help.UserFacingError{Err: err}
+		}
+
+		help.ExitOnError(err)
+
 		log.Info().
 			Int("updates", len(scoreUpdates)).
 			Str("took", fmt.Sprintf("%s", time.Since(start))).
