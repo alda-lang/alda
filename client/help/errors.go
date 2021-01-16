@@ -41,7 +41,7 @@ func PresentError(err error) {
 		fmt.Println(e.Error())
 	default:
 		fmt.Printf(
-			`%s
+			`Oops! Something went wrong:
   %s
 
 This might be a bug. For help, consider filing an issue at:
@@ -49,7 +49,6 @@ This might be a bug. For help, consider filing an issue at:
 
 Or come chat with us on Slack:
   %s`+"\n",
-			"Oops! Something went wrong:",
 			aurora.BgRed(err.Error()),
 			aurora.Underline("https://github.com/alda-lang/alda/issues/new"),
 			aurora.Underline("https://slack.alda.io"),
