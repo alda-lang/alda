@@ -144,7 +144,7 @@ func Execute() error {
 	// pool, so with typical usage, the odds are high that there will be at least
 	// one player process available when you need it.
 	for _, arg := range os.Args {
-		if arg == "ps" || arg == "shutdown" {
+		if arg == "ps" || arg == "shutdown" || arg == "doctor" {
 			commandIsAnException = true
 		}
 	}
