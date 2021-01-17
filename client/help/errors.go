@@ -38,9 +38,10 @@ func (ufe *UserFacingError) Error() string {
 func PresentError(err error) {
 	switch e := err.(type) {
 	case *UserFacingError:
-		fmt.Println(e.Error())
+		fmt.Fprintln(os.Stderr, e.Error())
 	default:
-		fmt.Printf(
+		fmt.Fprintf(
+			os.Stderr,
 			`Oops! Something went wrong:
   %s
 
