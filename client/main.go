@@ -1,9 +1,8 @@
 package main
 
 import (
-	"os"
-
 	"alda.io/client/cmd"
+	"alda.io/client/help"
 )
 
 // This directive makes it so that when you run `go generate`, it runs some Go
@@ -23,10 +22,5 @@ import (
 //go:generate go run gen/version/main.go
 
 func main() {
-	if err := cmd.Execute(); err != nil {
-		// Ordinarily, we would also print the error message here, but Cobra is
-		// already doing that before it returns the error, and we don't want to
-		// print the same message twice.
-		os.Exit(1)
-	}
+	help.ExitOnError(cmd.Execute())
 }
