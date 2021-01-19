@@ -8,10 +8,13 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 
 	"alda.io/client/generated"
+	"alda.io/client/help"
 	log "alda.io/client/logging"
+	"github.com/logrusorgru/aurora"
 )
 
 // PlayerState describes the current state of a player process. These states are
@@ -65,9 +68,72 @@ func ReadPlayerStates() ([]PlayerState, error) {
 	return states, nil
 }
 
+// ErrAldaPlayerNotFoundOnPath is the error message that is returned when
+// `alda-player` is not found on the PATH.
+var ErrAldaPlayerNotFoundOnPath error
+
 // ErrNoPlayersAvailable is the error message that is returned when no player
 // process is in an available state.
-var ErrNoPlayersAvailable = fmt.Errorf("no players available")
+var ErrNoPlayersAvailable error
+
+func init() {
+	extension := ""
+	if runtime.GOOS == "windows" {
+		extension = ".exe"
+	}
+
+	chmodInstruction := ""
+	if runtime.GOOS != "windows" {
+		chmodInstruction = fmt.Sprintf(`
+  • Make both files executable (e.g. %s)`,
+			aurora.Yellow("chmod +x ~/Downloads/alda-player"),
+		)
+	}
+
+	ErrAldaPlayerNotFoundOnPath = help.UserFacingErrorf(
+		`%s was not found on your PATH.
+
+If you haven't already done so...
+
+  • Download both %s and %s from %s.%s
+  • Include both executables on your PATH.`,
+		aurora.Bold("alda-player"+extension),
+		aurora.Bold("alda"+extension),
+		aurora.Bold("alda-player"+extension),
+		aurora.Underline("https://alda.io/install"),
+		chmodInstruction,
+	)
+
+	playerLogFile := CachePath("logs", "alda-player.log")
+
+	ErrNoPlayersAvailable = help.UserFacingErrorf(
+		`It looks like Alda is having trouble starting player processes in the
+background. This could happen for a number of reasons.
+
+To troubleshoot:
+
+  • Confirm that %s and %s both display the
+    same version number.
+
+  • Run %s to see the state of any currently running player
+    processes.
+
+  • Look for error messages in:
+      %s
+
+  • Try running a player process in the foreground:
+      %s
+
+  • Try to make it play something:
+      %s`,
+		aurora.Yellow("alda version"),
+		aurora.Yellow("alda-player info"),
+		aurora.Yellow("alda ps"),
+		aurora.Yellow(playerLogFile),
+		aurora.Yellow("alda-player -v run -p 27278"),
+		aurora.Yellow("alda -v2 play -p 27278 -c \"piano: c12 e g > c4\""),
+	)
+}
 
 // FindAvailablePlayer finds a player that is in an available state and returns
 // current information about its state.

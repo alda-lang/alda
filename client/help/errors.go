@@ -18,6 +18,15 @@ type UserFacingError struct {
 	Message string
 }
 
+// UserFacingErrorf is a convenient constructor for a UserFacingError that does
+// not wrap an existing error. It allows you to concisely create a
+// UserFacingError from a string in the same manner as fmt.Errorf.
+func UserFacingErrorf(format string, args ...interface{}) error {
+	return &UserFacingError{
+		Err: fmt.Errorf(format, args...),
+	}
+}
+
 // Unwrap implements error (un)wrapping as introduced in Go 1.13.
 // See: https://blog.golang.org/go1.13-errors
 func (ufe *UserFacingError) Unwrap() error {

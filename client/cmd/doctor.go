@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"alda.io/client/help"
+	log "alda.io/client/logging"
 	"alda.io/client/model"
 	"alda.io/client/parser"
 	"alda.io/client/repl"
@@ -31,7 +32,7 @@ const reasonableTimeout = 20 * time.Second
 
 func step(action string, test func() error) {
 	if err := test(); err != nil {
-		fmt.Printf("%s %s\n", aurora.Red("ERR"), action)
+		fmt.Printf("%s %s\n\n---\n\n", aurora.Red("ERR"), action)
 		help.ExitOnError(err)
 	}
 
@@ -187,7 +188,9 @@ var doctorCmd = &cobra.Command{
 			func() error {
 				ap, err := exec.LookPath("alda-player")
 				if err != nil {
-					return err
+					log.Debug().Err(err).Msg("exec.LookPath error")
+
+					return system.ErrAldaPlayerNotFoundOnPath
 				}
 
 				aldaPlayer = ap
