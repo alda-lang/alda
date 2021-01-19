@@ -1,11 +1,12 @@
 package model
 
 import (
-	"fmt"
 	"regexp"
 	"strconv"
 
+	"alda.io/client/help"
 	"alda.io/client/json"
+	"github.com/logrusorgru/aurora"
 )
 
 // The ScoreUpdate interface is implemented by events that update a score.
@@ -179,7 +180,16 @@ func (score *Score) InterpretOffsetReference(
 
 	offset, hit := score.Markers[reference]
 	if !hit {
-		return 0, fmt.Errorf("invalid offset reference: %s", reference)
+		return 0, help.UserFacingErrorf(
+			`%s is not a valid offset reference.
+
+Valid offset references include:
+  • A minute-and-second time marking (e.g. %s)
+  • The name of a marker in the score (e.g. %s)`,
+			aurora.Yellow(reference),
+			aurora.Yellow("0:30"),
+			aurora.Yellow("verse2"),
+		)
 	}
 
 	return offset, nil
