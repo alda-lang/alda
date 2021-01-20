@@ -982,6 +982,11 @@ func RunClient(serverHost string, serverPort int) error {
 		return err
 	}
 
+	switch serverHost {
+	case "localhost", "127.0.0.1", "0.0.0.0":
+		system.StartingPlayerProcesses()
+	}
+
 	defer console.Close()
 
 	log.SetOutput(console.Stderr())
