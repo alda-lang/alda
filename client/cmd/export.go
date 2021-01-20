@@ -157,8 +157,7 @@ output formats like MusicXML.
 			Interface("player", player).
 			Msg("Waiting for player to respond to ping.")
 
-		_, err = ping(player.Port)
-		if err != nil {
+		if _, err = ping(player.Port); err != nil {
 			return err
 		}
 
@@ -237,8 +236,7 @@ output formats like MusicXML.
 		if outputFilename != "" {
 			fmt.Fprintf(os.Stderr, "Exported score to %s\n", outputFilename)
 		} else {
-			_, err = io.Copy(os.Stdout, midiFile)
-			if err != nil {
+			if _, err := io.Copy(os.Stdout, midiFile); err != nil {
 				return err
 			}
 		}

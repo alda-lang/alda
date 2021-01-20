@@ -265,8 +265,7 @@ Text piped into the process on stdin:
 				Interface("player", player).
 				Msg("Waiting for player to respond to ping.")
 
-			_, err := ping(player.Port)
-			if err != nil {
+			if _, err := ping(player.Port); err != nil {
 				return err
 			}
 
