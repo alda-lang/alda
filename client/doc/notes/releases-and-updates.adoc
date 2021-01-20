@@ -51,7 +51,8 @@ provide users with download URLs for specific releases. The typical workflow
 * The Alda CLI downloads each of the executables for the user's OS/arch into the
   same directory as the currently running executable (`alda`), and (for
   non-Windows) marks them as executable.
-** To replace `alda.exe` on Windows systems, we can use this trick: https://stackoverflow.com/a/7198760/2338327
+** To replace `alda.exe` on Windows systems, we can use this trick:
+   https://stackoverflow.com/a/7198760/2338327
 
 === Migration path for Alda v1 users
 

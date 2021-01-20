@@ -48,7 +48,8 @@ Text piped into the process on stdin:
 
 ---
 
-The -o / --output parameter determines what output is displayed. Options include:
+The -o / --output parameter determines what output is displayed.
+Options include:
 
 events:
 

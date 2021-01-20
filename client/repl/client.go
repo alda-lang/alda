@@ -132,7 +132,9 @@ func init() {
 				}
 
 				if len(args) == 0 {
-					fmt.Println(`For commands marked with (*), more detailed information about the command is
+					fmt.Println(
+						`For commands marked with (*), more detailed ` +
+							`information about the command is
 available via the :help command.
 
 e.g. :help play
@@ -263,7 +265,8 @@ file into the REPL server.`,
 
 		"play": {
 			helpSummary: "Plays the current score.",
-			helpDetails: `Can take optional ` + "`from`" + `and ` + "`to`" + `arguments, in the form of markers or mm:ss
+			helpDetails: `Can take optional ` + "`from`" + `and ` + "`to`" +
+				`arguments, in the form of markers or mm:ss
 times.
 
 Without arguments, will play the entire score from beginning to end.
