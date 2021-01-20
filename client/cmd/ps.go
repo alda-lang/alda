@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"alda.io/client/help"
 	log "alda.io/client/logging"
 	"alda.io/client/system"
 	"github.com/dustin/go-humanize"
@@ -14,9 +13,11 @@ import (
 var psCmd = &cobra.Command{
 	Use:   "ps",
 	Short: "List background processes",
-	Run: func(_ *cobra.Command, args []string) {
+	RunE: func(_ *cobra.Command, args []string) error {
 		states, err := system.ReadPlayerStates()
-		help.ExitOnError(err)
+		if err != nil {
+			return err
+		}
 
 		fmt.Println("id\tport\tstate\texpiry")
 
@@ -32,5 +33,7 @@ var psCmd = &cobra.Command{
 				"%s\t%d\t%s\t%s\n", state.ID, state.Port, state.State, expiry,
 			)
 		}
+
+		return nil
 	},
 }

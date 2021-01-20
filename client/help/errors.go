@@ -107,12 +107,3 @@ Or come chat with us on Slack:
 		)
 	}
 }
-
-// ExitOnError exits gracefully if the provided error is non-nil. Before
-// exiting, we print a helpful, user-facing error message.
-func ExitOnError(err error) {
-	if err != nil {
-		PresentError(err)
-		os.Exit(1)
-	}
-}

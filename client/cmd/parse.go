@@ -63,14 +63,12 @@ data:
   new score.
 
 ---`,
-	Run: func(_ *cobra.Command, args []string) {
+	RunE: func(_ *cobra.Command, args []string) error {
 		switch outputType {
 		case "events", "data": // OK to proceed
 		default:
 			// TODO: user-facing error
-			help.ExitOnError(
-				fmt.Errorf("Invalid output type: %s\n", outputType),
-			)
+			return fmt.Errorf("invalid output type: %s", outputType)
 		}
 
 		var scoreUpdates []model.ScoreUpdate
@@ -104,7 +102,9 @@ data:
 			err = &help.UserFacingError{Err: err}
 		}
 
-		help.ExitOnError(err)
+		if err != nil {
+			return err
+		}
 
 		if outputType == "events" {
 			updates := json.Array()
@@ -114,7 +114,7 @@ data:
 
 			fmt.Println(updates.String())
 
-			return
+			return nil
 		}
 
 		score := model.NewScore()
@@ -130,7 +130,9 @@ data:
 			err = &help.UserFacingError{Err: err}
 		}
 
-		help.ExitOnError(err)
+		if err != nil {
+			return err
+		}
 
 		log.Info().
 			Int("updates", len(scoreUpdates)).
@@ -138,5 +140,7 @@ data:
 			Msg("Constructed score.")
 
 		fmt.Println(score.JSON().String())
+
+		return nil
 	},
 }

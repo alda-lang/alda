@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+
 	"alda.io/client/cmd"
 	"alda.io/client/help"
 )
@@ -22,5 +24,8 @@ import (
 //go:generate go run gen/version/main.go
 
 func main() {
-	help.ExitOnError(cmd.Execute())
+	if err := cmd.Execute(); err != nil {
+		help.PresentError(err)
+		os.Exit(1)
+	}
 }

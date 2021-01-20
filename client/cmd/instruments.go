@@ -11,7 +11,8 @@ import (
 var instrumentsCmd = &cobra.Command{
 	Use:   "instruments",
 	Short: "Display the list of available instruments",
-	Run: func(_ *cobra.Command, args []string) {
+	RunE: func(_ *cobra.Command, args []string) error {
 		fmt.Println(strings.Join(model.InstrumentsList(), "\n"))
+		return nil
 	},
 }

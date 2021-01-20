@@ -128,7 +128,7 @@ Text piped into the process on stdin:
   echo "glockenspiel: o5 g8 < g > g e4 d4." | alda play
 
 ---`,
-	Run: func(_ *cobra.Command, args []string) {
+	RunE: func(_ *cobra.Command, args []string) error {
 		var scoreUpdates []model.ScoreUpdate
 		var err error
 
@@ -163,7 +163,9 @@ Text piped into the process on stdin:
 			err = &help.UserFacingError{Err: err}
 		}
 
-		help.ExitOnError(err)
+		if err != nil {
+			return err
+		}
 
 		score := model.NewScore()
 		start := time.Now()
@@ -178,7 +180,9 @@ Text piped into the process on stdin:
 			err = &help.UserFacingError{Err: err}
 		}
 
-		help.ExitOnError(err)
+		if err != nil {
+			return err
+		}
 
 		log.Info().
 			Int("updates", len(scoreUpdates)).
@@ -202,7 +206,9 @@ Text piped into the process on stdin:
 		// Player ID is specified; look up the player by ID and use its port.
 		case playerID != "":
 			player, err := system.FindPlayerByID(playerID)
-			help.ExitOnError(err)
+			if err != nil {
+				return err
+			}
 			players = []system.PlayerState{player}
 
 		// We're actually unpausing, not playing, so send the message to all active
@@ -210,7 +216,9 @@ Text piped into the process on stdin:
 		// playing.
 		case action == "unpause":
 			allPlayers, err := system.ReadPlayerStates()
-			help.ExitOnError(err)
+			if err != nil {
+				return err
+			}
 			players = []system.PlayerState{}
 			for _, player := range allPlayers {
 				if player.State == "active" {
@@ -222,20 +230,20 @@ Text piped into the process on stdin:
 		default:
 			system.StartingPlayerProcesses()
 
-			help.ExitOnError(
-				util.Await(
-					func() error {
-						player, err := system.FindAvailablePlayer()
-						if err != nil {
-							return err
-						}
+			if err := util.Await(
+				func() error {
+					player, err := system.FindAvailablePlayer()
+					if err != nil {
+						return err
+					}
 
-						players = []system.PlayerState{player}
-						return nil
-					},
-					reasonableTimeout,
-				),
-			)
+					players = []system.PlayerState{player}
+					return nil
+				},
+				reasonableTimeout,
+			); err != nil {
+				return err
+			}
 		}
 
 		transmitOpts := []transmitter.TransmissionOption{
@@ -258,7 +266,9 @@ Text piped into the process on stdin:
 				Msg("Waiting for player to respond to ping.")
 
 			_, err := ping(player.Port)
-			help.ExitOnError(err)
+			if err != nil {
+				return err
+			}
 
 			transmitter := transmitter.OSCTransmitter{Port: player.Port}
 
@@ -268,7 +278,9 @@ Text piped into the process on stdin:
 			} else {
 				transmissionError = transmitter.TransmitScore(score, transmitOpts...)
 			}
-			help.ExitOnError(transmissionError)
+			if transmissionError != nil {
+				return transmissionError
+			}
 
 			log.Info().
 				Interface("player", player).
@@ -281,5 +293,7 @@ Text piped into the process on stdin:
 		// no audible output, e.g. `alda play -c "c d e"` (valid syntax, but no
 		// audible output because no part was indicated).
 		fmt.Fprintln(os.Stderr, "Playing...")
+
+		return nil
 	},
 }

@@ -10,7 +10,8 @@ import (
 var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print Alda version information",
-	Run: func(_ *cobra.Command, args []string) {
+	RunE: func(_ *cobra.Command, args []string) error {
 		fmt.Printf("alda %s\n", generated.ClientVersion)
+		return nil
 	},
 }

@@ -13,7 +13,6 @@ import (
 	"syscall"
 	"time"
 
-	"alda.io/client/help"
 	log "alda.io/client/logging"
 	"alda.io/client/model"
 	"alda.io/client/parser"
@@ -30,13 +29,14 @@ import (
 
 const reasonableTimeout = 20 * time.Second
 
-func step(action string, test func() error) {
+func step(action string, test func() error) error {
 	if err := test(); err != nil {
 		fmt.Printf("%s %s\n\n---\n\n", aurora.Red("ERR"), action)
-		help.ExitOnError(err)
+		return err
 	}
 
 	fmt.Printf("%s %s\n", aurora.Green("OK "), action)
+	return nil
 }
 
 func ping(port int) (*osc.Client, error) {
@@ -85,13 +85,13 @@ func init() {
 var doctorCmd = &cobra.Command{
 	Use:   "doctor",
 	Short: "Run health checks to determine if Alda can run correctly",
-	Run: func(_ *cobra.Command, args []string) {
+	RunE: func(_ *cobra.Command, args []string) error {
 		testInput := "glockenspiel: o6 {c e g}8 > c4."
 		expectedNotes := []uint8{84, 88, 91, 96}
 
 		var scoreUpdates []model.ScoreUpdate
 
-		step(
+		if err := step(
 			"Parse source code",
 			func() error {
 				su, err := parser.ParseString(testInput)
@@ -102,24 +102,28 @@ var doctorCmd = &cobra.Command{
 				scoreUpdates = su
 				return nil
 			},
-		)
+		); err != nil {
+			return err
+		}
 
 		//////////////////////////////////////////////////
 
 		score := model.NewScore()
 
-		step(
+		if err := step(
 			"Generate score model",
 			func() error {
 				return score.Update(scoreUpdates...)
 			},
-		)
+		); err != nil {
+			return err
+		}
 
 		//////////////////////////////////////////////////
 
 		var playerPort int
 
-		step(
+		if err := step(
 			"Find an open port",
 			func() error {
 				p, err := system.FindOpenPort()
@@ -131,7 +135,9 @@ var doctorCmd = &cobra.Command{
 				playerPort = p
 				return nil
 			},
-		)
+		); err != nil {
+			return err
+		}
 
 		//////////////////////////////////////////////////
 
@@ -139,7 +145,7 @@ var doctorCmd = &cobra.Command{
 		// function, but if it fails, it indicates that there might be networking
 		// issues, which could mean that the player isn't able to listen for
 		// messages.
-		step(
+		if err := step(
 			"Send and receive OSC messages",
 			func() error {
 				packetsReceived := make(chan osc.Packet, 1000)
@@ -177,13 +183,15 @@ var doctorCmd = &cobra.Command{
 					return err
 				}
 			},
-		)
+		); err != nil {
+			return err
+		}
 
 		//////////////////////////////////////////////////
 
 		var aldaPlayer string
 
-		step(
+		if err := step(
 			"Locate alda-player executable on PATH",
 			func() error {
 				ap, err := exec.LookPath("alda-player")
@@ -196,11 +204,13 @@ var doctorCmd = &cobra.Command{
 				aldaPlayer = ap
 				return nil
 			},
-		)
+		); err != nil {
+			return err
+		}
 
 		//////////////////////////////////////////////////
 
-		step(
+		if err := step(
 			"Spawn a player process",
 			func() error {
 				p, err := system.FindOpenPort()
@@ -225,7 +235,9 @@ var doctorCmd = &cobra.Command{
 
 				return cmd.Start()
 			},
-		)
+		); err != nil {
+			return err
+		}
 
 		//////////////////////////////////////////////////
 
@@ -233,7 +245,7 @@ var doctorCmd = &cobra.Command{
 
 		// This step ensures that the player is listening so that the following
 		// steps can pass.
-		step(
+		if err := step(
 			"Ping player process",
 			func() error {
 				pingClient, err := ping(playerPort)
@@ -245,24 +257,28 @@ var doctorCmd = &cobra.Command{
 				client = pingClient
 				return nil
 			},
-		)
-
-		//////////////////////////////////////////////////
-
-		if !noAudio {
-			step(
-				"Play score",
-				func() error {
-					transmitter := transmitter.OSCTransmitter{Port: playerPort}
-					return transmitter.TransmitScore(score)
-				},
-			)
+		); err != nil {
+			return err
 		}
 
 		//////////////////////////////////////////////////
 
 		if !noAudio {
-			step(
+			if err := step(
+				"Play score",
+				func() error {
+					transmitter := transmitter.OSCTransmitter{Port: playerPort}
+					return transmitter.TransmitScore(score)
+				},
+			); err != nil {
+				return err
+			}
+		}
+
+		//////////////////////////////////////////////////
+
+		if !noAudio {
+			if err := step(
 				"Export score as MIDI",
 				func() error {
 					tmpdir, err := ioutil.TempDir("", "alda-doctor")
@@ -345,14 +361,16 @@ var doctorCmd = &cobra.Command{
 
 					return nil
 				},
-			)
+			); err != nil {
+				return err
+			}
 		}
 
 		//////////////////////////////////////////////////
 
 		var logFile string
 
-		step(
+		if err := step(
 			"Locate player logs",
 			func() error {
 				return util.Await(
@@ -375,11 +393,13 @@ var doctorCmd = &cobra.Command{
 					reasonableTimeout,
 				)
 			},
-		)
+		); err != nil {
+			return err
+		}
 
 		//////////////////////////////////////////////////
 
-		step(
+		if err := step(
 			"Player logs show the ping was received",
 			func() error {
 				indication := "received ping"
@@ -399,20 +419,24 @@ var doctorCmd = &cobra.Command{
 					reasonableTimeout,
 				)
 			},
-		)
+		); err != nil {
+			return err
+		}
 
 		//////////////////////////////////////////////////
 
-		step(
+		if err := step(
 			"Shut down player process",
 			func() error {
 				return sendShutdownMessage(client)
 			},
-		)
+		); err != nil {
+			return err
+		}
 
 		//////////////////////////////////////////////////
 
-		step(
+		if err := step(
 			"Spawn a player on an unknown port",
 			func() error {
 				playerArgs := []string{"-v", "run"}
@@ -422,13 +446,15 @@ var doctorCmd = &cobra.Command{
 
 				return exec.Command(aldaPlayer, playerArgs...).Start()
 			},
-		)
+		); err != nil {
+			return err
+		}
 
 		//////////////////////////////////////////////////
 
 		var player system.PlayerState
 
-		step(
+		if err := step(
 			"Discover the player",
 			func() error {
 				return util.Await(
@@ -475,11 +501,13 @@ var doctorCmd = &cobra.Command{
 					reasonableTimeout,
 				)
 			},
-		)
+		); err != nil {
+			return err
+		}
 
 		//////////////////////////////////////////////////
 
-		step(
+		if err := step(
 			"Ping the player",
 			func() error {
 				pingClient, err := ping(player.Port)
@@ -491,26 +519,32 @@ var doctorCmd = &cobra.Command{
 				client = pingClient
 				return nil
 			},
-		)
+		); err != nil {
+			return err
+		}
 
 		//////////////////////////////////////////////////
 
-		step(
+		if err := step(
 			"Shut the player down",
 			func() error {
 				return sendShutdownMessage(client)
 			},
-		)
+		); err != nil {
+			return err
+		}
 
 		//////////////////////////////////////////////////
 
 		var replServer *repl.Server
 
-		step(
+		if err := step(
 			"Start a REPL server",
 			func() error {
 				port, err := system.FindOpenPort()
-				help.ExitOnError(err)
+				if err != nil {
+					return err
+				}
 
 				server, err := repl.RunServer(port)
 				if err != nil {
@@ -520,7 +554,9 @@ var doctorCmd = &cobra.Command{
 				replServer = server
 				return nil
 			},
-		)
+		); err != nil {
+			return err
+		}
 
 		// Ensure that the server is closed on normal exit.
 		defer replServer.Close()
@@ -536,7 +572,7 @@ var doctorCmd = &cobra.Command{
 
 		//////////////////////////////////////////////////
 
-		step(
+		if err := step(
 			"Interact with the REPL server",
 			func() error {
 				client, err := repl.NewClient("localhost", replServer.Port)
@@ -551,6 +587,10 @@ var doctorCmd = &cobra.Command{
 				_, err = client.StartSession()
 				return err
 			},
-		)
+		); err != nil {
+			return err
+		}
+
+		return nil
 	},
 }
