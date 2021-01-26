@@ -172,7 +172,18 @@ func FindPlayerByID(id string) (PlayerState, error) {
 		}
 	}
 
-	return PlayerState{}, fmt.Errorf("player not found: %s", id)
+	return PlayerState{}, help.UserFacingErrorf(
+		`No player was found with the ID %s.
+
+To list the current player processes, you can run %s.
+
+You can also omit the %s / %s option, and Alda will find a player process
+for you automatically.`,
+		aurora.Yellow(id),
+		aurora.Yellow("alda ps"),
+		aurora.Yellow("-i"),
+		aurora.Yellow("--player-id"),
+	)
 }
 
 func spawnPlayer() error {
