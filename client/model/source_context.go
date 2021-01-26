@@ -49,10 +49,33 @@ func (ase *AldaSourceError) Unwrap() error {
 // to parse, it would actually be worse, not better.
 func (ase *AldaSourceError) Error() string {
 	var bottom *AldaSourceError
+
+	// Ideally, instead of tracking these separately, we would just use the values
+	// from the source context of the bottom-most error.
+	//
+	// However, there are certain situations where the error is happening deep
+	// within the internals of alda-lisp (see: defattribute in lisp.go, for
+	// example), and it isn't really feasible (read: it's really hard and I
+	// haven't figured out how to do it) to include source context on everything.
+	//
+	// So, to make this experience a little better, we keep track of the source
+	// context at the deepest level where it was there. The chain of errors can
+	// keep going deeper and lack context, but in that case, at least we can
+	// include the higher-level context, which is typically correct anyway.
+	var filename string
+	var line int
+	var column int
+
 	var err error
 	err = ase
 
 	for {
+		if bottom != nil && bottom.Context.Line != 0 {
+			filename = bottom.Context.Filename
+			line = bottom.Context.Line
+			column = bottom.Context.Column
+		}
+
 		if !errors.As(err, &bottom) {
 			break
 		}
@@ -60,15 +83,15 @@ func (ase *AldaSourceError) Error() string {
 		err = bottom.Err
 	}
 
-	if bottom.Context.Filename == "" {
-		bottom.Context.Filename = "<no file>"
+	if filename == "" {
+		filename = "<no file>"
 	}
 
 	return fmt.Sprintf(
 		"%s:%d:%d %s",
-		bottom.Context.Filename,
-		bottom.Context.Line,
-		bottom.Context.Column,
+		filename,
+		line,
+		column,
 		bottom.Err.Error(),
 	)
 }
