@@ -180,10 +180,8 @@ func (gau GlobalAttributeUpdate) UpdateScore(score *Score) error {
 		for _, part := range score.CurrentParts[1:] {
 			if part.CurrentOffset != offset {
 				return fmt.Errorf(
-					"can't set global attribute %#v; offset unclear. There are "+
-						"multiple current parts with different offsets: %#v",
-					gau,
-					score.CurrentParts,
+					"can't set global attribute; there are multiple current parts with " +
+						"different offsets",
 				)
 			}
 		}
