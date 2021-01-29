@@ -186,9 +186,9 @@ func (score *Score) InterpretOffsetReference(
 Valid offset references include:
   • A minute-and-second time marking (e.g. %s)
   • The name of a marker in the score (e.g. %s)`,
-			aurora.Yellow(reference),
-			aurora.Yellow("0:30"),
-			aurora.Yellow("verse2"),
+			aurora.BrightYellow(reference),
+			aurora.BrightYellow("0:30"),
+			aurora.BrightYellow("verse2"),
 		)
 	}
 

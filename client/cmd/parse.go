@@ -81,9 +81,9 @@ Please choose one of:
   A JSON object representing the score that is constructed after parsing the
   source code into events and evaluating them in order within the context of a
   new score.`,
-				aurora.Yellow(outputType),
-				aurora.Yellow("events"),
-				aurora.Yellow("data"),
+				aurora.BrightYellow(outputType),
+				aurora.BrightYellow("events"),
+				aurora.BrightYellow("data"),
 			)
 		}
 

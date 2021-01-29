@@ -117,8 +117,8 @@ connect to it by running:
 
 See %s for more information about starting Alda REPL servers and
 clients.`,
-					aurora.Yellow("alda repl --client --port 12345"),
-					aurora.Yellow("alda repl --help"),
+					aurora.BrightYellow("alda repl --client --port 12345"),
+					aurora.BrightYellow("alda repl --help"),
 				)
 			}
 

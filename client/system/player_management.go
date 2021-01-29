@@ -86,7 +86,7 @@ func init() {
 	if runtime.GOOS != "windows" {
 		chmodInstruction = fmt.Sprintf(`
   • Make both files executable (e.g. %s)`,
-			aurora.Yellow("chmod +x ~/Downloads/alda-player"),
+			aurora.BrightYellow("chmod +x ~/Downloads/alda-player"),
 		)
 	}
 
@@ -126,12 +126,12 @@ To troubleshoot:
 
   • Try to make it play something:
       %s`,
-		aurora.Yellow("alda version"),
-		aurora.Yellow("alda-player info"),
-		aurora.Yellow("alda ps"),
-		aurora.Yellow(playerLogFile),
-		aurora.Yellow("alda-player -v run -p 27278"),
-		aurora.Yellow("alda -v2 play -p 27278 -c \"piano: c12 e g > c4\""),
+		aurora.BrightYellow("alda version"),
+		aurora.BrightYellow("alda-player info"),
+		aurora.BrightYellow("alda ps"),
+		aurora.BrightYellow(playerLogFile),
+		aurora.BrightYellow("alda-player -v run -p 27278"),
+		aurora.BrightYellow("alda -v2 play -p 27278 -c \"piano: c12 e g > c4\""),
 	)
 }
 
@@ -179,10 +179,10 @@ To list the current player processes, you can run %s.
 
 You can also omit the %s / %s option, and Alda will find a player process
 for you automatically.`,
-		aurora.Yellow(id),
-		aurora.Yellow("alda ps"),
-		aurora.Yellow("-i"),
-		aurora.Yellow("--player-id"),
+		aurora.BrightYellow(id),
+		aurora.BrightYellow("alda ps"),
+		aurora.BrightYellow("-i"),
+		aurora.BrightYellow("--player-id"),
 	)
 }
 

@@ -101,8 +101,8 @@ output formats like MusicXML.
 				`%s is not a supported output format.
 
 Currently, the only supported output format is %s.`,
-				aurora.Yellow(outputFormat),
-				aurora.Yellow("midi"),
+				aurora.BrightYellow(outputFormat),
+				aurora.BrightYellow("midi"),
 			)
 		}
 
