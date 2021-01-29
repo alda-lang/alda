@@ -1,13 +1,14 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"alda.io/client/help"
 	"alda.io/client/repl"
 	"alda.io/client/system"
+	"github.com/logrusorgru/aurora"
 	"github.com/spf13/cobra"
 )
 
@@ -106,9 +107,18 @@ Examples:
 
 		if startREPLClient {
 			if replPort == -1 {
-				// TODO: user-facing error
-				return fmt.Errorf(
-					"You must specify the --port of a running Alda REPL server.",
+				return help.UserFacingErrorf(
+					`You must specify the port of the Alda REPL server that you wish to connect to.
+
+For example, if you've started an Alda REPL server on port 12345, you can
+connect to it by running:
+
+  %s
+
+See %s for more information about starting Alda REPL servers and
+clients.`,
+					aurora.Yellow("alda repl --client --port 12345"),
+					aurora.Yellow("alda repl --help"),
 				)
 			}
 

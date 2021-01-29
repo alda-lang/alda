@@ -9,6 +9,7 @@ import (
 	log "alda.io/client/logging"
 	"alda.io/client/model"
 	"alda.io/client/parser"
+	"github.com/logrusorgru/aurora"
 	"github.com/spf13/cobra"
 )
 
@@ -56,7 +57,7 @@ events:
   A JSON array of objects, each of which represents an "event" parsed from the
   source code.
 
-data:
+data (default):
 
   A JSON object representing the score that is constructed after parsing the
   source code into events and evaluating them in order within the context of a
@@ -67,8 +68,23 @@ data:
 		switch outputType {
 		case "events", "data": // OK to proceed
 		default:
-			// TODO: user-facing error
-			return fmt.Errorf("invalid output type: %s", outputType)
+			return help.UserFacingErrorf(
+				`%s is not a supported output type.
+
+Please choose one of:
+
+  %s
+  A JSON array of objects, each of which represents an "event" parsed from the
+  source code.
+
+  %s (default)
+  A JSON object representing the score that is constructed after parsing the
+  source code into events and evaluating them in order within the context of a
+  new score.`,
+				aurora.Yellow(outputType),
+				aurora.Yellow("events"),
+				aurora.Yellow("data"),
+			)
 		}
 
 		var scoreUpdates []model.ScoreUpdate

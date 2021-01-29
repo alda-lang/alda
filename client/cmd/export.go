@@ -9,12 +9,14 @@ import (
 	"path/filepath"
 	"time"
 
+	"alda.io/client/help"
 	log "alda.io/client/logging"
 	"alda.io/client/model"
 	"alda.io/client/parser"
 	"alda.io/client/system"
 	"alda.io/client/transmitter"
 	"alda.io/client/util"
+	"github.com/logrusorgru/aurora"
 	"github.com/spf13/cobra"
 )
 
@@ -95,8 +97,13 @@ output formats like MusicXML.
 ---`,
 	RunE: func(_ *cobra.Command, args []string) error {
 		if outputFormat != "midi" {
-			// TODO: user facing error
-			return fmt.Errorf("invalid output format: %s", outputFormat)
+			return help.UserFacingErrorf(
+				`%s is not a supported output format.
+
+Currently, the only supported output format is %s.`,
+				aurora.Yellow(outputFormat),
+				aurora.Yellow("midi"),
+			)
 		}
 
 		var scoreUpdates []model.ScoreUpdate
