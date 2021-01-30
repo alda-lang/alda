@@ -169,6 +169,6 @@ demo](dev/osc/README.md).
 
 ## License
 
-Copyright © 2019-2020 Dave Yarwood, et al
+Copyright © 2019-2021 Dave Yarwood, et al
 
 Distributed under the Eclipse Public License version 2.0.
