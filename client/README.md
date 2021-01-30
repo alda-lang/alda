@@ -93,13 +93,14 @@ Playing...
 # 🎵 music 🎶
 ```
 
-### `bin/play` vs. `go run`
+### `bin/run` vs. `go run`
 
 There are two ways to run the client locally:
 
-* **Basic**: run a script and pass it arguments as if you're running `alda` on
-  your PATH. This takes a little bit longer sometimes, but it's more convenient
-  most of the time and it's exactly like running a release executable.
+* **Basic**: run the `bin/run` script and pass it arguments as if you're running
+  `alda` on your PATH. This takes a little bit longer sometimes, but it's more
+  convenient most of the time and it's exactly like running a release
+  executable.
 
 * **Go toolchain**: use `go run` for faster builds (no need to fully compile the
   executable) and more control over build options. This is useful if you're more
