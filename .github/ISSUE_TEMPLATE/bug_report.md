@@ -55,11 +55,25 @@ $ alda version
 
 ```
 
+<!--- Run `alda-player info` in your terminal and copy-paste the output below -->
+```
+$ alda-player info
+
+```
+
 
 
 **Logs:**
-<!--- Alda logs can be found in $HOME/.alda/logs/error.log. -->
-<!--- Do you see any logs there that might be relevant to this problem? -->
+<!--- On macOS and Linux, you can find Alda's logs in either -->
+<!---   ~/.cache/alda (Linux), or -->
+<!---   ~/Library/Caches/alda (macOS), or -->
+<!---   $XDG_CACHE_HOME (if you have that set) -->
+
+<!--- On Windows, look in: -->
+<!---   %LOCALAPPDATA%\alda\cache or -->
+<!---   C:\Users\yourname\AppData\Local\alda\cache -->
+
+<!--- Do you see any logs that might be relevant to the problem? -->
 <!--- If so, copy-paste what you found below -->
 ```
 ```
