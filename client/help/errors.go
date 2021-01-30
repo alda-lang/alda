@@ -102,7 +102,7 @@ This might be a bug. For help, consider filing an issue at:
 Or come chat with us on Slack:
   %s`+"\n",
 			aurora.BgRed(err),
-			aurora.Underline("https://github.com/alda-lang/alda/issues/new"),
+			aurora.Underline("https://github.com/alda-lang/alda/issues/new/choose"),
 			aurora.Underline("https://slack.alda.io"),
 		)
 	}
