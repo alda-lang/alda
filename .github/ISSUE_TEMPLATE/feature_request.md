@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: Suggest an idea for this project
+about: Do you have an idea for the future of Alda? Suggest it here!
 title: ''
 labels: feature
 assignees: ''
