@@ -13,6 +13,10 @@ import (
 // processes.
 var CacheDir string
 
+// ConfigDir is the system-dependent directory where we store user-specific
+// config files.
+var ConfigDir string
+
 func init() {
 	dirs := xdg.New("", "alda")
 	CacheDir = dirs.CacheHome()
@@ -30,21 +34,17 @@ func init() {
 	if runtime.GOOS == "windows" {
 		CacheDir = filepath.Join(CacheDir, "cache")
 	}
+
+	ConfigDir = dirs.ConfigHome()
 }
 
-// CachePath returns the full path to a cache file consisting of the provided
-// segments. This is done in a cross-platform way according to XDG conventions.
-func CachePath(pathSegments ...string) string {
-	allPathSegments := append([]string{CacheDir}, pathSegments...)
+func pathImpl(baseDir string, pathSegments []string) string {
+	allPathSegments := append([]string{baseDir}, pathSegments...)
 	return filepath.Join(allPathSegments...)
 }
 
-// QueryCache returns the full path to a cache file consisting of the provided
-// segments, if-and-only-if that file currently exists.
-//
-// Returns "" if the file doesn't exist.
-func QueryCache(pathSegments ...string) string {
-	filepath := CachePath(pathSegments...)
+func queryImpl(baseDir string, pathSegments []string) string {
+	filepath := pathImpl(baseDir, pathSegments)
 
 	_, err := os.Stat(filepath)
 
@@ -53,4 +53,32 @@ func QueryCache(pathSegments ...string) string {
 	}
 
 	return ""
+}
+
+// CachePath returns the full path to a cache file consisting of the provided
+// segments. This is done in a cross-platform way according to XDG conventions.
+func CachePath(pathSegments ...string) string {
+	return pathImpl(CacheDir, pathSegments)
+}
+
+// QueryCache returns the full path to a cache file consisting of the provided
+// segments, if-and-only-if that file currently exists.
+//
+// Returns "" if the file doesn't exist.
+func QueryCache(pathSegments ...string) string {
+	return queryImpl(CacheDir, pathSegments)
+}
+
+// ConfigPath returns the full path to a cache file consisting of the provided
+// segments. This is done in a cross-platform way according to XDG conventions.
+func ConfigPath(pathSegments ...string) string {
+	return pathImpl(ConfigDir, pathSegments)
+}
+
+// QueryConfig returns the full path to a cache file consisting of the provided
+// segments, if-and-only-if that file currently exists.
+//
+// Returns "" if the file doesn't exist.
+func QueryConfig(pathSegments ...string) string {
+	return queryImpl(ConfigDir, pathSegments)
 }

@@ -34,6 +34,7 @@ func init() {
 		replCmd,
 		shutdownCmd,
 		stopCmd,
+		telemetryCmd,
 		versionCmd,
 	} {
 		rootCmd.AddCommand(cmd)
@@ -141,6 +142,8 @@ func Execute() error {
 	if err := handleVerbosity(rootCmd, level); err != nil {
 		return err
 	}
+
+	informUserOfTelemetryIfNeeded()
 
 	// Unless the command is one of the exceptions below, Alda will preemptively
 	// spawn player processes in the background, up to a desired amount. This
