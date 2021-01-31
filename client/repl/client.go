@@ -970,7 +970,10 @@ func RunClient(serverHost string, serverPort int) error {
 		aurora.Bold("Type :help for a list of available commands."),
 	)
 
-	os.MkdirAll(filepath.Dir(replHistoryFilepath), os.ModePerm)
+	err = os.MkdirAll(filepath.Dir(replHistoryFilepath), os.ModePerm)
+	if err != nil {
+		return err
+	}
 
 	console, err := readline.NewEx(&readline.Config{
 		Prompt:          "alda> ",

@@ -34,7 +34,9 @@ type PlayerState struct {
 // Returns an error if something goes wrong.
 func ReadPlayerStates() ([]PlayerState, error) {
 	playersDir := CachePath("state", "players", generated.ClientVersion)
-	os.MkdirAll(playersDir, os.ModePerm)
+	if err := os.MkdirAll(playersDir, os.ModePerm); err != nil {
+		return nil, err
+	}
 
 	files, err := ioutil.ReadDir(playersDir)
 	if err != nil {
