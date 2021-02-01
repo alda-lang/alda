@@ -158,6 +158,10 @@ func Execute() error {
 	//   ID or port is specified). It's probably fair to assume that if someone is
 	//   running `alda shutdown`, they don't want additional player processes to
 	//   be spawned.
+	//
+	// * `alda doctor` spawns its own processes as part of the checks that it
+	//    does, and it simplifies our CI setup if we only spawn those explicit
+	//    ones without also spawning some implicit ones here.
 	commandIsAnException := false
 
 	// NB: This isn't scientific. If _any_ of the arguments are one of these
