@@ -13,6 +13,49 @@ import (
 
 var verbosity int
 
+// There are certain activities that the Alda CLI performs in the background,
+// like sending telemetry and filling the player pool.
+//
+// We want to avoid prematurely exiting before these activities have completed.
+//
+// Each activity has a "done" channel, on which a single `true` value is placed
+// when the activity completes.
+type backgroundActivity struct {
+	description string
+	done        chan bool
+}
+
+// A list of channels, each of which represents an activity happening in the
+// background that we want to make sure that we wait for to complete before we
+// exit.
+//
+// Completion of each activity is signaled by placing a single `true` value on
+// the channel.
+var backgroundActivities []backgroundActivity
+
+func startBackgroundActivity(description string, thunk func()) {
+	done := make(chan bool)
+
+	activity := backgroundActivity{description: description, done: done}
+
+	backgroundActivities = append(backgroundActivities, activity)
+
+	go func() {
+		thunk()
+		done <- true
+	}()
+}
+
+func awaitBackgroundActivities() {
+	for _, activity := range backgroundActivities {
+		log.Debug().
+			Str("activity", activity.description).
+			Msg("Waiting for background activity to complete.")
+
+		<-activity.done
+	}
+}
+
 func init() {
 	// Inspired by the approach here:
 	// https://github.com/spf13/cobra/issues/914#issuecomment-548411337
@@ -177,30 +220,17 @@ func Execute() error {
 		}
 	}
 
-	filledPlayerPool := make(chan bool)
-
-	if commandIsAnException {
-		close(filledPlayerPool)
-		return rootCmd.Execute()
+	if !commandIsAnException {
+		startBackgroundActivity("fill the player pool", func() {
+			if err := system.FillPlayerPool(); err != nil {
+				log.Warn().Err(err).Msg("Failed to fill player pool.")
+			}
+		})
 	}
-
-	go func() {
-		if err := system.FillPlayerPool(); err != nil {
-			log.Warn().Err(err).Msg("Failed to fill player pool.")
-		}
-
-		filledPlayerPool <- true
-	}()
 
 	err := rootCmd.Execute()
 
-	// The filling of the player pool is happening in the background, but I
-	// noticed that if we exit the main thread too quickly, the background
-	// processes never start. So, we wait here for the goroutine above to finish
-	// before we exit.
-	log.Debug().Msg("Awaiting completion of player pool filling routine...")
-	<-filledPlayerPool
-	log.Debug().Msg("Done.")
+	awaitBackgroundActivities()
 
 	// Cobra helpfully gives us cmd.SetFlagErrorFunc to allow us to recognize
 	// usage errors due to incorrect/unrecognized flags so that we can treat them
