@@ -105,7 +105,7 @@ func init() {
 		//
 		// When an invalid verbosity level is supplied, we fallback to the default
 		// log level, 1 (warn).
-		_ = handleVerbosity(cmd, verbosity)
+		_ = handleVerbosity(cmd)
 
 		fillPlayerPool()
 
@@ -166,8 +166,8 @@ Use "{{.CommandPath}} [command] --help" for more information about a command.{{e
 	}
 }
 
-func handleVerbosity(cmd *cobra.Command, level int) error {
-	switch level {
+func handleVerbosity(cmd *cobra.Command) error {
+	switch verbosity {
 	case 0:
 		log.SetGlobalLevel("error")
 	case 1:
@@ -197,7 +197,7 @@ Website: https://alda.io
 GitHub: https://github.com/alda-lang/alda
 Slack: https://slack.alda.io`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		if err := handleVerbosity(cmd, verbosity); err != nil {
+		if err := handleVerbosity(cmd); err != nil {
 			return err
 		}
 
