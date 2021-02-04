@@ -24,8 +24,14 @@ import (
 //go:generate go run gen/version/main.go
 
 func main() {
+	exitCode := 0
+
 	if err := cmd.Execute(); err != nil {
+		exitCode = 1
 		help.PresentError(err)
-		os.Exit(1)
 	}
+
+	cmd.AwaitBackgroundActivities()
+
+	os.Exit(exitCode)
 }

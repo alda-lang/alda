@@ -46,7 +46,7 @@ func startBackgroundActivity(description string, thunk func()) {
 	}()
 }
 
-func awaitBackgroundActivities() {
+func AwaitBackgroundActivities() {
 	for _, activity := range backgroundActivities {
 		log.Debug().
 			Str("activity", activity.description).
@@ -229,8 +229,6 @@ func Execute() error {
 	}
 
 	err := rootCmd.Execute()
-
-	awaitBackgroundActivities()
 
 	// Cobra helpfully gives us cmd.SetFlagErrorFunc to allow us to recognize
 	// usage errors due to incorrect/unrecognized flags so that we can treat them
