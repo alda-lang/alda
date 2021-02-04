@@ -181,7 +181,10 @@ func handleVerbosity(cmd *cobra.Command) error {
 
 		return &help.UsageError{
 			Cmd: cmd,
-			Err: fmt.Errorf("invalid verbosity level. Valid values are 0-3"),
+			Err: fmt.Errorf(
+				"invalid verbosity level (%d). Valid levels are 0-3",
+				verbosity,
+			),
 		}
 	}
 
