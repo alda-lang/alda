@@ -56,12 +56,83 @@ func AwaitBackgroundActivities() {
 	}
 }
 
+// We want to ensure that we fill the player pool in a variety of situations,
+// including `alda`, `alda --help`, `alda some-nonexistent-command`, etc.
+// Unfortunately, Cobra doesn't give you an easy way to consistently do that.
+// PersistentPreRunE _should_ do the trick, but it doesn't run in exceptional
+// scenarios like where the user is using flags incorrectly or the user is
+// requesting --help.
+//
+// As a result, we have to hook into "UsageFunc", the function that gets run
+// when Cobra prints usage information. But it's possible that both the
+// PersistentPreRunE _and_ the UsageFunc will be run, in cases like `alda` being
+// run without arguments.
+//
+// To ensure that we don't double-fill the pool in those scenarios, we use this
+// boolean to keep track of whether or not we're already doing it.
+var fillingPlayerPool = false
+
+// Fills the player pool, unless we're already doing it.
+func fillPlayerPool() {
+	if !fillingPlayerPool {
+		startBackgroundActivity("fill the player pool", func() {
+			if err := system.FillPlayerPool(); err != nil {
+				log.Warn().Err(err).Msg("Failed to fill player pool.")
+			}
+		})
+	}
+
+	fillingPlayerPool = true
+}
+
 func init() {
 	// Inspired by the approach here:
 	// https://github.com/spf13/cobra/issues/914#issuecomment-548411337
 	rootCmd.SetFlagErrorFunc(func(cmd *cobra.Command, err error) error {
 		return &help.UsageError{Cmd: cmd, Err: err}
 	})
+
+	// Cobra doesn't run my PersistentPreRunE function when there is a usage error
+	// or `--help` is requested. So, we have to wrap the default usage function
+	// here with the behavior that we want.
+	defaultUsageFunc := rootCmd.UsageFunc()
+	rootCmd.SetUsageFunc(func(cmd *cobra.Command) error {
+		fillPlayerPool()
+		return defaultUsageFunc(cmd)
+	})
+
+	// This is almost identical to Cobra's default usage template found in the
+	// source code. I just removed the `{{if .Runnable}}{{.UseLine}}{{end}}` part,
+	// i.e. the part that suggests that running `alda` with no subcommand is a way
+	// to use Alda.
+	//
+	// Usually, Cobra gets this right, but in this case, because I implemented a
+	// `RunE` for the root command, Cobra (reasonably) thinks that it should tell
+	// the user that both `alda` and `alda [command]` are ways to run Alda, when
+	// in fact, you can't really do anything without a subcommand.
+	rootCmd.SetUsageTemplate(`Usage:{{if .HasAvailableSubCommands}}
+  {{.CommandPath}} [command]{{end}}{{if gt (len .Aliases) 0}}
+
+Aliases:
+  {{.NameAndAliases}}{{end}}{{if .HasExample}}
+
+Examples:
+{{.Example}}{{end}}{{if .HasAvailableSubCommands}}
+
+Available Commands:{{range .Commands}}{{if (or .IsAvailableCommand (eq .Name "help"))}}
+  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{end}}{{if .HasAvailableLocalFlags}}
+
+Flags:
+{{.LocalFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if .HasAvailableInheritedFlags}}
+
+Global Flags:
+{{.InheritedFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if .HasHelpSubCommands}}
+
+Additional help topics:{{range .Commands}}{{if .IsAdditionalHelpTopicCommand}}
+  {{rpad .CommandPath .CommandPathPadding}} {{.Short}}{{end}}{{end}}{{end}}{{if .HasAvailableSubCommands}}
+
+Use "{{.CommandPath}} [command] --help" for more information about a command.{{end}}
+`)
 
 	rootCmd.PersistentFlags().IntVarP(
 		&verbosity, "verbosity", "v", 1, "verbosity level (0-3)",
@@ -113,8 +184,49 @@ Website: https://alda.io
 GitHub: https://github.com/alda-lang/alda
 Slack: https://slack.alda.io`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		// Unless the command is one of the exceptions below, Alda will preemptively
+		// spawn player processes in the background, up to a desired amount. This
+		// helps to ensure that the application will feel fast, because each time
+		// you need a player process, there will probably already be one available.
+		//
+		// Exceptions:
+		// * `alda ps` is designed to be run repeatedly, e.g.
+		//   `watch -n 0.25 alda ps`, in order to provide a live-updating view of
+		//   current Alda processes.
+		//
+		// * `alda shutdown` shuts down a player process (or all of them, if no
+		//   player ID or port is specified). It's probably fair to assume that if
+		//   someone is running `alda shutdown`, they don't want additional player
+		//   processes to be spawned.
+		//
+		// * `alda doctor` spawns its own processes as part of the checks that it
+		//   does, and it simplifies our CI setup if we only spawn those explicit
+		//   ones without also spawning some implicit ones here.
+		switch cmd.Name() {
+		case "ps", "shutdown", "doctor":
+			// Don't fill the player pool.
+		default:
+			fillPlayerPool()
+		}
+
 		return handleVerbosity(cmd, verbosity)
 	},
+
+	// I think this is equivalent to the default behavior that Cobra gives you
+	// when you run the root command with no subcommand; it just prints the help
+	// text.
+	//
+	// Why am I doing it explicitly like this? Because if I don't have a RunE
+	// function, Cobra won't run my PersistentPreRunE function.
+	//
+	// ...And because I have a RunE now, I had to also customize the UsageTemplate
+	// (see init()) to omit the part that suggests that running `alda` without a
+	// subcommand is a way to use Alda. Hacks upon hacks.
+	RunE: func(cmd *cobra.Command, args []string) error {
+		cmd.Help()
+		return nil
+	},
+
 	SilenceErrors: true,
 	SilenceUsage:  true,
 }
@@ -187,46 +299,6 @@ func Execute() error {
 	}
 
 	informUserOfTelemetryIfNeeded()
-
-	// Unless the command is one of the exceptions below, Alda will preemptively
-	// spawn player processes in the background, up to a desired amount. This
-	// helps to ensure that the application will feel fast, because each time you
-	// need a player process, there will probably already be one available.
-	//
-	// Exceptions:
-	// * `alda ps` is designed to be run repeatedly, e.g. `watch -n 0.25 alda ps`,
-	//   in order to provide a live-updating view of current Alda processes.
-	//
-	// * `alda shutdown` shuts down a player process (or all of them, if no player
-	//   ID or port is specified). It's probably fair to assume that if someone is
-	//   running `alda shutdown`, they don't want additional player processes to
-	//   be spawned.
-	//
-	// * `alda doctor` spawns its own processes as part of the checks that it
-	//    does, and it simplifies our CI setup if we only spawn those explicit
-	//    ones without also spawning some implicit ones here.
-	commandIsAnException := false
-
-	// NB: This isn't scientific. If _any_ of the arguments are one of these
-	// strings (even if it's an argument other than the command), then that will
-	// cause a false positive. But I think that scenario is pretty unlikely, and
-	// the consequence is just that it won't fill the player pool on that one run
-	// of `alda`. Any other command (e.g. `alda --help`) _will_ fill the player
-	// pool, so with typical usage, the odds are high that there will be at least
-	// one player process available when you need it.
-	for _, arg := range os.Args {
-		if arg == "ps" || arg == "shutdown" || arg == "doctor" {
-			commandIsAnException = true
-		}
-	}
-
-	if !commandIsAnException {
-		startBackgroundActivity("fill the player pool", func() {
-			if err := system.FillPlayerPool(); err != nil {
-				log.Warn().Err(err).Msg("Failed to fill player pool.")
-			}
-		})
-	}
 
 	err := rootCmd.Execute()
 
