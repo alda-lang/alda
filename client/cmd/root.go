@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"alda.io/client/help"
@@ -97,7 +96,19 @@ func init() {
 	// here with the behavior that we want.
 	defaultUsageFunc := rootCmd.UsageFunc()
 	rootCmd.SetUsageFunc(func(cmd *cobra.Command) error {
+		// handleVerbosity returns a usage error if the supplied verbosity level is
+		// invalid. We're choosing to ignore it here because the UsageFunc is called
+		// all over the place, e.g. as a side effect of constructing the usage
+		// string (see UsageString() in Cobra). In light of this, it feels dangerous
+		// to override the default UsageFunc with a function that might return an
+		// error for a reason unrelated to printing usage information.
+		//
+		// When an invalid verbosity level is supplied, we fallback to the default
+		// log level, 1 (warn).
+		_ = handleVerbosity(cmd, verbosity)
+
 		fillPlayerPool()
+
 		return defaultUsageFunc(cmd)
 	})
 
@@ -166,6 +177,8 @@ func handleVerbosity(cmd *cobra.Command, level int) error {
 	case 3:
 		log.SetGlobalLevel("debug")
 	default:
+		log.SetGlobalLevel("warn")
+
 		return &help.UsageError{
 			Cmd: cmd,
 			Err: fmt.Errorf("invalid verbosity level. Valid values are 0-3"),
@@ -184,6 +197,10 @@ Website: https://alda.io
 GitHub: https://github.com/alda-lang/alda
 Slack: https://slack.alda.io`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		if err := handleVerbosity(cmd, verbosity); err != nil {
+			return err
+		}
+
 		// Unless the command is one of the exceptions below, Alda will preemptively
 		// spawn player processes in the background, up to a desired amount. This
 		// helps to ensure that the application will feel fast, because each time
@@ -209,7 +226,7 @@ Slack: https://slack.alda.io`,
 			fillPlayerPool()
 		}
 
-		return handleVerbosity(cmd, verbosity)
+		return nil
 	},
 
 	// I think this is equivalent to the default behavior that Cobra gives you
@@ -233,71 +250,6 @@ Slack: https://slack.alda.io`,
 
 // Execute parses command-line arguments and runs the Alda command-line client.
 func Execute() error {
-	// The default logging level is WARN.
-	level := 1
-
-	// Cobra is a little bit janky in that there doesn't seem to be a way to add a
-	// hook that will _always_ run regardless of the command. PersistentPreRun
-	// almost works, but it doesn't run in cases like:
-	//
-	//   alda
-	//   alda --help
-	//   alda some-bogus-command
-	//
-	// We always want to do two things:
-	//
-	//   1. Set the logging level based on the -v / --verbosity option.
-	//   2. Spawn player processes.
-	//
-	// It's especially important that we do this when the user first installs Alda
-	// and they run `alda` or `alda --help` to explore the commands and options.
-	// By the time they figure out how to craft an `alda play ...` command, a
-	// player process will have fully spawned in the background and they'll hear
-	// output immediately, which is a great user experience.
-	//
-	// As a hacky workaround, we scan through the command line arguments here,
-	// make an attempt to set the log level, and spawn player processes, before we
-	// invoke Cobra and handle CLI arguments properly.
-	for i := 1; i < len(os.Args); i++ {
-		arg := os.Args[i]
-
-		switch arg {
-		case "-v0", "-v=0", "--verbosity=0":
-			level = 0
-		case "-v1", "-v=1", "--verbosity=1":
-			level = 1
-		case "-v2", "-v=2", "--verbosity=2":
-			level = 2
-		case "-v3", "-v=3", "--verbosity=3":
-			level = 3
-		}
-
-		if (arg == "-v" || arg == "--verbosity") && (i+1) < len(os.Args) {
-			i++
-			switch os.Args[i] {
-			case "0":
-				level = 0
-			case "1":
-				level = 1
-			case "2":
-				level = 2
-			case "3":
-				level = 3
-			}
-		}
-	}
-
-	// Ideally, we could pass in the subcommand here, but we haven't properly
-	// parsed it yet (that's done by Cobra when we call rootCmd.Execute() below).
-	// This is suboptimal, but I'm working around Cobra's jankiness and I had to
-	// make a trade-off.
-	//
-	// This will only happen if the user uses the correct syntax for specifying
-	// verbosity, but specifies a number that isn't in the range 0-3.
-	if err := handleVerbosity(rootCmd, level); err != nil {
-		return err
-	}
-
 	informUserOfTelemetryIfNeeded()
 
 	err := rootCmd.Execute()
@@ -310,6 +262,14 @@ func Execute() error {
 	// To work around that, we assume that no other types of errors in the
 	// application will begin with the string "unknown command" and do the special
 	// handling here.
+	//
+	// Worth noting: Cobra seems to be failing to set the global `verbosity` flag
+	// value in this scenario, which means in a case like `alda -v3 bogus-cmd`,
+	// the `-v3` part is ignored by Cobra and `rootCmd.Execute()` just returns the
+	// "unknown command" error. This is not ideal, but it's sort of an exceptional
+	// scenario, and the default log level of 1 (warn) is reasonable; the
+	// important part is that the user can see that they've entered an unknown
+	// command.
 	if err != nil && strings.HasPrefix(err.Error(), "unknown command") {
 		return &help.UsageError{Cmd: rootCmd, Err: err}
 	}
