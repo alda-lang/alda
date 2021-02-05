@@ -107,9 +107,34 @@ func init() {
 		// log level, 1 (warn).
 		_ = handleVerbosity(cmd)
 
+		informUserOfTelemetryIfNeeded()
+
 		fillPlayerPool()
 
 		return defaultUsageFunc(cmd)
+	})
+
+	// In some cases, the UsageFunc runs. In some cases, the HelpFunc runs,
+	// followed by the UsageFunc. I've even seen the UsageFunc run twice for some
+	// weird reason.
+	//
+	// The only reason we need a custom HelpFunc is so that in the case of
+	// informing the user of telemetry on the very first run of Alda, we can make
+	// sure that we print the notice about telemetry first, before the help text
+	// (instead of before the usage text, which is further down).
+	//
+	// Note that `informUserOfTelemetryIfNeeded` is idempotent. After informing
+	// the user of telemetry, it writes a `telemetry-status` file which makes it
+	// so that if we run `informUserOfTelemetryIfNeeded` again, it won't do
+	// anything because we already informed the user of telemetry.
+	defaultHelpFunc := rootCmd.HelpFunc()
+	rootCmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
+		// See the line that looks like this above in SetUsageFunc(...)
+		_ = handleVerbosity(cmd)
+
+		informUserOfTelemetryIfNeeded()
+
+		defaultHelpFunc(cmd, args)
 	})
 
 	// This is almost identical to Cobra's default usage template found in the
@@ -204,6 +229,8 @@ Slack: https://slack.alda.io`,
 			return err
 		}
 
+		informUserOfTelemetryIfNeeded()
+
 		// Unless the command is one of the exceptions below, Alda will preemptively
 		// spawn player processes in the background, up to a desired amount. This
 		// helps to ensure that the application will feel fast, because each time
@@ -253,8 +280,6 @@ Slack: https://slack.alda.io`,
 
 // Execute parses command-line arguments and runs the Alda command-line client.
 func Execute() error {
-	informUserOfTelemetryIfNeeded()
-
 	err := rootCmd.Execute()
 
 	// Cobra helpfully gives us cmd.SetFlagErrorFunc to allow us to recognize
