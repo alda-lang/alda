@@ -9,6 +9,7 @@ import (
 	"alda.io/client/help"
 	log "alda.io/client/logging"
 	"alda.io/client/system"
+	"alda.io/client/text"
 	"github.com/logrusorgru/aurora"
 	"github.com/spf13/cobra"
 )
@@ -94,19 +95,17 @@ func writeTelemetryStatus(status string) error {
 func informUserOfTelemetry() {
 	fmt.Fprintf(
 		os.Stderr,
-		`─────────────────────────────────────────────────────────────────
-
-%s
+		text.Boxed(
+			fmt.Sprintf(
+				`%s
 
 If you wish to disable anonymous usage reporting, you can run:
 
-  %s
-
-─────────────────────────────────────────────────────────────────
-
-`,
-		telemetryExplanation,
-		aurora.BrightYellow("alda telemetry --disable"),
+  %s`,
+				telemetryExplanation,
+				aurora.BrightYellow("alda telemetry --disable"),
+			),
+		)+"\n\n",
 	)
 
 	if err := enableTelemetry(); err != nil {
