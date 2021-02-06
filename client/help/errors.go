@@ -1,11 +1,11 @@
 package help
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"strings"
 
+	"alda.io/client/text"
 	"github.com/logrusorgru/aurora"
 	"github.com/spf13/cobra"
 )
@@ -57,29 +57,12 @@ func (ue *UsageError) Unwrap() error {
 	return ue.Err
 }
 
-// Indent returns a modified version of the supplied string where each line is
-// indented the desired amount.
-//
-// A single indent level is represented as two spaces.
-//
-// TODO: Move this function to a shared location if we end up needing it
-// elsewhere.
-func indent(amount int, str string) string {
-	var buffer bytes.Buffer
-
-	for _, line := range strings.Split(str, "\n") {
-		buffer.WriteString(strings.Repeat("  ", amount) + line + "\n")
-	}
-
-	return strings.TrimRight(buffer.String(), "\n")
-}
-
 // Error returns a string representation of a UsageError.
 func (ue *UsageError) Error() string {
 	return fmt.Sprintf(
 		"%s\n\n---\n\nUsage error:\n\n%s\n",
 		strings.TrimRight(ue.Cmd.UsageString(), "\n"),
-		aurora.Red(indent(1, strings.TrimRight(ue.Err.Error(), "\n"))),
+		aurora.Red(text.Indent(1, strings.TrimRight(ue.Err.Error(), "\n"))),
 	)
 }
 
