@@ -1,11 +1,17 @@
 package cmd
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
+	"time"
 
+	"alda.io/client/generated"
 	"alda.io/client/help"
 	log "alda.io/client/logging"
 	"alda.io/client/system"
@@ -208,4 +214,49 @@ See %s for more information.`,
 
 		return showTelemetryStatus()
 	},
+}
+
+func sendTelemetryRequest(command string) error {
+	payload := map[string]string{
+		"os":      runtime.GOOS,
+		"arch":    runtime.GOARCH,
+		"version": generated.ClientVersion,
+		"command": command,
+	}
+
+	json, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
+	log.Debug().Bytes("json", json).Msg("Sending telemetry request.")
+
+	response, err := (&http.Client{Timeout: 5 * time.Second}).Post(
+		"https://api.alda.io/telemetry",
+		"application/json",
+		bytes.NewBuffer(json),
+	)
+	if err != nil {
+		return err
+	}
+
+	responseBody, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return err
+	}
+
+	log.Debug().
+		Int("status", response.StatusCode).
+		Bytes("body", responseBody).
+		Msg("Telemetry sent.")
+
+	if response.StatusCode < 200 || response.StatusCode > 299 {
+		return fmt.Errorf(
+			"unsuccessful response (%d): %s",
+			response.StatusCode,
+			responseBody,
+		)
+	}
+
+	return nil
 }

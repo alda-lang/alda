@@ -84,6 +84,40 @@ func fillPlayerPool() {
 	fillingPlayerPool = true
 }
 
+func sendTelemetry(command string) {
+	// We don't send telemetry if the user runs `alda` without a subcommand,
+	// because that's effectively the same thing as running `alda --help`, and we
+	// don't send telemetry when the user is requesting `--help` either.
+	if command == "alda" {
+		return
+	}
+
+	// We will not record telemetry if the user has disabled it by running `alda
+	// telemetry --disable`.
+	status, err := readTelemetryStatus()
+
+	// If the telemetry status file contains unexpected content, or if we couldn't
+	// read the file for some reason, the only reasonable thing to do is not to
+	// record telemetry.
+	if err != nil {
+		log.Warn().
+			Err(err).
+			Msg("Couldn't determine whether telemetry is enabled.")
+		return
+	}
+
+	// Don't record telemetry if the user has opted out.
+	if status == TelemetryDisabled {
+		return
+	}
+
+	startBackgroundActivity("send telemetry", func() {
+		if err := sendTelemetryRequest(command); err != nil {
+			log.Debug().Err(err).Msg("Failed to send telemetry.")
+		}
+	})
+}
+
 func init() {
 	// Inspired by the approach here:
 	// https://github.com/spf13/cobra/issues/914#issuecomment-548411337
@@ -230,6 +264,8 @@ Slack: https://slack.alda.io`,
 		}
 
 		informUserOfTelemetryIfNeeded()
+
+		sendTelemetry(cmd.Name())
 
 		// Unless the command is one of the exceptions below, Alda will preemptively
 		// spawn player processes in the background, up to a desired amount. This
