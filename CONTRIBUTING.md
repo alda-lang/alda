@@ -8,9 +8,7 @@ We're working on the following projects:
 
 The source code for the Alda client and player lives in this repo.
 
-The website has [its own repo][alda-site-repo]. It's currently under
-construction and we could use your help making it look awesome and making sure
-it has all the information it needs!
+The website has [its own repo][alda-site-repo].
 
 Pull requests to contribute to any of these projects are warmly welcomed. Please
 feel free to take on any open issue that interests you, and let us know if you
@@ -29,7 +27,7 @@ the [Alda GitHub Project board][gh-project].
   to the unit tests whenever possible.
 - Submit a Pull Request.
 - Your Pull Request should get the Dave Yarwood Seal of Approval™ before being
-  merged. (Don't worry, he's not hard to win over!)
+  merged.
 
 If you need help understanding how something works or if you have any other
 questions, stop by the `#development` channel in the [Alda Slack
@@ -50,11 +48,11 @@ this repo.
 
 Alda is designed so that playback is asynchronous. When you use the Alda client
 to play a score, the client sends a bunch of [OSC][osc-intro] messages to a
-player process running in the background.
+separate player process running in the background.
 
 The player process is agnostic of the Alda language. It simply receives and
-handles OSC messages containing lower-level instructions pertaining to audio
-playback.
+handles OSC messages containing lower-level instructions that tell it what
+notes to play, etc.
 
 The player supports live coding in that it allows you to define, modify, and
 loop patterns during playback.
