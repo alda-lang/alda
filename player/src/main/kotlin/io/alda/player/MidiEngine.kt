@@ -110,7 +110,7 @@ private fun maxByteArrayValue(numBytes : Int) : Long {
 // There are 60 million microseconds in a minute, therefore the formula to
 // convert BPM => uspq is 60,000,000 / BPM.
 //
-// Example conversion: 120 BPM / 60,000,000 = 500,000 uspq.
+// Example conversion: 60,000,000 / 120 BPM = 500,000 uspq.
 //
 // The slower the tempo, the lower the BPM and the higher the uspq.
 //
