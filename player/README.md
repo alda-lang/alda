@@ -15,6 +15,10 @@ loop patterns during playback.
 
 ## Development
 
+> Once you're all set up to run the Alda player process locally, have a look at
+> the [development guide](./doc/development-guide.md) for a high-level overview
+> of the code base.
+
 ### Requirements
 
 * Java 8+

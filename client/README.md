@@ -6,6 +6,10 @@ process to perform the score.
 
 ## Development
 
+> Once you're all set up to run the Alda client locally, have a look at the
+> [development guide](./doc/development-guide.md) for a high-level overview of
+> the code base.
+
 ### Requirements
 
 You'll need to have Go installed in order to build and run the client locally.
@@ -159,13 +163,6 @@ There is a comprehensive test suite that you can run with this command:
 ```bash
 go test ./...
 ```
-
-### OSC API
-
-The client sends instructions to the player in the form of OSC message bundles.
-
-See the [OSC API doc](../player/doc/alda-osc-api.md) and [OSC API
-demo](dev/osc/README.md).
 
 ## License
 
