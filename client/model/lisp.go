@@ -180,7 +180,7 @@ func argumentsMatchSignature(
 	if len(arguments) > fixedArgs {
 		variadicArgType := signature.ArgumentTypes[totalArgs-1].(LispVariadic).Type
 
-		for _, argument := range arguments[fixedArgs:len(arguments)] {
+		for _, argument := range arguments[fixedArgs:] {
 			if reflect.TypeOf(argument) != reflect.TypeOf(variadicArgType) {
 				return false
 			}
@@ -1136,7 +1136,7 @@ func init() {
 				if len(forms) > 1 {
 					accidentals := []Accidental{}
 
-					for _, form := range forms[1:len(forms)] {
+					for _, form := range forms[1:] {
 						switch form.(type) {
 						case LispSymbol:
 							accidental, err := NewAccidental(form.(LispSymbol).Name)
