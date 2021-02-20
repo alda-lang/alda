@@ -13,6 +13,7 @@ import (
 	"alda.io/client/system"
 	"alda.io/client/transmitter"
 	"alda.io/client/util"
+	"github.com/logrusorgru/aurora"
 	"github.com/spf13/cobra"
 )
 
@@ -109,25 +110,58 @@ func parseStdin() ([]model.ScoreUpdate, error) {
 	return parser.ParseString(string(bytes))
 }
 
+func sourceCodeInputOptions(command string, color bool) string {
+	maybeColor := func(s string) string {
+		if color {
+			return fmt.Sprintf("%s", aurora.BrightYellow(s))
+		}
+
+		return s
+	}
+
+	fileExample := "alda %s -f path/to/my-score.alda"
+	if command == "export" {
+		fileExample = fileExample + " -o my-score.mid"
+	}
+
+	codeExample := `alda %s -c "harpsichord: o5 d+8 < b g+ e d+1"`
+	if command == "export" {
+		codeExample = codeExample + " -o harpsy.mid"
+	}
+
+	stdinExample := `echo "glockenspiel: o5 g8 < g > g e4 d4." | alda %s`
+	if command == "export" {
+		stdinExample = stdinExample + " -o glock.mid"
+	}
+
+	return fmt.Sprintf(`Source code can be provided in one of three ways:
+
+The path to a file (-f, --file):
+  %s
+
+A string of code (-c, --code):
+  %s
+
+Text piped into the process on stdin:
+  %s`,
+		maybeColor(fmt.Sprintf(fileExample, command)),
+		maybeColor(fmt.Sprintf(codeExample, command)),
+		maybeColor(fmt.Sprintf(stdinExample, command)),
+	)
+}
+
 var playCmd = &cobra.Command{
 	Use:   "play",
 	Short: "Evaluate and play Alda source code",
-	Long: `Evaluate and play Alda source code
+	Long: fmt.Sprintf(`Evaluate and play Alda source code
 
 ---
 
-Source code can be provided in one of three ways:
-
-The path to a file (-f, --file):
-  alda play -f path/to/my-score.alda
-
-A string of code (-c, --code):
-  alda play -c "harpsichord: o5 d+8 < b g+ e d+1"
-
-Text piped into the process on stdin:
-  echo "glockenspiel: o5 g8 < g > g e4 d4." | alda play
+%s
 
 ---`,
+		sourceCodeInputOptions("play", false),
+	),
 	RunE: func(_ *cobra.Command, args []string) error {
 		var scoreUpdates []model.ScoreUpdate
 		var err error

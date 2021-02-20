@@ -62,20 +62,11 @@ func init() {
 var exportCmd = &cobra.Command{
 	Use:   "export",
 	Short: "Evaluate Alda source code and export to another format",
-	Long: `Evaluate Alda source code and export to another format
+	Long: fmt.Sprintf(`Evaluate Alda source code and export to another format
 
 ---
 
-Source code can be provided in one of three ways:
-
-The path to a file (-f, --file):
-  alda export -f path/to/my-score.alda -o my-score.mid
-
-A string of code (-c, --code):
-  alda export -c "harpsichord: o5 d+8 < b g+ e d+1" -o harpsy.mid
-
-Text piped into the process on stdin:
-  echo "glockenspiel: o5 g8 < g > g e4 d4." | alda export -o glock.mid
+%s
 
 ---
 
@@ -95,6 +86,8 @@ Currently, the only output format is MIDI. At some point, there will be other
 output formats like MusicXML.
 
 ---`,
+		sourceCodeInputOptions("export", false),
+	),
 	RunE: func(_ *cobra.Command, args []string) error {
 		if outputFormat != "midi" {
 			return help.UserFacingErrorf(

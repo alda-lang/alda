@@ -32,20 +32,11 @@ func init() {
 var parseCmd = &cobra.Command{
 	Use:   "parse",
 	Short: "Display the result of parsing Alda source code",
-	Long: `Display the result of parsing Alda source code
+	Long: fmt.Sprintf(`Display the result of parsing Alda source code
 
 ---
 
-Source code can be provided in one of three ways:
-
-The path to a file (-f, --file):
-  alda parse -f path/to/my-score.alda
-
-A string of code (-c, --code):
-  alda parse -c "harpsichord: o5 d+8 < b g+ e d+1"
-
-Text piped into the process on stdin:
-  echo "glockenspiel: o5 g8 < g > g e4 d4." | alda parse
+%s
 
 ---
 
@@ -64,6 +55,8 @@ data (default):
   new score.
 
 ---`,
+		sourceCodeInputOptions("parse", false),
+	),
 	RunE: func(_ *cobra.Command, args []string) error {
 		switch outputType {
 		case "events", "data": // OK to proceed
