@@ -175,6 +175,20 @@ Currently, the only supported output format is %s.`,
 			Interface("player", player).
 			Msg("Transmitted score to player.")
 
+		// Ensure that the player process doesn't hang around with the score loaded.
+		// This avoids an unexpected behavior where if you run `alda export ...`
+		// followed by `alda play` without arguments (i.e. to un-pause playback),
+		// you end up hearing the score that was loaded into the player process that
+		// was used for the export. The desired behavior is that we shut the player
+		// down after using it for this one-off export.
+		defer func() {
+			transmitter.TransmitShutdownMessage(0)
+
+			log.Info().
+				Interface("player", player).
+				Msg("Sent shutdown message to player.")
+		}()
+
 		// When no output filename is specified, we write the result to stdout. But
 		// first, we need to ask the player to export to a file, so we use a
 		// temporary file.
