@@ -94,6 +94,10 @@ Please choose one of:
 			scoreUpdates, err = parseStdin()
 		}
 
+		if err == errNoInputSupplied {
+			return userFacingNoInputSuppliedError("parse")
+		}
+
 		// Errors with source context are presented to the user as-is.
 		//
 		// TODO: Consider writing better user-facing error messages with suggestions

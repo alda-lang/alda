@@ -134,7 +134,7 @@ func sourceCodeInputOptions(command string, color bool) string {
 		stdinExample = stdinExample + " -o glock.mid"
 	}
 
-	return fmt.Sprintf(`Source code can be provided in one of three ways:
+	return fmt.Sprintf(`You can provide input in one of three ways:
 
 The path to a file (-f, --file):
   %s
@@ -147,6 +147,14 @@ Text piped into the process on stdin:
 		maybeColor(fmt.Sprintf(fileExample, command)),
 		maybeColor(fmt.Sprintf(codeExample, command)),
 		maybeColor(fmt.Sprintf(stdinExample, command)),
+	)
+}
+
+func userFacingNoInputSuppliedError(command string) error {
+	return help.UserFacingErrorf(`No Alda source code input supplied.
+
+%s`,
+		sourceCodeInputOptions(command, true),
 	)
 }
 

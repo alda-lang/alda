@@ -113,6 +113,10 @@ Currently, the only supported output format is %s.`,
 			scoreUpdates, err = parseStdin()
 		}
 
+		if err == errNoInputSupplied {
+			return userFacingNoInputSuppliedError("export")
+		}
+
 		if err != nil {
 			return err
 		}
