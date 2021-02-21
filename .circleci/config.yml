@@ -177,6 +177,15 @@ jobs:
           command: cat /home/circleci/.cache/alda/logs/alda-player.log
           when: on_fail
 
+      - run:
+          name: "Test `alda update` mechanism"
+          command: |
+            export ALDA_DISABLE_SPAWNING=yes
+            # TODO: Test with a 2.x version
+            alda -v3 update --version 1.4.3
+            alda version | grep 1.4.3
+            # alda-player info | grep 1.4.3
+
   test_macos:
     macos:
       xcode: 11.3.0
@@ -209,6 +218,15 @@ jobs:
           command: cat /Users/distiller/Library/Caches/alda/logs/alda-player.log
           when: on_fail
 
+      - run:
+          name: "Test `alda update` mechanism"
+          command: |
+            export ALDA_DISABLE_SPAWNING=yes
+            # TODO: Test with a 2.x version
+            alda -v3 update --version 1.4.3
+            alda version | grep 1.4.3
+            # alda-player info | grep 1.4.3
+
   test_windows:
     executor: win/default
 
@@ -234,6 +252,16 @@ jobs:
             $env:PATH = "$env:PATH;C:\Program Files\Alda\bin"
             $env:ALDA_DISABLE_SPAWNING = "yes"
             alda -v3 doctor --no-audio
+
+      - run:
+          name: "Test `alda update` mechanism"
+          command: |
+            $env:PATH = "$env:PATH;C:\Program Files\Alda\bin"
+            $env:ALDA_DISABLE_SPAWNING = "yes"
+            # TODO: Test with a 2.x version
+            alda -v3 update --version 1.4.3
+            if (alda version | Select-String -Pattern 1.4.3 -quiet) { true } else { false }
+            # if (alda-player info | Select-String -Pattern 1.4.3 -quiet) { true } else { false }
 
       - run:
           name: "Troubleshooting: player logs"

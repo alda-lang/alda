@@ -224,6 +224,7 @@ Use "{{.CommandPath}} [command] --help" for more information about a command.{{e
 		shutdownCmd,
 		stopCmd,
 		telemetryCmd,
+		updateCmd,
 		versionCmd,
 	} {
 		rootCmd.AddCommand(cmd)
