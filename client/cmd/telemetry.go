@@ -181,7 +181,9 @@ var telemetryCmd = &cobra.Command{
 
 ---
 
-%s`, telemetryExplanation),
+%s
+
+---`, telemetryExplanation),
 	RunE: func(_ *cobra.Command, args []string) error {
 		if telemetryEnable && telemetryDisable {
 			return help.UserFacingErrorf(
