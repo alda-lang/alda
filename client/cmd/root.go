@@ -180,8 +180,13 @@ func init() {
 	// `RunE` for the root command, Cobra (reasonably) thinks that it should tell
 	// the user that both `alda` and `alda [command]` are ways to run Alda, when
 	// in fact, you can't really do anything without a subcommand.
+	//
+	// Update: I also had to add an {{else}} branch under Usage: because it was
+	// just showing up as Usage: with no content in most cases. I'm not sure if
+	// this is my fault or Cobra's, but I fixed it in the template.
 	rootCmd.SetUsageTemplate(`Usage:{{if .HasAvailableSubCommands}}
-  {{.CommandPath}} [command]{{end}}{{if gt (len .Aliases) 0}}
+  {{.CommandPath}} [command]{{else}}
+  {{.CommandPath}}{{end}}{{if gt (len .Aliases) 0}}
 
 Aliases:
   {{.NameAndAliases}}{{end}}{{if .HasExample}}
