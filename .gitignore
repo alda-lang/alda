@@ -13,5 +13,6 @@ pom.xml.asc
 .lsp/
 .scores/
 .workbench/
+.idea/
 *~
 .ruby-version

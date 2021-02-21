@@ -127,8 +127,8 @@ func orderOfSharps() []NoteLetter {
 	return []NoteLetter{F, C, G, D, A, E, B}
 }
 
-// Given a scale type, returns a map of note letter to an integer representing a
-// number of sharps or flats. A negative integer represents a number of flats,
+// partialCircleOfFifths returns a map of note letter to placement in the circle
+// of fifths given a scaleType. A negative integer represents a number of flats,
 // and a positive integer represents a number of sharps.
 func partialCircleOfFifths(scaleType ScaleType) map[NoteLetter]int {
 	var start int
@@ -158,17 +158,16 @@ func partialCircleOfFifths(scaleType ScaleType) map[NoteLetter]int {
 	return result
 }
 
-// KeySignatureFromScale returns a key signature given a tonic note and a scale
-// type.
-func KeySignatureFromScale(
-	tonic LetterAndAccidentals, scaleType ScaleType,
-) KeySignature {
-	n := partialCircleOfFifths(scaleType)[tonic.NoteLetter]
-
+// KeySignatureFromCircleOfFifths returns a key signature given a placement in
+// the circle of fifths. A negative integer represents a number of flats,
+// and a positive integer represents a number of sharps.
+func KeySignatureFromCircleOfFifths(fifths int) KeySignature {
 	var order []NoteLetter
 	var accidental Accidental
 
-	if n > 0 {
+	if fifths == 0 {
+		return KeySignature{}
+	} else if fifths > 0 {
 		order = orderOfSharps()
 		accidental = Sharp
 	} else {
@@ -176,13 +175,25 @@ func KeySignatureFromScale(
 		accidental = Flat
 	}
 
-	letters := order[0:int(math.Abs(float64(n)))]
-
 	keySignature := KeySignature{}
 
-	for _, letter := range letters {
-		keySignature[letter] = []Accidental{accidental}
+	for i := 0; i < int(math.Abs(float64(fifths))); i++ {
+		keySignature[order[i % len(order)]] = append(
+			keySignature[order[i % len(order)]],
+			accidental,
+		)
 	}
+
+	return keySignature
+}
+
+// KeySignatureFromScale returns a key signature given a tonic note and a scale
+// type.
+func KeySignatureFromScale(
+	tonic LetterAndAccidentals, scaleType ScaleType,
+) KeySignature {
+	fifths := partialCircleOfFifths(scaleType)[tonic.NoteLetter]
+	keySignature := KeySignatureFromCircleOfFifths(fifths)
 
 	for _, accidental := range tonic.Accidentals {
 		switch accidental {
