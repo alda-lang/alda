@@ -163,6 +163,7 @@ jobs:
             chmod +x /home/circleci/bin/alda
             chmod +x /home/circleci/bin/alda-player
             export ALDA_DISABLE_SPAWNING=yes
+            export ALDA_DISABLE_TELEMETRY=yes
             alda version
             alda-player info
 
@@ -170,6 +171,7 @@ jobs:
           name: alda doctor
           command: |
             export ALDA_DISABLE_SPAWNING=yes
+            export ALDA_DISABLE_TELEMETRY=yes
             alda -v3 doctor --no-audio
 
       - run:
@@ -181,6 +183,7 @@ jobs:
           name: "Test `alda update` mechanism"
           command: |
             export ALDA_DISABLE_SPAWNING=yes
+            export ALDA_DISABLE_TELEMETRY=yes
             # TODO: Test with a 2.x version
             alda -v3 update --version 1.4.3
             alda version | grep 1.4.3
@@ -204,6 +207,7 @@ jobs:
             chmod +x /usr/local/bin/alda
             chmod +x /usr/local/bin/alda-player
             export ALDA_DISABLE_SPAWNING=yes
+            export ALDA_DISABLE_TELEMETRY=yes
             alda version
             alda-player info
 
@@ -211,6 +215,7 @@ jobs:
           name: alda doctor
           command: |
             export ALDA_DISABLE_SPAWNING=yes
+            export ALDA_DISABLE_TELEMETRY=yes
             alda -v3 doctor --no-audio
 
       - run:
@@ -222,6 +227,7 @@ jobs:
           name: "Test `alda update` mechanism"
           command: |
             export ALDA_DISABLE_SPAWNING=yes
+            export ALDA_DISABLE_TELEMETRY=yes
             # TODO: Test with a 2.x version
             alda -v3 update --version 1.4.3
             alda version | grep 1.4.3
@@ -243,6 +249,7 @@ jobs:
             Copy-Item -Path "player\windows\alda-player.exe" -Destination "C:\Program Files\Alda\bin"
             $env:PATH = "$env:PATH;C:\Program Files\Alda\bin"
             $env:ALDA_DISABLE_SPAWNING = "yes"
+            $env:ALDA_DISABLE_TELEMETRY = "yes"
             alda version
             alda-player info
 
@@ -251,6 +258,7 @@ jobs:
           command: |
             $env:PATH = "$env:PATH;C:\Program Files\Alda\bin"
             $env:ALDA_DISABLE_SPAWNING = "yes"
+            $env:ALDA_DISABLE_TELEMETRY = "yes"
             alda -v3 doctor --no-audio
 
       - run:
@@ -258,6 +266,7 @@ jobs:
           command: |
             $env:PATH = "$env:PATH;C:\Program Files\Alda\bin"
             $env:ALDA_DISABLE_SPAWNING = "yes"
+            $env:ALDA_DISABLE_TELEMETRY = "yes"
             # TODO: Test with a 2.x version
             alda -v3 update --version 1.4.3
             if (alda version | Select-String -Pattern 1.4.3 -quiet) { true } else { false }

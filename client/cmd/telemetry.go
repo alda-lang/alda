@@ -61,6 +61,17 @@ const (
 const telemetryStatusFileName = "telemetry-status"
 
 func readTelemetryStatus() (TelemetryStatus, error) {
+	// The environment variable ALDA_DISABLE_TELEMETRY can be set to "yes" as a
+	// convenient way to disable telemetry for only one invocation of Alda, or to
+	// disable telemetry only for the duration of a terminal session.
+	if os.Getenv("ALDA_DISABLE_TELEMETRY") == "yes" {
+		log.Info().
+			Str("ALDA_DISABLE_TELEMETRY", "yes").
+			Msg("Telemetry is disabled.")
+
+		return TelemetryDisabled, nil
+	}
+
 	telemetryStatusFile := system.QueryConfig(telemetryStatusFileName)
 
 	if telemetryStatusFile == "" {
