@@ -252,6 +252,7 @@ func sendTelemetryRequest(command string) error {
 	if err != nil {
 		return err
 	}
+	defer response.Body.Close()
 
 	responseBody, err := ioutil.ReadAll(response.Body)
 	if err != nil {
