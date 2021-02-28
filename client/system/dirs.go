@@ -1,6 +1,7 @@
 package system
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -46,13 +47,11 @@ func pathImpl(baseDir string, pathSegments []string) string {
 func queryImpl(baseDir string, pathSegments []string) string {
 	filepath := pathImpl(baseDir, pathSegments)
 
-	_, err := os.Stat(filepath)
-
-	if (err != nil && os.IsExist(err)) || err == nil {
-		return filepath
+	if _, err := os.Stat(filepath); errors.Is(err, os.ErrNotExist) {
+		return ""
 	}
 
-	return ""
+	return filepath
 }
 
 // CachePath returns the full path to a cache file consisting of the provided
