@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"alda.io/client/help"
@@ -114,6 +115,29 @@ func sendTelemetry(command string) {
 	startBackgroundActivity("send telemetry", func() {
 		if err := sendTelemetryRequest(command); err != nil {
 			log.Debug().Err(err).Msg("Failed to send telemetry.")
+		}
+	})
+}
+
+func cleanUpRenamedExecutables() {
+	startBackgroundActivity("clean up renamed executables", func() {
+		renamedExecutables, err := system.FindRenamedExecutables()
+		if err != nil {
+			log.Warn().Err(err).Msg("Failed to search for renamed executables.")
+			return
+		}
+
+		for _, filepath := range renamedExecutables {
+			if err := os.Remove(filepath); err != nil {
+				log.Warn().
+					Err(err).
+					Str("filepath", filepath).
+					Msg("Failed to delete renamed executable")
+			} else {
+				log.Debug().
+					Str("filepath", filepath).
+					Msg("Deleted renamed executable.")
+			}
 		}
 	})
 }
@@ -268,6 +292,8 @@ Slack: https://slack.alda.io`,
 		if err := handleVerbosity(cmd); err != nil {
 			return err
 		}
+
+		cleanUpRenamedExecutables()
 
 		informUserOfTelemetryIfNeeded()
 

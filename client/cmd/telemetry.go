@@ -229,6 +229,10 @@ See %s for more information.`,
 	},
 }
 
+func aldaApiUrl(endpoint string) string {
+	return "https://api.alda.io" + endpoint
+}
+
 func sendTelemetryRequest(command string) error {
 	payload := map[string]string{
 		"os":      runtime.GOOS,
@@ -245,7 +249,7 @@ func sendTelemetryRequest(command string) error {
 	log.Debug().Bytes("json", json).Msg("Sending telemetry request.")
 
 	response, err := (&http.Client{Timeout: 5 * time.Second}).Post(
-		"https://api.alda.io/telemetry",
+		aldaApiUrl("/telemetry"),
 		"application/json",
 		bytes.NewBuffer(json),
 	)
