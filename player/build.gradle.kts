@@ -15,8 +15,7 @@ dependencies {
   implementation("com.beust:klaxon:5.0.1")
   implementation("com.github.ajalt:clikt:2.4.0")
 
-  // implementation("com.illposed.osc:javaosc-core:0.7")
-  implementation("io.djy:javaosc:0.7") {
+  implementation("com.illposed.osc:javaosc-core:0.8") {
     exclude("org.slf4j", "slf4j-api")
     exclude("org.slf4j", "slf4j-ext")
     exclude("org.slf4j", "slf4j-log4j12")
