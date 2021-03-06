@@ -185,7 +185,7 @@ jobs:
             export ALDA_DISABLE_SPAWNING=yes
             export ALDA_DISABLE_TELEMETRY=yes
             # TODO: Test with a 2.x version
-            alda -v3 update --version 1.4.3
+            alda -v3 update --yes --version 1.4.3
             alda version | grep 1.4.3
             # alda-player info | grep 1.4.3
 
@@ -229,7 +229,7 @@ jobs:
             export ALDA_DISABLE_SPAWNING=yes
             export ALDA_DISABLE_TELEMETRY=yes
             # TODO: Test with a 2.x version
-            alda -v3 update --version 1.4.3
+            alda -v3 update --yes --version 1.4.3
             alda version | grep 1.4.3
             # alda-player info | grep 1.4.3
 
@@ -268,7 +268,7 @@ jobs:
             $env:ALDA_DISABLE_SPAWNING = "yes"
             $env:ALDA_DISABLE_TELEMETRY = "yes"
             # TODO: Test with a 2.x version
-            alda -v3 update --version 1.4.3
+            alda -v3 update --yes --version 1.4.3
             if (alda version | Select-String -Pattern 1.4.3 -quiet) { true } else { false }
             # if (alda-player info | Select-String -Pattern 1.4.3 -quiet) { true } else { false }
 
