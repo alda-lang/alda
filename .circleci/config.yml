@@ -269,6 +269,8 @@ jobs:
             $env:ALDA_DISABLE_TELEMETRY = "yes"
             # TODO: Test with a 2.x version
             alda -v3 update --yes --version 1.4.4
+            # temporary, to aid in debugging failing CI build
+            alda version --client
             if (alda version --client | Select-String -Pattern 1.4.4 -quiet) { true } else { false }
             # if (alda-player info | Select-String -Pattern 1.4.4 -quiet) { true } else { false }
 
