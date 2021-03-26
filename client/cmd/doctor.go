@@ -13,11 +13,12 @@ import (
 	"syscall"
 	"time"
 
-	log "alda.io/client/logging"
+	"alda.io/client/help"
 	"alda.io/client/model"
 	"alda.io/client/parser"
 	"alda.io/client/repl"
 	"alda.io/client/system"
+	"alda.io/client/text"
 	"alda.io/client/transmitter"
 	"alda.io/client/util"
 	"github.com/daveyarwood/go-osc/osc"
@@ -190,19 +191,80 @@ var doctorCmd = &cobra.Command{
 		//////////////////////////////////////////////////
 
 		var aldaPlayer string
+		var sameVersion bool
 
 		if err := step(
 			"Locate alda-player executable on PATH",
 			func() error {
-				ap, err := exec.LookPath("alda-player")
-				if err != nil {
-					log.Debug().Err(err).Msg("exec.LookPath error")
+				ap, sv, err := system.AldaPlayerPath()
+				if err == system.ErrAldaPlayerNotFoundOnPath {
+					if !text.PromptForConfirmation(
+						fmt.Sprintf(
+							"\n%s does not appear to be installed.\nInstall %s now?",
+							aurora.Bold("alda-player"),
+							aurora.Bold("alda-player"),
+						),
+						true,
+					) {
+						return system.ErrAldaPlayerNotFoundOnPath
+					}
 
-					return system.ErrAldaPlayerNotFoundOnPath
+					if err := installCorrectAldaPlayerVersion(); err != nil {
+						return err
+					}
+
+					// Now that we've installed alda-player, let's make another attempt to
+					// find `alda-player` on the PATH. It should succeed this time, but if
+					// it doesn't, we'll return the error.
+					ap, sv, err = system.AldaPlayerPath()
+				}
+
+				if err != nil {
+					return err
 				}
 
 				aldaPlayer = ap
+				sameVersion = sv
 				return nil
+			},
+		); err != nil {
+			return err
+		}
+
+		//////////////////////////////////////////////////
+
+		if err := step(
+			"Check alda-player version",
+			func() error {
+				if sameVersion {
+					return nil
+				}
+
+				if !text.PromptForConfirmation(
+					fmt.Sprintf(
+						"\nThe versions of %s and %s that you have installed are "+
+							"different.\nInstall the correct version of %s?",
+						aurora.Bold("alda"),
+						aurora.Bold("alda-player"),
+						aurora.Bold("alda-player"),
+					),
+					true,
+				) {
+					return help.UserFacingErrorf(
+						`The versions of %s and %s that you have installed are different.
+This might cause unexpected problems.
+
+For best results, run %s and follow the prompt to install the correct
+version of %s.`,
+						aurora.Bold("alda"),
+						aurora.Bold("alda-player"),
+						aurora.BrightYellow("alda doctor"),
+						aurora.Bold("alda-player"),
+					)
+				}
+
+				fmt.Println()
+				return installCorrectAldaPlayerVersion()
 			},
 		); err != nil {
 			return err

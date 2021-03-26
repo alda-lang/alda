@@ -83,13 +83,11 @@ type releaseAsset struct {
 	assetUrl  string
 }
 
-func downloadAssets(
-	outdir string, version string, assets []releaseAsset,
-) error {
-	fmt.Printf(
-		"%s",
-		aurora.Bold(fmt.Sprintf("Downloading Alda %s...\n", version)),
-	)
+func downloadAssets(assets []releaseAsset) (assetsDir string, err error) {
+	outdir, err := ioutil.TempDir("", "alda-update")
+	if err != nil {
+		return "", err
+	}
 
 	maxAssetNameLength := -1
 	for _, asset := range assets {
@@ -114,7 +112,7 @@ func downloadAssets(
 		client := &http.Client{Timeout: 10 * time.Second}
 		response, err := client.Get(asset.assetUrl)
 		if err != nil {
-			return err
+			return "", err
 		}
 		defer response.Body.Close()
 
@@ -129,7 +127,9 @@ func downloadAssets(
 					Msg("Asset HTTP response")
 			}
 
-			return fmt.Errorf("unexpected HTTP response (%d)", response.StatusCode)
+			return "", fmt.Errorf(
+				"unexpected HTTP response (%d)", response.StatusCode,
+			)
 		}
 
 		bar := progress.Add(
@@ -154,7 +154,7 @@ func downloadAssets(
 
 		out, err := os.Create(filepath.Join(outdir, asset.assetName))
 		if err != nil {
-			return err
+			return "", err
 		}
 		defer out.Close()
 
@@ -169,15 +169,26 @@ func downloadAssets(
 
 	progress.Wait()
 
-	return downloadError
+	if downloadError != nil {
+		return "", downloadError
+	}
+
+	return outdir, nil
 }
 
-func installAsset(indir string, outdir string, asset releaseAsset) error {
+func installAsset(indir string, asset releaseAsset) error {
 	if asset.assetType != "executable" {
 		return fmt.Errorf(
 			"unexpected asset type: %s (%s)", asset.assetType, asset.assetName,
 		)
 	}
+
+	aldaPath, err := system.AldaExecutablePath()
+	if err != nil {
+		return err
+	}
+
+	outdir := filepath.Dir(aldaPath)
 
 	fmt.Printf(
 		"%s\n",
@@ -209,7 +220,7 @@ func installAsset(indir string, outdir string, asset releaseAsset) error {
 		Str("new-name", oldRenamed).
 		Msg("Renaming existing executable.")
 
-	err := os.Rename(outpath, oldRenamed)
+	err = os.Rename(outpath, oldRenamed)
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		return err
 	}
@@ -290,17 +301,39 @@ func installAsset(indir string, outdir string, asset releaseAsset) error {
 	return nil
 }
 
-func installVersion(json *json.Container) error {
+func downloadAndInstallAssets(assets []releaseAsset) error {
+	assetsDir, err := downloadAssets(assets)
+	if err != nil {
+		return err
+	}
+
+	for _, asset := range assets {
+		fmt.Println()
+		if err := installAsset(assetsDir, asset); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func versionString(json *json.Container) string {
 	version, ok := json.Search("version").Data().(string)
 	if !ok {
-		version = "<unknown version>"
+		return "<unknown version>"
 	}
+
+	return version
+}
+
+func versionAssets(json *json.Container) ([]releaseAsset, error) {
+	version := versionString(json)
 
 	osAndArch := fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH)
 
 	assetsInfo, ok := json.Search("assets", osAndArch).Data().([]interface{})
 	if !ok {
-		return fmt.Errorf(
+		return nil, fmt.Errorf(
 			"no assets found for version: %s, os/arch: %s", version, osAndArch,
 		)
 	}
@@ -312,22 +345,22 @@ func installVersion(json *json.Container) error {
 
 		m, ok := assetInfo.(map[string]interface{})
 		if !ok {
-			return errUnexpectedAsset
+			return nil, errUnexpectedAsset
 		}
 
 		assetName, ok := m["name"].(string)
 		if !ok {
-			return errUnexpectedAsset
+			return nil, errUnexpectedAsset
 		}
 
 		assetType, ok := m["type"].(string)
 		if !ok {
-			return errUnexpectedAsset
+			return nil, errUnexpectedAsset
 		}
 
 		assetUrl, ok := m["url"].(string)
 		if !ok {
-			return errUnexpectedAsset
+			return nil, errUnexpectedAsset
 		}
 
 		assets = append(assets, releaseAsset{
@@ -337,31 +370,24 @@ func installVersion(json *json.Container) error {
 		})
 	}
 
-	tmpdir, err := ioutil.TempDir("", "alda-update")
-	if err != nil {
-		return err
-	}
-
-	if err := downloadAssets(tmpdir, version, assets); err != nil {
-		return err
-	}
-
-	aldaPath, err := system.AldaExecutablePath()
-	if err != nil {
-		return err
-	}
-
-	for _, asset := range assets {
-		fmt.Println()
-		if err := installAsset(tmpdir, filepath.Dir(aldaPath), asset); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return assets, nil
 }
 
-func installDesiredVersion(version string) error {
+func installVersion(json *json.Container) error {
+	assets, err := versionAssets(json)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf(
+		"%s",
+		aurora.Bold(fmt.Sprintf("Downloading Alda %s...\n", versionString(json))),
+	)
+
+	return downloadAndInstallAssets(assets)
+}
+
+func fetchReleaseInfo(version string) (*json.Container, error) {
 	fmt.Println("Fetching information about Alda releases...")
 	fmt.Println()
 
@@ -369,14 +395,14 @@ func installDesiredVersion(version string) error {
 		aldaApiUrl("/release/" + version),
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer response.Body.Close()
 
 	switch response.StatusCode {
 	case 200: // OK to proceed
 	case 404:
-		return help.UserFacingErrorf(
+		return nil, help.UserFacingErrorf(
 			`The requested Alda version, %s, was not found.`,
 			aurora.Bold(version),
 		)
@@ -391,10 +417,17 @@ func installDesiredVersion(version string) error {
 				Msg("Alda API response")
 		}
 
-		return fmt.Errorf("unexpected Alda API response (%d)", response.StatusCode)
+		return nil, fmt.Errorf(
+			"unexpected Alda API response (%d)",
+			response.StatusCode,
+		)
 	}
 
-	json, err := json.ParseJSONBuffer(response.Body)
+	return json.ParseJSONBuffer(response.Body)
+}
+
+func installDesiredVersion(version string) error {
+	json, err := fetchReleaseInfo(version)
 	if err != nil {
 		return err
 	}
@@ -417,6 +450,42 @@ func installDesiredVersion(version string) error {
 	fmt.Println()
 
 	return installVersion(json)
+}
+
+func installCorrectAldaPlayerVersion() error {
+	json, err := fetchReleaseInfo(generated.ClientVersion)
+	if err != nil {
+		return err
+	}
+
+	assets, err := versionAssets(json)
+	if err != nil {
+		return err
+	}
+
+	version := versionString(json)
+
+	fmt.Printf(
+		"%s",
+		aurora.Bold(fmt.Sprintf("Downloading alda-player %s...\n", version)),
+	)
+
+	var aldaPlayerAsset releaseAsset
+	for _, asset := range assets {
+		if asset.assetName == "alda-player" ||
+			asset.assetName == "alda-player.exe" {
+			aldaPlayerAsset = asset
+		}
+	}
+
+	if aldaPlayerAsset.assetName == "" {
+		return fmt.Errorf(
+			"release %s seems to be missing an alda-player asset",
+			version,
+		)
+	}
+
+	return downloadAndInstallAssets([]releaseAsset{aldaPlayerAsset})
 }
 
 var updateCmd = &cobra.Command{

@@ -8,7 +8,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
-	"runtime"
 	"strings"
 
 	"alda.io/client/generated"
@@ -79,31 +78,19 @@ var ErrAldaPlayerNotFoundOnPath error
 var ErrNoPlayersAvailable error
 
 func init() {
-	extension := ""
-	if runtime.GOOS == "windows" {
-		extension = ".exe"
-	}
-
-	chmodInstruction := ""
-	if runtime.GOOS != "windows" {
-		chmodInstruction = fmt.Sprintf(`
-  • Make both files executable (e.g. %s)`,
-			aurora.BrightYellow("chmod +x ~/Downloads/alda-player"),
-		)
-	}
-
 	ErrAldaPlayerNotFoundOnPath = help.UserFacingErrorf(
-		`%s was not found on your PATH.
+		`%s does not appear to be installed.
 
-If you haven't already done so...
+The %s command-line client needs to spawn %s processes in order to play audio
+in the background.
 
-  • Download both %s and %s from %s.%s
-  • Include both executables on your PATH.`,
-		aurora.Bold("alda-player"+extension),
-		aurora.Bold("alda"+extension),
-		aurora.Bold("alda-player"+extension),
-		aurora.Underline("https://alda.io/install"),
-		chmodInstruction,
+To install %s, run %s and answer %s when prompted.`,
+		aurora.Bold("alda-player"),
+		aurora.Bold("alda"),
+		aurora.Bold("alda-player"),
+		aurora.Bold("alda-player"),
+		aurora.BrightYellow("alda doctor"),
+		aurora.Bold("y"),
 	)
 
 	playerLogFile := CachePath("logs", "alda-player.log")
@@ -114,8 +101,7 @@ background. This could happen for a number of reasons.
 
 To troubleshoot:
 
-  • Confirm that %s and %s both display the
-    same version number.
+  • Run %s and see if any of the health checks fail.
 
   • Run %s to see the state of any currently running player
     processes.
@@ -128,8 +114,7 @@ To troubleshoot:
 
   • Try to make it play something:
       %s`,
-		aurora.BrightYellow("alda version"),
-		aurora.BrightYellow("alda-player info"),
+		aurora.BrightYellow("alda doctor"),
 		aurora.BrightYellow("alda ps"),
 		aurora.BrightYellow(playerLogFile),
 		aurora.BrightYellow("alda-player -v run -p 27278"),
@@ -188,21 +173,30 @@ for you automatically.`,
 	)
 }
 
-func spawnPlayer() error {
+// AldaPlayerPath returns the absolute path to the `alda-player` executable and
+// whether the player is the same version as the client.
+//
+// To determine whether the player is the same version of the client, we run
+// `alda-player info` and parse the version number from the output. If the
+// versions don't match, a warning is logged that includes instructions about
+// how to fix this situation.
+//
+// Returns `ErrAldaPlayerNotFoundOnPath` if `alda-player` is not found on the
+// PATH.
+//
+// Returns an unspecified error if something else goes wrong.
+func AldaPlayerPath() (playerPath string, sameVersion bool, err error) {
 	aldaPlayer, err := exec.LookPath("alda-player")
 	if err != nil {
-		return err
+		return "", false, ErrAldaPlayerNotFoundOnPath
 	}
 
-	// First, we run `alda-player info` and parse the version number from the
-	// output, so that we can confirm that the player is the same version as the
-	// client.
 	infoCmd := exec.Command(aldaPlayer, "info")
 	infoCmd.Stdout = nil
 	infoCmd.Stderr = nil
 	outputBytes, err := infoCmd.Output()
 	if err != nil {
-		return err
+		return "", false, err
 	}
 
 	output := string(outputBytes)
@@ -210,25 +204,32 @@ func spawnPlayer() error {
 	re := regexp.MustCompile(`alda-player ([^\r\n]+)`)
 	captured := re.FindStringSubmatch(output)
 	if len(captured) < 2 {
-		return fmt.Errorf(
+		return "", false, fmt.Errorf(
 			"unable to parse player version from output: %s", output,
 		)
 	}
 	// captured[0] is "alda-player X.X.X", captured[1] is "X.X.X"
 	playerVersion := captured[1]
 
-	// TODO: If the player version is different from the client version, offer to
-	// download and install the correct player version.
 	if playerVersion != generated.ClientVersion {
-		return fmt.Errorf(
-			"client version is %s, but player version is %s",
-			generated.ClientVersion, playerVersion,
-		)
+		log.Warn().
+			Str("clientVersion", generated.ClientVersion).
+			Str("playerVersion", playerVersion).
+			Msg("`alda` and `alda-player` are different versions. " +
+				"Run `alda doctor` to install the correct version of `alda-player`.")
 	}
 
-	// Once we've confirmed that the client and player version are the same, we
-	// run `alda-player run` to start the player process.
-	runCmd := exec.Command(aldaPlayer, "run")
+	return aldaPlayer, playerVersion == generated.ClientVersion, nil
+}
+
+// spawnPlayer spawns an Alda player process, using the provided absolute path
+// to `alda-player`.
+//
+// Note that this path can be obtained by calling `AldaPlayerPath()`, which also
+// checks that the client and player versions are the same and logs a warning if
+// they aren't.
+func spawnPlayer(playerPath string) error {
+	runCmd := exec.Command(playerPath, "run")
 	if err := runCmd.Start(); err != nil {
 		return err
 	}
@@ -252,6 +253,11 @@ func FillPlayerPool() error {
 			Msg("Skipping filling the player pool.")
 
 		return nil
+	}
+
+	playerPath, _, err := AldaPlayerPath()
+	if err != nil {
+		return err
 	}
 
 	players, err := ReadPlayerStates()
@@ -280,7 +286,7 @@ func FillPlayerPool() error {
 	for i := 0; i < playersToStart; i++ {
 		result := make(chan error)
 		results = append(results, result)
-		go func() { result <- spawnPlayer() }()
+		go func() { result <- spawnPlayer(playerPath) }()
 	}
 
 	for _, result := range results {
