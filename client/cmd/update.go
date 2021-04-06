@@ -19,6 +19,7 @@ import (
 	log "alda.io/client/logging"
 	"alda.io/client/system"
 	"alda.io/client/text"
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/logrusorgru/aurora"
 	"github.com/spf13/cobra"
 	"github.com/vbauerster/mpb/v6"
@@ -326,6 +327,15 @@ func versionString(json *json.Container) string {
 	return version
 }
 
+func dateString(json *json.Container) string {
+	date, ok := json.Search("date").Data().(string)
+	if !ok {
+		return "<unknown date>"
+	}
+
+	return date
+}
+
 func versionAssets(json *json.Container) ([]releaseAsset, error) {
 	version := versionString(json)
 
@@ -387,6 +397,46 @@ func installVersion(json *json.Container) error {
 	return downloadAndInstallAssets(assets)
 }
 
+func errUnexpectedAldaApiResponse(response *http.Response) error {
+	responseBody, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		log.Error().Err(err).Msg("Unable to read Alda API response body")
+	} else {
+		log.Error().
+			Bytes("body", responseBody).
+			Int("status", response.StatusCode).
+			Msg("Alda API response")
+	}
+
+	return fmt.Errorf(
+		"unexpected Alda API response (%d)",
+		response.StatusCode,
+	)
+}
+
+func errUnexpectedAldaApiResponseJson(json *json.Container) error {
+	return fmt.Errorf("unexpected Alda API response: %#v", json)
+}
+
+func fetchLatestReleasesInfo() (*json.Container, error) {
+	fmt.Println("Fetching information about Alda releases...")
+	fmt.Println()
+
+	response, err := (&http.Client{Timeout: 30 * time.Second}).Get(
+		aldaApiUrl("/releases/latest?from-version=" + generated.ClientVersion),
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != 200 {
+		return nil, errUnexpectedAldaApiResponse(response)
+	}
+
+	return json.ParseJSONBuffer(response.Body)
+}
+
 func fetchReleaseInfo(version string) (*json.Container, error) {
 	fmt.Println("Fetching information about Alda releases...")
 	fmt.Println()
@@ -407,31 +457,13 @@ func fetchReleaseInfo(version string) (*json.Container, error) {
 			aurora.Bold(version),
 		)
 	default:
-		responseBody, err := ioutil.ReadAll(response.Body)
-		if err != nil {
-			log.Error().Err(err).Msg("Unable to read Alda API response body")
-		} else {
-			log.Error().
-				Bytes("body", responseBody).
-				Int("status", response.StatusCode).
-				Msg("Alda API response")
-		}
-
-		return nil, fmt.Errorf(
-			"unexpected Alda API response (%d)",
-			response.StatusCode,
-		)
+		return nil, errUnexpectedAldaApiResponse(response)
 	}
 
 	return json.ParseJSONBuffer(response.Body)
 }
 
-func installDesiredVersion(version string) error {
-	json, err := fetchReleaseInfo(version)
-	if err != nil {
-		return err
-	}
-
+func promptAndInstallVersion(json *json.Container) error {
 	displayVersionInfo(json)
 	fmt.Println()
 
@@ -439,7 +471,7 @@ func installDesiredVersion(version string) error {
 		fmt.Sprintf(
 			"Alda %s is currently installed. Install version %s?",
 			aurora.Bold(generated.ClientVersion),
-			aurora.Bold(version),
+			aurora.Bold(versionString(json)),
 		),
 		true, // default to "yes"
 	) {
@@ -488,14 +520,79 @@ func installCorrectAldaPlayerVersion() error {
 	return downloadAndInstallAssets([]releaseAsset{aldaPlayerAsset})
 }
 
+func checkForUpdates() error {
+	apiResponse, err := fetchLatestReleasesInfo()
+	if err != nil {
+		return err
+	}
+
+	explanation, ok := apiResponse.Search("explanation").Data().(string)
+	if ok {
+		fmt.Println(text.Boxed(explanation))
+		fmt.Println()
+	}
+
+	releasesList := apiResponse.Search("releases")
+	if releasesList == nil {
+		// API response JSON missing a "releases" key
+		return errUnexpectedAldaApiResponseJson(apiResponse)
+	}
+
+	releases := releasesList.Children()
+	if releases == nil {
+		// "releases" is present, but not a list (i.e. doesn't have children)
+		return errUnexpectedAldaApiResponseJson(apiResponse)
+	}
+
+	switch len(releases) {
+	case 0:
+		fmt.Println("Alda is up to date.")
+		return nil
+	case 1:
+		return promptAndInstallVersion(releases[0])
+	default:
+		fmt.Println("There are multiple newer releases available.")
+		fmt.Println()
+
+		options := []string{}
+		versions := map[string]*json.Container{}
+
+		for _, release := range releases {
+			option := fmt.Sprintf(
+				"Alda %s (%s)", versionString(release), dateString(release),
+			)
+			options = append(options, option)
+			versions[option] = release
+		}
+
+		selectedVersion := ""
+
+		survey.AskOne(
+			&survey.Select{
+				Message: "Which version would you like to install?",
+				Options: options,
+			},
+			&selectedVersion,
+		)
+
+		fmt.Println()
+
+		return promptAndInstallVersion(versions[selectedVersion])
+	}
+}
+
 var updateCmd = &cobra.Command{
 	Use:   "update",
 	Short: "Update to the latest version of Alda",
 	RunE: func(_ *cobra.Command, args []string) error {
 		if desiredVersion != "" {
-			return installDesiredVersion(desiredVersion)
+			json, err := fetchReleaseInfo(desiredVersion)
+			if err != nil {
+				return err
+			}
+			return promptAndInstallVersion(json)
 		}
 
-		return fmt.Errorf("TODO: implement checking for updates")
+		return checkForUpdates()
 	},
 }

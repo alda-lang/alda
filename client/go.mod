@@ -3,6 +3,7 @@ module alda.io/client
 go 1.15
 
 require (
+	github.com/AlecAivazis/survey/v2 v2.2.9
 	github.com/Jeffail/gabs/v2 v2.6.0
 	github.com/OpenPeeDeeP/xdg v0.2.0
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
