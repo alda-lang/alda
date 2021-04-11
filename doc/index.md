@@ -17,7 +17,7 @@ Hello! I'm an introductory paragraph, and this is the landing page for Alda's of
 
   * [Updating Alda](../README.md#updating-alda)
 
-  * [MIDI soundfonts](installing-a-good-soundfont.md)
+  * [Installing a good soundfont](installing-a-good-soundfont.md)
 
   * [Editor plugins](editor-plugins.md)
 
