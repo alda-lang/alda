@@ -17,9 +17,9 @@ Hello! I'm an introductory paragraph, and this is the landing page for Alda's of
 
   * [Updating Alda](../README.md#updating-alda)
 
-  * [MIDI soundfonts](../README.md#midi-soundfonts)
+  * [MIDI soundfonts](installing-a-good-soundfont.md)
 
-  * [Editor plugins](../README.md#editor-plugins)
+  * [Editor plugins](editor-plugins.md)
 
 * The article on [scores and parts](scores-and-parts.md) provides some good general information on what an Alda score is. After that, you may be interested in learning more about the fundamental pieces of an Alda score:
   * [notes](notes.md)
