@@ -25,11 +25,8 @@
   </p>
 </p>
 
-> New to Alda? You may be interested in reading [this blog post][alda-blog-post] as an introduction.
-
-
 Alda is a text-based programming language for music composition. It allows you
-to write and play back music using only a text editor and the command line.
+to compose and play back music using only your text editor and the command line.
 
 ```alda
 piano:
@@ -42,6 +39,10 @@ piano:
 > For more examples, see these [example scores](https://github.com/alda-lang/alda-core/tree/master/examples).
 
 The language's design equally favors aesthetics, flexibility and ease of use.
+
+(Why compose music this way instead of in a graphical sheet music notation
+program? See [this blog post][alda-blog-post] for a brief history and
+rationale.)
 
 [alda-blog-post]: https://blog.djy.io/alda-a-manifesto-and-gentle-introduction/
 
