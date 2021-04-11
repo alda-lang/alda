@@ -121,20 +121,6 @@ Once you have Alda installed, you can update to the latest version at any time b
 alda update
 ```
 
-### Editor Plugins
-
-For the best experience when editing Alda score files, install the Alda file-type plugin for your editor of choice.
-
-> Don't see a plugin for your favorite editor? Write your own and open a pull request to add it here! :)
-
-- [Ace](https://ace.c9.io/)
-- [Atom](https://github.com/MadcapJake/language-alda)
-- [Eclipse](https://github.com/VishwaasHegde/Alda-Eclipse-Plugin)
-- [Emacs](https://github.com/jgkamat/alda-mode)
-- [Sublime Text](https://github.com/archimedespi/sublime-alda)
-- [Vim](https://github.com/daveyarwood/vim-alda)
-- [VS Code](https://github.com/abhi18av/Alda-VsCode)
-
 ## Demo
 
 First start the Alda server (this may take a minute):
