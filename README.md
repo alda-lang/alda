@@ -74,20 +74,6 @@ The language's design equally favors aesthetics, flexibility and ease of use.
 
 > **TODO**: Develop an installation process for Alda 2.0.
 
-### Editor Plugins
-
-For the best experience when editing Alda score files, install the Alda file-type plugin for your editor of choice.
-
-> Don't see a plugin for your favorite editor? Write your own and open a pull request to add it here! :)
-
-- [Ace](https://ace.c9.io/)
-- [Atom](https://github.com/MadcapJake/language-alda)
-- [Eclipse](https://github.com/VishwaasHegde/Alda-Eclipse-Plugin)
-- [Emacs](https://github.com/jgkamat/alda-mode)
-- [Sublime Text](https://github.com/archimedespi/sublime-alda)
-- [Vim](https://github.com/daveyarwood/vim-alda)
-- [VS Code](https://github.com/abhi18av/Alda-VsCode)
-
 ## Demo
 
 For an overview of available commands and options:
