@@ -73,7 +73,10 @@ rationale.)
 
 ## Installation
 
-> **TODO**: Develop an installation process for Alda 2.0.
+See [the official website][alda-install] for instructions to install the latest
+release of Alda.
+
+[alda-install]: https://alda.io/install
 
 ## Demo
 
