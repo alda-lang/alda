@@ -121,33 +121,6 @@ Once you have Alda installed, you can update to the latest version at any time b
 alda update
 ```
 
-### MIDI soundfonts
-
-Default JVM soundfonts usually are of low quality. We recommend installing a good freeware soundfont like FluidR3 to make your MIDI instruments sound a lot nicer.
-
-#### Mac OS X / Linux
-
-For your convenience, there is a script in this repo that will install the FluidR3 soundfont for Mac and Linux users.
-
-To install FluidR3 on your Mac or Linux system, clone this repo and run:
-
-    scripts/install-fluidr3
-
-This will download FluidR3 and replace `~/.gervill/soundbank-emg.sf2` (your JVM's default soundfont) with it.
-
-#### Windows
-
-<img src="doc/windows_jre_soundfont.png" alt="Replacing the JVM soundfont on Windows">
-
-To replace the default soundfont on a Windows OS:
-
-1. Locate your Java Runtime (JRE) folder and navigate into the `lib` folder. 
-   * If you have JDK 8 or earlier installed, locate your JDK folder instead and navigate into the `jre\lib` folder. 
-2. Make a new folder named `audio`.
-3. Copy any `.sf2` file into this folder.
-
-A variety of popular freeware soundfonts, including FluidR3, are available for download [here](https://musescore.org/en/handbook/soundfonts#list).
-
 ### Editor Plugins
 
 For the best experience when editing Alda score files, install the Alda file-type plugin for your editor of choice.
