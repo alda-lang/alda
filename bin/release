@@ -18,7 +18,7 @@ echo "========================================"
 echo "$version_changelog"
 echo "========================================"
 echo
-read -p "Is this changelog correct? [yN] "
+read -r -p "Is this changelog correct? [yN] "
 
 if [[ "$REPLY" != "y" ]]; then
   echo "Aborting."
