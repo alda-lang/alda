@@ -14,7 +14,8 @@ found_version=no
 while read -r line; do
   # Skip all lines before the heading for the version we're looking for.
   if [[ "$found_version" != yes ]]; then
-    if [[ "$line" == "## $version" ]]; then
+    version_prefix="## $version"
+    if [[ "$line" == $version_prefix* ]]; then
       found_version=yes
     fi
 
