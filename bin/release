@@ -12,7 +12,7 @@ version="$(cat "$(dirname "$0")/../VERSION")"
 echo "--- Release version: $version ---"
 echo
 
-version_changelog="$($(dirname "$0")/version-changelog "$version")"
+version_changelog="$("$(dirname "$0")/version-changelog" "$version")"
 
 echo "========================================"
 echo "$version_changelog"
