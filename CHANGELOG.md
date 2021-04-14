@@ -1,9 +1,5 @@
 # CHANGELOG
 
-## 1.99.3 (2021-04-13)
-
-Just testing.
-
 ---
 
 ## Earlier Versions
