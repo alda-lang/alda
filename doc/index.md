@@ -13,13 +13,11 @@ Hello! I'm an introductory paragraph, and this is the landing page for Alda's of
 
 ## Where to Start
 
-* [Installing Alda](../README.md#installation)
+* [Installing Alda](https://alda.io/install)
 
-  * [Updating Alda](../README.md#updating-alda)
+* [Installing a good soundfont](installing-a-good-soundfont.md)
 
-  * [Installing a good soundfont](installing-a-good-soundfont.md)
-
-  * [Editor plugins](editor-plugins.md)
+* [Editor plugins](editor-plugins.md)
 
 * Learn about the [etymology](etymology.md) behind the name Alda.
 
