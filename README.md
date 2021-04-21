@@ -116,7 +116,7 @@ For more details on how you can contribute to Alda, see [CONTRIBUTING.md](CONTRI
 [gh-project]: https://github.com/orgs/alda-lang/projects/1
 [gh-sponsor]: https://github.com/sponsors/daveyarwood
 
-## Support, Discussion, Comaraderie
+## Support, Discussion, Camaraderie
 
 **Slack**: Joining the [Alda Slack group](https://slack.alda.io) is quick and
 painless. Come say hi!
