@@ -4,12 +4,11 @@ Hello! I'm an introductory paragraph, and this is the landing page for Alda's of
 
 ## Useful Links
 
-* [README](../README.md)
+* [The official Alda website](https://alda.io)
+* [Community](https://alda.io/community)
 * [Contributing to Alda](../CONTRIBUTING.md)
-* [CHANGELOG (Version History)](../CHANGELOG.md)
-* [Some background on Alda and a tutorial](http://blog.djy.io/alda-a-manifesto-and-gentle-introduction)
-* [Alda for Clojurists](http://blog.djy.io/alda-for-clojurists)
-* [Community](community.md)
+* [CHANGELOG (release notes)](../CHANGELOG.md)
+* [Dave's 2015 manifesto about text-based music composition](https://blog.djy.io/alda-a-manifesto-and-gentle-introduction)
 
 ## Where to Start
 
