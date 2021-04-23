@@ -9,6 +9,10 @@ Hello! I'm an introductory paragraph, and this is the landing page for Alda's of
 * [Contributing to Alda](../CONTRIBUTING.md)
 * [CHANGELOG (release notes)](../CHANGELOG.md)
 * [Dave's 2015 manifesto about text-based music composition](https://blog.djy.io/alda-a-manifesto-and-gentle-introduction)
+* Writing music with Alda blog series:
+  1. [Your first notes](https://blog.djy.io/writing-music-with-alda-1/)
+  2. [Rhythm and meter](https://blog.djy.io/writing-music-with-alda-2/)
+  3. [Flats, sharps, and key signatures](https://blog.djy.io/writing-music-with-alda-3/)
 
 ## Where to Start
 
