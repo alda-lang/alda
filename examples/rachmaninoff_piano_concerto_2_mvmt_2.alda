@@ -1,0 +1,204 @@
+# Piano Concerto No. 2, Op. 18 II. Adagio sostenuto
+# Sergei Rachmaninoff
+#
+# excerpt: measure 1 - measure 24
+# transcribed by David Lu
+
+(tempo! 52)
+(key-sig! "f+ c+ g+ d+") # E-major
+
+solo = (vol 100) # solo piano
+soloTutti = (vol 80) # solo piano during tutti sections
+
+soli = (vol 70)
+accomp = (vol 40)
+tutti = (vol 50)
+
+# --- opening ---
+piano "solo":
+    %opening
+    r1 r r r
+
+violin:
+    @opening
+    tutti
+    V1: o4 c_2 d_ | e- f_ | g_ <b+/>g+ | c+4 d+ e_ f+  | <b2./>g2.
+    V2: o3 g_2 b- | b- a- | >c_ <b+    | a+4 b+ >c+ d+ | <g2./>e2.
+
+viola:
+    @opening
+    tutti
+    o3 e-2 f_ | e- c_/>c_ | <c_/>c_ <d+ | g+1 | g2./b2.
+
+cello:
+    @opening
+    tutti
+    o2 >c_2 <b-4. a-8 | g_2 f_2 | e-4 d+ g+2 | ~2 >c4 <b+ | e2./b_2.
+
+contrabass:
+    @opening
+    tutti
+    o2 r1 | r1 | e-4 d+ <g+ >f | e d c <b+ | e2.
+
+clarinet:
+    @opening
+    tutti
+    (key-sig "f+")
+    (transpose -3) # Clarinet in A
+    r1 | r2 o4 d+2 | <a+/>d+ <b/>d+ | c+4/e4 d+/f e/g f/a | g2./b2.
+
+bassoon:
+    @opening
+    tutti
+    o3 r1 | b-2 a- | e-/g_ <a-4/>e-4 <g+4./>d+4 | e_4 d c <b+ | b_2.
+
+french-horn:
+    @opening
+    tutti
+    (key-sig "")
+    (transpose -7) # Horn in F
+    o3 r1 | r1 | d2/>d2 <d+2~1~8/>d+2~1~8
+
+# --- solo piano_in and flute_in ---
+solo:
+    %piano_in
+    solo
+    V2: o3 g1/g12 b12 > e g d e g b d_ e+ g b
+    V1: o2 e1/b
+
+    V2: o3 a2/>c12 e+ g b c e+ g a c_ d f a
+    V1: o2 e1/>c2~6 c_3
+
+    V2: o3 g2/b12 >d f a <b >d f g <b >d_ e+ g
+    V1: o2 e1/b2~6 >d_3
+
+    V2: o3 f2/a+12 >c e g <a_ >c_ e f <a_ b >d f
+    V1: o2 e1/>c3 c_3 <b3
+
+    %flute_in
+    V2: o3 g12 b > e g d e g b d_ e+ g b
+    V1: o2 e1/b/>g
+
+    V2: o3 a2/>c12 e+ g b c e+ f a c_ d f a
+    V1: o2 e1/>c2~6 c_3
+
+    V2: o3 g2/b12 >d f a <b >d e g <b >d_ e+ g
+    V1: o2 e1/b2~6 >d_3
+
+flute:
+    @flute_in
+    soli
+    o4 r4 b >e e+ | e+2 f4 a | d2 e4 g | c2 e8
+
+# --- clarinet_in and strings ---
+solo:
+    %clarinet_in
+    solo
+    V2: o3 g2/a+12 >c e g <a+ >c <f2/>e12 f <a_ >d <b >f
+    V1: o2 e1/>c2~8 c_8 <b4
+
+    V2: o3 g12 b >e g <b >e <g b >e b <b >e <a/>c d a b <b >b
+    V1: o2 e1/b1 e2/b2
+
+    V2: <g2/g12 b12 >e g <b >e <g2/b+12 >d12 f b+ d g
+    V1: o2 e2/b2 e2/b+2
+
+    V2: o3 <g2/b_12 >e12 g b_ e g r8 >d_ e d_
+    V1: o2 e2/b_2 >b12 >g d_ <b >d_ <e
+
+    V2: c d_ e4 <c12/c2 e12 a a e a d_12/d_2 f_12 g >d_ <e g
+    V1: a >a e c e <a <e1
+
+    V2: o4 c2/c12 e12 a >c <e a <a2/a12 >c12 g_ >c <c g_
+    V1: o2 e1/>e2 c2
+
+    V2: <g+2/g+12 >c12 e g+8 b+ >c <b_ >c_ <a+
+    V1: <e2/>c2/r4 >r12 >e g c e g c_ e g
+
+    V2: o3 g1/g12 b12 >e g <b >e <g b >e b d e <a2/>c12 d12 a b <b >b
+    V1: o2 e1/b1 e2/b2
+
+    V2: o3 g2/b12 >e12 g b e g <g2/b12 >f g b <b >f <g2/g12 b12 >f >f <<b >e+
+    V1: o2 e2/b2 d_2/>d_2 <c2/>c2
+
+    V2: o3 a2/a12 >c12 f >c <c f c_2/c_12 e12 f >c_ <d f
+    V1: o2 f2/>c4 f4 <a2/>e2
+
+clarinet:
+    @clarinet_in
+    V1: soli o4 r4 r g a | b b4~8 b8 a b b >c <a g | b2~8 a8 b a
+    V2: accomp o4 r1 r1. r1
+
+    V1: b1 | r4 g4~8 g8 f_ g g a- f_ e | g2~8 f+8 g f+ | g2~4 r4
+    V2: r2 <d2 | c2 r1 | r1 | r2 e4 e_
+
+    V1: r4 b4~8 b8 a b b >c <a g | b2~8 b8 a b b >c <b g+ | a2~8 b8 g_ f
+    V2: d2
+
+flute:
+    @clarinet_in
+    accomp
+    r1 r1~2 r1
+
+    V1: r2 g2  | a2 r1   | r1 r2 g2 | ~2~8 r8 r4 r2 | r1 r2 | r1
+    V2: r2 d_2 | e4 c r1 | r1 r2 e2 | ~2~8 r8 r4 r2 | r1 r2 | r1
+
+violin:
+    @clarinet_in
+    accomp
+    V1: o4 r4 r4 r4 d/a  | e1/g1 d2/a2 | e2/g2~2 f2    | e2~8/g2~8 r8 r4
+    V2: o3 r4 r4 r4 b4   | ~1 >c4. <b8 | b2 b+2        | b_2~8 r8 r4
+
+    V1: o4 r2 c/a d_/g   | c/a <a/>g_  | e2~4/g+2~4 r4 | r2 e/g d/a
+    V2: o4 r2 e f_4. e8  | e2 c        | <g2~4 r4      | r2 b4. >d8 c4. <b8
+
+    V1: o4 e2/g2 <g1/b1  | a2~2/>c2 c_2
+    V2: o3 b2 >f2~4. e+8 | f2 e_4. d8
+
+cello/contrabass:
+    @clarinet_in
+    accomp
+    (quant 15)
+    r1 | e4 r4 r1 | e4 r4 r2 | e4 r4 r2 | r1. | e4 r4 r2 | e4 r4 r2 | r1.
+    e4 r d_ r c r | f r <a r
+
+# --- end of the current section and excerpt ---
+solo:
+    %ending
+    soloTutti
+    V2: <b2/b12 >e12 g b e g <b2/b12 >c e+ b c e+
+    V1: <g2/>e2 <c2/>>e+2
+
+    V2: o3 a+12 >e_ a+ <a_ >e_ a_ <a_2/a_12 >d a_ b d <a_
+    V1: o2 f2/>c4 c_4 <<b2/>b2
+
+    V2: g2
+    V1: e2/b2
+
+flute:
+    @ending
+    tutti
+    V1: o6 r4 d_ c <b       | a+ a_ a_4. g8        | e2
+    V2: o5 e2 e+2           | e_2 d2               | e2
+
+clarinet:
+    @ending
+    tutti
+    V1: g4 f_ e d           | c+ c_ c_4. <b8       | b2
+
+french-horn:
+    @ending
+    tutti
+    V1: r1 | r2 a+ | b
+    V2: r1 | r2 f+ | d+
+
+violin:
+    @ending
+    tutti
+    V1: <b2/b4 >e4 <b2/>e+2 | e_2/f2 <b4~8/d4~8 r8 | g2
+    V2: e4 d_ c <b          | a+4 a_ a_4. g8       | g2
+
+cello/contrabass:
+    @ending
+    tutti
+    g r >c r | <f >c_ <b r4 >e4
