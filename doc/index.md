@@ -33,6 +33,9 @@ Hello! I'm an introductory paragraph, and this is the landing page for Alda's of
   * [markers](markers.md)
   * [offset](offset.md)
   * [attributes](attributes.md)
+  * [repeats](repeats.md)
+  * [variables](variables.md)
+  * [cram expressions](cram-expressions.md)
 
 * Peruse this list of [available instruments](list-of-instruments.md).
 
