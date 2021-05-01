@@ -54,7 +54,7 @@ func RenamedExecutable(path string) string {
 // "alda.1615061099.2081.old") looks like it's a renamed Alda executable.
 func IsRenamedExecutable(basename string) bool {
 	return regexp.MustCompile(
-		`alda(-player)?\.\d+\.\d+\.old`,
+		`alda(-player)?(\.exe)?\.\d+\.\d+\.old`,
 	).MatchString(basename)
 }
 
