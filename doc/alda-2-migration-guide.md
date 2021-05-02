@@ -1,34 +1,33 @@
-# Alda v2 migration guide
+# Alda 2 migration guide
 
-Alda 2.0.0 was released in Spring 2021. Whereas Alda v1 had been written mostly
-in Clojure (with a thin Java client for faster command line interactions), Alda
-v2 is a from-scratch rewrite in Go and Kotlin.
+Alda 2.0.0 was released in May 2021. Whereas Alda 1 had been written mostly in
+Clojure (with a thin Java client for faster command line interactions), Alda 2
+is a from-scratch rewrite in Go and Kotlin.
 
 > If you're curious why Dave decided to rewrite Alda in Go and Kotlin, have a
 > read through [this blog post][why-the-rewrite] that he wrote about it!
 
-Alda v2 is mostly backwards compatible with Alda v1, to the extent that most of
-the scores that you may have written with Alda v1 should work with Alda v2 and
+Alda 2 is mostly backwards compatible with Alda 1, to the extent that most of
+the scores that you may have written with Alda 1 should work with Alda 2 and
 sound exactly the same. The implementation of Alda has been rewritten from the
 ground up, but Alda the language remains almost exactly the same.
 
-There is one important change to the language in Alda v2: **inline Clojure code
+There is one important change to the language in Alda 2: **inline Clojure code
 is no longer supported**. This is for obvious reasons: The Alda client is now
 written in Go, so we can't evaluate arbitrary Clojure code inside an Alda score,
 the way that we used to. (Despite this, Alda remains as powerful as ever as a
 tool for algorithmic composition! See "Programmatic composition" below.)
 
 Read on for a run-down of some things that you should be aware of when you
-upgrade from Alda v1 to Alda v2.
+upgrade from Alda 1 to Alda 2.
 
 ## No more running `alda up`! Introducing `alda-player`
 
-Alda v1 required you to start an Alda server (by running `alda up`) before you
+Alda 1 required you to start an Alda server (by running `alda up`) before you
 could play a score.
 
-In Alda v2, there is no Alda server. You can simply run a command like `alda
-play -c "flute: o5 c8 < b16 a g f e d c2"`, without needing to run `alda up`
-first.
+In Alda 2, there is no Alda server. You can simply run a command like `alda play
+-c "flute: o5 c8 < b16 a g f e d c2"`, without needing to run `alda up` first.
 
 There is a new background process called `alda-player` that handles the audio
 playback. Alda will start one for you automatically each time you play a score.
@@ -78,7 +77,7 @@ you pinpoint the issue and help Alda's maintainers find and fix bugs.
 
 The REPL (**R**ead-**E**val-**P**lay **L**oop, a variation on the
 "read-eval-print loop" from Lisp tradition) experience that you know and love
-from Alda v1 is preserved in Alda v2. Simply run `alda repl` to begin an
+from Alda 1 is preserved in Alda 2. Simply run `alda repl` to begin an
 interactive REPL session. Then you can play around and experiment with Alda code
 and hear how each line of input sounds. (Try typing in something like
 `midi-woodblock: c8. c c8 r c c` and see what happens.)
@@ -86,7 +85,7 @@ and hear how each line of input sounds. (Try typing in something like
 Just like before, you can enter `:help` for an overview of what REPL commands
 are available, and find out more about a command by entering e.g. `:help play`.
 
-So, what's new in the Alda v2 REPL? One superpower that we've given the new REPL
+So, what's new in the Alda 2 REPL? One superpower that we've given the new REPL
 is that it can be run in either client or server mode. By default, `alda repl`
 will start both a server and a client session. But if you already have a REPL
 server running (or if a friend does, somewhere else in the world... :bulb:), you
@@ -99,7 +98,7 @@ connect to the same REPL server and collaborate in real time!
 > check out Dave's blog post about it, [Alda and the nREPL
 > protocol][alda-nrepl].
 
-Some other REPL-related things that have changed since Alda v1:
+Some other REPL-related things that have changed since Alda 1:
 
 * Server/worker management commands are no longer present because there are no
   longer server and worker processes to be managed! The following commands have
@@ -119,13 +118,13 @@ Some other REPL-related things that have changed since Alda v1:
 
 ## Attribute syntax has changed, in some cases
 
-You might not have realized this, but in Alda v1, attributes like `(volume 42)`
+You might not have realized this, but in Alda 1, attributes like `(volume 42)`
 were actually Clojure function calls that were evaluated at runtime. In fact,
 the entire Clojure language was available to use within an Alda score. You
 could, for example, generate a random number between 0 and 100 and set the
 volume to that value with `(volume (rand-int 100))`.
 
-You can't do this kind of thing anymore in Alda v2, because Alda is no longer
+You can't do this kind of thing anymore in Alda 2, because Alda is no longer
 written in Clojure. (However, if you're interested in doing this kind of thing,
 you'll be relieved to know that you still can! see "Programmatic composition"
 below.)
@@ -138,21 +137,21 @@ remaining items are _arguments_. S-expressions are nestable; for example, an
 arithmetic expression like `(1 + 2) * (3 + 4)` is written in Lisp like this: `(*
 (+ 1 2) (+ 3 4))`.
 
-Alda v2 includes a simple, built-in Lisp language ("alda-lisp") that provides
+Alda 2 includes a simple, built-in Lisp language ("alda-lisp") that provides
 just enough to support Alda's attribute operations. However, it lacks a lot of
 the syntax of Clojure. Clojure has a variety of additional syntax that you may
 have seen in Alda scores, including `:keywords`, `[vectors]` and `{hash maps}`.
 alda-lisp does not have these features, so some Alda scores will not be playable
-in Alda v2 if they make use of these features of Clojure.
+in Alda 2 if they make use of these features of Clojure.
 
-The following attributes are affected by syntax changes in Alda v2:
+The following attributes are affected by syntax changes in Alda 2:
 
 <table>
   <thead>
     <tr>
       <th>Example</th>
-      <th>Alda v1</th>
-      <th>Alda v2</th>
+      <th>Alda 1</th>
+      <th>Alda 2</th>
     </tr>
   </thead>
   <tbody>
@@ -189,7 +188,7 @@ The following attributes are affected by syntax changes in Alda v2:
 
 All other attributes should work just fine, but please [let us
 know][open-an-issue] if you run into any other backwards compatibility issues
-with your existing Alda v1 scores!
+with your existing Alda 1 scores!
 
 ## Programmatic composition
 
@@ -198,7 +197,7 @@ As noted above, inline Clojure code is no longer supported as a feature of Alda.
 However, if you're interested in using Clojure to write algorithmic music,
 you're in luck! In 2018, Dave created [alda-clj], a Clojure library for
 live-coding music with Alda. The library provides a Clojure DSL for writing Alda
-scores, and the DSL is equivalent to the one that was available in Alda v1.
+scores, and the DSL is equivalent to the one that was available in Alda 1.
 
 Here is an [example score][entropy] that shows how a Clojure programmer can use
 alda-clj to compose algorithmic music.
@@ -209,9 +208,9 @@ The `alda parse` command parses an Alda score and produces JSON output that
 represents the score data. This can be useful for debugging purposes, or for
 building tooling on top of Alda.
 
-The output of `alda parse` in Alda v2 is different from that of Alda v1 in a
-number of ways. For example, here is the output of `alda parse -c "guitar: e"
--o events` in Alda v1:
+The output of `alda parse` in Alda 2 is different from that of Alda 1 in a
+number of ways. For example, here is the output of `alda parse -c "guitar: e" -o
+events` in Alda 1:
 
 ```json
 [
@@ -236,7 +235,7 @@ number of ways. For example, here is the output of `alda parse -c "guitar: e"
 ]
 ```
 
-And in Alda v2:
+And in Alda 2:
 
 ```json
 [
@@ -260,15 +259,15 @@ And in Alda v2:
 ]
 ```
 
-As you can see, Alda v1 and Alda v2 present the same information in very
-different ways! If you happen to have built any tooling or workflows that rely
-on the Alda v1 `alda parse` output, you will likely need to make adjustments
-after upgrading to Alda v2.
+As you can see, Alda 1 and Alda 2 present the same information in very different
+ways! If you happen to have built any tooling or workflows that rely on the Alda
+1 `alda parse` output, you will likely need to make adjustments after upgrading
+to Alda 2.
 
 ## That's it!
 
-We hope you enjoy Alda v2! Please feel free to join our [Slack
-group][alda-slack] and let us know what you think of it. You can also [open an
+We hope you enjoy Alda 2! Please feel free to join our [Slack group][alda-slack]
+and let us know what you think of it. You can also [open an
 issue][open-an-issue] if you run into a bug or any other sort of weird behavior.
 We'll be happy to help you get it sorted out!
 

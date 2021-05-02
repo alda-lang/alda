@@ -13,7 +13,7 @@ Hello! I'm an introductory paragraph, and this is the landing page for Alda's of
   1. [Your first notes](https://blog.djy.io/writing-music-with-alda-1/)
   2. [Rhythm and meter](https://blog.djy.io/writing-music-with-alda-2/)
   3. [Flats, sharps, and key signatures](https://blog.djy.io/writing-music-with-alda-3/)
-* [Alda v2 migration guide](alda-v2-migration-guide.md)
+* [Alda 2 migration guide](alda-2-migration-guide.md)
 
 ## Where to Start
 
