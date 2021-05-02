@@ -119,7 +119,11 @@ we could use the [`child_process`][child-process] module that comes with Node.
 
 ### Step 2: Keep track of history
 
-> **NOTE:** This step will no longer be necessary when Alda v2 is released.
+> **NOTE**: This step is no longer necessary in Alda 2, which was released in
+> May 2021. However, we do have to do something different (and easier) in its
+> place.
+>
+> Please bear with us until we can update this part for Alda 2!
 
 In the current version of Alda (v1), there is no out-of-the-box way to
 "continue" a score once we've started it. By that, I mean, if we evaluate the
