@@ -1,6 +1,6 @@
 # Alda: The Docs™
 
-Hello! I'm an introductory paragraph, and this is the landing page for Alda's official documentation. If you've come here to learn more about Alda and how to use it to write amazing musical scores, READ ON!
+This is the landing page for Alda's official documentation. If you've come here to learn more about Alda and how to use it to write amazing musical scores, READ ON!
 
 ## Useful Links
 
