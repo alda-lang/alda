@@ -7,6 +7,7 @@ require (
 	github.com/Jeffail/gabs/v2 v2.6.0
 	github.com/OpenPeeDeeP/xdg v0.2.0
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
+	github.com/beevik/etree v1.1.0
 	github.com/chzyer/logex v1.1.10 // indirect
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e
 	github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1 // indirect

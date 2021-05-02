@@ -1,0 +1,112 @@
+= Interfacing with MusicXML
+
+== Background
+
+* MusicXML is the standard open format for exchanging digital sheet music, and
+is supported by popular programs like Finale, Sibelius, and MuseScore.
+
+* MusicXML is defined both by Document Type Definitions (DTDs) and an XML Schema
+Definition (XSD).
+
+* One goal of Alda is to be interoperable with popular formats like MusicXML, so
+we require a way for our Go client to interface with (parse and write) MusicXML.
+
+== Attempting to model MusicXML in Go
+
+* The ideal scenario, when interfacing with a MusicXML file, is to be able to
+unmarshal the file into a group of Go structs.
+
+* First, I tried looking at various existing libraries to parse XSD definitions
+and auto-generate the structs for us. Most of them barely worked, but two
+performed quite well, so I forked them to continue development.
+
+** https://github.com/Scowluga/xgen[xgen] was my first attempt. Unfortunately,
+it doesn't handle nesting of `xs:group` and `xs:attributeGroup` tags.
+
+** https://github.com/Scowluga/go-xml[go-xml] was my next attempt. The code that
+this library generates is quite impressive, and I made various enhancements.
+
+=== Running into problems
+* Unfortunately, while working on the go-xml library, I kept running into issues
+that didn't immediately have clear solutions. As an example, consider how to
+model a MusicXML partwise measure that contains the `music-data` group.
+
+** Upon inspection (see the
+https://github.com/w3c/musicxml/blob/v3.1/schema/musicxml.xsd[MusicXML XSD]),
+the `music-data` group consists of an unbounded sequence of elements, for which
+each element can be 1 of 13 possible types including `note`, `backup`, and more.
+
+** By default, this is what the converter outputs:
+
+    type Measure struct {
+        Note           *Note        `xml:"note"`
+        Backup         *Backup      `xml:"backup"`
+        Forward        *Forward     `xml:"forward"`
+        Direction      *Direction   `xml:"direction"`
+        Attributes     *Attributes  `xml:"attributes"`
+        ...
+
+** The default generated `Measure` struct can only contain one of each element
+type, and the elements themselves are not ordered. This obviously doesn't work.
+
+** A fix for both of the above problems is to instead have `Measure` contain an
+attribute of type `[]interface{}`, where each list element itself can then be
+one of the 13 possible types.
+
+
+    type Measure struct {
+        MusicData []interface{}
+        ...
+
+** This works in theory, and in fact it gets quite far. I was able to write a
+marshal method that loops through `MusicData` and encodes each element.
+
+** Unfortunately, when you get to the unmarshal method, we see a problem: to
+decode, you need the type of the object you are decoding. Since each element can
+be 1 of 13 types, however, we don't have the type when we are decoding. To my
+knowledge, there is no easy way to obtain this information.
+
+
+
+=== Why a model will never work
+
+* Upon inspection of the Go unmarshal source code, I came across the following
+comment.
+
+    // Mapping between XML elements and data structures is inherently flawed
+
+* XML and Go structs are fundamentally different ways
+to represent data, and trying to obtain a one-to-one mapping is likely not worth
+the effort.
+
+* Looking at the real world supports this claim. One popular site that supports
+MusicXML is https://musescore.org/en[MuseScore]. Diving into their MusicXML
+importer, they interface directly with an XML parser, and never actually model
+the file completely.
+
+* It appears that from this exploration, the correct way to interface with
+MusicXML is without a strict Go model.
+
+== Finding an XML decoder
+
+* Parsing a MusicXML file into a series of Go structs is the most high-level way
+to interface with MusicXML. We showed above, however, that it is not ideal.
+
+* On the opposite end of the spectrum, we can use Go's built-in `xml.Decoder`,
+which lets us read tokens from an XML file. Unfortunately, using `xml.Decoder`
+directly is a hassle, as it requires manual parsing of `xml.StartElement` and
+`xml.EndElement` tags.
+
+* A happy middle ground is to use a library that can convert an XML file into a
+representation that falls between raw tokens and full-blown structs.
+
+* After a bit of searching, I found two libraries:
+
+** https://github.com/clbanning/mxj[mxj], which can parse an XML file into an
+ordered `map[string]interface{}`.
+
+** https://github.com/beevik/etree[etree], which can parse an XML file into a
+tree structure
+
+* After some comparison, I decided on etree. This is because mxj does not easily
+support ordered traversal of a tag's children by default.

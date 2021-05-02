@@ -23,7 +23,8 @@ type parser struct {
 // A parseOption is a function that customizes a parser instance.
 type parseOption func(*parser)
 
-func suppressSourceContext(parser *parser) {
+// SuppressSourceContext customizes a parser to ignore source context
+func SuppressSourceContext(parser *parser) {
 	parser.suppressSourceContext = true
 }
 
