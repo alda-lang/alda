@@ -62,6 +62,13 @@ $ alda-player info
 ```
 
 
+**Health check:**
+<!--- Run `alda doctor` in your terminal and copy-paste the output below -->
+```
+$ alda doctor
+
+```
+
 
 **Logs:**
 <!--- On macOS and Linux, you can find Alda's logs in either -->
