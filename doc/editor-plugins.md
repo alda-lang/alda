@@ -41,7 +41,7 @@ features like keyboard shortcuts to play the Alda code that you're editing.
     <tr>
       <td>Emacs</td>
       <td>
-        <a href="https://github.com/jgkamat/alda-mode">
+        <a href="https://gitlab.com/jgkamat/alda-mode">
           jgkamat/alda-mode
         </a>
       </td>
