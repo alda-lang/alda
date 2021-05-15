@@ -100,7 +100,6 @@ func init() {
 				if err != nil {
 					return err
 				}
-				printResponseErrors(res)
 
 				switch res["binary-data"].(type) {
 				// It's a little weird that this is coming through as a string and not a
@@ -177,7 +176,6 @@ Available commands:
 				if err != nil {
 					return err
 				}
-				printResponseErrors(res)
 
 				switch res["instruments"].(type) {
 				// For some reason, Go isn't recognizing the list of strings as a list
@@ -232,7 +230,7 @@ file into the REPL server.`,
 					return err
 				}
 
-				res, err := client.sendRequest(
+				_, err = client.sendRequest(
 					map[string]interface{}{
 						"op":   "load",
 						"code": string(contents)},
@@ -241,8 +239,6 @@ file into the REPL server.`,
 					return err
 				}
 
-				printResponseErrors(res)
-
 				return nil
 			},
 		},
@@ -250,14 +246,12 @@ file into the REPL server.`,
 		"new": {
 			helpSummary: "Resets the REPL server state and initializes a new score.",
 			run: func(client *Client, argsString string) error {
-				res, err := client.sendRequest(
+				_, err := client.sendRequest(
 					map[string]interface{}{"op": "new-score"},
 				)
 				if err != nil {
 					return err
 				}
-
-				printResponseErrors(res)
 
 				return nil
 			},
@@ -316,12 +310,10 @@ Example usage:
 					}
 				}
 
-				res, err := client.sendRequest(req)
+				_, err = client.sendRequest(req)
 				if err != nil {
 					return err
 				}
-
-				printResponseErrors(res)
 
 				return nil
 			},
@@ -448,12 +440,10 @@ arguments will save the updated score to the same file.`,
 		"stop": {
 			helpSummary: "Stops playback.",
 			run: func(client *Client, argsString string) error {
-				res, err := client.sendRequest(map[string]interface{}{"op": "stop"})
+				_, err := client.sendRequest(map[string]interface{}{"op": "stop"})
 				if err != nil {
 					return err
 				}
-
-				printResponseErrors(res)
 
 				return nil
 			},
@@ -468,7 +458,6 @@ arguments will save the updated score to the same file.`,
 				if err != nil {
 					return err
 				}
-				printResponseErrors(res)
 
 				serverVersionInfo, err := serverVersion(res)
 				if err != nil {
@@ -620,6 +609,20 @@ func (client *Client) sendRequest(
 			)
 	}
 
+	// Originally, this wasn't here; instead, we called `printResponseErrors(res)`
+	// as needed to handle the response returned by this function.
+	//
+	// Then I realized that we were _always_ calling `printResponseErrors`, and I
+	// also ended up needing to print response errors from outside of the repl
+	// package. Instead of making `printResponseErrors` public and continuing to
+	// use it everywhere, I decided that it makes more sense to put it here and
+	// just always print response errors automatically.
+	//
+	// If/when we want to suppress printing response errors in certain situations,
+	// we could make that an option. Perhaps it could be a config option for the
+	// REPL client.
+	printResponseErrors(res)
+
 	return res, nil
 }
 
@@ -724,7 +727,6 @@ func (client *Client) scoreText() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	printResponseErrors(res)
 
 	switch res["text"].(type) {
 	case string: // OK to proceed
@@ -744,7 +746,6 @@ func (client *Client) scoreData() (*json.Container, error) {
 	if err != nil {
 		return nil, err
 	}
-	printResponseErrors(res)
 
 	switch res["data"].(type) {
 	case string: // OK to proceed
@@ -764,7 +765,6 @@ func (client *Client) scoreEvents() (*json.Container, error) {
 	if err != nil {
 		return nil, err
 	}
-	printResponseErrors(res)
 
 	switch res["events"].(type) {
 	case string: // OK to proceed
@@ -897,9 +897,10 @@ func (client *Client) StartSession() (map[string]interface{}, error) {
 	//
 	// At the moment, it's not a problem if we don't have a session ID, because
 	// every request is executed in the same global context. If that ever stops
-	// being the case, then it would probably make sense to bomb out here (i.e.
-	// return an error, causing the program to print the message and exit)
-	printResponseErrors(res)
+	// being the case, then it would probably make sense to check that there is a
+	// session ID here and bomb out if it's absent (i.e. return an error, causing
+	// the program to print the message and exit).
+
 	switch newSession := res["new-session"].(type) {
 	case string:
 		log.Info().Str("sessionID", newSession).Msg("Started nREPL session.")
@@ -911,7 +912,6 @@ func (client *Client) StartSession() (map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	printResponseErrors(res)
 
 	serverVersion, err := serverVersion(res)
 	if err != nil {
@@ -1040,13 +1040,11 @@ func RunClient(serverHost string, serverPort int) error {
 			client.running = false
 		default:
 			req := map[string]interface{}{"op": "eval-and-play", "code": input}
-			res, err := client.sendRequest(req)
+			_, err := client.sendRequest(req)
 			if err != nil {
 				fmt.Printf("ERROR: %s\n", err)
 				continue
 			}
-
-			printResponseErrors(res)
 		}
 	}
 
