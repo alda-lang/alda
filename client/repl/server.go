@@ -123,9 +123,9 @@ func NewServer(port int) *Server {
 	return server
 }
 
-const nREPLPortFile = ".nrepl-port"
+const nREPLPortFile = ".alda-nrepl-port"
 
-// The nREPL server writes a file called ".nrepl-port" into the current
+// The nREPL server writes a file called ".alda-nrepl-port" into the current
 // directory. This makes it easy for a client started in the same directory to
 // discover what port the server is running on.
 func (server *Server) writePortFile() {
@@ -148,8 +148,8 @@ func (server *Server) Close() {
 // Returns an error if something goes wrong.
 //
 // NOTE: The caller is responsible for calling `Close()` on the server instance
-// when it is no longer needed. Otherwise, resources like the .nrepl-port file
-// will not be cleaned up.
+// when it is no longer needed. Otherwise, resources like the .alda-nrepl-port
+// file will not be cleaned up.
 func RunServer(port int) (*Server, error) {
 	server := NewServer(port)
 
@@ -158,8 +158,8 @@ func RunServer(port int) (*Server, error) {
 		return nil, err
 	}
 
-	// This writes an .nrepl-port file, which gets cleaned up when `Close()` is
-	// invoked.
+	// This writes an .alda-nrepl-port file, which gets cleaned up when `Close()`
+	// is invoked.
 	server.writePortFile()
 
 	// See repl/player_management.go
