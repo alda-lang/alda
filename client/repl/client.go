@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"alda.io/client/generated"
+	"alda.io/client/help"
 	"alda.io/client/json"
 	log "alda.io/client/logging"
 	"alda.io/client/system"
@@ -542,7 +543,21 @@ func (client *Client) connect() error {
 		},
 		serverConnectTimeout,
 	); err != nil {
-		return err
+		return help.UserFacingErrorf(
+			`Attempting to connect to %s resulted in this error:
+
+  %s
+
+Is there an Alda REPL server running on that port? If not, you can start one
+by running:
+
+  %s`,
+			aurora.Bold(client.serverAddr),
+			aurora.BgRed(err),
+			aurora.BrightYellow(
+				fmt.Sprintf("alda repl --server --port %d", client.serverAddr.Port),
+			),
+		)
 	}
 
 	return nil
