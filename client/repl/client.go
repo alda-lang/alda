@@ -563,6 +563,24 @@ by running:
 	return nil
 }
 
+// replClientRequestContext provides context about the behavior around sending
+// nREPL requests to the server.
+type replClientRequestContext struct {
+	suppressErrorPrinting bool
+}
+
+// replClientRequestOption is a function that customizes a
+// replClientRequestContext instance.
+type replClientRequestOption func(*replClientRequestContext)
+
+// suppressErrorPrinting disables the default behavior where we print errors in
+// responses from the server.
+func suppressErrorPrinting() replClientRequestOption {
+	return func(ctx *replClientRequestContext) {
+		ctx.suppressErrorPrinting = true
+	}
+}
+
 // Sends a request as a bencoded payload to the server, awaits a response from
 // the server, and returns the bdecoded response.
 //
@@ -582,8 +600,13 @@ by running:
 // "status" value includes "done". At the moment, we don't have that need, so
 // we're keeping it simple.
 func (client *Client) sendRequest(
-	req map[string]interface{},
+	req map[string]interface{}, opts ...replClientRequestOption,
 ) (map[string]interface{}, error) {
+	ctx := &replClientRequestContext{}
+	for _, opt := range opts {
+		opt(ctx)
+	}
+
 	if client.sessionID != "" {
 		req["session"] = client.sessionID
 	}
@@ -633,10 +656,11 @@ func (client *Client) sendRequest(
 	// use it everywhere, I decided that it makes more sense to put it here and
 	// just always print response errors automatically.
 	//
-	// If/when we want to suppress printing response errors in certain situations,
-	// we could make that an option. Perhaps it could be a config option for the
-	// REPL client.
-	printResponseErrors(res)
+	// This default behavior can be disabled via the `suppressErrorPrinting`
+	// option.
+	if !ctx.suppressErrorPrinting {
+		printResponseErrors(res)
+	}
 
 	return res, nil
 }
