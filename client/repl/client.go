@@ -665,14 +665,11 @@ func (client *Client) sendRequest(
 	return res, nil
 }
 
-func printResponseErrors(res map[string]interface{}) {
-	switch res["status"].(type) {
-	case []interface{}: // OK to proceed
-	default:
-		fmt.Printf("ERROR: %#v\n", res)
-		return
+func ResponseErrors(res map[string]interface{}) []string {
+	statuses, ok := res["status"].([]interface{})
+	if !ok {
+		return []string{fmt.Sprintf("%#v", res)}
 	}
-	statuses := res["status"].([]interface{})
 
 	errorStatus := false
 	for _, status := range statuses {
@@ -681,36 +678,44 @@ func printResponseErrors(res map[string]interface{}) {
 		}
 	}
 	if !errorStatus {
-		return
+		return nil
 	}
 
-	switch res["problems"].(type) {
-	case []interface{}: // OK to proceed
-	default:
-		fmt.Printf("ERROR: %#v\n", res)
-		return
+	problems, ok := res["problems"].([]interface{})
+	if !ok {
+		return []string{fmt.Sprintf("%#v", res)}
 	}
-	problems := res["problems"].([]interface{})
 
-	switch len(problems) {
-	case 0:
-		fmt.Printf("ERROR: %#v\n", res)
-	case 1:
-		switch problem := problems[0].(type) {
-		case string:
-			fmt.Printf("ERROR: %s\n", problem)
-		default:
-			fmt.Printf("ERROR: %#v\n", problem)
+	// We return the entire response as an error in this case, because the error
+	// status indicated that _something_ was wrong.
+	if len(problems) == 0 {
+		return []string{fmt.Sprintf("%#v", res)}
+	}
+
+	errors := []string{}
+	for _, problem := range problems {
+		if str, ok := problem.(string); ok {
+			errors = append(errors, str)
+		} else {
+			errors = append(errors, fmt.Sprintf("%#v", problem))
 		}
+	}
+
+	return errors
+}
+
+func printResponseErrors(res map[string]interface{}) {
+	errors := ResponseErrors(res)
+
+	switch len(errors) {
+	case 0:
+		return
+	case 1:
+		fmt.Fprintf(os.Stderr, "ERROR: %s\n", errors[0])
 	default:
-		fmt.Println("ERRORS:")
-		for _, problem := range problems {
-			switch p := problem.(type) {
-			case string:
-				fmt.Println(p)
-			default:
-				fmt.Printf("%#v\n", p)
-			}
+		fmt.Fprintln(os.Stderr, "ERRORS:")
+		for _, err := range errors {
+			fmt.Fprintln(os.Stderr, err)
 		}
 	}
 }
