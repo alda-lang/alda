@@ -1094,3 +1094,22 @@ func RunClient(serverHost string, serverPort int) error {
 
 	return nil
 }
+
+// SendMessage opens a one-off client session to an Alda REPL server, sends a
+// message, and returns the response from the server.
+func SendMessage(
+	host string, port int, message map[string]interface{},
+) (map[string]interface{}, error) {
+	client, err := NewClient(host, port)
+	if err != nil {
+		return nil, err
+	}
+	defer client.Disconnect()
+
+	_, err = client.StartSession()
+	if err != nil {
+		return nil, err
+	}
+
+	return client.sendRequest(message, suppressErrorPrinting())
+}

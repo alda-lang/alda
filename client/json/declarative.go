@@ -53,3 +53,10 @@ func Object(elements ...interface{}) *Container {
 
 	return object
 }
+
+// ToJson converts the provided value into a JSON container.
+//
+// This is an alias for the Wrap function in github.com/Jeffail/gabs/v2.
+func ToJson(value interface{}) *Container {
+	return gabs.Wrap(value)
+}

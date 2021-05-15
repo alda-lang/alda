@@ -1,11 +1,13 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"alda.io/client/help"
+	"alda.io/client/json"
 	"alda.io/client/repl"
 	"alda.io/client/system"
 	"github.com/logrusorgru/aurora"
@@ -16,6 +18,7 @@ var replHost string
 var replPort int
 var startREPLClient bool
 var startREPLServer bool
+var replMessage string
 
 func init() {
 	replCmd.Flags().StringVarP(
@@ -33,7 +36,80 @@ func init() {
 	replCmd.Flags().BoolVarP(
 		&startREPLServer, "server", "s", false, "Start an Alda REPL server",
 	)
+
+	replCmd.Flags().StringVarP(
+		&replMessage,
+		"message",
+		"m",
+		"",
+		"A JSON nREPL message to send to the server",
+	)
 }
+
+func errInvalidNREPLMessage(message string) error {
+	return help.UserFacingErrorf(
+		`Invalid nREPL message:
+
+  %s
+
+Here is an example of a valid nREPL message:
+
+  %s`,
+		aurora.BgRed(message),
+		aurora.Bold(`{"op": "eval-and-play", "code": "banjo: c"}`),
+	)
+}
+
+func sendREPLMessage(host string, port int, message string) error {
+	parsed, err := json.ParseJSON([]byte(message))
+	if err != nil {
+		return errInvalidNREPLMessage(message)
+	}
+
+	msg, ok := parsed.Data().(map[string]interface{})
+	if !ok {
+		return errInvalidNREPLMessage(message)
+	}
+
+	// This is just a basic check that the provided JSON is an object that
+	// contains an "op" entry. An invalid message will fail below anyway, but it's
+	// nice if we can recognize earlier that the input is bad and tell the user in
+	// a more useful way.
+	if _, hasOp := msg["op"]; !hasOp {
+		return errInvalidNREPLMessage(message)
+	}
+
+	res, err := repl.SendMessage(host, port, msg)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(json.ToJson(res))
+
+	if len(repl.ResponseErrors(res)) > 0 {
+		return help.UserFacingErrorf(
+			`The Alda REPL server indicated that your request was unsuccessful.
+
+See the response output for details.`,
+		)
+	}
+
+	return nil
+}
+
+var errREPLServerPortUnspecified = help.UserFacingErrorf(
+	`You must specify the port of the Alda REPL server that you wish to connect to.
+
+For example, if you've started an Alda REPL server on port 12345, you can
+connect to it by running:
+
+  %s
+
+See %s for more information about starting Alda REPL servers and
+clients.`,
+	aurora.BrightYellow("alda repl --client --port 12345"),
+	aurora.BrightYellow("alda repl --help"),
+)
 
 var replCmd = &cobra.Command{
 	Use:   "repl",
@@ -59,8 +135,20 @@ Examples:
     Starts an Alda REPL server without an interactive prompt. Clients can then
     connect by running ` + "`alda repl --client --port 12345`" + `.
 
+  alda repl --port 12345 --message '{"op": "eval-and-play", "code": "banjo: c"}'
+    Sends an nREPL message to the Alda REPL server running on port 12345.
+    This is mainly useful for writing scripts and tools for working with Alda.
+
 ---`,
 	RunE: func(_ *cobra.Command, args []string) error {
+		if replMessage != "" {
+			if replPort == -1 {
+				return errREPLServerPortUnspecified
+			}
+
+			return sendREPLMessage(replHost, replPort, replMessage)
+		}
+
 		// If both --client and --server are omitted, run them both.
 		if !startREPLClient && !startREPLServer {
 			startREPLClient = true
@@ -107,19 +195,7 @@ Examples:
 
 		if startREPLClient {
 			if replPort == -1 {
-				return help.UserFacingErrorf(
-					`You must specify the port of the Alda REPL server that you wish to connect to.
-
-For example, if you've started an Alda REPL server on port 12345, you can
-connect to it by running:
-
-  %s
-
-See %s for more information about starting Alda REPL servers and
-clients.`,
-					aurora.BrightYellow("alda repl --client --port 12345"),
-					aurora.BrightYellow("alda repl --help"),
-				)
+				return errREPLServerPortUnspecified
 			}
 
 			return repl.RunClient(replHost, replPort)
