@@ -952,6 +952,17 @@ func (client *Client) StartSession() (map[string]interface{}, error) {
 	return res, nil
 }
 
+func (client *Client) EvalAndPlay(input string) error {
+	req := map[string]interface{}{"op": "eval-and-play", "code": input}
+
+	_, err := client.sendRequest(req)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // RunClient runs an Alda REPL client session in the foreground.
 func RunClient(serverHost string, serverPort int) error {
 	client, err := NewClient(serverHost, serverPort)
@@ -1054,11 +1065,8 @@ func RunClient(serverHost string, serverPort int) error {
 		case "quit", "exit", "bye":
 			client.running = false
 		default:
-			req := map[string]interface{}{"op": "eval-and-play", "code": input}
-			_, err := client.sendRequest(req)
-			if err != nil {
+			if client.EvalAndPlay(input); err != nil {
 				fmt.Printf("ERROR: %s\n", err)
-				continue
 			}
 		}
 	}
