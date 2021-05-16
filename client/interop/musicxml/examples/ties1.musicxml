@@ -7,7 +7,7 @@
   <identification>
     <encoding>
       <software>MuseScore 3.6.2</software>
-      <encoding-date>2021-05-01</encoding-date>
+      <encoding-date>2021-05-09</encoding-date>
       <supports element="accidental" type="yes"/>
       <supports element="beam" type="yes"/>
       <supports element="print" attribute="new-page" type="yes" value="yes"/>
@@ -17,23 +17,23 @@
     </identification>
   <defaults>
     <scaling>
-      <millimeters>6.2</millimeters>
+      <millimeters>7</millimeters>
       <tenths>40</tenths>
       </scaling>
     <page-layout>
-      <page-height>1916.13</page-height>
-      <page-width>1354.84</page-width>
+      <page-height>1697.14</page-height>
+      <page-width>1200</page-width>
       <page-margins type="even">
-        <left-margin>96.7742</left-margin>
-        <right-margin>96.7742</right-margin>
-        <top-margin>96.7742</top-margin>
-        <bottom-margin>96.7742</bottom-margin>
+        <left-margin>85.7143</left-margin>
+        <right-margin>85.7143</right-margin>
+        <top-margin>85.7143</top-margin>
+        <bottom-margin>85.7143</bottom-margin>
         </page-margins>
       <page-margins type="odd">
-        <left-margin>96.7742</left-margin>
-        <right-margin>96.7742</right-margin>
-        <top-margin>96.7742</top-margin>
-        <bottom-margin>96.7742</bottom-margin>
+        <left-margin>85.7143</left-margin>
+        <right-margin>85.7143</right-margin>
+        <top-margin>85.7143</top-margin>
+        <bottom-margin>85.7143</bottom-margin>
         </page-margins>
       </page-layout>
     <word-font font-family="Edwin" font-size="10"/>
@@ -41,7 +41,7 @@
     </defaults>
   <credit page="1">
     <credit-type>title</credit-type>
-    <credit-words default-x="677.42" default-y="1819.71" justify="center" valign="top" font-size="22">My Title</credit-words>
+    <credit-words default-x="600" default-y="1612.29" justify="center" valign="top" font-size="22">My Title</credit-words>
     </credit>
   <part-list>
     <score-part id="P1">
@@ -53,14 +53,14 @@
       <midi-device id="P1-I1" port="1"></midi-device>
       <midi-instrument id="P1-I1">
         <midi-channel>1</midi-channel>
-        <midi-program>69</midi-program>
+        <midi-program>1</midi-program>
         <volume>78.7402</volume>
         <pan>0</pan>
         </midi-instrument>
       </score-part>
     </part-list>
   <part id="P1">
-    <measure number="1" width="349.77">
+    <measure number="1" width="325.95">
       <print>
         <system-layout>
           <system-margins>
@@ -71,7 +71,7 @@
           </system-layout>
         </print>
       <attributes>
-        <divisions>8</divisions>
+        <divisions>2</divisions>
         <key>
           <fifths>0</fifths>
           </key>
@@ -84,112 +84,133 @@
           <line>2</line>
           </clef>
         </attributes>
-      <note default-x="73.72" default-y="-15.00">
-        <pitch>
-          <step>C</step>
-          <octave>5</octave>
-          </pitch>
-        <duration>16</duration>
-        <voice>1</voice>
-        <type>half</type>
-        <stem>down</stem>
-        </note>
-      <note>
-        <rest/>
-        <duration>16</duration>
-        <voice>1</voice>
-        <type>half</type>
-        </note>
-      </measure>
-    <measure number="2" width="450.41">
-      <note default-x="13.00" default-y="-10.00">
+      <note default-x="73.72" default-y="-10.00">
         <pitch>
           <step>D</step>
           <octave>5</octave>
           </pitch>
         <duration>8</duration>
+        <tie type="start"/>
         <voice>1</voice>
-        <type>quarter</type>
-        <stem>down</stem>
+        <type>whole</type>
+        <notations>
+          <tied type="start"/>
+          </notations>
         </note>
-      <note>
-        <rest/>
-        <duration>8</duration>
-        <voice>1</voice>
-        <type>quarter</type>
-        </note>
-      <note default-x="158.20" default-y="-5.00">
+      </measure>
+    <measure number="2" width="270.51">
+      <note default-x="13.96" default-y="-10.00">
         <pitch>
-          <step>E</step>
+          <step>D</step>
           <octave>5</octave>
           </pitch>
-        <duration>4</duration>
+        <duration>8</duration>
+        <tie type="stop"/>
+        <tie type="start"/>
         <voice>1</voice>
-        <type>eighth</type>
+        <type>whole</type>
+        <notations>
+          <tied type="stop"/>
+          <tied type="start"/>
+          </notations>
+        </note>
+      </measure>
+    <measure number="3" width="382.11">
+      <note default-x="13.00" default-y="-10.00">
+        <pitch>
+          <step>D</step>
+          <octave>5</octave>
+          </pitch>
+        <duration>2</duration>
+        <tie type="stop"/>
+        <voice>1</voice>
+        <type>quarter</type>
         <stem>down</stem>
+        <notations>
+          <tied type="stop"/>
+          </notations>
         </note>
-      <note>
-        <rest/>
-        <duration>4</duration>
-        <voice>1</voice>
-        <type>eighth</type>
-        </note>
-      <note default-x="272.29" default-y="0.00">
+      <note default-x="88.46" default-y="0.00">
         <pitch>
           <step>F</step>
           <octave>5</octave>
           </pitch>
-        <duration>2</duration>
+        <duration>1</duration>
+        <tie type="start"/>
         <voice>1</voice>
-        <type>16th</type>
+        <type>eighth</type>
         <stem>down</stem>
+        <beam number="1">begin</beam>
+        <notations>
+          <tied type="start"/>
+          </notations>
         </note>
-      <note>
-        <rest/>
-        <duration>2</duration>
-        <voice>1</voice>
-        <type>16th</type>
-        </note>
-      <note default-x="355.27" default-y="5.00">
+      <note default-x="135.63" default-y="0.00">
         <pitch>
-          <step>G</step>
+          <step>F</step>
+          <octave>5</octave>
+          </pitch>
+        <duration>1</duration>
+        <tie type="stop"/>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem>down</stem>
+        <beam number="1">end</beam>
+        <notations>
+          <tied type="stop"/>
+          </notations>
+        </note>
+      <note default-x="182.80" default-y="0.00">
+        <pitch>
+          <step>F</step>
           <octave>5</octave>
           </pitch>
         <duration>1</duration>
         <voice>1</voice>
-        <type>32nd</type>
+        <type>eighth</type>
         <stem>down</stem>
+        <beam number="1">begin</beam>
         </note>
-      <note>
-        <rest/>
-        <duration>1</duration>
-        <voice>1</voice>
-        <type>32nd</type>
-        </note>
-      <note>
-        <rest/>
-        <duration>2</duration>
-        <voice>1</voice>
-        <type>16th</type>
-        </note>
-      </measure>
-    <measure number="3" width="311.11">
-      <note default-x="16.50" default-y="10.00">
+      <note default-x="229.96" default-y="0.00">
         <pitch>
-          <step>A</step>
+          <step>F</step>
           <octave>5</octave>
           </pitch>
-        <duration>8</duration>
+        <duration>1</duration>
         <voice>1</voice>
-        <type>quarter</type>
+        <type>eighth</type>
         <stem>down</stem>
+        <beam number="1">continue</beam>
         </note>
-      <note>
-        <rest/>
-        <duration>24</duration>
+      <note default-x="277.13" default-y="-35.00">
+        <pitch>
+          <step>F</step>
+          <octave>4</octave>
+          </pitch>
+        <duration>1</duration>
+        <tie type="start"/>
         <voice>1</voice>
-        <type>half</type>
-        <dot/>
+        <type>eighth</type>
+        <stem>down</stem>
+        <beam number="1">continue</beam>
+        <notations>
+          <tied type="start"/>
+          </notations>
+        </note>
+      <note default-x="324.29" default-y="-35.00">
+        <pitch>
+          <step>F</step>
+          <octave>4</octave>
+          </pitch>
+        <duration>1</duration>
+        <tie type="stop"/>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem>down</stem>
+        <beam number="1">end</beam>
+        <notations>
+          <tied type="stop"/>
+          </notations>
         </note>
       <barline location="right">
         <bar-style>light-heavy</bar-style>

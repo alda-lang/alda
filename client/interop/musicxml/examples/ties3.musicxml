@@ -7,7 +7,7 @@
   <identification>
     <encoding>
       <software>MuseScore 3.6.2</software>
-      <encoding-date>2021-04-27</encoding-date>
+      <encoding-date>2021-05-10</encoding-date>
       <supports element="accidental" type="yes"/>
       <supports element="beam" type="yes"/>
       <supports element="print" attribute="new-page" type="yes" value="yes"/>
@@ -41,12 +41,9 @@
     </defaults>
   <credit page="1">
     <credit-type>title</credit-type>
-    <credit-words default-x="600" default-y="1611.43" justify="center" valign="top" font-size="22">My Title</credit-words>
+    <credit-words default-x="600" default-y="1612.29" justify="center" valign="top" font-size="22">My Title</credit-words>
     </credit>
   <part-list>
-    <part-group type="start" number="1">
-      <group-symbol>brace</group-symbol>
-      </part-group>
     <score-part id="P1">
       <part-name>Piano</part-name>
       <part-abbreviation>Pno.</part-abbreviation>
@@ -56,25 +53,25 @@
       <midi-device id="P1-I1" port="1"></midi-device>
       <midi-instrument id="P1-I1">
         <midi-channel>1</midi-channel>
-        <midi-program>69</midi-program>
+        <midi-program>1</midi-program>
         <volume>78.7402</volume>
         <pan>0</pan>
         </midi-instrument>
       </score-part>
     </part-list>
   <part id="P1">
-    <measure number="1" width="310.32">
+    <measure number="1" width="558.94">
       <print>
         <system-layout>
           <system-margins>
             <left-margin>50.00</left-margin>
-            <right-margin>467.72</right-margin>
+            <right-margin>419.64</right-margin>
             </system-margins>
           <top-system-distance>170.00</top-system-distance>
           </system-layout>
         </print>
       <attributes>
-        <divisions>1</divisions>
+        <divisions>2</divisions>
         <key>
           <fifths>0</fifths>
           </key>
@@ -87,56 +84,156 @@
           <line>2</line>
           </clef>
         </attributes>
-      <note default-x="80.72" default-y="-15.00">
+      <note default-x="77.22" default-y="-50.00">
+        <pitch>
+          <step>C</step>
+          <octave>4</octave>
+          </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <stem>up</stem>
+        </note>
+      <note default-x="77.22" default-y="-40.00">
+        <chord/>
+        <pitch>
+          <step>E</step>
+          <octave>4</octave>
+          </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <stem>up</stem>
+        </note>
+      <note default-x="77.22" default-y="-30.00">
+        <chord/>
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+          </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <stem>up</stem>
+        </note>
+      <note default-x="77.22" default-y="-15.00">
+        <chord/>
         <pitch>
           <step>C</step>
           <octave>5</octave>
           </pitch>
-        <duration>1</duration>
+        <duration>2</duration>
+        <tie type="start"/>
         <voice>1</voice>
         <type>quarter</type>
-        <stem>down</stem>
+        <stem>up</stem>
+        <notations>
+          <tied type="start"/>
+          </notations>
         </note>
-      <note default-x="137.67" default-y="-10.00">
+      <note default-x="181.90" default-y="-15.00">
         <pitch>
-          <step>D</step>
+          <step>C</step>
           <octave>5</octave>
           </pitch>
-        <duration>1</duration>
+        <duration>2</duration>
+        <tie type="stop"/>
         <voice>1</voice>
         <type>quarter</type>
         <stem>down</stem>
+        <notations>
+          <tied type="stop"/>
+          </notations>
         </note>
-      <note default-x="194.62" default-y="-5.00">
+      <note default-x="286.58" default-y="-5.00">
         <pitch>
           <step>E</step>
           <octave>5</octave>
           </pitch>
         <duration>1</duration>
+        <tie type="start"/>
         <voice>1</voice>
-        <type>quarter</type>
+        <type>eighth</type>
         <stem>down</stem>
+        <beam number="1">begin</beam>
+        <notations>
+          <tied type="start"/>
+          </notations>
         </note>
-      <note default-x="251.57" default-y="0.00">
-        <pitch>
-          <step>F</step>
-          <octave>5</octave>
-          </pitch>
-        <duration>1</duration>
-        <voice>1</voice>
-        <type>quarter</type>
-        <stem>down</stem>
-        </note>
-      </measure>
-    <measure number="2" width="200.54">
-      <note default-x="13.96" default-y="5.00">
+      <note default-x="286.58" default-y="5.00">
+        <chord/>
         <pitch>
           <step>G</step>
           <octave>5</octave>
           </pitch>
-        <duration>4</duration>
+        <duration>1</duration>
+        <tie type="start"/>
         <voice>1</voice>
-        <type>whole</type>
+        <type>eighth</type>
+        <stem>down</stem>
+        <notations>
+          <tied type="start"/>
+          </notations>
+        </note>
+      <note default-x="352.01" default-y="-10.00">
+        <pitch>
+          <step>D</step>
+          <octave>5</octave>
+          </pitch>
+        <duration>1</duration>
+        <tie type="start"/>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem>down</stem>
+        <beam number="1">continue</beam>
+        <notations>
+          <tied type="start"/>
+          </notations>
+        </note>
+      <note default-x="352.01" default-y="5.00">
+        <chord/>
+        <pitch>
+          <step>G</step>
+          <octave>5</octave>
+          </pitch>
+        <duration>1</duration>
+        <tie type="stop"/>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem>down</stem>
+        <notations>
+          <tied type="stop"/>
+          </notations>
+        </note>
+      <note default-x="417.43" default-y="-10.00">
+        <pitch>
+          <step>D</step>
+          <octave>5</octave>
+          </pitch>
+        <duration>1</duration>
+        <tie type="stop"/>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem>down</stem>
+        <beam number="1">continue</beam>
+        <notations>
+          <tied type="stop"/>
+          </notations>
+        </note>
+      <note default-x="482.86" default-y="-5.00">
+        <pitch>
+          <step>E</step>
+          <octave>5</octave>
+          </pitch>
+        <duration>1</duration>
+        <tie type="stop"/>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem>down</stem>
+        <beam number="1">end</beam>
+        <notations>
+          <tied type="stop"/>
+          </notations>
         </note>
       <barline location="right">
         <bar-style>light-heavy</bar-style>

@@ -7,7 +7,7 @@
   <identification>
     <encoding>
       <software>MuseScore 3.6.2</software>
-      <encoding-date>2021-04-30</encoding-date>
+      <encoding-date>2021-05-15</encoding-date>
       <supports element="accidental" type="yes"/>
       <supports element="beam" type="yes"/>
       <supports element="print" attribute="new-page" type="yes" value="yes"/>
@@ -17,23 +17,23 @@
     </identification>
   <defaults>
     <scaling>
-      <millimeters>6.2</millimeters>
+      <millimeters>7</millimeters>
       <tenths>40</tenths>
       </scaling>
     <page-layout>
-      <page-height>1916.13</page-height>
-      <page-width>1354.84</page-width>
+      <page-height>1697.14</page-height>
+      <page-width>1200</page-width>
       <page-margins type="even">
-        <left-margin>96.7742</left-margin>
-        <right-margin>96.7742</right-margin>
-        <top-margin>96.7742</top-margin>
-        <bottom-margin>96.7742</bottom-margin>
+        <left-margin>85.7143</left-margin>
+        <right-margin>85.7143</right-margin>
+        <top-margin>85.7143</top-margin>
+        <bottom-margin>85.7143</bottom-margin>
         </page-margins>
       <page-margins type="odd">
-        <left-margin>96.7742</left-margin>
-        <right-margin>96.7742</right-margin>
-        <top-margin>96.7742</top-margin>
-        <bottom-margin>96.7742</bottom-margin>
+        <left-margin>85.7143</left-margin>
+        <right-margin>85.7143</right-margin>
+        <top-margin>85.7143</top-margin>
+        <bottom-margin>85.7143</bottom-margin>
         </page-margins>
       </page-layout>
     <word-font font-family="Edwin" font-size="10"/>
@@ -41,7 +41,7 @@
     </defaults>
   <credit page="1">
     <credit-type>title</credit-type>
-    <credit-words default-x="677.42" default-y="1819.71" justify="center" valign="top" font-size="22">My Title</credit-words>
+    <credit-words default-x="600" default-y="1612.29" justify="center" valign="top" font-size="22">My Title</credit-words>
     </credit>
   <part-list>
     <score-part id="P1">
@@ -53,25 +53,25 @@
       <midi-device id="P1-I1" port="1"></midi-device>
       <midi-instrument id="P1-I1">
         <midi-channel>1</midi-channel>
-        <midi-program>69</midi-program>
+        <midi-program>1</midi-program>
         <volume>78.7402</volume>
         <pan>0</pan>
         </midi-instrument>
       </score-part>
     </part-list>
   <part id="P1">
-    <measure number="1" width="332.28">
+    <measure number="1" width="409.12">
       <print>
         <system-layout>
           <system-margins>
             <left-margin>50.00</left-margin>
-            <right-margin>498.61</right-margin>
+            <right-margin>0.00</right-margin>
             </system-margins>
           <top-system-distance>170.00</top-system-distance>
           </system-layout>
         </print>
       <attributes>
-        <divisions>1</divisions>
+        <divisions>16</divisions>
         <key>
           <fifths>0</fifths>
           </key>
@@ -84,87 +84,104 @@
           <line>2</line>
           </clef>
         </attributes>
-      <note default-x="77.22" default-y="-55.00">
+      <note default-x="73.72" default-y="-30.00">
         <pitch>
-          <step>B</step>
-          <octave>3</octave>
+          <step>G</step>
+          <octave>4</octave>
           </pitch>
-        <duration>1</duration>
+        <duration>31</duration>
         <voice>1</voice>
         <type>quarter</type>
+        <dot/>
+        <dot/>
+        <dot/>
+        <dot/>
         <stem>up</stem>
         </note>
-      <note default-x="140.54" default-y="-15.00">
-        <pitch>
-          <step>C</step>
-          <octave>5</octave>
-          </pitch>
+      <note>
+        <rest/>
         <duration>1</duration>
         <voice>1</voice>
-        <type>quarter</type>
-        <stem>down</stem>
+        <type>64th</type>
         </note>
-      <note default-x="203.85" default-y="-25.00">
+      <note default-x="231.46" default-y="-25.00">
         <pitch>
           <step>A</step>
           <octave>4</octave>
           </pitch>
-        <duration>1</duration>
+        <duration>30</duration>
         <voice>1</voice>
         <type>quarter</type>
+        <dot/>
+        <dot/>
+        <dot/>
         <stem>up</stem>
         </note>
-      <note default-x="267.16" default-y="-10.00">
-        <pitch>
-          <step>D</step>
-          <octave>5</octave>
-          </pitch>
-        <duration>1</duration>
+      <note>
+        <rest/>
+        <duration>2</duration>
         <voice>1</voice>
-        <type>quarter</type>
-        <stem>down</stem>
+        <type>32nd</type>
         </note>
       </measure>
-    <measure number="2" width="280.41">
-      <note default-x="16.50" default-y="-55.00">
-        <pitch>
-          <step>B</step>
-          <octave>3</octave>
-          </pitch>
-        <duration>1</duration>
+    <measure number="2" width="268.44">
+      <note>
+        <rest/>
+        <duration>24</duration>
         <voice>1</voice>
         <type>quarter</type>
-        <stem>up</stem>
+        <dot/>
         </note>
-      <note default-x="79.81" default-y="25.00">
-        <pitch>
-          <step>D</step>
-          <octave>6</octave>
-          </pitch>
-        <duration>1</duration>
+      <note>
+        <rest/>
+        <duration>8</duration>
         <voice>1</voice>
-        <type>quarter</type>
-        <stem>down</stem>
+        <type>eighth</type>
         </note>
-      <note default-x="143.13" default-y="-20.00">
+      <note default-x="158.31" default-y="-20.00">
         <pitch>
           <step>B</step>
           <octave>4</octave>
           </pitch>
-        <duration>1</duration>
+        <duration>32</duration>
+        <tie type="start"/>
         <voice>1</voice>
-        <type>quarter</type>
+        <type>half</type>
         <stem>down</stem>
+        <notations>
+          <tied type="start"/>
+          </notations>
         </note>
-      <note default-x="206.44" default-y="-5.00">
+      </measure>
+    <measure number="3" width="301.01">
+      <note default-x="13.00" default-y="-20.00">
         <pitch>
-          <step>E</step>
-          <octave>5</octave>
+          <step>B</step>
+          <octave>4</octave>
           </pitch>
-        <duration>1</duration>
+        <duration>48</duration>
+        <tie type="stop"/>
         <voice>1</voice>
-        <type>quarter</type>
+        <type>half</type>
+        <dot/>
         <stem>down</stem>
+        <notations>
+          <tied type="stop"/>
+          </notations>
+        </note>
+      <note>
+        <rest/>
+        <duration>14</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <dot/>
+        <dot/>
+        </note>
+      <note>
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>32nd</type>
         </note>
       <barline location="right">
         <bar-style>light-heavy</bar-style>

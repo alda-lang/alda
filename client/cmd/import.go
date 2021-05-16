@@ -3,7 +3,7 @@ package cmd
 import (
 	"alda.io/client/code-generator"
 	"alda.io/client/help"
-	"alda.io/client/interop"
+	"alda.io/client/interop/musicxml/importer"
 	log "alda.io/client/logging"
 	"alda.io/client/model"
 	"alda.io/client/system"
@@ -102,10 +102,10 @@ Currently, the only supported output format is %s.`,
 				return err
 			}
 
-			scoreUpdates, err = interop.ImportMusicXML(inputFile)
+			scoreUpdates, err = importer.ImportMusicXML(inputFile)
 		case code != "":
 			reader := strings.NewReader(code)
-			scoreUpdates, err = interop.ImportMusicXML(reader)
+			scoreUpdates, err = importer.ImportMusicXML(reader)
 
 		default:
 			bytes, err := readStdin()
@@ -114,7 +114,7 @@ Currently, the only supported output format is %s.`,
 			}
 
 			reader := strings.NewReader(string(bytes))
-			scoreUpdates, err = interop.ImportMusicXML(reader)
+			scoreUpdates, err = importer.ImportMusicXML(reader)
 		}
 
 		if err != nil {

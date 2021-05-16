@@ -1,4 +1,4 @@
-package interop
+package importer
 
 import (
 	"alda.io/client/model"
@@ -9,9 +9,10 @@ import (
 )
 
 type importerTestCase struct {
-	label    string
-	file     string
-	expected string
+	label       string
+	file        string
+	expected    string
+	postprocess func(updates []model.ScoreUpdate) []model.ScoreUpdate
 }
 
 func executeImporterTestCases(
@@ -46,6 +47,10 @@ func executeImporterTestCases(
 				}
 				expected[i] = lispForm.(model.LispScoreUpdate).ScoreUpdate
 			}
+		}
+
+		if testCase.postprocess != nil {
+			expected = testCase.postprocess(expected)
 		}
 
 		if diff := deep.Equal(expected, actual); diff != nil {
