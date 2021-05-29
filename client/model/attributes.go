@@ -334,6 +334,35 @@ func (tvs TrackVolumeSet) updatePart(part *Part, globalUpdate bool) {
 	part.TrackVolume = tvs.TrackVolume
 }
 
+var DynamicVolumes map[string]float64
+
+func init() {
+	DynamicVolumes = map[string]float64{
+		"pppp": 0.05,
+		"ppp":  0.10,
+		"pp":   0.20,
+		"p":    0.30,
+		"mp":   0.40,
+		"mf":   0.50,
+		"f":    0.60,
+		"ff":   0.70,
+		"fff":  0.80,
+		"ffff": 0.90,
+	}
+}
+
+type DynamicMarking struct {
+	Marking string
+}
+
+func (dm DynamicMarking) JSON() *json.Container {
+	return json.Object("attribute", "dynamic-marking", "value", dm.Marking)
+}
+
+func (dm DynamicMarking) updatePart(part *Part, globalUpdate bool) {
+	part.Volume = DynamicVolumes[dm.Marking]
+}
+
 // PanningSet sets the panning of all active parts.
 type PanningSet struct {
 	Panning float64

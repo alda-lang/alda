@@ -229,6 +229,10 @@ func argumentsMatchSignature(
 
 	totalArgs := len(signature.ArgumentTypes)
 
+	if totalArgs == 0 && len(signature.ArgumentTypes) == 0 {
+		return true
+	}
+
 	variadic := false
 	switch signature.ArgumentTypes[totalArgs-1].(type) {
 	case LispVariadic:
@@ -990,6 +994,22 @@ func init() {
 			},
 		},
 	)
+
+	// Dynamic markings corresponding to a volume set
+	var dynamicImplementation = func(marking string) func(args ...LispForm) (PartUpdate, error) {
+		return func(args ...LispForm) (PartUpdate, error) {
+			return DynamicMarking{Marking: marking}, nil
+		}
+	}
+
+	for marking := range DynamicVolumes {
+		defattribute([]string{marking},
+			attributeFunctionSignature{
+				argumentTypes: []LispForm{},
+				implementation: dynamicImplementation(marking),
+			},
+		)
+	}
 
 	// Current panning. 0 = hard left, 100 = hard right.
 	defattribute([]string{"panning", "pan"},
