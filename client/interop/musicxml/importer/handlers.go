@@ -123,17 +123,14 @@ func scorePartHandler(element *etree.Element, importer *musicXMLImporter) {
 		}
 	}
 
-	part := musicXMLPart{
-		voices:      make(map[int32]*musicXMLVoice),
-		instruments: instruments,
-		divisions:   1, // Divisions for a part are set in the first measure
-	}
-	importer.parts[id.Value] = &part
+	part := newMusicXMLPart()
+	part.instruments = instruments
+	importer.parts[id.Value] = part
 }
 
 func addBarline(importer *musicXMLImporter) {
 	if len(importer.updates()) == 0 {
-		importer.set([]model.ScoreUpdate{model.Barline{}})
+		importer.append(model.Barline{})
 		return
 	}
 	// Alda parses barlines into note/rest durations to account for ties
@@ -194,11 +191,8 @@ func partHandler(element *etree.Element, importer *musicXMLImporter) {
 	recursivelyCreateVoices = func(element *etree.Element) {
 		if element.Tag == "voice" {
 			voiceNumber, _ := strconv.ParseInt(element.Text(), 10, 32)
-			voice := musicXMLVoice{
-				octave: 4, // 4 is the default Alda octave
-				slurs:  0, // By default a note is not slurred
-			}
-			importer.currentPart.voices[int32(voiceNumber)] = &voice
+			voice := newMusicXMLVoice()
+			importer.currentPart.voices[int32(voiceNumber)] = voice
 		}
 
 		for _, child := range element.ChildElements() {
@@ -356,29 +350,6 @@ func translateDuration(
 			Dots:        dots,
 		}},
 	}, aldaDuration
-}
-
-// getBeats counts beats for score updates
-func getBeats(updates ...model.ScoreUpdate) float64 {
-	beats := 0.0
-	for _, update := range updates {
-		switch value := update.(type) {
-		case model.Note:
-			beats += value.Duration.Beats()
-		case model.Rest:
-			beats += value.Duration.Beats()
-		case model.Chord:
-			min := 0.0
-			for _, event := range value.Events {
-				eventBeats := getBeats(event)
-				if eventBeats < min {
-					min = eventBeats
-				}
-			}
-			beats += min
-		}
-	}
-	return beats
 }
 
 // translateNote translates a MusicXML note into Alda represented by:
