@@ -42,6 +42,7 @@ func init() {
 		"part":           partHandler,
 		"measure":        measureHandler,
 		"attributes":     recurseHandler,
+		"barline":        barlineHandler,
 		"key":            keyHandler,
 		"divisions":      divisionsHandler,
 		"transpose":      transposeHandler,
@@ -262,6 +263,67 @@ func measureHandler(element *etree.Element, importer *musicXMLImporter) {
 			padVoiceToPresent(child, importer)
 		}
 		handle(child, importer)
+	}
+}
+
+func barlineHandler(element *etree.Element, importer *musicXMLImporter) {
+	repeat := element.FindElement("repeat")
+	ending := element.FindElement("ending")
+
+	if ending == nil && repeat == nil {
+		return
+	} else if ending == nil && repeat != nil {
+		direction := repeat.SelectAttrValue("direction", "")
+		if direction == "forward" {
+			// Start a new repeat
+			// We keep track of the "start octave" so we can return to this
+			// at the end of a repeated section to maintain octave integrity
+			importer.currentPart.currentVoice.startOctave =
+				importer.currentPart.currentVoice.octave
+			importer.append(model.Repeat{Event: model.EventSequence{}})
+		} else if direction == "backward" {
+			// Maintain octave integrity
+			for importer.currentPart.currentVoice.octave >
+				importer.currentPart.currentVoice.startOctave {
+				importer.append(
+					model.AttributeUpdate{PartUpdate: model.OctaveDown{}},
+				)
+				importer.currentPart.currentVoice.octave--
+			}
+
+			for importer.currentPart.currentVoice.octave <
+				importer.currentPart.currentVoice.startOctave {
+				importer.append(
+					model.AttributeUpdate{PartUpdate: model.OctaveUp{}},
+				)
+				importer.currentPart.currentVoice.octave++
+			}
+
+			// Set times
+			times, _ := strconv.ParseInt(
+				repeat.SelectAttrValue("times", "2"), 10, 8,
+			)
+
+			if repeatUpdate, ok := getLastRepeat(
+				importer.currentPart.currentVoice.updates,
+			); ok {
+				repeatUpdate.Times = int32(times)
+			} else {
+				repeatUpdate := model.Repeat{
+					Event: model.EventSequence{
+						Events: importer.currentPart.currentVoice.updates,
+					},
+					Times: int32(times),
+				}
+				importer.currentPart.currentVoice.updates = []model.ScoreUpdate{
+					repeatUpdate,
+				}
+			}
+		}
+	} else if ending != nil && repeat == nil {
+
+	} else if ending != nil && repeat != nil {
+
 	}
 }
 

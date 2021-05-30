@@ -2,6 +2,7 @@ package importer
 
 import (
 	"alda.io/client/model"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -212,4 +213,71 @@ midi-french-horn:
 	g4 b4 g4 b4 | > d4 < b4 g2 | r1 | g1
 `,
 	})
+}
+
+func TestRepeat1(t *testing.T) {
+	executeImporterTestCases(t, importerTestCase{
+		label: "simple repeat",
+		file:  "../examples/repeat1.musicxml",
+		expected: `
+midi-acoustic-grand-piano:
+	[(key-signature "") > c1 | g1 <]*2
+`,
+	})
+}
+
+func TestRepeat2(t *testing.T) {
+	executeImporterTestCases(t, importerTestCase{
+		label: "simple repeat with forward repeat",
+		file:  "../examples/repeat2.musicxml",
+		expected: `
+midi-acoustic-grand-piano:
+	[(key-signature "") > c1 | g1 <]*2
+`,
+	})
+}
+
+//func TestRepeats2(t *testing.T) {
+//	executeImporterTestCases(t, importerTestCase{
+//		label: "repeats with first and second ending",
+//		file:  "../examples/repeats2.musicxml",
+//		expected: `
+//midi-acoustic-grand-piano:
+//	(key-signature "")
+//	> c1
+//	[
+//		[e1]'1
+//		[g1]'2
+//	]*2
+//`,
+//	})
+//}
+
+//func TestRepeats3(t *testing.T) {
+//	executeImporterTestCases(t, importerTestCase{
+//		label: "repeats with complex octave updates",
+//		file:  "../examples/repeats3.musicxml",
+//		expected: `
+//midi-acoustic-grand-piano:
+//	(key-signature "")
+//	[> d1 > d1 <<]*2 >> c1
+//`,
+//	})
+//}
+
+type Foo struct {
+	info []interface{}
+}
+
+func Test(t *testing.T) {
+	foo := Foo{
+		info: []interface{}{"a", "b", "c"},
+	}
+
+	info := foo.info
+	str := info[0]
+	_ = str
+	str = "aaa"
+
+	assert.Equal(t, "aaa", foo.info[0])
 }

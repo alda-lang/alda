@@ -15,6 +15,32 @@ type importerTestCase struct {
 	postprocess func(updates []model.ScoreUpdate) []model.ScoreUpdate
 }
 
+func evaluateLisp(updates []model.ScoreUpdate) error {
+	for i, element := range updates {
+		switch value := element.(type) {
+		case model.Repeat:
+			eventSequence := value.Event.(model.EventSequence)
+			evaluateLisp(eventSequence.Events)
+			value.Event = eventSequence
+			updates[i] = value
+		case model.OnRepetitions:
+			eventSequence := value.Event.(model.EventSequence)
+			evaluateLisp(eventSequence.Events)
+			value.Event = eventSequence
+			updates[i] = value
+		default:
+			if lispList, ok := value.(model.LispList); ok {
+				lispForm, err := lispList.Eval()
+				if err != nil {
+					return err
+				}
+				updates[i] = lispForm.(model.LispScoreUpdate).ScoreUpdate
+			}
+		}
+	}
+	return nil
+}
+
 func executeImporterTestCases(
 	t *testing.T, testCases ...importerTestCase,
 ) {
@@ -37,16 +63,9 @@ func executeImporterTestCases(
 		}
 
 		// Evaluate all LispList elements and unpacked ScoreUpdates
-		for i, value := range expected {
-			if lispList, ok := value.(model.LispList); ok {
-				lispForm, err := lispList.Eval()
-				if err != nil {
-					t.Error(testCase.label)
-					t.Error(err)
-					return
-				}
-				expected[i] = lispForm.(model.LispScoreUpdate).ScoreUpdate
-			}
+		if err = evaluateLisp(expected); err != nil {
+			t.Error(testCase.label)
+			t.Error(err)
 		}
 
 		if testCase.postprocess != nil {
