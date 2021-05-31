@@ -231,7 +231,9 @@ func padVoiceToPresent(element *etree.Element, importer *musicXMLImporter) {
 		// We make an assumption that this cannot happen
 		// If we must handle this case, importing would have to support changes
 		// by beats / duration. This would be non-trivial
-		warnWhileParsing(element, `voice is behind in beats, output will be incorrect.`)
+		warnWhileParsing(
+			element, `voice is behind in beats, output will be incorrect.`,
+		)
 	} else if beatDifference > 0 {
 		// We update without using append and moving the part-level beats here
 		// This is because we pad the voice to "catch up", not move forwards
@@ -267,68 +269,150 @@ func measureHandler(element *etree.Element, importer *musicXMLImporter) {
 }
 
 func barlineHandler(element *etree.Element, importer *musicXMLImporter) {
-	repeat := element.FindElement("repeat")
-	ending := element.FindElement("ending")
+	startRepeat := func() {
+		// We keep track of the "start octave" so we can return to this
+		// at the end of a repeated section to maintain octave integrity
+		importer.voice().startOctave = importer.voice().octave
+		importer.append(model.Repeat{Event: model.EventSequence{}})
+	}
 
-	if ending == nil && repeat == nil {
-		return
-	} else if ending == nil && repeat != nil {
-		direction := repeat.SelectAttrValue("direction", "")
-		if direction == "forward" {
-			// Start a new repeat
-			// We keep track of the "start octave" so we can return to this
-			// at the end of a repeated section to maintain octave integrity
-			importer.voice().startOctave = importer.voice().octave
-			importer.append(model.Repeat{Event: model.EventSequence{}})
-		} else if direction == "backward" {
-			// Maintain octave integrity
-			for importer.voice().octave > importer.voice().startOctave {
-				importer.append(
-					model.AttributeUpdate{PartUpdate: model.OctaveDown{}},
-				)
-				importer.voice().octave--
-			}
+	countEndings := func() int {
+		repeatUpdate := importer.voice().updates[len(
+			importer.voice().updates,
+		) - 1].(model.Repeat)
 
-			for importer.voice().octave <
-				importer.voice().startOctave {
-				importer.append(
-					model.AttributeUpdate{PartUpdate: model.OctaveUp{}},
-				)
-				importer.voice().octave++
-			}
-
-			// Set times
-			times, _ := strconv.ParseInt(
-				repeat.SelectAttrValue("times", "2"), 10, 8,
-			)
-
-			if reflect.TypeOf(
-				importer.voice().updates[len(importer.voice().updates) - 1],
-			) == repeatType {
-				importer.modifyAt(
-					nestedIndex{indices: []int{
-						len(importer.voice().updates) - 1,
-					}},
-					func(update model.ScoreUpdate) model.ScoreUpdate {
-						repeat := update.(model.Repeat)
-						repeat.Times = int32(times)
-						return repeat
-					},
-				)
-			} else {
-				repeatUpdate := model.Repeat{
-					Event: model.EventSequence{
-						Events: importer.voice().updates,
-					},
-					Times: int32(times),
-				}
-				importer.setAll(repeatUpdate)
+		count := 0
+		for _, update := range repeatUpdate.Event.(model.EventSequence).Events {
+			if reflect.TypeOf(update) == repetitionType {
+				count++
 			}
 		}
-	} else if ending != nil && repeat == nil {
+		return count
+	}
 
-	} else if ending != nil && repeat != nil {
+	maintainOctaveIntegrity := func() {
+		for importer.voice().octave > importer.voice().startOctave {
+			importer.append(
+				model.AttributeUpdate{PartUpdate: model.OctaveDown{}},
+			)
+			importer.voice().octave--
+		}
 
+		for importer.voice().octave <
+			importer.voice().startOctave {
+			importer.append(
+				model.AttributeUpdate{PartUpdate: model.OctaveUp{}},
+			)
+			importer.voice().octave++
+		}
+	}
+
+	concludeEnding := func() {
+		maintainOctaveIntegrity()
+
+		endingNumber := countEndings()
+		repetitionRange := []model.RepetitionRange{{
+			First: int32(endingNumber),
+			Last:  int32(endingNumber),
+		}}
+
+		// Find the repetition corresponding to this ending
+		_, ni := importer.findLast(filterNestedImportableUpdate)
+		// Set the repetitions
+		importer.modifyAt(
+			ni,
+			func(update model.ScoreUpdate) model.ScoreUpdate {
+				ending := update.(model.OnRepetitions)
+				ending.Repetitions = repetitionRange
+				return ending
+			},
+		)
+	}
+
+	ending := element.FindElement("ending")
+	repeat := element.FindElement("repeat")
+
+	// No significant barline attributes, just continue
+	if ending == nil && repeat == nil {
+		return
+	}
+
+	// Start of an ending
+	if ending != nil && ending.SelectAttrValue("type", "") == "start" {
+		// Create repeat if does not exist
+		if reflect.TypeOf(
+			importer.voice().updates[len(importer.voice().updates) - 1],
+		) != repeatType {
+			startRepeat()
+		}
+
+		importer.append(model.OnRepetitions{
+			Event:         model.EventSequence{},
+		})
+		return
+	}
+
+	// Start of a repeated section
+	if repeat != nil && repeat.SelectAttrValue("direction", "") == "forward" {
+		startRepeat()
+		return
+	}
+
+	// Conclusion of standard repeat without multiple endings
+	if ending == nil && repeat != nil {
+		maintainOctaveIntegrity()
+
+		// Set times
+		times, _ := strconv.ParseInt(
+			repeat.SelectAttrValue("times", "2"), 10, 8,
+		)
+
+		if reflect.TypeOf(
+			importer.voice().updates[len(importer.voice().updates) - 1],
+		) == repeatType {
+			importer.modifyAt(
+				nestedIndex{indices: []int{
+					len(importer.voice().updates) - 1,
+				}},
+				func(update model.ScoreUpdate) model.ScoreUpdate {
+					repeat := update.(model.Repeat)
+					repeat.Times = int32(times)
+					return repeat
+				},
+			)
+		} else {
+			repeatUpdate := model.Repeat{
+				Event: model.EventSequence{
+					Events: importer.voice().updates,
+				},
+				Times: int32(times),
+			}
+			importer.setAll(repeatUpdate)
+		}
+		return
+	}
+
+	// Conclusion of repeat with multiple endings
+	if ending != nil && repeat == nil {
+		concludeEnding()
+
+		repeatUpdate := importer.voice().updates[len(
+			importer.voice().updates,
+		) - 1].(model.Repeat)
+
+		repeatUpdate.Times = int32(countEndings())
+
+		importer.setAt(
+			nestedIndex{[]int{len(importer.voice().updates) - 1}},
+			repeatUpdate,
+		)
+		return
+	}
+
+	// Conclusion of current ending, but more endings to come
+	if ending != nil && repeat != nil {
+		concludeEnding()
+		return
 	}
 }
 

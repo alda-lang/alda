@@ -234,34 +234,30 @@ midi-acoustic-grand-piano:
 	})
 }
 
-//func TestRepeats2(t *testing.T) {
-//	executeImporterTestCases(t, importerTestCase{
-//		label: "repeats with first and second ending",
-//		file:  "../examples/repeats2.musicxml",
-//		expected: `
-//midi-acoustic-grand-piano:
-//	(key-signature "")
-//	> c1
-//	[
-//		[e1]'1
-//		[g1]'2
-//	]*2
-//`,
-//	})
-//}
+func TestRepeats3(t *testing.T) {
+	executeImporterTestCases(t, importerTestCase{
+		label: "repeats with complex octave updates",
+		file:  "../examples/repeat3.musicxml",
+		expected: `
+midi-acoustic-grand-piano:
+	[(key-signature "") > d1 | > d1 <<]*2 | >> c1
+`,
+	})
+}
 
-//func TestRepeats3(t *testing.T) {
-//	executeImporterTestCases(t, importerTestCase{
-//		label: "repeats with complex octave updates",
-//		file:  "../examples/repeats3.musicxml",
-//		expected: `
-//midi-acoustic-grand-piano:
-//	(key-signature "")
-//	[> d1 > d1 <<]*2 >> c1
-//`,
-//	})
-//}
-
-type Foo struct {
-	info []interface{}
+func TestRepeats4(t *testing.T) {
+	executeImporterTestCases(t, importerTestCase{
+		label: "repeats with first and second ending",
+		file:  "../examples/repeat4.musicxml",
+		expected: `
+midi-acoustic-grand-piano:
+	(key-signature "")
+	> c1 |
+	[
+		[e1]'1
+		| 
+		[g1]'2
+	]*2
+`,
+	})
 }

@@ -157,15 +157,20 @@ func (importer *musicXMLImporter) voice() *musicXMLVoice {
 
 // updates returns the current list of model.ScoreUpdate to import into
 func (importer *musicXMLImporter) updates() []model.ScoreUpdate {
-	current := importer.voice().updates
-	for len(current) > 0 {
-		if nested, ok := getNestedUpdates(current[len(current) - 1], true); ok {
-			current = nested
-		} else {
-			break
-		}
+	if len(importer.voice().updates) == 0 {
+		return importer.voice().updates
 	}
-	return current
+
+	if _, ok := getNestedUpdates(
+		importer.voice().updates[len(importer.voice().updates) - 1], true,
+	); ok {
+		// We can use findLast to recursively determine the current updates
+		update, _ := importer.findLast(filterNestedImportableUpdate)
+		nested, _ := getNestedUpdates(update, true)
+		return nested
+	} else {
+		return importer.voice().updates
+	}
 }
 
 // last returns the last update in the current active slice of model.ScoreUpdate
@@ -193,22 +198,26 @@ func (importer *musicXMLImporter) append(newUpdates ...model.ScoreUpdate) {
 		return
 	}
 
-	lastUpdate := importer.voice().updates[len(importer.voice().updates) - 1]
-
 	// If not nested, append directly to voice
-	if _, ok := getNestedUpdates(lastUpdate, true); !ok {
+	if _, ok := getNestedUpdates(
+		importer.voice().updates[len(importer.voice().updates) - 1], true,
+	); ok {
+		_, ni := importer.findLast(filterNestedImportableUpdate)
+		importer.modifyAt(
+			ni,
+			func(update model.ScoreUpdate) model.ScoreUpdate {
+				modified, _ := modifyNestedUpdates(
+					update,
+					func(updates []model.ScoreUpdate) []model.ScoreUpdate {
+						return append(updates, newUpdates...)
+					},
+				)
+				return modified
+			},
+		)
+	} else {
 		appendToVoice()
-		return
 	}
-
-	// Append recursively, then update the voice updates slice
-	lastUpdate, _ = modifyNestedUpdates(
-		lastUpdate,
-		func(updates []model.ScoreUpdate) []model.ScoreUpdate {
-			return append(updates, newUpdates...)
-		},
-	)
-	importer.voice().updates[len(importer.voice().updates) - 1] = lastUpdate
 }
 
 func (importer *musicXMLImporter) setAll(newUpdates ...model.ScoreUpdate) {
@@ -222,20 +231,20 @@ func (importer *musicXMLImporter) setAll(newUpdates ...model.ScoreUpdate) {
 	lastUpdate := importer.voice().updates[len(importer.voice().updates) - 1]
 
 	// If not nested, set directly to voice
-	if _, ok := getNestedUpdates(lastUpdate, true); !ok {
+	if _, ok := getNestedUpdates(lastUpdate, true); ok {
+		_, ni := importer.findLast(filterNestedImportableUpdate)
+		importer.modifyAt(
+			ni,
+			func(update model.ScoreUpdate) model.ScoreUpdate {
+				modified, _ := setNestedUpdates(update, newUpdates)
+				return modified
+			},
+		)
+
+	} else {
 		importer.voice().updates = newUpdates
 		importer.recountBeats()
-		return
 	}
-
-	// Set recursively, then update the voice updates slice
-	lastUpdate, _ = modifyNestedUpdates(
-		lastUpdate,
-		func(_ []model.ScoreUpdate) []model.ScoreUpdate {
-			return newUpdates
-		},
-	)
-	importer.voice().updates[len(importer.voice().updates) - 1] = lastUpdate
 }
 
 func (importer *musicXMLImporter) recountBeats() {
