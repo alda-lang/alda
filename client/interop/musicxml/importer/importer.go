@@ -7,6 +7,7 @@ import (
 	"github.com/beevik/etree"
 	"github.com/logrusorgru/aurora"
 	"io"
+	"sort"
 )
 
 // musicXMLImporter contains global state for importing a MusicXML file
@@ -66,6 +67,48 @@ func newMusicXMLVoice() *musicXMLVoice {
 	}
 }
 
+// generateScoreUpdates flattens score updates in an importer to a single slice
+// This represents the overall output of the importer
+func (importer *musicXMLImporter) generateScoreUpdates() []model.ScoreUpdate {
+	var updates []model.ScoreUpdate
+
+	// We process parts in order of ID
+	var partIDs []string
+	for id := range importer.parts {
+		partIDs = append(partIDs, id)
+	}
+
+	sort.Sort(sort.StringSlice(partIDs))
+
+	for _, id := range partIDs {
+		part := importer.parts[id]
+		partDeclaration := model.PartDeclaration{
+			Names: part.instruments,
+		}
+		updates = append(updates, partDeclaration)
+
+		if len(part.voices) == 1 {
+			// For a single voice, we don't include a voice marker
+			updates = append(updates, part.currentVoice.updates...)
+		} else {
+			// Process voices in order of voice number
+			var voiceNumber int32 = 1
+			for voicesLeft := len(part.voices); voicesLeft > 0; voiceNumber++ {
+				if voice, ok := part.voices[voiceNumber]; ok {
+					voiceMarker := model.VoiceMarker{
+						VoiceNumber: voiceNumber,
+					}
+					updates = append(updates, voiceMarker)
+					updates = append(updates, voice.updates...)
+					voicesLeft--
+				}
+			}
+		}
+	}
+
+	return updates
+}
+
 func warnWhileParsing(element *etree.Element, message string) {
 	log.Warn().
 		Str("tag", element.Tag).
@@ -102,4 +145,294 @@ func ImportMusicXML(r io.Reader) ([]model.ScoreUpdate, error) {
  	postProcess(importer)
 
 	return importer.generateScoreUpdates(), nil
+}
+
+func (importer *musicXMLImporter) part() *musicXMLPart {
+	return importer.currentPart
+}
+
+func (importer *musicXMLImporter) voice() *musicXMLVoice {
+	return importer.currentPart.currentVoice
+}
+
+// updates returns the current list of model.ScoreUpdate to import into
+func (importer *musicXMLImporter) updates() []model.ScoreUpdate {
+	current := importer.voice().updates
+	for len(current) > 0 {
+		if nested, ok := getNestedUpdates(current[len(current) - 1], true); ok {
+			current = nested
+		} else {
+			break
+		}
+	}
+	return current
+}
+
+// last returns the last update in the current active slice of model.ScoreUpdate
+func (importer *musicXMLImporter) last() model.ScoreUpdate {
+	updates := importer.updates()
+	return updates[len(updates) - 1]
+}
+
+func (importer *musicXMLImporter) append(newUpdates ...model.ScoreUpdate) {
+	// When appending we can increment beats at the start
+	beats := getBeats(newUpdates...)
+	importer.part().beats += beats
+	importer.voice().beats += beats
+
+	appendToVoice := func() {
+		importer.voice().updates = append(
+			importer.voice().updates,
+			newUpdates...,
+		)
+	}
+
+	// If empty, append directly to voice
+	if len(importer.voice().updates) == 0 {
+		appendToVoice()
+		return
+	}
+
+	lastUpdate := importer.voice().updates[len(importer.voice().updates) - 1]
+
+	// If not nested, append directly to voice
+	if _, ok := getNestedUpdates(lastUpdate, true); !ok {
+		appendToVoice()
+		return
+	}
+
+	// Append recursively, then update the voice updates slice
+	lastUpdate, _ = modifyNestedUpdates(
+		lastUpdate,
+		func(updates []model.ScoreUpdate) []model.ScoreUpdate {
+			return append(updates, newUpdates...)
+		},
+	)
+	importer.voice().updates[len(importer.voice().updates) - 1] = lastUpdate
+}
+
+func (importer *musicXMLImporter) setAll(newUpdates ...model.ScoreUpdate) {
+	// If empty, set directly to voice
+	if len(importer.voice().updates) == 0 {
+		importer.voice().updates = newUpdates
+		importer.recountBeats()
+		return
+	}
+
+	lastUpdate := importer.voice().updates[len(importer.voice().updates) - 1]
+
+	// If not nested, set directly to voice
+	if _, ok := getNestedUpdates(lastUpdate, true); !ok {
+		importer.voice().updates = newUpdates
+		importer.recountBeats()
+		return
+	}
+
+	// Set recursively, then update the voice updates slice
+	lastUpdate, _ = modifyNestedUpdates(
+		lastUpdate,
+		func(_ []model.ScoreUpdate) []model.ScoreUpdate {
+			return newUpdates
+		},
+	)
+	importer.voice().updates[len(importer.voice().updates) - 1] = lastUpdate
+}
+
+func (importer *musicXMLImporter) recountBeats() {
+	beats := getBeats(importer.voice().updates...)
+	importer.part().beats = beats
+	importer.voice().beats = beats
+}
+
+// nestedIndex identifies a model.ScoreUpdate in a []model.ScoreUpdate
+// nestedIndex is designed to work with slices as built by musicXMLImporter
+// indices in order represent the indices within slices of score updates
+// multiple indices means we enter the sequences for chords, repeats, or
+// repetitions
+type nestedIndex struct {
+	indices []int
+}
+
+func (importer *musicXMLImporter) findLast(
+	filter func(update model.ScoreUpdate) bool,
+) (model.ScoreUpdate, nestedIndex) {
+	updates := importer.voice().updates
+	return findLastRecursive(updates, filter)
+}
+
+func (importer *musicXMLImporter) findLastFrom(
+	filter func(update model.ScoreUpdate) bool,
+	startIndex int,
+) (model.ScoreUpdate, nestedIndex) {
+	updates := importer.voice().updates
+	return findLastRecursive(updates[:startIndex], filter)
+}
+
+func findLastRecursive(
+	updates []model.ScoreUpdate,
+	filter func(updates model.ScoreUpdate) bool,
+) (model.ScoreUpdate, nestedIndex) {
+	for i := len(updates) - 1; i >= 0; i-- {
+		if filter(updates[i]) {
+			return updates[i], nestedIndex{indices: []int{i}}
+		}
+
+		if nested, ok := getNestedUpdates(updates[i], false); ok {
+			update, ni := findLastRecursive(nested, filter)
+			if len(ni.indices) > 0 {
+				return update, nestedIndex{
+					indices: append([]int{i}, ni.indices...),
+				}
+			}
+		}
+	}
+	return nil, nestedIndex{indices: nil}
+}
+
+func (importer *musicXMLImporter) findLastWithState(
+	filter func(update model.ScoreUpdate, state interface{}) bool,
+	initialState interface{},
+	updateState func(update model.ScoreUpdate, state interface{}) interface{},
+) (model.ScoreUpdate, nestedIndex, interface{}) {
+	updates := importer.voice().updates
+	return findLastWithStateRecursive(
+		updates, filter, initialState, updateState,
+	)
+}
+
+func findLastWithStateRecursive(
+	updates []model.ScoreUpdate,
+	filter func(updates model.ScoreUpdate, state interface{}) bool,
+	initialState interface{},
+	updateState func(
+	update model.ScoreUpdate, state interface{},
+) interface{},
+) (model.ScoreUpdate, nestedIndex, interface{}) {
+	curr := initialState
+	for i := len(updates) - 1; i >= 0; i-- {
+		if filter(updates[i], curr) {
+			return updates[i], nestedIndex{indices: []int{i}}, curr
+		}
+
+		curr = updateState(updates[i], curr)
+
+		if nested, ok := getNestedUpdates(updates[i], false); ok {
+			update, ni, state := findLastWithStateRecursive(
+				nested, filter, curr, updateState,
+			)
+			curr = state
+			if len(ni.indices) > 0 {
+				return update, nestedIndex{
+					indices: append([]int{i}, ni.indices...),
+				}, curr
+			}
+		}
+	}
+	return nil, nestedIndex{indices: nil}, curr
+}
+
+func (importer *musicXMLImporter) modifyAt(
+	ni nestedIndex, modify func(update model.ScoreUpdate) model.ScoreUpdate,
+) {
+	if len(ni.indices) == 1 {
+		importer.voice().updates[ni.indices[0]] = modify(
+			importer.voice().updates[ni.indices[0]],
+		)
+		importer.recountBeats()
+	} else {
+		depth := 1
+
+		var modifyNested func(updates []model.ScoreUpdate) []model.ScoreUpdate
+		modifyNested = func(updates []model.ScoreUpdate) []model.ScoreUpdate {
+			if depth == len(ni.indices) - 1 {
+				// Reached the last layer, do the set
+				updates[ni.indices[depth]] = modify(
+					updates[ni.indices[depth]],
+				)
+				return updates
+			} else {
+				// Recursively modify
+				currDepth := depth
+				depth++
+				modifiedUpdate, _ := modifyNestedUpdates(
+					updates[ni.indices[currDepth]],
+					modifyNested,
+				)
+				updates[ni.indices[currDepth]] = modifiedUpdate
+				return updates
+			}
+		}
+
+		update, _ := modifyNestedUpdates(
+			importer.voice().updates[ni.indices[0]],
+			modifyNested,
+		)
+		importer.voice().updates[ni.indices[0]] = update
+	}
+}
+
+func (importer *musicXMLImporter) getAt(ni nestedIndex) model.ScoreUpdate {
+	var foundUpdate model.ScoreUpdate
+	importer.modifyAt(ni, func(update model.ScoreUpdate) model.ScoreUpdate {
+		foundUpdate = update
+		return update
+	})
+	return foundUpdate
+}
+
+func (importer *musicXMLImporter) setAt(
+	ni nestedIndex, update model.ScoreUpdate,
+) {
+	importer.modifyAt(ni, func(_ model.ScoreUpdate) model.ScoreUpdate {
+		return update
+	})
+}
+
+func (importer *musicXMLImporter) insertAt(
+	ni nestedIndex, update model.ScoreUpdate,
+) {
+	if len(ni.indices) == 1 {
+		importer.voice().updates = insert(
+			update, importer.voice().updates, ni.indices[0],
+		)
+		importer.recountBeats()
+	} else {
+		depth := 1
+
+		var modify func(updates []model.ScoreUpdate) []model.ScoreUpdate
+		modify = func(updates []model.ScoreUpdate) []model.ScoreUpdate {
+			if depth == len(ni.indices) - 1 {
+				// Reached the last layer, do the insert
+				return insert(update, updates, ni.indices[depth])
+			} else {
+				// Recursively modify
+				currDepth := depth
+				depth++
+				modifiedUpdate, _ := modifyNestedUpdates(
+					updates[ni.indices[currDepth]],
+					modify,
+				)
+				updates[ni.indices[currDepth]] = modifiedUpdate
+				return updates
+			}
+		}
+
+		update, _ := modifyNestedUpdates(
+			importer.voice().updates[ni.indices[0]],
+			modify,
+		)
+		importer.voice().updates[ni.indices[0]] = update
+	}
+}
+
+func insert(
+	update model.ScoreUpdate, updates []model.ScoreUpdate, index int,
+) []model.ScoreUpdate {
+	// Make space
+	updates = append(updates, model.Note{})
+	// Shift over
+	copy(updates[index + 1:], updates[index:])
+	// Set inserted element
+	updates[index] = update
+	return updates
 }

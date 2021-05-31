@@ -2,7 +2,6 @@ package importer
 
 import (
 	"alda.io/client/model"
-	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -107,29 +106,27 @@ func TestTies2(t *testing.T) {
 		label: "ties with chords",
 		file:  "../examples/ties2.musicxml",
 		expected: `
-midi-acoustic-grand-piano: 
-	(key-signature "") 
+midi-acoustic-grand-piano:
+	(key-signature "")
 	a4/>c4~4 < g4 > d2~ | 4~4 e4~4/g4~4
 `,
 		postprocess: func(updates []model.ScoreUpdate) []model.ScoreUpdate {
 			// The OctaveDown before the g is parsed into the chord
 			// We take it out
 			indexOfChord := 2
-			updates = apply(
-				updates,
-				nestedIndex{index: indexOfChord, chordIndex: -1},
-				func(update model.ScoreUpdate) model.ScoreUpdate {
-					chord := update.(model.Chord)
-					chord.Events = chord.Events[:len(chord.Events)-1]
-					return chord
+
+			updates[indexOfChord], _ = modifyNestedUpdates(
+				updates[indexOfChord],
+				func(updates []model.ScoreUpdate) []model.ScoreUpdate {
+					return updates[:len(updates) - 1]
 				},
 			)
 
 			// Then we insert it in the parsed location
 			updates = insert(
-				updates,
-				nestedIndex{index: indexOfChord + 1, chordIndex: -1},
 				model.AttributeUpdate{PartUpdate: model.OctaveDown{}},
+				updates,
+				indexOfChord + 1,
 			)
 
 			// This change produces equivalent Alda representation
@@ -267,17 +264,4 @@ midi-acoustic-grand-piano:
 
 type Foo struct {
 	info []interface{}
-}
-
-func Test(t *testing.T) {
-	foo := Foo{
-		info: []interface{}{"a", "b", "c"},
-	}
-
-	info := foo.info
-	str := info[0]
-	_ = str
-	str = "aaa"
-
-	assert.Equal(t, "aaa", foo.info[0])
 }
