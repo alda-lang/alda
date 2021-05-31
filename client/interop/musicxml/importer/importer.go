@@ -2,7 +2,6 @@ package importer
 
 import (
 	"alda.io/client/help"
-	log "alda.io/client/logging"
 	"alda.io/client/model"
 	"github.com/beevik/etree"
 	"github.com/logrusorgru/aurora"
@@ -115,13 +114,6 @@ func (importer *musicXMLImporter) generateScoreUpdates() []model.ScoreUpdate {
 	return updates
 }
 
-func warnWhileParsing(element *etree.Element, message string) {
-	log.Warn().
-		Str("tag", element.Tag).
-		Str("issue", message).
-		Msg("Issue parsing tag")
-}
-
 func ImportMusicXML(r io.Reader) ([]model.ScoreUpdate, error) {
 	doc := etree.NewDocument()
 
@@ -171,9 +163,9 @@ func (importer *musicXMLImporter) updates() []model.ScoreUpdate {
 		importer.voice().updates[len(importer.voice().updates) - 1], true,
 	); ok {
 		// We can use findLast to recursively determine the current updates
-		update, _ := importer.findLast(filterNestedImportableUpdate)
-		nested, _ := getNestedUpdates(update, true)
-		return nested
+		importInto, _ := importer.findLast(filterNestedImportableUpdate)
+		nestedUpdates, _ := getNestedUpdates(importInto, true)
+		return nestedUpdates
 	} else {
 		return importer.voice().updates
 	}
@@ -185,6 +177,7 @@ func (importer *musicXMLImporter) last() model.ScoreUpdate {
 	return updates[len(updates) - 1]
 }
 
+// append appends updates to the current slice to import into
 func (importer *musicXMLImporter) append(newUpdates ...model.ScoreUpdate) {
 	// When appending we can increment beats at the start
 	beats := getBeats(newUpdates...)
@@ -226,6 +219,7 @@ func (importer *musicXMLImporter) append(newUpdates ...model.ScoreUpdate) {
 	}
 }
 
+// setAll replaces the updates for the current slice to import into
 func (importer *musicXMLImporter) setAll(newUpdates ...model.ScoreUpdate) {
 	// If empty, set directly to voice
 	if len(importer.voice().updates) == 0 {

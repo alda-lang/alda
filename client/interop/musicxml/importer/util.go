@@ -1,7 +1,9 @@
 package importer
 
 import (
+	log "alda.io/client/logging"
 	"alda.io/client/model"
+	"github.com/beevik/etree"
 	"reflect"
 )
 
@@ -14,6 +16,9 @@ var octaveDownType = reflect.TypeOf(model.OctaveDown{})
 var repeatType = reflect.TypeOf(model.Repeat{})
 var repetitionType = reflect.TypeOf(model.OnRepetitions{})
 
+// getNestedUpdates facilitates recursing on nested slices of updates in Alda IR
+// getNestedUpdates abstracts recursive model.ScoreUpdate properties from users
+// getNestedUpdates returns the nested updates, and whether the update is nested
 func getNestedUpdates(
 	update model.ScoreUpdate, toImport bool,
 ) ([]model.ScoreUpdate, bool) {
@@ -21,14 +26,12 @@ func getNestedUpdates(
 	case model.Repeat:
 		if toImport && value.Times > 0 {
 			// We use a repeat's times to track whether the repeat has ended
-			// If times > 0, it has been set at the repeat ending
-			// Then we do not continue to import into the repeat
 			break
 		}
 		return value.Event.(model.EventSequence).Events, true
 	case model.OnRepetitions:
-		// We use repetitions to determine whether an ending is complete
 		if toImport && len(value.Repetitions) > 0 {
+			// We use a repetition's repetitions to track whether it has ended
 			break
 		}
 		return value.Event.(model.EventSequence).Events, true
@@ -41,6 +44,8 @@ func getNestedUpdates(
 	return nil, false
 }
 
+// modifyNestedUpdates facilitates recursively modifying Alda IR
+// modifyNestedUpdates returns the modified update, and success
 func modifyNestedUpdates(
 	update model.ScoreUpdate,
 	modify func(updates []model.ScoreUpdate) []model.ScoreUpdate,
@@ -63,6 +68,7 @@ func modifyNestedUpdates(
 	return update, false
 }
 
+// setNestedUpdates is a short-hand to modifyNestedUpdates but set a new slice
 func setNestedUpdates(
 	update model.ScoreUpdate,
 	updates []model.ScoreUpdate,
@@ -75,6 +81,8 @@ func setNestedUpdates(
  	)
 }
 
+// insert is a helper to insert an element in a slice
+// insert returns the updated slice with element inserted at the provided index
 func insert(
 	update model.ScoreUpdate, updates []model.ScoreUpdate, index int,
 ) []model.ScoreUpdate {
@@ -121,7 +129,7 @@ func filterUpdateWithDuration(update model.ScoreUpdate) bool {
 		reflect.TypeOf(update) == chordType
 }
 
-// Finds an update which can be imported into
+// filterNestedImportableUpdate finds the update to import into
 func filterNestedImportableUpdate(update model.ScoreUpdate) bool {
 	if nested, ok := getNestedUpdates(update, true); ok {
 		if len(nested) == 0 {
@@ -131,7 +139,16 @@ func filterNestedImportableUpdate(update model.ScoreUpdate) bool {
 		_, nestedOk := getNestedUpdates(last, true)
 
 		// We stop if the nested layer does not have further nested layers
+		// In which we can then "import" into that nested layer
 		return !nestedOk
 	}
 	return false
+}
+
+// warnWhileParsing displays a standard importing warning to the user
+func warnWhileParsing(element *etree.Element, message string) {
+	log.Warn().
+		Str("tag", element.Tag).
+		Str("issue", message).
+		Msg("Issue parsing tag")
 }
