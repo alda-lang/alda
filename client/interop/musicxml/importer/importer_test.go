@@ -251,13 +251,33 @@ func TestRepeats4(t *testing.T) {
 		file:  "../examples/repeat4.musicxml",
 		expected: `
 midi-acoustic-grand-piano:
-	(key-signature "")
-	> c1 |
-	[
-		[e1]'1
+	[	
+		(key-signature "")
+		> c1 |
+		[e1 <]'1
 		| 
 		[g1]'2
 	]*2
+`,
+	})
+}
+
+func TestRepeats5(t *testing.T) {
+	executeImporterTestCases(t, importerTestCase{
+		label: "very complex repeats",
+		file:  "../examples/repeat5.musicxml",
+		expected: `
+midi-acoustic-grand-piano:
+	[
+		(key-signature "")
+		> c1 | 
+		[d1 <]'1
+		|
+		[e1 <]'2
+		|
+		[f1]'3
+	]*3
+	| [g1]*2 | [a1]*2
 `,
 	})
 }

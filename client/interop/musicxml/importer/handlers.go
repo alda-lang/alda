@@ -269,13 +269,65 @@ func measureHandler(element *etree.Element, importer *musicXMLImporter) {
 }
 
 func barlineHandler(element *etree.Element, importer *musicXMLImporter) {
+	// Obtaining information helpful for barline handling
+	ending := element.FindElement("ending")
+	endingType := ""
+	if ending != nil {
+		endingType = ending.SelectAttrValue("type", "")
+		if endingType == "discontinue" {
+			// We treat discontinue the same as stopping
+			endingType = "stop"
+		}
+	}
+
+	repeat := element.FindElement("repeat")
+	repeatDirection := ""
+	if repeat != nil {
+		repeatDirection = repeat.SelectAttrValue("direction", "")
+	}
+
+	isRepeatOngoing := reflect.TypeOf(
+		importer.voice().updates[len(importer.voice().updates) - 1],
+	) == repeatType
+
+	// No significant barline attributes, just continue
+	if ending == nil && repeat == nil {
+		return
+	}
+
+	// Dealing with start of repeats & endings
 	startRepeat := func() {
-		// We keep track of the "start octave" so we can return to this
-		// at the end of a repeated section to maintain octave integrity
-		importer.voice().startOctave = importer.voice().octave
+		importer.voice().sectionStartOctave = importer.voice().octave
 		importer.append(model.Repeat{Event: model.EventSequence{}})
 	}
 
+	startEnding := func() {
+		importer.voice().endingStartOctave = importer.voice().octave
+		importer.append(model.OnRepetitions{Event: model.EventSequence{}})
+	}
+
+	if ending == nil && repeatDirection == "forward" {
+		// (1) Repeat starting (no ending start)
+		startRepeat()
+	} else if endingType == "start" && repeatDirection == "forward" {
+		// (2) Repeat starting & first ending starting
+		startRepeat()
+		startEnding()
+	} else if endingType == "start" && !isRepeatOngoing {
+		// (3) First ending start, no repeat yet
+		// We have to build the repeat
+		repeatUpdate := model.Repeat{Event: model.EventSequence{
+			Events: importer.voice().updates,
+		}}
+
+		importer.setAll(repeatUpdate)
+		startEnding()
+	} else if endingType == "start" && isRepeatOngoing {
+		// (4) Ending starting, but already have repeat and previous ending
+		importer.append(model.OnRepetitions{Event: model.EventSequence{}})
+	}
+
+	// Dealing with conclusion of repeats & endings
 	countEndings := func() int {
 		repeatUpdate := importer.voice().updates[len(
 			importer.voice().updates,
@@ -290,16 +342,15 @@ func barlineHandler(element *etree.Element, importer *musicXMLImporter) {
 		return count
 	}
 
-	maintainOctaveIntegrity := func() {
-		for importer.voice().octave > importer.voice().startOctave {
+	maintainRepeatOctaveIntegrity := func() {
+		for importer.voice().octave > importer.voice().sectionStartOctave {
 			importer.append(
 				model.AttributeUpdate{PartUpdate: model.OctaveDown{}},
 			)
 			importer.voice().octave--
 		}
 
-		for importer.voice().octave <
-			importer.voice().startOctave {
+		for importer.voice().octave < importer.voice().sectionStartOctave {
 			importer.append(
 				model.AttributeUpdate{PartUpdate: model.OctaveUp{}},
 			)
@@ -307,9 +358,7 @@ func barlineHandler(element *etree.Element, importer *musicXMLImporter) {
 		}
 	}
 
-	concludeEnding := func() {
-		maintainOctaveIntegrity()
-
+	setEndingRepetitions := func() {
 		endingNumber := countEndings()
 		repetitionRange := []model.RepetitionRange{{
 			First: int32(endingNumber),
@@ -329,90 +378,56 @@ func barlineHandler(element *etree.Element, importer *musicXMLImporter) {
 		)
 	}
 
-	ending := element.FindElement("ending")
-	repeat := element.FindElement("repeat")
-
-	// No significant barline attributes, just continue
-	if ending == nil && repeat == nil {
-		return
+	setRepeatTimes := func(times int32) {
+		importer.modifyAt(
+			nestedIndex{indices: []int{
+				len(importer.voice().updates) - 1,
+			}},
+			func(update model.ScoreUpdate) model.ScoreUpdate {
+				repeat := update.(model.Repeat)
+				repeat.Times = int32(times)
+				return repeat
+			},
+		)
 	}
 
-	// Start of an ending
-	if ending != nil && ending.SelectAttrValue("type", "") == "start" {
-		// Create repeat if does not exist
-		if reflect.TypeOf(
-			importer.voice().updates[len(importer.voice().updates) - 1],
-		) != repeatType {
-			startRepeat()
-		}
+	if ending == nil && repeatDirection == "backward" {
+		// (1) A normal repeat with no endings
+		maintainRepeatOctaveIntegrity()
 
-		importer.append(model.OnRepetitions{
-			Event:         model.EventSequence{},
-		})
-		return
-	}
-
-	// Start of a repeated section
-	if repeat != nil && repeat.SelectAttrValue("direction", "") == "forward" {
-		startRepeat()
-		return
-	}
-
-	// Conclusion of standard repeat without multiple endings
-	if ending == nil && repeat != nil {
-		maintainOctaveIntegrity()
-
-		// Set times
 		times, _ := strconv.ParseInt(
 			repeat.SelectAttrValue("times", "2"), 10, 8,
 		)
 
-		if reflect.TypeOf(
-			importer.voice().updates[len(importer.voice().updates) - 1],
-		) == repeatType {
-			importer.modifyAt(
-				nestedIndex{indices: []int{
-					len(importer.voice().updates) - 1,
-				}},
-				func(update model.ScoreUpdate) model.ScoreUpdate {
-					repeat := update.(model.Repeat)
-					repeat.Times = int32(times)
-					return repeat
-				},
-			)
+		if isRepeatOngoing {
+			setRepeatTimes(int32(times))
 		} else {
+			// We have to create the repeat with all the existing score updates
 			repeatUpdate := model.Repeat{
 				Event: model.EventSequence{
 					Events: importer.voice().updates,
 				},
-				Times: int32(times),
 			}
 			importer.setAll(repeatUpdate)
+			setRepeatTimes(int32(times))
 		}
-		return
-	}
+	} else if endingType == "stop" && repeat == nil {
+		// (2) Only an ending is concluding, but not a repeat
+		// This means this is the last ending in a repeated section
+		// Note how we don't have to maintain any octave information because
+		// we just continue on playing after this point
+		setEndingRepetitions()
+		setRepeatTimes(int32(countEndings()))
+	} else if endingType == "stop" && repeatDirection == "backward" {
+		// (3) Both ending and repeat concluding
+		// This means this is not the last ending
+		maintainRepeatOctaveIntegrity()
 
-	// Conclusion of repeat with multiple endings
-	if ending != nil && repeat == nil {
-		concludeEnding()
+		setEndingRepetitions()
 
-		repeatUpdate := importer.voice().updates[len(
-			importer.voice().updates,
-		) - 1].(model.Repeat)
-
-		repeatUpdate.Times = int32(countEndings())
-
-		importer.setAt(
-			nestedIndex{[]int{len(importer.voice().updates) - 1}},
-			repeatUpdate,
-		)
-		return
-	}
-
-	// Conclusion of current ending, but more endings to come
-	if ending != nil && repeat != nil {
-		concludeEnding()
-		return
+		// Set the current octave manually to the ending start octave
+		// This is because when going to an ending we skip previous endings
+		importer.voice().octave = importer.voice().endingStartOctave
 	}
 }
 

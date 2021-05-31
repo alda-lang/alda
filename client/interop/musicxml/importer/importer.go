@@ -45,25 +45,31 @@ func newMusicXMLPart() *musicXMLPart {
 
 // musicXMLVoice contains voice-specific information necessary for import
 type musicXMLVoice struct {
-	updates     []model.ScoreUpdate
-	beats       float64
-	octave      int64
-	// Alda notes contain only a pitch, not an octave
-	// We must keep track of the current octave of a voice while importing
-	// We also need to maintain the startOctave to facilitate building repeats
-	startOctave int64
+	updates []model.ScoreUpdate
+	beats   float64
+	octave  int64
+
 	// slurs are represented by start and stop tags
 	// slurs can be nested, so we track the nested depth as an integer
 	// Then a note is slurred if the depth is strictly greater than 0
-	slurs       int64
+	slurs int64
+
+	// Alda notes contain only a pitch, not an octave
+	// We must then keep track of octave information to handle repeats
+	// See barlineHandler for how this is managed
+	sectionStartOctave int64
+	endingStartOctave  int64
 }
 
 func newMusicXMLVoice() *musicXMLVoice {
 	return &musicXMLVoice{
 		beats:       0,
 		octave:      4, // 4 is the default Alda octave
-		startOctave: 4,
 		slurs:       0, // By default a note is not slurred
+
+		// To handle octave setting in repeats
+		sectionStartOctave: 4,
+		endingStartOctave:  4,
 	}
 }
 
@@ -377,6 +383,7 @@ func (importer *musicXMLImporter) modifyAt(
 			modifyNested,
 		)
 		importer.voice().updates[ni.indices[0]] = update
+		importer.recountBeats()
 	}
 }
 
@@ -432,16 +439,4 @@ func (importer *musicXMLImporter) insertAt(
 		)
 		importer.voice().updates[ni.indices[0]] = update
 	}
-}
-
-func insert(
-	update model.ScoreUpdate, updates []model.ScoreUpdate, index int,
-) []model.ScoreUpdate {
-	// Make space
-	updates = append(updates, model.Note{})
-	// Shift over
-	copy(updates[index + 1:], updates[index:])
-	// Set inserted element
-	updates[index] = update
-	return updates
 }

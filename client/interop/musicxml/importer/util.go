@@ -75,6 +75,19 @@ func setNestedUpdates(
  	)
 }
 
+func insert(
+	update model.ScoreUpdate, updates []model.ScoreUpdate, index int,
+) []model.ScoreUpdate {
+	// Make space
+	updates = append(updates, model.Note{})
+	// Shift over
+	copy(updates[index + 1:], updates[index:])
+	// Set inserted element
+	updates[index] = update
+	return updates
+}
+
+
 // getBeats counts beats for a slice of model.ScoreUpdate
 func getBeats(updates ...model.ScoreUpdate) float64 {
 	beats := 0.0
