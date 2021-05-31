@@ -16,8 +16,16 @@ var octaveDownType = reflect.TypeOf(model.OctaveDown{})
 var repeatType = reflect.TypeOf(model.Repeat{})
 var repetitionType = reflect.TypeOf(model.OnRepetitions{})
 
+// warnWhileParsing displays a standard importing warning to the user
+func warnWhileParsing(element *etree.Element, message string) {
+	log.Warn().
+		Str("tag", element.Tag).
+		Str("issue", message).
+		Msg("Issue parsing tag")
+}
+
 // getNestedUpdates facilitates recursing on nested slices of updates in Alda IR
-// getNestedUpdates abstracts recursive model.ScoreUpdate properties from users
+// getNestedUpdates abstracts recursive update properties from the importer
 // getNestedUpdates returns the nested updates, and whether the update is nested
 func getNestedUpdates(
 	update model.ScoreUpdate, toImport bool,
@@ -40,6 +48,8 @@ func getNestedUpdates(
 		if !toImport {
 			return value.Events, true
 		}
+	case model.EventSequence:
+		return value.Events, true
 	}
 	return nil, false
 }
@@ -64,11 +74,14 @@ func modifyNestedUpdates(
 	case model.Chord:
 		value.Events = modify(value.Events)
 		return value, true
+	case model.EventSequence:
+		value.Events = modify(value.Events)
+		return value, true
 	}
 	return update, false
 }
 
-// setNestedUpdates is a short-hand to modifyNestedUpdates but set a new slice
+// setNestedUpdates is short-hand to modifyNestedUpdates but setting a new slice
 func setNestedUpdates(
 	update model.ScoreUpdate,
 	updates []model.ScoreUpdate,
@@ -115,8 +128,11 @@ func getBeats(updates ...model.ScoreUpdate) float64 {
 			}
 			beats += min
 		case model.Repeat:
-			eventSequence := value.Event.(model.EventSequence)
-			beats += getBeats(eventSequence.Events...)
+			beats += getBeats(value.Event)
+		case model.OnRepetitions:
+			beats += getBeats(value.Event)
+		case model.EventSequence:
+			beats += getBeats(value.Events...)
 		}
 	}
 	return beats
@@ -145,10 +161,9 @@ func filterNestedImportableUpdate(update model.ScoreUpdate) bool {
 	return false
 }
 
-// warnWhileParsing displays a standard importing warning to the user
-func warnWhileParsing(element *etree.Element, message string) {
-	log.Warn().
-		Str("tag", element.Tag).
-		Str("issue", message).
-		Msg("Issue parsing tag")
+// filterType finds the last update of a specific reflect.Type
+func filterType(requiredType reflect.Type) func(update model.ScoreUpdate) bool {
+	return func(update model.ScoreUpdate) bool {
+		return reflect.TypeOf(update) == requiredType
+	}
 }
