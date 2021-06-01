@@ -341,8 +341,8 @@ func findLastWithStateRecursive(
 	filter func(updates model.ScoreUpdate, state interface{}) bool,
 	initialState interface{},
 	updateState func(
-	update model.ScoreUpdate, state interface{},
-) interface{},
+		update model.ScoreUpdate, state interface{},
+	) interface{},
 ) (model.ScoreUpdate, nestedIndex, interface{}) {
 	curr := initialState
 	for i := len(updates) - 1; i >= 0; i-- {
