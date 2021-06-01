@@ -106,29 +106,27 @@ func TestTies2(t *testing.T) {
 		label: "ties with chords",
 		file:  "../examples/ties2.musicxml",
 		expected: `
-midi-acoustic-grand-piano: 
-	(key-signature "") 
+midi-acoustic-grand-piano:
+	(key-signature "")
 	a4/>c4~4 < g4 > d2~ | 4~4 e4~4/g4~4
 `,
 		postprocess: func(updates []model.ScoreUpdate) []model.ScoreUpdate {
 			// The OctaveDown before the g is parsed into the chord
 			// We take it out
 			indexOfChord := 2
-			updates = apply(
-				updates,
-				nestedIndex{index: indexOfChord, chordIndex: -1},
-				func(update model.ScoreUpdate) model.ScoreUpdate {
-					chord := update.(model.Chord)
-					chord.Events = chord.Events[:len(chord.Events)-1]
-					return chord
+
+			updates[indexOfChord], _ = modifyNestedUpdates(
+				updates[indexOfChord],
+				func(updates []model.ScoreUpdate) []model.ScoreUpdate {
+					return updates[:len(updates) - 1]
 				},
 			)
 
 			// Then we insert it in the parsed location
 			updates = insert(
-				updates,
-				nestedIndex{index: indexOfChord + 1, chordIndex: -1},
 				model.AttributeUpdate{PartUpdate: model.OctaveDown{}},
+				updates,
+				indexOfChord + 1,
 			)
 
 			// This change produces equivalent Alda representation
@@ -210,6 +208,76 @@ midi-french-horn:
 	(key-signature "f+") 
 	(transpose -7)
 	g4 b4 g4 b4 | > d4 < b4 g2 | r1 | g1
+`,
+	})
+}
+
+func TestRepeat1(t *testing.T) {
+	executeImporterTestCases(t, importerTestCase{
+		label: "simple repeat",
+		file:  "../examples/repeat1.musicxml",
+		expected: `
+midi-acoustic-grand-piano:
+	[(key-signature "") > c1 | g1 <]*2
+`,
+	})
+}
+
+func TestRepeat2(t *testing.T) {
+	executeImporterTestCases(t, importerTestCase{
+		label: "simple repeat with forward repeat",
+		file:  "../examples/repeat2.musicxml",
+		expected: `
+midi-acoustic-grand-piano:
+	[(key-signature "") > c1 | g1 <]*2
+`,
+	})
+}
+
+func TestRepeats3(t *testing.T) {
+	executeImporterTestCases(t, importerTestCase{
+		label: "repeats with complex octave updates",
+		file:  "../examples/repeat3.musicxml",
+		expected: `
+midi-acoustic-grand-piano:
+	[(key-signature "") > d1 | > d1 <<]*2 | >> c1
+`,
+	})
+}
+
+func TestRepeats4(t *testing.T) {
+	executeImporterTestCases(t, importerTestCase{
+		label: "repeats with first and second ending",
+		file:  "../examples/repeat4.musicxml",
+		expected: `
+midi-acoustic-grand-piano:
+	[	
+		(key-signature "")
+		> c1 |
+		[e1 <]'1
+		| 
+		[g1]'2
+	]*2
+`,
+	})
+}
+
+func TestRepeats5(t *testing.T) {
+	executeImporterTestCases(t, importerTestCase{
+		label: "very complex repeats",
+		file:  "../examples/repeat5.musicxml",
+		expected: `
+midi-acoustic-grand-piano:
+	[
+		(key-signature "")
+		> c1 | 
+		[d1 <]'1
+		|
+		[e1 <]'2
+		|
+		[f1]'3
+	]*3
+	| [g1]*2 | [a1]*2
 `,
 	})
 }

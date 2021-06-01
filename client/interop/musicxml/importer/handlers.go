@@ -42,6 +42,7 @@ func init() {
 		"part":           partHandler,
 		"measure":        measureHandler,
 		"attributes":     recurseHandler,
+		"barline":        barlineHandler,
 		"key":            keyHandler,
 		"divisions":      divisionsHandler,
 		"transpose":      transposeHandler,
@@ -123,17 +124,16 @@ func scorePartHandler(element *etree.Element, importer *musicXMLImporter) {
 		}
 	}
 
-	part := musicXMLPart{
-		voices:      make(map[int32]*musicXMLVoice),
-		instruments: instruments,
-		divisions:   1, // Divisions for a part are set in the first measure
-	}
-	importer.parts[id.Value] = &part
+	part := newMusicXMLPart()
+	part.instruments = instruments
+	importer.parts[id.Value] = part
 }
 
+// addBarline adds a barline to represent a measure passing
+// addBarline attempts to add barlines the way Alda parses them
 func addBarline(importer *musicXMLImporter) {
 	if len(importer.updates()) == 0 {
-		importer.set([]model.ScoreUpdate{model.Barline{}})
+		importer.append(model.Barline{})
 		return
 	}
 	// Alda parses barlines into note/rest durations to account for ties
@@ -173,10 +173,12 @@ func addBarline(importer *musicXMLImporter) {
 		return update, false
 	}
 
-	if newUpdate, success := tryAddBarline(
-		importer.updates()[len(importer.updates()) - 1],
-	); success {
-		importer.updates()[len(importer.updates()) - 1] = newUpdate
+	// We try to add a barline to the last element
+	last := importer.last()
+	if last, ok := tryAddBarline(last); ok {
+		updates := importer.updates()
+		updates[len(updates) - 1] = last
+		importer.setAll(updates)
 	} else {
 		importer.append(model.Barline{})
 	}
@@ -194,11 +196,8 @@ func partHandler(element *etree.Element, importer *musicXMLImporter) {
 	recursivelyCreateVoices = func(element *etree.Element) {
 		if element.Tag == "voice" {
 			voiceNumber, _ := strconv.ParseInt(element.Text(), 10, 32)
-			voice := musicXMLVoice{
-				octave: 4, // 4 is the default Alda octave
-				slurs:  0, // By default a note is not slurred
-			}
-			importer.currentPart.voices[int32(voiceNumber)] = &voice
+			voice := newMusicXMLVoice()
+			importer.part().voices[int32(voiceNumber)] = voice
 		}
 
 		for _, child := range element.ChildElements() {
@@ -207,12 +206,12 @@ func partHandler(element *etree.Element, importer *musicXMLImporter) {
 	}
 
 	recursivelyCreateVoices(element)
-	importer.currentPart.currentVoice = importer.currentPart.voices[1]
+	importer.currentPart.currentVoice = importer.part().voices[1]
 
 	for i, child := range element.ChildElements() {
 		handle(child, importer)
 		// Between each measure, we do cleanup
-		for _, voice := range importer.currentPart.voices {
+		for _, voice := range importer.part().voices {
 			// We pad each voice with rests
 			// This is because we can never backup to before a measure
 			importer.currentPart.currentVoice = voice
@@ -229,30 +228,28 @@ func partHandler(element *etree.Element, importer *musicXMLImporter) {
 // padVoiceToPresent fills the current voice with rests to catch up to the
 // current beats counter
 func padVoiceToPresent(element *etree.Element, importer *musicXMLImporter) {
-	beatDifference := importer.currentPart.beats -
-		importer.currentPart.currentVoice.beats
+	beatDifference := importer.part().beats - importer.voice().beats
 
 	if beatDifference < 0 {
 		// We make an assumption that this cannot happen
 		// If we must handle this case, importing would have to support changes
 		// by beats / duration. This would be non-trivial
-		warnWhileParsing(element, `voice is behind in beats, output will be incorrect.`)
+		warnWhileParsing(
+			element, `voice is behind in beats, output will be incorrect.`,
+		)
 	} else if beatDifference > 0 {
 		// We update without using append and moving the part-level beats here
 		// This is because we pad the voice to "catch up", not move forwards
-		importer.currentPart.currentVoice.updates = append(
-			importer.currentPart.currentVoice.updates,
-			model.Rest{
-				Duration: model.Duration{
-					Components: []model.DurationComponent{
-						model.NoteLength{
-							Denominator: 4 / beatDifference,
-						},
+		importer.append(model.Rest{
+			Duration: model.Duration{
+				Components: []model.DurationComponent{
+					model.NoteLength{
+						Denominator: 4 / beatDifference,
 					},
 				},
 			},
-		)
-		importer.currentPart.currentVoice.beats += beatDifference
+		})
+		importer.voice().beats += beatDifference
 	}
 }
 
@@ -262,12 +259,172 @@ func measureHandler(element *etree.Element, importer *musicXMLImporter) {
 		if voice := child.FindElement("voice"); voice != nil {
 			voiceNumber, _ := strconv.ParseInt(voice.Text(), 10, 8)
 			importer.currentPart.currentVoice =
-				importer.currentPart.voices[int32(voiceNumber)]
+				importer.part().voices[int32(voiceNumber)]
 
 			// We pad the voice with rests as necessary to align beats
 			padVoiceToPresent(child, importer)
 		}
 		handle(child, importer)
+	}
+}
+
+func barlineHandler(element *etree.Element, importer *musicXMLImporter) {
+	// Obtaining information helpful for barline handling
+	ending := element.FindElement("ending")
+	endingType := ""
+	if ending != nil {
+		endingType = ending.SelectAttrValue("type", "")
+		if endingType == "discontinue" {
+			// We treat discontinue the same as stopping
+			endingType = "stop"
+		}
+	}
+
+	repeat := element.FindElement("repeat")
+	repeatDirection := ""
+	if repeat != nil {
+		repeatDirection = repeat.SelectAttrValue("direction", "")
+	}
+
+	importTo, _ := importer.findLast(filterNestedImportableUpdate)
+	isRepeatOngoing := reflect.TypeOf(importTo) == repeatType
+
+	// No significant barline attributes, just continue
+	if ending == nil && repeat == nil {
+		return
+	}
+
+	// Dealing with start of repeats & endings
+	startRepeat := func() {
+		importer.voice().sectionStartOctave = importer.voice().octave
+		importer.append(model.Repeat{Event: model.EventSequence{}})
+	}
+
+	startEnding := func() {
+		importer.voice().endingStartOctave = importer.voice().octave
+		importer.append(model.OnRepetitions{Event: model.EventSequence{}})
+	}
+
+	if ending == nil && repeatDirection == "forward" {
+		// (1) Repeat starting (no ending start)
+		startRepeat()
+	} else if endingType == "start" && repeatDirection == "forward" {
+		// (2) Repeat starting & first ending starting
+		startRepeat()
+		startEnding()
+	} else if endingType == "start" && !isRepeatOngoing {
+		// (3) First ending start, no repeat yet
+		// We have to build the repeat
+		repeatUpdate := model.Repeat{Event: model.EventSequence{
+			Events: importer.flatUpdates(),
+		}}
+
+		importer.setAll([]model.ScoreUpdate{repeatUpdate})
+		startEnding()
+	} else if endingType == "start" && isRepeatOngoing {
+		// (4) Ending starting, but already have repeat and previous ending
+		importer.append(model.OnRepetitions{Event: model.EventSequence{}})
+	}
+
+	// Dealing with conclusion of repeats & endings
+	countEndings := func() int {
+		repeat, _ := importer.findLast(filterType(repeatType))
+		repeatEvents := repeat.(model.Repeat).Event.(model.EventSequence).Events
+
+		count := 0
+		for _, update := range repeatEvents {
+			if reflect.TypeOf(update) == repetitionType {
+				count++
+			}
+		}
+		return count
+	}
+
+	maintainRepeatOctaveIntegrity := func() {
+		for importer.voice().octave > importer.voice().sectionStartOctave {
+			importer.append(
+				model.AttributeUpdate{PartUpdate: model.OctaveDown{}},
+			)
+			importer.voice().octave--
+		}
+
+		for importer.voice().octave < importer.voice().sectionStartOctave {
+			importer.append(
+				model.AttributeUpdate{PartUpdate: model.OctaveUp{}},
+			)
+			importer.voice().octave++
+		}
+	}
+
+	setEndingRepetitions := func() {
+		endingNumber := countEndings()
+		repetitionRange := []model.RepetitionRange{{
+			First: int32(endingNumber),
+			Last:  int32(endingNumber),
+		}}
+
+		// Find the repetition corresponding to this ending
+		_, ni := importer.findLast(filterNestedImportableUpdate)
+		// Set the repetitions
+		importer.modifyAt(
+			ni,
+			func(update model.ScoreUpdate) model.ScoreUpdate {
+				ending := update.(model.OnRepetitions)
+				ending.Repetitions = repetitionRange
+				return ending
+			},
+		)
+	}
+
+	setRepeatTimes := func(times int32) {
+		_, ni := importer.findLast(filterType(repeatType))
+		importer.modifyAt(
+			ni,
+			func(update model.ScoreUpdate) model.ScoreUpdate {
+				repeat := update.(model.Repeat)
+				repeat.Times = times
+				return repeat
+			},
+		)
+	}
+
+	if ending == nil && repeatDirection == "backward" {
+		// (1) A normal repeat with no endings
+		maintainRepeatOctaveIntegrity()
+
+		times, _ := strconv.ParseInt(
+			repeat.SelectAttrValue("times", "2"), 10, 8,
+		)
+
+		if isRepeatOngoing {
+			setRepeatTimes(int32(times))
+		} else {
+			// We have to create the repeat with all the existing score updates
+			repeatUpdate := model.Repeat{
+				Event: model.EventSequence{
+					Events: importer.flatUpdates(),
+				},
+			}
+			importer.setAll([]model.ScoreUpdate{repeatUpdate})
+			setRepeatTimes(int32(times))
+		}
+	} else if endingType == "stop" && repeat == nil {
+		// (2) Only an ending is concluding, but not a repeat
+		// This means this is the last ending in a repeated section
+		// Note how we don't have to maintain any octave information because
+		// we just continue on playing after this point
+		setEndingRepetitions()
+		setRepeatTimes(int32(countEndings()))
+	} else if endingType == "stop" && repeatDirection == "backward" {
+		// (3) Both ending and repeat concluding
+		// This means this is not the last ending
+		maintainRepeatOctaveIntegrity()
+
+		setEndingRepetitions()
+
+		// Set the current octave manually to the ending start octave
+		// This is because when going to an ending we skip previous endings
+		importer.voice().octave = importer.voice().endingStartOctave
 	}
 }
 
@@ -277,14 +434,14 @@ func backupHandler(element *etree.Element, importer *musicXMLImporter) {
 	// This is not enforced by MusicXML, but exporters should have no reason to
 	// do this
 	duration, _ := translateDuration(element, importer)
-	importer.currentPart.beats -= getBeats(model.Rest{Duration: duration})
+	importer.part().beats -= getBeats(model.Rest{Duration: duration})
 }
 
 func forwardHandler(element *etree.Element, importer *musicXMLImporter) {
 	// We can handle forward by moving the part-level beats counter forward
 	// This is because when switching voices, we pad to present
 	duration, _ := translateDuration(element, importer)
-	importer.currentPart.beats += getBeats(model.Rest{Duration: duration})
+	importer.part().beats += getBeats(model.Rest{Duration: duration})
 }
 
 func keyHandler(element *etree.Element, importer *musicXMLImporter) {
@@ -313,7 +470,7 @@ func divisionsHandler(element *etree.Element, importer *musicXMLImporter) {
 	// Due to our management of Alda durations and beats, we do not need to
 	// maintain history for division changes
 	value, _ := strconv.ParseInt(element.Text(), 10, 8)
-	importer.currentPart.divisions = int(value)
+	importer.part().divisions = int(value)
 }
 
 func transposeHandler(element *etree.Element, importer *musicXMLImporter) {
@@ -356,29 +513,6 @@ func translateDuration(
 			Dots:        dots,
 		}},
 	}, aldaDuration
-}
-
-// getBeats counts beats for score updates
-func getBeats(updates ...model.ScoreUpdate) float64 {
-	beats := 0.0
-	for _, update := range updates {
-		switch value := update.(type) {
-		case model.Note:
-			beats += value.Duration.Beats()
-		case model.Rest:
-			beats += value.Duration.Beats()
-		case model.Chord:
-			min := 0.0
-			for _, event := range value.Events {
-				eventBeats := getBeats(event)
-				if eventBeats < min {
-					min = eventBeats
-				}
-			}
-			beats += min
-		}
-	}
-	return beats
 }
 
 // translateNote translates a MusicXML note into Alda represented by:
@@ -433,7 +567,7 @@ func translateNote(
 			}
 		}
 
-		slurred := (importer.currentPart.currentVoice.slurs + slurChange) > 0
+		slurred := (importer.voice().slurs + slurChange) > 0
 
 		// Accidentals
 		var accidentals []model.Accidental
@@ -455,7 +589,7 @@ func translateNote(
 		// Octaves
 		octave := pitch.FindElement("octave")
 		octaveVal, _ := strconv.ParseInt(octave.Text(), 10, 8)
-		octaveDifference := octaveVal - importer.currentPart.currentVoice.octave
+		octaveDifference := octaveVal - importer.voice().octave
 
 		var octaveUpdate model.PartUpdate
 		if octaveDifference > 0 {
@@ -489,7 +623,7 @@ func translateNote(
 		}
 
 		return []model.ScoreUpdate{restScoreUpdate},
-			importer.currentPart.currentVoice.octave,
+			importer.voice().octave,
 			durationValue,
 			0
 	} else {
@@ -507,8 +641,8 @@ func noteHandler(element *etree.Element, importer *musicXMLImporter) {
 	}
 
 	updateImporterState := func() {
-		importer.currentPart.currentVoice.octave = newOctave
-		importer.currentPart.currentVoice.slurs += slurChange
+		importer.voice().octave = newOctave
+		importer.voice().slurs += slurChange
 	}
 
 	// We obtain part-level attributes that must be handled separately
@@ -547,8 +681,7 @@ func noteHandler(element *etree.Element, importer *musicXMLImporter) {
 			}
 		}
 
-		ni, _ := lastWithState(
-			importer.updates(),
+		tieStart, tieStartNI, _ := importer.findLastWithState(
 			func(update model.ScoreUpdate, state interface{}) bool {
 				switch value := update.(type) {
 				case model.Note:
@@ -560,13 +693,13 @@ func noteHandler(element *etree.Element, importer *musicXMLImporter) {
 					return false
 				}
 			},
-			importer.currentPart.currentVoice.octave,
+			importer.voice().octave,
 			func(update model.ScoreUpdate, state interface{}) interface{} {
 				return state.(int64) + getOctaveChange(update)
 			},
 		)
 
-		if ni.index == -1 {
+		if !tieStartNI.valid(importer) {
 			// We ignore a note if we can't find the start of the tie
 			warnWhileParsing(element, `cannot find start of tie`)
 			return
@@ -579,8 +712,8 @@ func noteHandler(element *etree.Element, importer *musicXMLImporter) {
 		// in a chord to all have the same duration
 		// Then we can find the last update with a duration, and compare its
 		// index with our tie start index
-		lastIndex := last(importer.updates(), filterUpdateWithDuration).index
-		indexDiff := lastIndex - ni.index
+		_, lastDurationNI := importer.findLast(filterUpdateWithDuration)
+		indexDiff := lastDiff(lastDurationNI, tieStartNI)
 
 		var isAdjacentTie bool
 		if isChord {
@@ -590,14 +723,15 @@ func noteHandler(element *etree.Element, importer *musicXMLImporter) {
 				isAdjacentTie = true
 			} else {
 				// We can allow a single element, no more
-				lastLastIndex := last(
-					importer.updates()[:lastIndex], filterUpdateWithDuration,
-				).index
+				_, lastLastDurationNI := importer.findLastFrom(
+					filterUpdateWithDuration,
+					lastDurationNI.last(),
+				)
 
-				if lastLastIndex == -1 {
+				if !lastDurationNI.valid(importer) {
 					isAdjacentTie = true
 				} else {
-					indexDiff = lastLastIndex - ni.index
+					indexDiff = lastDiff(lastLastDurationNI, tieStartNI)
 					isAdjacentTie = indexDiff <= 0
 				}
 			}
@@ -608,18 +742,13 @@ func noteHandler(element *etree.Element, importer *musicXMLImporter) {
 
 		if isAdjacentTie {
 			// We have passed all checks, so we add the duration
-			importer.set(apply(
-				importer.updates(),
-				ni,
-				func(update model.ScoreUpdate) model.ScoreUpdate {
-					tieStart := update.(model.Note)
-					tieStart.Duration.Components = append(
-						tieStart.Duration.Components,
-						note.Duration.Components...,
-					)
-					return tieStart
-				},
-			))
+			tieStartNote := tieStart.(model.Note)
+			tieStartNote.Duration.Components = append(
+				tieStartNote.Duration.Components,
+				note.Duration.Components...,
+			)
+
+			importer.setAt(tieStartNI, tieStartNote)
 		} else {
 			// We ignore a note that is in a nonadjacent tie
 			warnWhileParsing(element, `found nonadjacent tied note`)
@@ -627,9 +756,11 @@ func noteHandler(element *etree.Element, importer *musicXMLImporter) {
 		}
 	} else if isChord {
 		// We find the last score update that is a note, rest, or chord
-		lastIndex := last(importer.updates(), filterUpdateWithDuration).index
+		lastDurationElement, lastDurationNI := importer.findLast(
+			filterUpdateWithDuration,
+		)
 
-		if lastIndex == -1 {
+		if !lastDurationNI.valid(importer) {
 			// We continue by considering the note as not part of a chord
 			warnWhileParsing(
 				element, `note found in chord with no starting note. The note will be ignored.`,
@@ -637,23 +768,25 @@ func noteHandler(element *etree.Element, importer *musicXMLImporter) {
 			return
 		}
 
-		switch value := importer.updates()[lastIndex].(type) {
+		switch value := lastDurationElement.(type) {
 		case model.Chord:
 			// Add the note updates to the existing chord
 			value.Events = append(value.Events, noteUpdates...)
 			updateImporterState()
-			importer.updates()[lastIndex] = value
+			importer.setAt(lastDurationNI, value)
 		case model.Note, model.Rest:
 			// Create a chord from the previous updates and new note updates
 			chord := model.Chord{Events: make(
 				[]model.ScoreUpdate,
-				len(importer.updates()) - lastIndex,
+				len(importer.updates()) - lastDurationNI.last(),
 			)}
-			copy(chord.Events, importer.updates()[lastIndex:])
+			copy(chord.Events, importer.updates()[lastDurationNI.last():])
 			chord.Events = append(chord.Events, noteUpdates...)
 
 			updateImporterState()
-			importer.set(append(importer.updates()[:lastIndex], chord))
+			importer.setAll(append(
+				importer.updates()[:lastDurationNI.last()], chord,
+			))
 		}
 	} else {
 		updateImporterState()
