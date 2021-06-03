@@ -1782,7 +1782,7 @@ Shout-out to [elyisgreat] for finding all these bugs!
 
 * Starting with this release, we'll be releasing Unix and Windows executables on
   GitHub. These are standalone programs; all you need to run them is Java.
-  [Boot](http://boot-clj.com) is no longer a dependency to run Alda, just
+  [Boot](https://boot-clj.github.io/) is no longer a dependency to run Alda, just
   something we use to build it and create releases. For development builds,
   running `boot build -o directory_name` will generate `alda.jar`, `alda`, and
   `alda.exe` files which can be run directly.
