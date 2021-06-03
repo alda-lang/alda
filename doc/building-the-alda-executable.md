@@ -6,7 +6,7 @@ Knowledge is Power. :bulb:
 
 ## What You'll Need
 
-* The Alda project uses [Boot](http://boot-clj.com) to build releases from the Java/Clojure source, as well as to perform useful development tasks like running tests. You will need Boot in order to test any changes you make to the source code.
+* The Alda project uses [Boot](https://boot-clj.github.io/) to build releases from the Java/Clojure source, as well as to perform useful development tasks like running tests. You will need Boot in order to test any changes you make to the source code.
 
   > The `boot` commands described in this guide need to be run while in the root directory of this project, which contains the project file `build.boot`.
 
