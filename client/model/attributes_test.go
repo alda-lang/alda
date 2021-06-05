@@ -358,6 +358,16 @@ func TestAttributes(t *testing.T) {
 			},
 		},
 		scoreUpdateTestCase{
+			label: "set volume using dynamic marking",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				AttributeUpdate{PartUpdate: DynamicMarking{Marking: "ppp"}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPartVolume("piano", 0.23683),
+			},
+		},
+		scoreUpdateTestCase{
 			label: "initial track volume",
 			updates: []ScoreUpdate{
 				PartDeclaration{Names: []string{"piano"}},
