@@ -229,7 +229,7 @@ func argumentsMatchSignature(
 
 	totalArgs := len(signature.ArgumentTypes)
 
-	if totalArgs == 0 && len(signature.ArgumentTypes) == 0 {
+	if totalArgs == 0 && len(arguments) == 0 {
 		return true
 	}
 
