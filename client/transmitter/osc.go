@@ -400,7 +400,7 @@ func (oe OSCTransmitter) TransmitScore(
 	}
 
 	if ctx.oneOff {
-		bundle.Append(systemShutdownMsg(int32(math.Round(scoreLength + 1000))))
+		bundle.Append(systemShutdownMsg(int32(math.Round(scoreLength + 10000))))
 	}
 
 	log.Debug().
