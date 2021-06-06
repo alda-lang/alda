@@ -802,7 +802,8 @@ func TestAttributes(t *testing.T) {
 			},
 		},
 		scoreUpdateTestCase{
-			label: "set key signature via lisp (name of scale 1)",
+			// (key-signature '(g major))
+			label: "set key signature via lisp (name of scale 1a)",
 			updates: []ScoreUpdate{
 				PartDeclaration{Names: []string{"piano"}},
 				LispList{Elements: []LispForm{
@@ -811,6 +812,31 @@ func TestAttributes(t *testing.T) {
 						LispSymbol{Name: "g"}, LispSymbol{Name: "major"},
 					},
 					}},
+				}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPartKeySignature(
+					"piano", KeySignature{F: {Sharp}},
+				),
+			},
+		},
+		scoreUpdateTestCase{
+			// (key-signature (quote (g major)))
+			label: "set key signature via lisp (name of scale 1b)",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "key-signature"},
+					LispList{
+						Elements: []LispForm{
+							LispSymbol{Name: "quote"},
+							LispList{
+								Elements: []LispForm{
+									LispSymbol{Name: "g"}, LispSymbol{Name: "major"},
+								},
+							},
+						},
+					},
 				}},
 			},
 			expectations: []scoreUpdateExpectation{

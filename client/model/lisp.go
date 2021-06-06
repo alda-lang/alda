@@ -31,6 +31,45 @@ type LispForm interface {
 	Eval() (LispForm, error)
 }
 
+// NOTE: I'm not sure yet whether it actually makes sense for special forms to
+// implement the LispForm interface. I'm not sure that all of the functions in
+// that interface are really applicable to special forms. For now, I'm just
+// going to assume that they are and we'll see how it goes.
+
+// LispSpecialFormQuote is the special form `quote`.
+type LispSpecialFormQuote struct{}
+
+// JSON implements RepresentableAsJSON.JSON.
+func (LispSpecialFormQuote) JSON() *json.Container {
+	return json.Object(
+		"type", "special-form",
+		"value", "quote",
+	)
+}
+
+// TypeString implements LispForm.TypeString.
+func (LispSpecialFormQuote) TypeString() string {
+	return "special-form"
+}
+
+// GetSourceContext implements HasSourceContext.GetSourceContext.
+func (LispSpecialFormQuote) GetSourceContext() AldaSourceContext {
+	// I'm not sure yet how to handle source context for special forms. It seems
+	// like I might not need to, because really, the thing that has the source
+	// context is the LispSymbol that evaluated to the special form, and I'm not
+	// sure that anything is ever going to call GetSourceContext() on a special
+	// form.
+	//
+	// I could easily be wrong about this. Let's just roll with this for now and
+	// see how it goes.
+	return AldaSourceContext{}
+}
+
+// Eval implements LispForm.Eval by returning the special form.
+func (q LispSpecialFormQuote) Eval() (LispForm, error) {
+	return q, nil
+}
+
 // An Operator is something that takes 0 or more forms and returns a form or an
 // error..
 type Operator interface {
@@ -239,6 +278,10 @@ Got:
 		signatureLines(f.Signatures),
 		argumentTypesLine(arguments),
 	)
+}
+
+var specialForms = map[string]LispForm{
+	"quote": LispSpecialFormQuote{},
 }
 
 var environment = map[string]LispForm{}
@@ -1298,16 +1341,20 @@ func (sym LispSymbol) String() string {
 //
 // Returns an error if the symbol cannot be resolved.
 func (sym LispSymbol) Eval() (LispForm, error) {
-	value, hit := environment[sym.Name]
-
-	if !hit {
-		return nil, &AldaSourceError{
-			Context: sym.SourceContext,
-			Err:     fmt.Errorf("Unresolvable symbol: %s", sym.Name),
-		}
+	specialForm, hit := specialForms[sym.Name]
+	if hit {
+		return specialForm, nil
 	}
 
-	return value, nil
+	value, hit := environment[sym.Name]
+	if hit {
+		return value, nil
+	}
+
+	return nil, &AldaSourceError{
+		Context: sym.SourceContext,
+		Err:     fmt.Errorf("Unresolvable symbol: %s", sym.Name),
+	}
 }
 
 // LispNumber is a floating point number.
@@ -1478,8 +1525,13 @@ func (LispList) TypeString() string {
 }
 
 // Eval implements LispForm.Eval by treating the (unquoted) list as an
-// S-expression. All forms in the list are evaluated. The first form is treated
-// as an operator and the remaining forms are treated as arguments.
+// S-expression.
+//
+// All forms in the list are evaluated, unless the operator is a
+// special form (TODO: also add support for macros).
+//
+// The first form is treated as an operator and the remaining forms are treated
+// as arguments.
 func (l LispList) Eval() (LispForm, error) {
 	sourceError := func(err error) error {
 		return &AldaSourceError{
@@ -1491,6 +1543,19 @@ func (l LispList) Eval() (LispForm, error) {
 	operator, err := l.Elements[0].Eval()
 	if err != nil {
 		return nil, err
+	}
+
+	// Handle special forms
+	// TODO: consider turning this into an interface?
+	switch operator.(type) {
+	case LispSpecialFormQuote:
+		if len(l.Elements[1:]) > 1 {
+			return nil, fmt.Errorf(
+				"expected 1 argument to quote, got %d", len(l.Elements[1:]),
+			)
+		}
+
+		return l.Elements[1], nil
 	}
 
 	arguments := []LispForm{}
