@@ -1,8 +1,10 @@
 package importer
 
 import (
-	"alda.io/client/model"
 	"testing"
+
+	"alda.io/client/model"
+	_ "alda.io/client/testing"
 )
 
 func TestNote(t *testing.T) {
@@ -118,7 +120,7 @@ midi-acoustic-grand-piano:
 			updates[indexOfChord], _ = modifyNestedUpdates(
 				updates[indexOfChord],
 				func(updates []model.ScoreUpdate) []model.ScoreUpdate {
-					return updates[:len(updates) - 1]
+					return updates[:len(updates)-1]
 				},
 			)
 
@@ -126,7 +128,7 @@ midi-acoustic-grand-piano:
 			updates = insert(
 				model.AttributeUpdate{PartUpdate: model.OctaveDown{}},
 				updates,
-				indexOfChord + 1,
+				indexOfChord+1,
 			)
 
 			// This change produces equivalent Alda representation
