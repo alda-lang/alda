@@ -86,6 +86,43 @@ type FunctionSignature struct {
 	Implementation func(...LispForm) (LispForm, error)
 }
 
+// LispAny represents any type of value.
+//
+// LispAny is not meant to be an argument or return type itself. It should never
+// occur as a value in alda-lisp.
+type LispAny struct{}
+
+// JSON implements LispForm.JSON.
+//
+// Note that this should never get called, as LispAny should never occur as a
+// value. I'm implementing it here simply because the compiler is forcing me to!
+// (And so that if it does, for some weird reason, occur as a value, at least it
+// will be represented as JSON in a sensible way.)
+func (LispAny) JSON() *json.Container {
+	return json.Object("type", "any-indicator")
+}
+
+// TypeString implements LispForm.TypeString.
+func (LispAny) TypeString() string {
+	return "any"
+}
+
+// GetSourceContext implements HasSourceContext.GetSourceContext.
+func (LispAny) GetSourceContext() AldaSourceContext {
+	// It isn't possible to parse a LispAny instance from an Alda score, so there
+	// is no way we can provide source context.
+	return AldaSourceContext{}
+}
+
+// Eval implements LispForm.Eval by returning an error, because LispAny is not
+// meant to be used as an argument or return type.
+func (LispAny) Eval() (LispForm, error) {
+	return nil, &AldaSourceError{
+		Context: AldaSourceContext{},
+		Err:     fmt.Errorf("LispAny is not a valid value type"),
+	}
+}
+
 // LispVariadic wraps a LispForm as a way of representing that it appears 0 or
 // more times in a list of arguments.
 //
@@ -188,6 +225,8 @@ func (f LispFunction) Validate() error {
 func argumentsMatchSignature(
 	arguments []LispForm, signature FunctionSignature,
 ) bool {
+	anyType := reflect.TypeOf(LispAny{})
+
 	totalArgs := len(signature.ArgumentTypes)
 
 	variadic := false
@@ -210,17 +249,21 @@ func argumentsMatchSignature(
 	}
 
 	for i := 0; i < fixedArgs; i++ {
-		if reflect.TypeOf(arguments[i]) !=
-			reflect.TypeOf(signature.ArgumentTypes[i]) {
+		expectedType := reflect.TypeOf(signature.ArgumentTypes[i])
+		actualType := reflect.TypeOf(arguments[i])
+
+		if actualType != expectedType && expectedType != anyType {
 			return false
 		}
 	}
 
 	if len(arguments) > fixedArgs {
 		variadicArgType := signature.ArgumentTypes[totalArgs-1].(LispVariadic).Type
+		expectedType := reflect.TypeOf(variadicArgType)
 
 		for _, argument := range arguments[fixedArgs:] {
-			if reflect.TypeOf(argument) != reflect.TypeOf(variadicArgType) {
+			actualType := reflect.TypeOf(argument)
+			if actualType != expectedType && expectedType != anyType {
 				return false
 			}
 		}
@@ -1072,6 +1115,15 @@ func init() {
 					return nil, err
 				}
 				return ReferencePitchSet{Frequency: frequency}, nil
+			},
+		},
+	)
+
+	defn("list",
+		FunctionSignature{
+			ArgumentTypes: []LispForm{LispVariadic{LispAny{}}},
+			Implementation: func(args ...LispForm) (LispForm, error) {
+				return LispList{Elements: args}, nil
 			},
 		},
 	)
