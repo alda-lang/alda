@@ -1,12 +1,16 @@
 package parser
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"time"
 
+	"alda.io/client/help"
 	log "alda.io/client/logging"
 	model "alda.io/client/model"
+	"github.com/logrusorgru/aurora"
 )
 
 type parser struct {
@@ -818,6 +822,16 @@ func ParseString(input string) ([]model.ScoreUpdate, error) {
 // ParseFile reads a file and parses the input.
 func ParseFile(filepath string) ([]model.ScoreUpdate, error) {
 	contents, err := ioutil.ReadFile(filepath)
+
+	if errors.Is(err, os.ErrNotExist) {
+		return nil, help.UserFacingErrorf(
+			`Failed to open %s. The file does not seem to exist.
+
+Please check that you haven't misspelled the file name, etc.`,
+			aurora.BrightYellow(filepath),
+		)
+	}
+
 	if err != nil {
 		return nil, err
 	}
