@@ -204,17 +204,6 @@ func (gau GlobalAttributeUpdate) UpdateScore(score *Score) error {
 
 	score.GlobalAttributes.Record(offset, gau.PartUpdate)
 
-	// Immediately apply the attribute update to the current parts.
-	for _, part := range score.CurrentParts {
-		// We're passing in `false` as the `globalUpdate` argument here, which might
-		// seem confusing because this is a global attribute update. However, in
-		// this particular line of code, the global attribute update is being
-		// applied locally. It's important that this context is captured because in
-		// the case of a global tempo update, we do want the tempo value to be
-		// recorded (See *Part.RecordTempoValue for more context.)
-		gau.PartUpdate.updatePart(part, false)
-	}
-
 	return nil
 }
 

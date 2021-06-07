@@ -1155,6 +1155,16 @@ func TestAttributes(t *testing.T) {
 					LispNumber{Value: 60},
 				}},
 
+				// Now that the tempo is 60 bpm, this quarter note should last 1000 ms.
+				Note{
+					Pitch: LetterAndAccidentals{NoteLetter: C},
+					Duration: Duration{
+						Components: []DurationComponent{
+							NoteLength{Denominator: 4},
+						},
+					},
+				},
+
 				// The viola part should start off having a tempo of 120, not 60
 				PartDeclaration{Names: []string{"viola"}},
 				// After resting for 3 beats (still before the global tempo update), the
@@ -1166,11 +1176,23 @@ func TestAttributes(t *testing.T) {
 						},
 					},
 				},
+				// Because the tempo is still 120 bpm, this quarter note should last 500
+				// ms.
+				Note{
+					Pitch: LetterAndAccidentals{NoteLetter: C},
+					Duration: Duration{
+						Components: []DurationComponent{
+							NoteLength{Denominator: 4},
+						},
+					},
+				},
 			},
 			expectations: []scoreUpdateExpectation{
 				expectGlobalAttributeUpdates(2000, []PartUpdate{TempoSet{Tempo: 60}}),
 				expectPartTempo("piano", 60),
 				expectPartTempo("viola", 120),
+				expectNoteOffsets(2000, 1500),
+				expectNoteDurations(1000, 500),
 			},
 		},
 		scoreUpdateTestCase{
