@@ -55,6 +55,10 @@ type Part struct {
 	// A map of offset to the tempo value that should be applied at that offset.
 	// See *Part.RecordTempoValue.
 	TempoValues map[float64]float64
+	// Used in order to track the case where a part overrides a global attribute
+	// change with a local attribute change just for that part, at the exact same
+	// offset.
+	localAttributeOverride PartUpdate
 	// Used for conditionally playing or not playing an event based on how many
 	// times through a repeated sequence the part has played so far.
 	//
@@ -484,8 +488,6 @@ func (decl PartDeclaration) UpdateScore(score *Score) error {
 	}
 
 	score.CurrentParts = parts
-
-	score.ApplyGlobalAttributes()
 
 	return nil
 }

@@ -39,6 +39,8 @@ func (chord Chord) JSON() *json.Container {
 // all active parts, and updating each part's CurrentOffset, LastOffset, and
 // Duration accordingly.
 func (chord Chord) UpdateScore(score *Score) error {
+	score.ApplyGlobalAttributes()
+
 	shortestDurationMs := map[*Part]float64{}
 	for _, part := range score.CurrentParts {
 		shortestDurationMs[part] = math.MaxFloat64

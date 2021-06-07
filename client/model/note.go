@@ -86,6 +86,15 @@ func updateDefaultDuration(part *Part, duration Duration) {
 }
 
 func addNoteOrRest(score *Score, noteOrRest ScoreUpdate) {
+	// Avoid applying the same global attribute change multiple times if we're in
+	// a chord.
+	//
+	// (To apply the change one time in the case of a chord, we call
+	// score.ApplyGlobalAttributes() as part of the chord score update).
+	if !score.chordMode {
+		score.ApplyGlobalAttributes()
+	}
+
 	var specifiedDuration Duration
 	switch noteOrRest.(type) {
 	case Note:
@@ -141,8 +150,6 @@ func addNoteOrRest(score *Score, noteOrRest ScoreUpdate) {
 
 		updateDefaultDuration(part, duration)
 	}
-
-	score.ApplyGlobalAttributes()
 }
 
 // UpdateScore implements ScoreUpdate.UpdateScore by adding a note to the score

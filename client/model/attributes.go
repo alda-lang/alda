@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"reflect"
 	"sort"
 
 	"alda.io/client/json"
@@ -31,6 +32,11 @@ func (au AttributeUpdate) JSON() *json.Container {
 func (au AttributeUpdate) UpdateScore(score *Score) error {
 	for _, part := range score.CurrentParts {
 		au.PartUpdate.updatePart(part, false)
+		// Here, we record that this local (part-specific) attribute was updated.
+		// This is so that we can track the case where a local attribute change is
+		// applied at the exact same time as a global attribute change, and we want
+		// the local attribute change to take precedence.
+		part.localAttributeOverride = au.PartUpdate
 	}
 
 	return nil
@@ -133,7 +139,14 @@ func (score *Score) ApplyGlobalAttributes() {
 		for _, update := range score.GlobalAttributes.InWindow(
 			part.LastOffset, part.CurrentOffset,
 		) {
-			for _, part := range score.CurrentParts {
+			if reflect.TypeOf(part.localAttributeOverride) == reflect.TypeOf(update) {
+				log.Debug().
+					Str("part", part.Name).
+					Interface("globalUpdate", update).
+					Interface("localUpdate", part.localAttributeOverride).
+					Msg("Skipping global attribute update. " +
+						"Overridden by local attribute update.")
+			} else {
 				log.Debug().
 					Str("part", part.Name).
 					Interface("update", update).
@@ -142,6 +155,8 @@ func (score *Score) ApplyGlobalAttributes() {
 				update.updatePart(part, true)
 			}
 		}
+
+		part.localAttributeOverride = nil
 	}
 }
 

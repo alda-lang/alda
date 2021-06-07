@@ -90,6 +90,8 @@ func (atMarker AtMarker) JSON() *json.Container {
 //
 // If no such marker was previously defined, an error is returned.
 func (atMarker AtMarker) UpdateScore(score *Score) error {
+	score.ApplyGlobalAttributes()
+
 	offset, hit := score.Markers[atMarker.Name]
 	if !hit {
 		return fmt.Errorf("Marker undefined: %s", atMarker.Name)
@@ -99,8 +101,6 @@ func (atMarker AtMarker) UpdateScore(score *Score) error {
 		part.LastOffset = part.CurrentOffset
 		part.CurrentOffset = offset
 	}
-
-	score.ApplyGlobalAttributes()
 
 	return nil
 }
