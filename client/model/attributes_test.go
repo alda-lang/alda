@@ -846,6 +846,28 @@ func TestAttributes(t *testing.T) {
 			},
 		},
 		scoreUpdateTestCase{
+			// (key-signature (list 'g 'major))
+			label: "set key signature via lisp (name of scale 1c)",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "key-signature"},
+					LispList{
+						Elements: []LispForm{
+							LispSymbol{Name: "list"},
+							LispQuotedForm{Form: LispSymbol{Name: "g"}},
+							LispQuotedForm{Form: LispSymbol{Name: "major"}},
+						},
+					},
+				}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPartKeySignature(
+					"piano", KeySignature{F: {Sharp}},
+				),
+			},
+		},
+		scoreUpdateTestCase{
 			label: "set key signature via lisp (name of scale 2)",
 			updates: []ScoreUpdate{
 				PartDeclaration{Names: []string{"piano"}},
@@ -1180,9 +1202,19 @@ func TestAttributes(t *testing.T) {
 						},
 					},
 				},
-				// After resting for 1 more beat, we've arrived at the 2000ms mark, so
-				// the viola's tempo should now be 60 bpm.
-				Rest{
+				// This quarter note should still be at 120 BPM, so 500 ms long
+				Note{
+					Pitch: LetterAndAccidentals{NoteLetter: C},
+					Duration: Duration{
+						Components: []DurationComponent{
+							NoteLength{Denominator: 4},
+						},
+					},
+				},
+				// Now we've arrived at the 2000ms mark, so the viola's tempo should now
+				// be 60 bpm. This note should therefore be 1000 ms long.
+				Note{
+					Pitch: LetterAndAccidentals{NoteLetter: C},
 					Duration: Duration{
 						Components: []DurationComponent{
 							NoteLength{Denominator: 4},
@@ -1191,7 +1223,9 @@ func TestAttributes(t *testing.T) {
 				},
 			},
 			expectations: []scoreUpdateExpectation{
-				expectPartTempo("viola", 60),
+				expectPartTempo("viola", 60), // at the end, post tempo change
+				expectNoteOffsets(1500, 2000),
+				expectNoteDurations(500, 1000),
 			},
 		},
 		scoreUpdateTestCase{
@@ -1218,9 +1252,20 @@ func TestAttributes(t *testing.T) {
 				// After jumping to the marker, we've passed the 2000ms mark, so the
 				// viola's tempo should now be 60 bpm.
 				AtMarker{Name: "two-thousand"},
+				// This quarter note should therefore be 1000 ms long.
+				Note{
+					Pitch: LetterAndAccidentals{NoteLetter: C},
+					Duration: Duration{
+						Components: []DurationComponent{
+							NoteLength{Denominator: 4},
+						},
+					},
+				},
 			},
 			expectations: []scoreUpdateExpectation{
-				expectPartTempo("viola", 60),
+				expectPartTempo("viola", 60), // at the end, post tempo change
+				expectNoteOffsets(2000),
+				expectNoteDurations(1000),
 			},
 		},
 	)
