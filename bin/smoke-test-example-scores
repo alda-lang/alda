@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+set -eo pipefail
+
+for file in "$(dirname "$0")/../examples/"*; do
+  echo "############################################################"
+  echo "### $file"
+  echo "############################################################"
+  echo
+  "$(dirname "$0")/../client/bin/run" play -f "$file"
+
+  echo
+  echo "------------------------------------------------------------"
+  echo
+  echo "Press ENTER to continue."
+  read -r
+done
+
