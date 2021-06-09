@@ -1,8 +1,15 @@
 # Contributing to Alda
 
-The Alda project is composed of a number of subprojects, each of which has its
-own GitHub repo:
+_NOTE: As of December 31, 2020, Alda has been reformatted to encompass a single 
+repository: "alda". As such, much of the below information is no longer applicable.
+The previously-incorporated repositories ("alda-client-java", "alda-server-clj",
+"alda-core", and "alda-sound-engine-clj") have been archived and are no longer
+available to contribute to. Alda v2 will be released in the near future to reflect
+these changes._
 
+_You can read the official post about this topic [**here**](https://github.com/alda-lang/alda/issues/293#issuecomment-753245126)._
+
+##
   - [**alda**](https://github.com/alda-lang/alda) is the "main" repository.
 
     It includes a `build.boot` file that we use to pull together all of the
