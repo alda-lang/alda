@@ -277,4 +277,24 @@ cello:
 
 * **Value:** a number between 0 and 100
 
-* **Initial Value:** 100
+* **Initial Value:** 54 (corresponding to a `(mf)` marking)
+
+### Dynamic Markings 
+
+* **Description:** Aside from setting the volume of a note directly, you can 
+  also specify dynamic markings which correspond to fixed volumes following MIDI
+  standards. 
+  
+* **Available Dynamics:** 
+
+  | Dynamic Marking | Matching Volume   | Dynamic Marking | Matching Volume   |
+  |-----------------|-------------------|-----------------|-------------------|
+  | `(pppppp)`      | `(vol 1)`         | `(mf)`          | `(vol 54)`        |
+  | `(ppppp)`       | `(vol 8)`         | `(f)`           | `(vol 62)`        |
+  | `(pppp)`        | `(vol 16)`        | `(ff)`          | `(vol 69)`        |
+  | `(ppp)`         | `(vol 24)`        | `(fff)`         | `(vol 77)`        |
+  | `(pp)`          | `(vol 31)`        | `(ffff)`        | `(vol 85)`        |
+  | `(p)`           | `(vol 39)`        | `(fffff)`       | `(vol 92)`        |
+  | `(mp)`          | `(vol 46)`        | `(ffffff)`      | `(vol 100)`       |
+
+* **Initial Value:** `(mf)` (corresponding to a volume of 54) 
