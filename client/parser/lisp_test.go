@@ -35,6 +35,13 @@ func TestLisp(t *testing.T) {
 	executeParseTestCases(
 		t,
 		parseTestCase{
+			label: "attribute change with no value",
+			given: "(fff)",
+			expect: []model.ScoreUpdate{
+				lispList(lispSymbol("fff")),
+			},
+		},
+		parseTestCase{
 			label: "attribute change with number value",
 			given: "(volume 50)",
 			expect: []model.ScoreUpdate{

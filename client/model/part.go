@@ -152,7 +152,7 @@ func (score *Score) NewPart(name string) (*Part, error) {
 		Octave:          4,
 		Tempo:           120,
 		TempoValues:     map[float64]float64{},
-		Volume:          1.0,
+		Volume:          DynamicVolumes["mf"],
 		TrackVolume:     100.0 / 127,
 		Panning:         0.5,
 		Quantization:    0.9,

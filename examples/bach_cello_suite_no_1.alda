@@ -44,7 +44,7 @@ cello "main":
   # Simulating notes weaving around the open A string by using a second cello
   # for the A string.
   %weaving
-  (quant 65) (volume 100)
+  (quant 65)
   o3 g8 a b d a b > c < d b > c d < b > | c < b > c < a b a b g |
   o3 a g a f+
 
@@ -64,5 +64,5 @@ cello "main":
 # Just the open A string of the %weaving part above.
 cello "aux":
   @weaving
-  (quant 65) (volume 70)
+  (quant 65) (p)
   o3 r16 a8 a a a | a a a a a a a a | a a a a a a a a | a a a a

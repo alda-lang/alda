@@ -132,7 +132,7 @@ clarinet:
     V1: b1 | r4 g4~8 g8 f_ g g a- f_ e | g2~8 f+8 g f+ | g2~4 r4
     V2: r2 <d2 | c2 r1 | r1 | r2 e4 e_
 
-    V1: r4 b4~8 b8 a b b >c <a g | b2~8 b8 a b b >c <b g+ | a2~8 b8 g_ f
+    V1: r4 b4~8 b8 a b b >c <a g | b2~8 b8 a b b >c <a g+ | a2~8 b8 g_ f
     V2: d2
 
 flute:

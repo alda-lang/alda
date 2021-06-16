@@ -10,7 +10,7 @@ is a from-scratch rewrite in Go and Kotlin.
 Alda 2 is mostly backwards compatible with Alda 1, to the extent that most of
 the scores that you may have written with Alda 1 should work with Alda 2 and
 sound exactly the same. The implementation of Alda has been rewritten from the
-ground up, but Alda the language remains almost exactly the same.
+ground up, but Alda the language remains almost identical.
 
 There is one important change to the language in Alda 2: **inline Clojure code
 is no longer supported**. This is for obvious reasons: The Alda client is now
@@ -189,6 +189,17 @@ The following attributes are affected by syntax changes in Alda 2:
 All other attributes should work just fine, but please [let us
 know][open-an-issue] if you run into any other backwards compatibility issues
 with your existing Alda 1 scores!
+
+## Score starting volumes 
+
+Alda 1 started all scores at an Alda volume of 100 corresponding to a MIDI 
+velocity of 127. This is the maximum value. With Alda 2, you can now specify 
+volumes with dynamic markings such as `(mp)` or `(ff)`. 
+
+With this addition, all scores now default to a dynamic volume of `(mf)` 
+equivalent to `(vol 54)`. This means that if you previously relied on scores 
+starting from a volume of 100 in Alda 1, you now have to specify this attribute 
+at the beginning of your Alda 2 score. 
 
 ## Programmatic composition
 

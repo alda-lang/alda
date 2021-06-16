@@ -334,6 +334,45 @@ func (tvs TrackVolumeSet) updatePart(part *Part, globalUpdate bool) {
 	part.TrackVolume = tvs.TrackVolume
 }
 
+var DynamicVolumes map[string]float64
+
+func init() {
+	// Dynamic volumes in Alda follow a uniform distribution from 0 to 1
+	// This follows the standard set by MIDI and existing software programs
+	// Alda supports the full range of MusicXML dynamics from pppppp to ffffff
+	// Volumes are mapped to MIDI velocity [0, 127] by multiplying by 127
+	// The default Alda volume is mf
+	// MIDI velocities are commented
+	DynamicVolumes = map[string]float64{
+		"pppppp": 0.00787, // 1
+		"ppppp":  0.08419, // 11
+		"pppp":   0.16051, // 20
+		"ppp":    0.23683, // 30
+		"pp":     0.31314, // 40
+		"p":      0.38946, // 49
+		"mp":     0.46578, // 59
+		"mf":     0.54210, // 69
+		"f":      0.61841, // 79
+		"ff":     0.69473, // 88
+		"fff":    0.77105, // 98
+		"ffff":   0.84737, // 108
+		"fffff":  0.92368, // 117
+		"ffffff": 1.00000, // 127
+	}
+}
+
+type DynamicMarking struct {
+	Marking string
+}
+
+func (dm DynamicMarking) JSON() *json.Container {
+	return json.Object("attribute", "dynamic-marking", "value", dm.Marking)
+}
+
+func (dm DynamicMarking) updatePart(part *Part, globalUpdate bool) {
+	part.Volume = DynamicVolumes[dm.Marking]
+}
+
 // PanningSet sets the panning of all active parts.
 type PanningSet struct {
 	Panning float64
