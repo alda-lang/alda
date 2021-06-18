@@ -36,14 +36,12 @@ var handlers map[string]elementHandler
 
 func init() {
 	handlers = map[string]elementHandler{
-		"score-partwise": recurseHandler,
-		"part-list":      recurseHandler,
 		"score-part":     scorePartHandler,
 		"part":           partHandler,
 		"measure":        measureHandler,
-		"attributes":     recurseHandler,
 		"barline":        barlineHandler,
 		"key":            keyHandler,
+		"dynamics":       dynamicsHandler,
 		"divisions":      divisionsHandler,
 		"transpose":      transposeHandler,
 		"note":           noteHandler,
@@ -56,6 +54,8 @@ func init() {
 func handle(element *etree.Element, importer *musicXMLImporter) {
 	if handler, ok := handlers[element.Tag]; ok {
 		handler(element, importer)
+	} else {
+		recurseHandler(element, importer)
 	}
 }
 
@@ -464,6 +464,18 @@ func keyHandler(element *etree.Element, importer *musicXMLImporter) {
 		importer.append(keySignatureSet)
 	}
 	// key-octave tags are purely for appearance, and are thus category (3)
+}
+
+func dynamicsHandler(element *etree.Element, importer *musicXMLImporter) {
+	for _, marking := range element.ChildElements() {
+		if _, ok := model.DynamicVolumes[marking.Tag]; ok {
+			importer.append(model.AttributeUpdate{
+				PartUpdate: model.DynamicMarking{Marking: marking.Tag},
+			})
+		} else {
+			unsupportedHandler("dynamics", false)(marking, importer)
+		}
+	}
 }
 
 func divisionsHandler(element *etree.Element, importer *musicXMLImporter) {

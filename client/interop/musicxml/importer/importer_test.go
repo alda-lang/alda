@@ -283,3 +283,20 @@ midi-acoustic-grand-piano:
 `,
 	})
 }
+
+func TestDynamics(t *testing.T) {
+	executeImporterTestCases(t, importerTestCase{
+		label: "simple dynamics",
+		file:  "../examples/dynamics.musicxml",
+		expected: `
+midi-acoustic-grand-piano: 
+	(key-signature "")
+	(f) > c4
+	(ff) (mp) d4
+	e4
+	f4
+	| 
+	g1 (p)
+`,
+	})
+}
