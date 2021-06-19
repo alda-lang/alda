@@ -2,7 +2,6 @@ package model
 
 import (
 	"alda.io/client/json"
-
 	"github.com/mohae/deepcopy"
 )
 
