@@ -5,6 +5,7 @@ import (
 	"alda.io/client/model"
 	"github.com/beevik/etree"
 	"reflect"
+	"strings"
 )
 
 var noteType = reflect.TypeOf(model.Note{})
@@ -166,4 +167,8 @@ func filterType(requiredType reflect.Type) func(update model.ScoreUpdate) bool {
 	return func(update model.ScoreUpdate) bool {
 		return reflect.TypeOf(update) == requiredType
 	}
+}
+
+func percussionPartNameToAlias(name string) string {
+	return strings.Join(strings.Split(name, " "), "_")
 }
