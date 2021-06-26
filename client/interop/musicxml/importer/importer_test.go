@@ -8,7 +8,7 @@ import (
 )
 
 func TestNote(t *testing.T) {
-	executeImporterTestCases(t, importerTestCase{
+	executeImporterTestCases(t, testCaseWithAlda{
 		label: "simple notes",
 		file:  "../examples/note.musicxml",
 		expected: `
@@ -20,7 +20,7 @@ midi-acoustic-grand-piano:
 }
 
 func TestKeySignature(t *testing.T) {
-	executeImporterTestCases(t, importerTestCase{
+	executeImporterTestCases(t, testCaseWithAlda{
 		label: "simple traditional key signature",
 		file:  "../examples/key_signature.musicxml",
 		expected: `
@@ -32,7 +32,7 @@ midi-acoustic-grand-piano:
 }
 
 func TestAccidental(t *testing.T) {
-	executeImporterTestCases(t, importerTestCase{
+	executeImporterTestCases(t, testCaseWithAlda{
 		label: "simple accidentals",
 		file:  "../examples/accidental.musicxml",
 		expected: `
@@ -44,7 +44,7 @@ midi-acoustic-grand-piano:
 }
 
 func TestOctave(t *testing.T) {
-	executeImporterTestCases(t, importerTestCase{
+	executeImporterTestCases(t, testCaseWithAlda{
 		label: "simple octave switching",
 		file:  "../examples/octave.musicxml",
 		expected: `
@@ -56,7 +56,7 @@ midi-acoustic-grand-piano:
 }
 
 func TestRest(t *testing.T) {
-	executeImporterTestCases(t, importerTestCase{
+	executeImporterTestCases(t, testCaseWithAlda{
 		label: "simple rests",
 		file:  "../examples/rest.musicxml",
 		expected: `
@@ -68,7 +68,7 @@ midi-acoustic-grand-piano:
 }
 
 func TestSlurs(t *testing.T) {
-	executeImporterTestCases(t, importerTestCase{
+	executeImporterTestCases(t, testCaseWithAlda{
 		label: "simple slurs",
 		file:  "../examples/slurs.musicxml",
 		expected: `
@@ -80,7 +80,7 @@ midi-acoustic-grand-piano:
 }
 
 func TestChord(t *testing.T) {
-	executeImporterTestCases(t, importerTestCase{
+	executeImporterTestCases(t, testCaseWithAlda{
 		label: "simple chords",
 		file:  "../examples/chord.musicxml",
 		expected: `
@@ -92,7 +92,7 @@ midi-acoustic-grand-piano:
 }
 
 func TestTies1(t *testing.T) {
-	executeImporterTestCases(t, importerTestCase{
+	executeImporterTestCases(t, testCaseWithAlda{
 		label: "simple ties",
 		file:  "../examples/ties1.musicxml",
 		expected: `
@@ -104,7 +104,7 @@ midi-acoustic-grand-piano:
 }
 
 func TestTies2(t *testing.T) {
-	executeImporterTestCases(t, importerTestCase{
+	executeImporterTestCases(t, testCaseWithAlda{
 		label: "ties with chords",
 		file:  "../examples/ties2.musicxml",
 		expected: `
@@ -139,7 +139,7 @@ midi-acoustic-grand-piano:
 }
 
 func TestTies3(t *testing.T) {
-	executeImporterTestCases(t, importerTestCase{
+	executeImporterTestCases(t, testCaseWithAlda{
 		label: "complex ties",
 		file:  "../examples/ties3.musicxml",
 		expected: `
@@ -151,7 +151,7 @@ midi-acoustic-grand-piano:
 }
 
 func TestDots(t *testing.T) {
-	executeImporterTestCases(t, importerTestCase{
+	executeImporterTestCases(t, testCaseWithAlda{
 		label: "simple dotted notes",
 		file:  "../examples/dots.musicxml",
 		expected: `
@@ -163,7 +163,7 @@ midi-acoustic-grand-piano:
 }
 
 func TestVoices1(t *testing.T) {
-	executeImporterTestCases(t, importerTestCase{
+	executeImporterTestCases(t, testCaseWithAlda{
 		label: "simple voices",
 		file:  "../examples/voices1.musicxml",
 		expected: `
@@ -175,7 +175,7 @@ midi-acoustic-grand-piano:
 }
 
 func TestVoices2(t *testing.T) {
-	executeImporterTestCases(t, importerTestCase{
+	executeImporterTestCases(t, testCaseWithAlda{
 		label: "complex voices with padding, backup, and forward",
 		file:  "../examples/voices2.musicxml",
 		expected: `
@@ -189,7 +189,7 @@ midi-acoustic-grand-piano:
 }
 
 func TestParts(t *testing.T) {
-	executeImporterTestCases(t, importerTestCase{
+	executeImporterTestCases(t, testCaseWithAlda{
 		label: "simple parts (wind quintet) with transpositions",
 		file:  "../examples/parts.musicxml",
 		expected: `
@@ -215,7 +215,7 @@ midi-french-horn:
 }
 
 func TestRepeat1(t *testing.T) {
-	executeImporterTestCases(t, importerTestCase{
+	executeImporterTestCases(t, testCaseWithAlda{
 		label: "simple repeat",
 		file:  "../examples/repeat1.musicxml",
 		expected: `
@@ -226,7 +226,7 @@ midi-acoustic-grand-piano:
 }
 
 func TestRepeat2(t *testing.T) {
-	executeImporterTestCases(t, importerTestCase{
+	executeImporterTestCases(t, testCaseWithAlda{
 		label: "simple repeat with forward repeat",
 		file:  "../examples/repeat2.musicxml",
 		expected: `
@@ -237,7 +237,7 @@ midi-acoustic-grand-piano:
 }
 
 func TestRepeats3(t *testing.T) {
-	executeImporterTestCases(t, importerTestCase{
+	executeImporterTestCases(t, testCaseWithAlda{
 		label: "repeats with complex octave updates",
 		file:  "../examples/repeat3.musicxml",
 		expected: `
@@ -248,7 +248,7 @@ midi-acoustic-grand-piano:
 }
 
 func TestRepeats4(t *testing.T) {
-	executeImporterTestCases(t, importerTestCase{
+	executeImporterTestCases(t, testCaseWithAlda{
 		label: "repeats with first and second ending",
 		file:  "../examples/repeat4.musicxml",
 		expected: `
@@ -265,7 +265,7 @@ midi-acoustic-grand-piano:
 }
 
 func TestRepeats5(t *testing.T) {
-	executeImporterTestCases(t, importerTestCase{
+	executeImporterTestCases(t, testCaseWithAlda{
 		label: "very complex repeats",
 		file:  "../examples/repeat5.musicxml",
 		expected: `
@@ -285,7 +285,7 @@ midi-acoustic-grand-piano:
 }
 
 func TestDynamics(t *testing.T) {
-	executeImporterTestCases(t, importerTestCase{
+	executeImporterTestCases(t, testCaseWithAlda{
 		label: "simple dynamics",
 		file:  "../examples/dynamics.musicxml",
 		expected: `
@@ -298,5 +298,44 @@ midi-acoustic-grand-piano:
 	| 
 	g1 (p)
 `,
+	})
+}
+
+func TestPercussion(t *testing.T) {
+	executeImporterTestCases(t, testCaseWithUpdates{
+		label: "percussion instruments",
+		file:  "../examples/percussion.musicxml",
+		expected: []model.ScoreUpdate{
+			model.PartDeclaration{
+				Names: []string{"midi-percussion"},
+				Alias: "Triangle",
+			},
+			model.AttributeUpdate{PartUpdate: model.KeySignatureSet{
+				KeySignature: model.KeySignatureFromCircleOfFifths(0),
+			}},
+			aldaPercussionNoteWithBarline(80, 1),
+			aldaPercussionNoteWithBarline(81, 1),
+			aldaRestWithBarline(1),
+			aldaPercussionNoteWithBarline(80, 1),
+			aldaPercussionNote(81, 4),
+			aldaPercussionNote(81, 4),
+			aldaPercussionNote(80, 4),
+			aldaPercussionNote(80, 4),
+			model.PartDeclaration{
+				Names: []string{"midi-percussion"},
+				Alias: "Wood_Blocks",
+			},
+			model.AttributeUpdate{PartUpdate: model.KeySignatureSet{
+				KeySignature: model.KeySignatureFromCircleOfFifths(0),
+			}},
+			aldaPercussionNote(76, 4),
+			aldaPercussionNote(76, 4),
+			aldaPercussionNote(77, 4),
+			aldaPercussionNoteWithBarline(77, 4),
+			aldaPercussionNoteWithBarline(76, 1),
+			aldaPercussionNoteWithBarline(76, 1),
+			aldaPercussionNoteWithBarline(77, 1),
+			aldaRest(1),
+		},
 	})
 }
