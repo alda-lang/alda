@@ -5,7 +5,6 @@ import (
 	"alda.io/client/parser"
 	"github.com/go-test/deep"
 	"os"
-	"reflect"
 	"testing"
 )
 
@@ -63,23 +62,4 @@ func executeImporterTestCases(
 			}
 		}
 	}
-}
-
-func evaluateLisp(updates []model.ScoreUpdate) []model.ScoreUpdate {
-	for i, update := range updates {
-		if reflect.TypeOf(update) == lispListType {
-			lispList := update.(model.LispList)
-			lispForm, err := lispList.Eval()
-			if err != nil {
-				panic(err)
-			}
-			updates[i] = lispForm.(model.LispScoreUpdate).ScoreUpdate
-		}
-
-		if modified, ok := modifyNestedUpdates(update, evaluateLisp); ok {
-			updates[i] = modified
-		}
-	}
-
-	return updates
 }
