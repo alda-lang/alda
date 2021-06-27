@@ -97,6 +97,35 @@ func setNestedUpdates(
  	)
 }
 
+// getBeats counts beats for a slice of model.ScoreUpdate
+func getBeats(updates ...model.ScoreUpdate) float64 {
+	beats := 0.0
+	for _, update := range updates {
+		switch value := update.(type) {
+		case model.Note:
+			beats += value.Duration.Beats()
+		case model.Rest:
+			beats += value.Duration.Beats()
+		case model.Chord:
+			min := 0.0
+			for _, event := range value.Events {
+				eventBeats := getBeats(event)
+				if eventBeats < min {
+					min = eventBeats
+				}
+			}
+			beats += min
+		case model.Repeat:
+			beats += getBeats(value.Event)
+		case model.OnRepetitions:
+			beats += getBeats(value.Event)
+		case model.EventSequence:
+			beats += getBeats(value.Events...)
+		}
+	}
+	return beats
+}
+
 // insert is a helper to insert an element in a slice
 // insert returns the updated slice with element inserted at the provided index
 func insert(
@@ -111,12 +140,11 @@ func insert(
 	return updates
 }
 
+// standardizeBarlines extracts any barlines that are the last duration
+// component in a note or rest and inserts them directly after
+// standardizeBarlines produces equivalent Alda, but makes the score updates
+// easier for the importer to manipulate (both for tests and postprocessing)
 func standardizeBarlines(updates []model.ScoreUpdate) []model.ScoreUpdate {
-	// Alda has to parse barlines into note and rest duration components to
-	// handle ties
-	// This causes various issues while importing
-	// To deal with this, we will standardize the location of all barlines
-	// Any barline that is the last duration component will be moved outside
 	for i := len(updates) - 1; i >= 0; i-- {
 		barlineAfter := false
 
@@ -168,33 +196,24 @@ func standardizeBarlines(updates []model.ScoreUpdate) []model.ScoreUpdate {
 	return updates
 }
 
-// getBeats counts beats for a slice of model.ScoreUpdate
-func getBeats(updates ...model.ScoreUpdate) float64 {
-	beats := 0.0
-	for _, update := range updates {
-		switch value := update.(type) {
-		case model.Note:
-			beats += value.Duration.Beats()
-		case model.Rest:
-			beats += value.Duration.Beats()
-		case model.Chord:
-			min := 0.0
-			for _, event := range value.Events {
-				eventBeats := getBeats(event)
-				if eventBeats < min {
-					min = eventBeats
-				}
+// evaluateLisp evaluates all lisp expressions into plain score updates
+func evaluateLisp(updates []model.ScoreUpdate) []model.ScoreUpdate {
+	for i, update := range updates {
+		if reflect.TypeOf(update) == lispListType {
+			lispList := update.(model.LispList)
+			lispForm, err := lispList.Eval()
+			if err != nil {
+				panic(err)
 			}
-			beats += min
-		case model.Repeat:
-			beats += getBeats(value.Event)
-		case model.OnRepetitions:
-			beats += getBeats(value.Event)
-		case model.EventSequence:
-			beats += getBeats(value.Events...)
+			updates[i] = lispForm.(model.LispScoreUpdate).ScoreUpdate
+		}
+
+		if modified, ok := modifyNestedUpdates(update, evaluateLisp); ok {
+			updates[i] = modified
 		}
 	}
-	return beats
+
+	return updates
 }
 
 // filterUpdateWithDuration only takes elements with a duration
