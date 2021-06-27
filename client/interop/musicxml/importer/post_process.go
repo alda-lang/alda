@@ -12,18 +12,11 @@ func postProcess(updates []model.ScoreUpdate) []model.ScoreUpdate {
 	return processor.processAll(updates)
 }
 
-// modifier is a function applied to an individual update in postprocessing
-type modifier = func(
-	update model.ScoreUpdate, processor *postProcessor,
-) model.ScoreUpdate
-
-var modifiers = []modifier{removeRedundantAccidentals}
-
 type postProcessor struct {
 	// currentDuration stores the last duration encountered in a note or rest
 	// This lets us remove repeated durations which Alda tracks automatically
 	// Note that we do not remove repeated durations for ties such as "c4~4"
-	currentDuration float64
+	currentDuration model.Duration
 
 	// currentKeySignature stores the last key signature set
 	// This lets us remove unnecessary accidentals that are covered by the key
@@ -43,12 +36,7 @@ type postProcessor struct {
 
 func newPostProcessor() postProcessor {
 	processor := postProcessor{
-		currentDuration: 4,
-		//currentDuration:     model.Duration{
-		//	Components: []model.DurationComponent{
-		//		model.NoteLength{Denominator: 4},
-		//	},
-		//},
+		currentDuration:     model.Duration{},
 		currentKeySignature: model.KeySignatureFromCircleOfFifths(0),
 		currentNoteState:    make(map[model.NoteLetter]bool),
 	}
@@ -63,151 +51,179 @@ func (processor *postProcessor) resetNoteState() {
 	}
 }
 
+func (processor *postProcessor) resetDuration() {
+	processor.currentDuration = model.Duration{}
+}
+
+func (processor *postProcessor) hasDuration() bool {
+	return len(processor.currentDuration.Components) != 0
+}
+
 func (processor *postProcessor) processAll(
 	updates []model.ScoreUpdate,
 ) []model.ScoreUpdate {
-	for i, update := range updates {
-		// Apply modifiers
-		for _, modifier := range modifiers {
-			update = modifier(update, processor)
+	updates = processor.removeRedundantAccidentals(updates)
+	updates = processor.removeRedundantDurations(updates)
+	return updates
+}
+
+func (processor *postProcessor) removeRedundantAccidentals(
+	updates []model.ScoreUpdate,
+) []model.ScoreUpdate {
+	modify := func(update model.ScoreUpdate) model.ScoreUpdate {
+		switch typedUpdate := update.(type) {
+		// Key Signature
+		case model.AttributeUpdate:
+			switch typedPartUpdate := typedUpdate.PartUpdate.(type) {
+			case model.KeySignatureSet:
+				different := len(deep.Equal(
+					processor.currentKeySignature, typedPartUpdate.KeySignature,
+				)) > 0
+
+				if different {
+					processor.resetNoteState()
+					processor.currentKeySignature = typedPartUpdate.KeySignature
+				}
+			}
+		// Accidentals
+		case model.Note:
+			switch typedPitchIdentifier := typedUpdate.Pitch.(type) {
+			case model.LetterAndAccidentals:
+				letter := typedPitchIdentifier.NoteLetter
+				accidentals := typedPitchIdentifier.Accidentals
+				keySignatureAccidentals := processor.currentKeySignature[letter]
+
+				different := len(deep.Equal(
+					accidentals, keySignatureAccidentals,
+				)) > 0
+
+				if different {
+					// When accidentals are different than the key, we just
+					// update our current note state
+					processor.currentNoteState[letter] = true
+				} else {
+					if !processor.currentNoteState[letter] {
+						// Clear accidentals (redundant)
+						typedPitchIdentifier.Accidentals = nil
+						typedUpdate.Pitch = typedPitchIdentifier
+						update = typedUpdate
+					}
+				}
+			}
+		case model.Barline:
+			processor.resetNoteState()
 		}
 
+		// Process a note or rest's duration components to detect barlines
+		var durationComponents []model.DurationComponent
+		if reflect.TypeOf(update) == noteType {
+			durationComponents = update.(model.Note).Duration.Components
+		} else if reflect.TypeOf(update) == restType {
+			durationComponents = update.(model.Rest).Duration.Components
+		}
+
+		for _, duration := range durationComponents {
+			if reflect.TypeOf(duration) == barlineType {
+				processor.resetNoteState()
+			}
+		}
+
+		return update
+	}
+
+	for i, update := range updates {
+		update = modify(update)
+
 		// Recurse process through nested score updates
-		if modified, ok := modifyNestedUpdates(update, processor.processAll); ok {
+		if modified, ok := modifyNestedUpdates(
+			update, processor.removeRedundantAccidentals,
+		); ok {
 			update = modified
 		}
 
 		updates[i] = update
 	}
+
 	return updates
 }
 
-func removeRedundantAccidentals(
-	update model.ScoreUpdate, processor *postProcessor,
-) model.ScoreUpdate {
-	switch typedUpdate := update.(type) {
-	// Key Signature
-	case model.AttributeUpdate:
-		switch typedPartUpdate := typedUpdate.PartUpdate.(type) {
-		case model.KeySignatureSet:
-			different := len(deep.Equal(
-				processor.currentKeySignature, typedPartUpdate.KeySignature,
-			)) > 0
-
-			if different {
-				processor.resetNoteState()
-				processor.currentKeySignature = typedPartUpdate.KeySignature
-			}
-		}
-	// Accidentals
-	case model.Note:
-		switch typedPitchIdentifier := typedUpdate.Pitch.(type) {
-		case model.LetterAndAccidentals:
-			noteLetter := typedPitchIdentifier.NoteLetter
-			noteAccidentals := typedPitchIdentifier.Accidentals
-			keySignatureAccidentals := processor.currentKeySignature[noteLetter]
-
-			different := len(deep.Equal(
-				noteAccidentals, keySignatureAccidentals,
-			)) > 0
-
-			if different {
-				// When accidentals are different than the key, we just leave
-				// them and update our current note state
-				processor.currentNoteState[noteLetter] = true
-			} else {
-				if !processor.currentNoteState[noteLetter] {
-					// Clear accidentals (redundant)
-					typedPitchIdentifier.Accidentals = nil
-					typedUpdate.Pitch = typedPitchIdentifier
-					update = typedUpdate
-				}
-			}
-		}
-	case model.Barline:
-		processor.resetNoteState()
-	}
-
-	// Process a note or rest's duration components to detect barlines
-	var durationComponents []model.DurationComponent
-	if reflect.TypeOf(update) == noteType {
-		durationComponents = update.(model.Note).Duration.Components
-	} else if reflect.TypeOf(update) == restType {
-		durationComponents = update.(model.Rest).Duration.Components
-	}
-
-	for _, duration := range durationComponents {
-		if reflect.TypeOf(duration) == barlineType {
-			processor.resetNoteState()
-		}
-	}
-
-	return update
-}
-
-func removeRepeatedDurations(
-	update model.ScoreUpdate, processor *postProcessor,
-) model.ScoreUpdate {
-	getDurationComponents := func(
+func (processor *postProcessor) removeRedundantDurations(
+	updates []model.ScoreUpdate,
+) []model.ScoreUpdate {
+	getDuration := func(
 		update model.ScoreUpdate,
-	) []model.DurationComponent {
+	) model.Duration {
 		if reflect.TypeOf(update) == noteType {
-			return update.(model.Note).Duration.Components
+			return update.(model.Note).Duration
 		} else if reflect.TypeOf(update) == restType {
-			return update.(model.Rest).Duration.Components
+			return update.(model.Rest).Duration
 		} else {
-			return nil
+			return model.Duration{}
 		}
 	}
 
-	setDurationComponents := func(
-		update model.ScoreUpdate, components []model.DurationComponent,
+	setDuration := func(
+		update model.ScoreUpdate, duration model.Duration,
 	) model.ScoreUpdate {
 		switch typedUpdate := update.(type) {
 		case model.Note:
-			typedUpdate.Duration.Components = components
-			return typedUpdate
+			typedUpdate.Duration = duration
+			update = typedUpdate
 		case model.Rest:
-			typedUpdate.Duration.Components = components
-			return typedUpdate
-		default:
-			return update
+			typedUpdate.Duration = duration
+			update = typedUpdate
 		}
-	}
-
-	durationComponents := getDurationComponents(update)
-	if len(durationComponents) == 0 {
 		return update
 	}
 
-	// We do preprocessing to obtain some necessary information
-	var lastNoteLength model.NoteLength
-	var lastNoteLengthIndex int
-	noteLengthCount := 0
-
-	for i, duration := range durationComponents {
-		if reflect.TypeOf(duration) == noteLengthType {
-			lastNoteLength = duration.(model.NoteLength)
-			lastNoteLengthIndex = i
-			noteLengthCount++
+	modify := func(update model.ScoreUpdate) model.ScoreUpdate {
+		// We reset duration at every barline
+		if reflect.TypeOf(update) == barlineType {
+			processor.resetDuration()
+			return update
 		}
+
+		duration := getDuration(update)
+
+		// If there are no duration components, we just skip
+		if len(duration.Components) == 0 {
+			return update
+		}
+
+		// If the duration contains a barline, we reset
+		for _, component := range duration.Components {
+			if reflect.TypeOf(component) == barlineType {
+				processor.resetDuration()
+				return update
+			}
+		}
+
+		if processor.hasDuration() {
+			difference := deep.Equal(processor.currentDuration, duration)
+			if len(difference) == 0 {
+				update = setDuration(update, model.Duration{})
+			}
+		}
+
+		processor.currentDuration = duration
+		return update
 	}
 
-	if noteLengthCount == 1 &&
-		lastNoteLength.Denominator == processor.currentDuration {
-		// Only in this specific case do we have a repeated duration to remove
-		// If noteLengthCount > 1, then we are dealing with ties
-		durationComponents = append(
-			durationComponents[:lastNoteLengthIndex],
-			durationComponents[lastNoteLengthIndex + 1:]...
-		)
+	for i, update := range updates {
+		update = modify(update)
 
-		if len(durationComponents) == 0 {
-			durationComponents = nil
+		// Recurse process through nested score updates
+		if _, ok := getNestedUpdates(update, false); ok {
+			processor.resetDuration()
+
+			modified, _ := modifyNestedUpdates(update, processor.processAll)
+			update = modified
+
+			processor.resetDuration()
 		}
+
+		updates[i] = update
 	}
 
-	processor.currentDuration = lastNoteLength.Denominator
-	update = setDurationComponents(update, durationComponents)
-	return update
+	return updates
 }

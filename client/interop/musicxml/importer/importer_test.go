@@ -14,7 +14,7 @@ func TestNote(t *testing.T) {
 		expected: `
 midi-acoustic-grand-piano: 
 	(key-signature "") 
-	> c4 d4 e4 f4 | g1
+	> c4 d e f4 | g1
 `,
 	})
 }
