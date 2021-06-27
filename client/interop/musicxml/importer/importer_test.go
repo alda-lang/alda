@@ -43,21 +43,6 @@ midi-acoustic-grand-piano:
 	})
 }
 
-func TestAccidental2(t *testing.T) {
-	executeImporterTestCases(t, importerTestCase{
-		label: "complex key signatures and accidentals (for postprocessing)",
-		file:  "../examples/accidental2.musicxml",
-		expected: `
-midi-acoustic-grand-piano:
-	(key-signature "f+ c+ g+ d+")
-	> d+4 d_4 d+4 d_4 |
-	(key-signature "b- e- a- d-")
-	d-4 d--4 d++4 d-8 d_8 |
-	d-1
-`,
-	})
-}
-
 func TestOctave(t *testing.T) {
 	executeImporterTestCases(t, importerTestCase{
 		label: "simple octave switching",
