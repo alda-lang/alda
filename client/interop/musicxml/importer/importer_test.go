@@ -8,31 +8,31 @@ import (
 )
 
 func TestNote(t *testing.T) {
-	executeImporterTestCases(t, testCaseWithAlda{
+	executeImporterTestCases(t, importerTestCase{
 		label: "simple notes",
 		file:  "../examples/note.musicxml",
 		expected: `
 midi-acoustic-grand-piano: 
 	(key-signature "") 
-	> c d e f | g1
-`,
-	})
-}
-
-func TestKeySignature(t *testing.T) {
-	executeImporterTestCases(t, testCaseWithAlda{
-		label: "simple traditional key signature",
-		file:  "../examples/key_signature.musicxml",
-		expected: `
-midi-acoustic-grand-piano: 
-	(key-signature "f+ c+ g+ d+") 
 	> c4 d4 e4 f4 | g1
 `,
 	})
 }
 
+func TestKeySignature(t *testing.T) {
+	executeImporterTestCases(t, importerTestCase{
+		label: "simple traditional key signature",
+		file:  "../examples/key_signature.musicxml",
+		expected: `
+midi-acoustic-grand-piano: 
+	(key-signature "f+ c+ g+ d+") 
+	> c+4 d+4 e4 f+4 | g+1
+`,
+	})
+}
+
 func TestAccidental(t *testing.T) {
-	executeImporterTestCases(t, testCaseWithAlda{
+	executeImporterTestCases(t, importerTestCase{
 		label: "simple accidentals",
 		file:  "../examples/accidental.musicxml",
 		expected: `
@@ -44,22 +44,22 @@ midi-acoustic-grand-piano:
 }
 
 func TestAccidental2(t *testing.T) {
-	executeImporterTestCases(t, testCaseWithAlda{
+	executeImporterTestCases(t, importerTestCase{
 		label: "complex key signatures and accidentals (for postprocessing)",
 		file:  "../examples/accidental2.musicxml",
 		expected: `
 midi-acoustic-grand-piano:
 	(key-signature "f+ c+ g+ d+")
-	> d4 d_4 d+4 d_4 |
+	> d+4 d_4 d+4 d_4 |
 	(key-signature "b- e- a- d-")
-	d4 d--4 d++4 d-8 d_8 |
-	d1
+	d-4 d--4 d++4 d-8 d_8 |
+	d-1
 `,
 	})
 }
 
 func TestOctave(t *testing.T) {
-	executeImporterTestCases(t, testCaseWithAlda{
+	executeImporterTestCases(t, importerTestCase{
 		label: "simple octave switching",
 		file:  "../examples/octave.musicxml",
 		expected: `
@@ -71,7 +71,7 @@ midi-acoustic-grand-piano:
 }
 
 func TestRest(t *testing.T) {
-	executeImporterTestCases(t, testCaseWithAlda{
+	executeImporterTestCases(t, importerTestCase{
 		label: "simple rests",
 		file:  "../examples/rest.musicxml",
 		expected: `
@@ -83,7 +83,7 @@ midi-acoustic-grand-piano:
 }
 
 func TestSlurs(t *testing.T) {
-	executeImporterTestCases(t, testCaseWithAlda{
+	executeImporterTestCases(t, importerTestCase{
 		label: "simple slurs",
 		file:  "../examples/slurs.musicxml",
 		expected: `
@@ -95,7 +95,7 @@ midi-acoustic-grand-piano:
 }
 
 func TestChord(t *testing.T) {
-	executeImporterTestCases(t, testCaseWithAlda{
+	executeImporterTestCases(t, importerTestCase{
 		label: "simple chords",
 		file:  "../examples/chord.musicxml",
 		expected: `
@@ -107,7 +107,7 @@ midi-acoustic-grand-piano:
 }
 
 func TestTies1(t *testing.T) {
-	executeImporterTestCases(t, testCaseWithAlda{
+	executeImporterTestCases(t, importerTestCase{
 		label: "simple ties",
 		file:  "../examples/ties1.musicxml",
 		expected: `
@@ -119,7 +119,7 @@ midi-acoustic-grand-piano:
 }
 
 func TestTies2(t *testing.T) {
-	executeImporterTestCases(t, testCaseWithAlda{
+	executeImporterTestCases(t, importerTestCase{
 		label: "ties with chords",
 		file:  "../examples/ties2.musicxml",
 		expected: `
@@ -154,7 +154,7 @@ midi-acoustic-grand-piano:
 }
 
 func TestTies3(t *testing.T) {
-	executeImporterTestCases(t, testCaseWithAlda{
+	executeImporterTestCases(t, importerTestCase{
 		label: "complex ties",
 		file:  "../examples/ties3.musicxml",
 		expected: `
@@ -166,7 +166,7 @@ midi-acoustic-grand-piano:
 }
 
 func TestDots(t *testing.T) {
-	executeImporterTestCases(t, testCaseWithAlda{
+	executeImporterTestCases(t, importerTestCase{
 		label: "simple dotted notes",
 		file:  "../examples/dots.musicxml",
 		expected: `
@@ -178,7 +178,7 @@ midi-acoustic-grand-piano:
 }
 
 func TestVoices1(t *testing.T) {
-	executeImporterTestCases(t, testCaseWithAlda{
+	executeImporterTestCases(t, importerTestCase{
 		label: "simple voices",
 		file:  "../examples/voices1.musicxml",
 		expected: `
@@ -190,7 +190,7 @@ midi-acoustic-grand-piano:
 }
 
 func TestVoices2(t *testing.T) {
-	executeImporterTestCases(t, testCaseWithAlda{
+	executeImporterTestCases(t, importerTestCase{
 		label: "complex voices with padding, backup, and forward",
 		file:  "../examples/voices2.musicxml",
 		expected: `
@@ -204,7 +204,7 @@ midi-acoustic-grand-piano:
 }
 
 func TestParts(t *testing.T) {
-	executeImporterTestCases(t, testCaseWithAlda{
+	executeImporterTestCases(t, importerTestCase{
 		label: "simple parts (wind quintet) with transpositions",
 		file:  "../examples/parts.musicxml",
 		expected: `
@@ -230,7 +230,7 @@ midi-french-horn:
 }
 
 func TestRepeat1(t *testing.T) {
-	executeImporterTestCases(t, testCaseWithAlda{
+	executeImporterTestCases(t, importerTestCase{
 		label: "simple repeat",
 		file:  "../examples/repeat1.musicxml",
 		expected: `
@@ -241,7 +241,7 @@ midi-acoustic-grand-piano:
 }
 
 func TestRepeat2(t *testing.T) {
-	executeImporterTestCases(t, testCaseWithAlda{
+	executeImporterTestCases(t, importerTestCase{
 		label: "simple repeat with forward repeat",
 		file:  "../examples/repeat2.musicxml",
 		expected: `
@@ -252,7 +252,7 @@ midi-acoustic-grand-piano:
 }
 
 func TestRepeats3(t *testing.T) {
-	executeImporterTestCases(t, testCaseWithAlda{
+	executeImporterTestCases(t, importerTestCase{
 		label: "repeats with complex octave updates",
 		file:  "../examples/repeat3.musicxml",
 		expected: `
@@ -263,7 +263,7 @@ midi-acoustic-grand-piano:
 }
 
 func TestRepeats4(t *testing.T) {
-	executeImporterTestCases(t, testCaseWithAlda{
+	executeImporterTestCases(t, importerTestCase{
 		label: "repeats with first and second ending",
 		file:  "../examples/repeat4.musicxml",
 		expected: `
@@ -280,7 +280,7 @@ midi-acoustic-grand-piano:
 }
 
 func TestRepeats5(t *testing.T) {
-	executeImporterTestCases(t, testCaseWithAlda{
+	executeImporterTestCases(t, importerTestCase{
 		label: "very complex repeats",
 		file:  "../examples/repeat5.musicxml",
 		expected: `
@@ -300,7 +300,7 @@ midi-acoustic-grand-piano:
 }
 
 func TestDynamics(t *testing.T) {
-	executeImporterTestCases(t, testCaseWithAlda{
+	executeImporterTestCases(t, importerTestCase{
 		label: "simple dynamics",
 		file:  "../examples/dynamics.musicxml",
 		expected: `
@@ -317,40 +317,39 @@ midi-acoustic-grand-piano:
 }
 
 func TestPercussion(t *testing.T) {
-	executeImporterTestCases(t, testCaseWithUpdates{
+	executeImporterTestCases(t, importerTestCase{
 		label: "percussion instruments",
 		file:  "../examples/percussion.musicxml",
-		expected: []model.ScoreUpdate{
-			model.PartDeclaration{
-				Names: []string{"midi-percussion"},
-				Alias: "Triangle",
-			},
-			model.AttributeUpdate{PartUpdate: model.KeySignatureSet{
-				KeySignature: model.KeySignatureFromCircleOfFifths(0),
-			}},
-			aldaPercussionNoteWithBarline(80, 1),
-			aldaPercussionNoteWithBarline(81, 1),
-			aldaRestWithBarline(1),
-			aldaPercussionNoteWithBarline(80, 1),
-			aldaPercussionNote(81, 4),
-			aldaPercussionNote(81, 4),
-			aldaPercussionNote(80, 4),
-			aldaPercussionNote(80, 4),
-			model.PartDeclaration{
-				Names: []string{"midi-percussion"},
-				Alias: "Wood_Blocks",
-			},
-			model.AttributeUpdate{PartUpdate: model.KeySignatureSet{
-				KeySignature: model.KeySignatureFromCircleOfFifths(0),
-			}},
-			aldaPercussionNote(76, 4),
-			aldaPercussionNote(76, 4),
-			aldaPercussionNote(77, 4),
-			aldaPercussionNoteWithBarline(77, 4),
-			aldaPercussionNoteWithBarline(76, 1),
-			aldaPercussionNoteWithBarline(76, 1),
-			aldaPercussionNoteWithBarline(77, 1),
-			aldaRest(1),
-		},
+		expected: `
+midi-percussion "Triangle": 
+	(key-signature "")
+	(note (midi-note 80) (note-length 1))
+	| 
+	(note (midi-note 81) (note-length 1))
+	| 
+	r1
+	| 
+	(note (midi-note 80) (note-length 1))
+	|
+	(note (midi-note 81) (note-length 4))
+	(note (midi-note 81) (note-length 4))
+	(note (midi-note 80) (note-length 4))
+	(note (midi-note 80) (note-length 4))
+
+midi-percussion "Wood_Blocks": 
+	(key-signature "")
+	(note (midi-note 76) (note-length 4))
+	(note (midi-note 76) (note-length 4))
+	(note (midi-note 77) (note-length 4))
+	(note (midi-note 77) (note-length 4))
+	| 
+	(note (midi-note 76) (note-length 1))
+	|
+	(note (midi-note 76) (note-length 1))
+	| 
+	(note (midi-note 77) (note-length 1))
+	| 
+	r1
+`,
 	})
 }
