@@ -5,71 +5,18 @@ import (
 	"alda.io/client/parser"
 	"github.com/go-test/deep"
 	"os"
+	"reflect"
 	"testing"
 )
 
-type importerTestCase interface {
-	testCaseLabel()    string
-	testCaseFile()     string
-	evaluate() ([]model.ScoreUpdate, error)
-}
-
-func standardizeBarlines(updates []model.ScoreUpdate) []model.ScoreUpdate {
-	// Alda has to parse barlines into note and rest duration components to
-	// handle ties
-	// This causes various issues while importing
-	// So in our tests, we will "standardize" the location of barlines
-	// Any barline that is the last duration component will be moved outside
-
-	
-}
-
-func executeImporterTestCases(
-	t *testing.T, testCases ...importerTestCase,
-) {
-	for _, testCase := range testCases {
-		file, _ := os.Open(testCase.testCaseFile())
-		actual, err := ImportMusicXML(file)
-		if err != nil {
-			t.Error(testCase.testCaseLabel())
-			t.Error(err)
-			return
-		}
-		actual = standardizeBarlines(actual)
-
-		expected, err := testCase.evaluate()
-		if err != nil {
-			t.Error(testCase.testCaseLabel())
-			t.Error(err)
-			return
-		}
-		expected = standardizeBarlines(expected)
-
-		if diff := deep.Equal(expected, actual); diff != nil {
-			t.Error(testCase.testCaseLabel())
-			for _, diffItem := range diff {
-				t.Errorf("%v", diffItem)
-			}
-		}
-	}
-}
-
-type testCaseWithAlda struct {
+type importerTestCase struct {
 	label       string
 	file        string
 	expected    string
 	postprocess func(updates []model.ScoreUpdate) []model.ScoreUpdate
 }
 
-func (testCase testCaseWithAlda) testCaseLabel() string {
-	return testCase.label
-}
-
-func (testCase testCaseWithAlda) testCaseFile() string {
-	return testCase.file
-}
-
-func (testCase testCaseWithAlda) evaluate() ([]model.ScoreUpdate, error) {
+func (testCase importerTestCase) evaluate() ([]model.ScoreUpdate, error) {
 	expected, err := parser.Parse(
 		testCase.label, testCase.expected, parser.SuppressSourceContext,
 	)
@@ -90,6 +37,89 @@ func (testCase testCaseWithAlda) evaluate() ([]model.ScoreUpdate, error) {
 	}
 
 	return expected, nil
+}
+
+func executeImporterTestCases(
+	t *testing.T, testCases ...importerTestCase,
+) {
+	for _, testCase := range testCases {
+		file, _ := os.Open(testCase.file)
+		actual, err := ImportMusicXML(file)
+		if err != nil {
+			t.Error(testCase.label)
+			t.Error(err)
+			return
+		}
+		actual = standardizeBarlines(actual)
+
+		expected, err := testCase.evaluate()
+		if err != nil {
+			t.Error(testCase.label)
+			t.Error(err)
+			return
+		}
+		expected = standardizeBarlines(expected)
+
+		if diff := deep.Equal(expected, actual); diff != nil {
+			t.Error(testCase.label)
+			for _, diffItem := range diff {
+				t.Errorf("%v", diffItem)
+			}
+		}
+	}
+}
+
+func standardizeBarlines(updates []model.ScoreUpdate) []model.ScoreUpdate {
+	// Alda has to parse barlines into note and rest duration components to
+	// handle ties
+	// This causes various issues while importing
+	// So in our tests, we will "standardize" the location of barlines
+	// Any barline that is the last duration component will be moved outside
+	for i := len(updates) - 1; i >= 0; i-- {
+		barlineAfter := false
+
+		update := updates[i]
+		switch typedUpdate := update.(type) {
+		case model.Note:
+			durations := typedUpdate.Duration.Components
+			if len(durations) > 0 &&
+				reflect.TypeOf(durations[len(durations) - 1]) == barlineType {
+				durations = durations[:len(durations) - 1]
+				if len(durations) == 0 {
+					durations = nil
+				}
+				typedUpdate.Duration.Components = durations
+				update = typedUpdate
+				barlineAfter = true
+			}
+		case model.Rest:
+			durations := typedUpdate.Duration.Components
+			if len(durations) > 0 &&
+				reflect.TypeOf(durations[len(durations) - 1]) == barlineType {
+				durations = durations[:len(durations) - 1]
+				if len(durations) == 0 {
+					durations = nil
+				}
+				typedUpdate.Duration.Components = durations
+				update = typedUpdate
+				barlineAfter = true
+			}
+		}
+
+		updates[i] = update
+		if barlineAfter {
+			updates = insert(model.Barline{}, updates, i + 1)
+		}
+
+		// Recursively standardize barlines
+		if modified, ok := modifyNestedUpdates(
+			update, standardizeBarlines,
+		); ok {
+			updates[i] = modified
+		}
+	}
+
+	return updates
 }
 
 func evaluateLisp(updates []model.ScoreUpdate) ([]model.ScoreUpdate, error) {
@@ -116,60 +146,4 @@ func evaluateLisp(updates []model.ScoreUpdate) ([]model.ScoreUpdate, error) {
 		}
 	}
 	return updates, nil
-}
-
-type testCaseWithUpdates struct {
-	label    string
-	file     string
-	expected []model.ScoreUpdate
-}
-
-func (testCase testCaseWithUpdates) testCaseLabel() string {
-	return testCase.label
-}
-
-func (testCase testCaseWithUpdates) testCaseFile() string {
-	return testCase.file
-}
-
-func (testCase testCaseWithUpdates) evaluate() ([]model.ScoreUpdate, error) {
-	return testCase.expected, nil
-}
-
-func aldaPercussionNote(number int32, duration float64) model.ScoreUpdate {
-	return model.Note{
-		Pitch:    model.MidiNoteNumber{MidiNote: number},
-		Duration: model.Duration{Components: []model.DurationComponent{
-			model.NoteLength{Denominator: duration},
-		}},
-	}
-}
-
-func aldaPercussionNoteWithBarline(
-	number int32, duration float64,
-) model.ScoreUpdate {
-	return model.Note{
-		Pitch:    model.MidiNoteNumber{MidiNote: number},
-		Duration: model.Duration{Components: []model.DurationComponent{
-			model.NoteLength{Denominator: duration},
-			model.Barline{},
-		}},
-	}
-}
-
-func aldaRest(duration float64) model.ScoreUpdate {
-	return model.Rest{
-		Duration: model.Duration{Components: []model.DurationComponent{
-			model.NoteLength{Denominator: duration},
-		}},
-	}
-}
-
-func aldaRestWithBarline(duration float64) model.ScoreUpdate {
-	return model.Rest{
-		Duration: model.Duration{Components: []model.DurationComponent{
-			model.NoteLength{Denominator: duration},
-			model.Barline{},
-		}},
-	}
 }

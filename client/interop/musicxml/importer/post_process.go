@@ -8,8 +8,9 @@ import (
 
 // postProcess applies various modifier methods to generate more idiomatic Alda
 func postProcess(updates []model.ScoreUpdate) []model.ScoreUpdate {
-	processor := newPostProcessor()
-	return processor.processAll(updates)
+	return updates
+	//processor := newPostProcessor()
+	//return processor.processAll(updates)
 }
 
 // modifier is a function applied to an individual update in postprocessing
@@ -43,7 +44,12 @@ type postProcessor struct {
 
 func newPostProcessor() postProcessor {
 	processor := postProcessor{
-		currentDuration:     4,
+		currentDuration: 4,
+		//currentDuration:     model.Duration{
+		//	Components: []model.DurationComponent{
+		//		model.NoteLength{Denominator: 4},
+		//	},
+		//},
 		currentKeySignature: model.KeySignatureFromCircleOfFifths(0),
 		currentNoteState:    make(map[model.NoteLetter]bool),
 	}
@@ -171,6 +177,9 @@ func removeRepeatedDurations(
 	}
 
 	durationComponents := getDurationComponents(update)
+	if len(durationComponents) == 0 {
+		return update
+	}
 
 	// We do preprocessing to obtain some necessary information
 	var lastNoteLength model.NoteLength
@@ -193,6 +202,10 @@ func removeRepeatedDurations(
 			durationComponents[:lastNoteLengthIndex],
 			durationComponents[lastNoteLengthIndex + 1:]...
 		)
+
+		if len(durationComponents) == 0 {
+			durationComponents = nil
+		}
 	}
 
 	processor.currentDuration = lastNoteLength.Denominator
