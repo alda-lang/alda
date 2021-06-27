@@ -26,11 +26,7 @@ func (testCase importerTestCase) evaluate() ([]model.ScoreUpdate, error) {
 	}
 
 	// Evaluate all LispList elements and unpacked ScoreUpdates
-	expected, err = evaluateLisp(expected)
-
-	if err != nil {
-		return nil, err
-	}
+	expected = evaluateLisp(expected)
 
 	if testCase.postprocess != nil {
 		expected = testCase.postprocess(expected)
@@ -78,29 +74,33 @@ func standardizeBarlines(updates []model.ScoreUpdate) []model.ScoreUpdate {
 	for i := len(updates) - 1; i >= 0; i-- {
 		barlineAfter := false
 
-		update := updates[i]
-		switch typedUpdate := update.(type) {
-		case model.Note:
-			durations := typedUpdate.Duration.Components
+		removeBarline := func(
+			durations []model.DurationComponent,
+		) ([]model.DurationComponent, bool) {
 			if len(durations) > 0 &&
 				reflect.TypeOf(durations[len(durations) - 1]) == barlineType {
 				durations = durations[:len(durations) - 1]
 				if len(durations) == 0 {
 					durations = nil
 				}
-				typedUpdate.Duration.Components = durations
+				return durations, true
+			}
+			return nil, false
+		}
+
+		update := updates[i]
+		switch typedUpdate := update.(type) {
+		case model.Note:
+			durations := typedUpdate.Duration.Components
+			if updatedDurations, ok := removeBarline(durations); ok {
+				typedUpdate.Duration.Components = updatedDurations
 				update = typedUpdate
 				barlineAfter = true
 			}
 		case model.Rest:
 			durations := typedUpdate.Duration.Components
-			if len(durations) > 0 &&
-				reflect.TypeOf(durations[len(durations) - 1]) == barlineType {
-				durations = durations[:len(durations) - 1]
-				if len(durations) == 0 {
-					durations = nil
-				}
-				typedUpdate.Duration.Components = durations
+			if updatedDurations, ok := removeBarline(durations); ok {
+				typedUpdate.Duration.Components = updatedDurations
 				update = typedUpdate
 				barlineAfter = true
 			}
@@ -122,28 +122,21 @@ func standardizeBarlines(updates []model.ScoreUpdate) []model.ScoreUpdate {
 	return updates
 }
 
-func evaluateLisp(updates []model.ScoreUpdate) ([]model.ScoreUpdate, error) {
-	for i, element := range updates {
-		switch value := element.(type) {
-		case model.Repeat:
-			eventSequence := value.Event.(model.EventSequence)
-			evaluateLisp(eventSequence.Events)
-			value.Event = eventSequence
-			updates[i] = value
-		case model.OnRepetitions:
-			eventSequence := value.Event.(model.EventSequence)
-			evaluateLisp(eventSequence.Events)
-			value.Event = eventSequence
-			updates[i] = value
-		default:
-			if lispList, ok := value.(model.LispList); ok {
-				lispForm, err := lispList.Eval()
-				if err != nil {
-					return nil, err
-				}
-				updates[i] = lispForm.(model.LispScoreUpdate).ScoreUpdate
+func evaluateLisp(updates []model.ScoreUpdate) []model.ScoreUpdate {
+	for i, update := range updates {
+		if reflect.TypeOf(update) == lispListType {
+			lispList := update.(model.LispList)
+			lispForm, err := lispList.Eval()
+			if err != nil {
+				panic(err)
 			}
+			updates[i] = lispForm.(model.LispScoreUpdate).ScoreUpdate
+		}
+
+		if modified, ok := modifyNestedUpdates(update, evaluateLisp); ok {
+			updates[i] = modified
 		}
 	}
-	return updates, nil
+
+	return updates
 }
