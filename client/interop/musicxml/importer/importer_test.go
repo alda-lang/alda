@@ -353,3 +353,22 @@ midi-percussion "Wood_Blocks":
 `,
 	})
 }
+
+func TestDuration(t *testing.T) {
+	executeImporterTestCases(t, importerTestCase{
+		label: "different redundant durations",
+		file:  "../examples/duration.musicxml",
+		expected: `
+midi-acoustic-grand-piano: 
+	(key-signature "")
+	c8~8 e c8~8/e/g e8~8 | 
+	c2/e/g c4../e/g r16 | 
+	c2 e | 
+	[
+		g2 r | 
+		e2 c
+	]*2 | 
+	e2 r
+`,
+	})
+}

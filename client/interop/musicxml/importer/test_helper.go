@@ -45,7 +45,6 @@ func executeImporterTestCases(
 			t.Error(err)
 			return
 		}
-		actual = standardizeBarlines(actual)
 
 		expected, err := testCase.evaluate()
 		if err != nil {
