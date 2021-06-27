@@ -65,63 +65,6 @@ func executeImporterTestCases(
 	}
 }
 
-func standardizeBarlines(updates []model.ScoreUpdate) []model.ScoreUpdate {
-	// Alda has to parse barlines into note and rest duration components to
-	// handle ties
-	// This causes various issues while importing
-	// So in our tests, we will "standardize" the location of barlines
-	// Any barline that is the last duration component will be moved outside
-	for i := len(updates) - 1; i >= 0; i-- {
-		barlineAfter := false
-
-		removeBarline := func(
-			durations []model.DurationComponent,
-		) ([]model.DurationComponent, bool) {
-			if len(durations) > 0 &&
-				reflect.TypeOf(durations[len(durations) - 1]) == barlineType {
-				durations = durations[:len(durations) - 1]
-				if len(durations) == 0 {
-					durations = nil
-				}
-				return durations, true
-			}
-			return nil, false
-		}
-
-		update := updates[i]
-		switch typedUpdate := update.(type) {
-		case model.Note:
-			durations := typedUpdate.Duration.Components
-			if updatedDurations, ok := removeBarline(durations); ok {
-				typedUpdate.Duration.Components = updatedDurations
-				update = typedUpdate
-				barlineAfter = true
-			}
-		case model.Rest:
-			durations := typedUpdate.Duration.Components
-			if updatedDurations, ok := removeBarline(durations); ok {
-				typedUpdate.Duration.Components = updatedDurations
-				update = typedUpdate
-				barlineAfter = true
-			}
-		}
-
-		updates[i] = update
-		if barlineAfter {
-			updates = insert(model.Barline{}, updates, i + 1)
-		}
-
-		// Recursively standardize barlines
-		if modified, ok := modifyNestedUpdates(
-			update, standardizeBarlines,
-		); ok {
-			updates[i] = modified
-		}
-	}
-
-	return updates
-}
-
 func evaluateLisp(updates []model.ScoreUpdate) []model.ScoreUpdate {
 	for i, update := range updates {
 		if reflect.TypeOf(update) == lispListType {
