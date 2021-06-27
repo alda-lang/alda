@@ -62,6 +62,7 @@ func (processor *postProcessor) hasDuration() bool {
 func (processor *postProcessor) processAll(
 	updates []model.ScoreUpdate,
 ) []model.ScoreUpdate {
+	updates = standardizeBarlines(updates)
 	updates = processor.removeRedundantAccidentals(updates)
 	updates = processor.removeRedundantDurations(updates)
 	return updates
