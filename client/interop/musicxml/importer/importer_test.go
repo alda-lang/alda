@@ -14,7 +14,7 @@ func TestNote(t *testing.T) {
 		expected: `
 midi-acoustic-grand-piano: 
 	(key-signature "") 
-	> c4 d4 e4 f4 | g1
+	> c d e f | g1
 `,
 	})
 }
@@ -26,7 +26,7 @@ func TestKeySignature(t *testing.T) {
 		expected: `
 midi-acoustic-grand-piano: 
 	(key-signature "f+ c+ g+ d+") 
-	> c+4 d+4 e4 f+4 | g+1
+	> c4 d4 e4 f4 | g1
 `,
 	})
 }
@@ -39,6 +39,21 @@ func TestAccidental(t *testing.T) {
 midi-acoustic-grand-piano: 
 	(key-signature "") 
 	> c4 d+4 e4 f-4 | g++1
+`,
+	})
+}
+
+func TestAccidental2(t *testing.T) {
+	executeImporterTestCases(t, testCaseWithAlda{
+		label: "complex key signatures and accidentals (for postprocessing)",
+		file:  "../examples/accidental2.musicxml",
+		expected: `
+midi-acoustic-grand-piano:
+	(key-signature "f+ c+ g+ d+")
+	> d4 d_4 d+4 d_4 |
+	(key-signature "b- e- a- d-")
+	d4 d--4 d++4 d-8 d_8 |
+	d1
 `,
 	})
 }

@@ -16,6 +16,12 @@ var octaveUpType = reflect.TypeOf(model.OctaveUp{})
 var octaveDownType = reflect.TypeOf(model.OctaveDown{})
 var repeatType = reflect.TypeOf(model.Repeat{})
 var repetitionType = reflect.TypeOf(model.OnRepetitions{})
+var barlineType = reflect.TypeOf(model.Barline{})
+var noteLengthType = reflect.TypeOf(model.NoteLength{})
+
+var noteLetters = []model.NoteLetter{
+	model.A, model.B, model.C, model.D, model.E, model.F, model.G,
+}
 
 // warnWhileParsing displays a standard importing warning to the user
 func warnWhileParsing(element *etree.Element, message string) {

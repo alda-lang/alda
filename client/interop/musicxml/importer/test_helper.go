@@ -14,6 +14,16 @@ type importerTestCase interface {
 	evaluate() ([]model.ScoreUpdate, error)
 }
 
+func standardizeBarlines(updates []model.ScoreUpdate) []model.ScoreUpdate {
+	// Alda has to parse barlines into note and rest duration components to
+	// handle ties
+	// This causes various issues while importing
+	// So in our tests, we will "standardize" the location of barlines
+	// Any barline that is the last duration component will be moved outside
+
+	
+}
+
 func executeImporterTestCases(
 	t *testing.T, testCases ...importerTestCase,
 ) {
@@ -25,6 +35,7 @@ func executeImporterTestCases(
 			t.Error(err)
 			return
 		}
+		actual = standardizeBarlines(actual)
 
 		expected, err := testCase.evaluate()
 		if err != nil {
@@ -32,6 +43,7 @@ func executeImporterTestCases(
 			t.Error(err)
 			return
 		}
+		expected = standardizeBarlines(expected)
 
 		if diff := deep.Equal(expected, actual); diff != nil {
 			t.Error(testCase.testCaseLabel())
