@@ -609,7 +609,10 @@ func translateNote(
 
 		// Accidentals
 		var accidentals []model.Accidental
-		if alter := pitch.FindElement("alter"); alter != nil {
+		if accidental := element.FindElement("accidental"); accidental != nil &&
+			accidental.Text() == "natural" {
+			accidentals = []model.Accidental{model.Natural}
+		} else if alter := pitch.FindElement("alter"); alter != nil {
 			alterAmount, _ := strconv.ParseInt(alter.Text(), 10, 8)
 
 			var accidental model.Accidental
