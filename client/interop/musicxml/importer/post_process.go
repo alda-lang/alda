@@ -6,32 +6,24 @@ import (
 	"reflect"
 )
 
-// postProcess applies various modifier methods to generate more idiomatic Alda
+// postProcess applies various modifications to generate more idiomatic Alda
 func postProcess(updates []model.ScoreUpdate) []model.ScoreUpdate {
 	processor := newPostProcessor()
 	return processor.processAll(updates)
 }
 
 type postProcessor struct {
-	// currentDuration stores the last duration encountered in a note or rest
-	// This lets us remove repeated durations which Alda tracks automatically
-	// Note that we do not remove repeated durations for ties such as "c4~4"
-	currentDuration model.Duration
-
-	// currentKeySignature stores the last key signature set
-	// This lets us remove unnecessary accidentals that are covered by the key
+	// currentNoteState is true if the last occurrence of a note had accidentals
+	// different from the key signature
+	// This signifies that the next redundant accidental (same as key signature)
+	// will be kept to re-iterate this return to the key signature
+	currentNoteState    map[model.NoteLetter]bool
 	currentKeySignature model.KeySignature
 
-	// But we do not want to remove all accidentals covered by the key
-	// Accidentals that appear in the same measure after a different accidental
-	// should be kept to state that we are returning to normal
-	// For example, if there is a natural, then we "undo" this natural later in
-	// the bar, we want this "undo" accidental to remain
-	// This is just to follow musical convention, and is not necessary in Alda
-
-	// currentNoteState will track for each note whether it has diverged from
-	// the key and so the next accidental that returns to the key will be kept
-	currentNoteState map[model.NoteLetter]bool
+	// currentDuration stores the last duration encountered in a rest or note
+	// currentDuration is reset in various situations such as nested structures
+	// and barlines
+	currentDuration     model.Duration
 }
 
 func newPostProcessor() postProcessor {
@@ -62,12 +54,18 @@ func (processor *postProcessor) hasDuration() bool {
 func (processor *postProcessor) processAll(
 	updates []model.ScoreUpdate,
 ) []model.ScoreUpdate {
+	// We standardize barlines in post processing to improve duration removal
 	updates = standardizeBarlines(updates)
 	updates = processor.removeRedundantAccidentals(updates)
 	updates = processor.removeRedundantDurations(updates)
 	return updates
 }
 
+// removeRedundantAccidentals will remove all unnecessary accidentals covered by
+// the key signature, but keep redundant accidentals that represent a return to
+// the key signature
+// While having an accidental to return to a key signature is not necessary in
+// Alda, it exists in all sheet music, so makes sense to have here
 func (processor *postProcessor) removeRedundantAccidentals(
 	updates []model.ScoreUpdate,
 ) []model.ScoreUpdate {
@@ -148,6 +146,11 @@ func (processor *postProcessor) removeRedundantAccidentals(
 	return updates
 }
 
+// removeRedundantDurations will remove repeated durations within a measure
+// The last tracked duration will reset in various situations such as nested
+// structures and new measures
+// This is so we only remove durations that are truly unnecessary, but keep
+// those that are visually important for the Alda code
 func (processor *postProcessor) removeRedundantDurations(
 	updates []model.ScoreUpdate,
 ) []model.ScoreUpdate {
@@ -202,6 +205,7 @@ func (processor *postProcessor) removeRedundantDurations(
 		if processor.hasDuration() {
 			difference := deep.Equal(processor.currentDuration, duration)
 			if len(difference) == 0 {
+				// This is a repeated duration, we set it to nil
 				update = setDuration(update, model.Duration{})
 			}
 		}
@@ -215,6 +219,7 @@ func (processor *postProcessor) removeRedundantDurations(
 
 		// Recurse process through nested score updates
 		if _, ok := getNestedUpdates(update, false); ok {
+			// We reset upon entering and returning from a nested layer
 			processor.resetDuration()
 
 			modified, _ := modifyNestedUpdates(update, processor.processAll)
