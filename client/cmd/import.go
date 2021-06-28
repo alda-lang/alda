@@ -1,7 +1,12 @@
 package cmd
 
 import (
+	"fmt"
+	"os"
+	"strings"
+
 	"alda.io/client/code-generator"
+	"alda.io/client/color"
 	"alda.io/client/help"
 	"alda.io/client/interop/musicxml/importer"
 	log "alda.io/client/logging"
@@ -9,11 +14,7 @@ import (
 	"alda.io/client/system"
 	"alda.io/client/transmitter"
 	"alda.io/client/util"
-	"fmt"
-	"github.com/logrusorgru/aurora"
 	"github.com/spf13/cobra"
-	"os"
-	"strings"
 )
 
 var outputAldaFilename string
@@ -38,10 +39,10 @@ func init() {
 }
 
 var importCmd = &cobra.Command{
-	Use:   "import",
+	Use:    "import",
 	Hidden: true,
-	Short: "Evaluate external format and import as Alda source code",
-	Long:  `Evaluate external format and import as Alda source code
+	Short:  "Evaluate external format and import as Alda source code",
+	Long: `Evaluate external format and import as Alda source code
 
 ---
 
@@ -73,21 +74,21 @@ redirecting into other files or processes.
 Currently, the only import format is MusicXML.  
 
 ---`,
-	RunE:  func(_ *cobra.Command, args[]string) error {
+	RunE: func(_ *cobra.Command, args []string) error {
 		if importFormat != "musicxml" {
 			return help.UserFacingErrorf(
 				`%s is not a supported input format.
 
 Currently, the only supported output format is %s.`,
-				aurora.BrightYellow(importFormat),
-				aurora.BrightYellow("musicxml"),
+				color.Aurora.BrightYellow(importFormat),
+				color.Aurora.BrightYellow("musicxml"),
 			)
 		}
 
 		// TODO (experimental): remove warning log
 		log.Warn().Msg(fmt.Sprintf(
 			`The %s command is currently experimental. Imported scores may be incorrect and lack information.`,
-			aurora.BrightYellow("import"),
+			color.Aurora.BrightYellow("import"),
 		))
 
 		var scoreUpdates []model.ScoreUpdate

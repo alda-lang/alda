@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"time"
 
+	"alda.io/client/color"
 	"alda.io/client/help"
 	"alda.io/client/json"
 	log "alda.io/client/logging"
 	"alda.io/client/model"
 	"alda.io/client/parser"
-	"github.com/logrusorgru/aurora"
 	"github.com/spf13/cobra"
 )
 
@@ -74,9 +74,9 @@ Please choose one of:
   A JSON object representing the score that is constructed after parsing the
   source code into events and evaluating them in order within the context of a
   new score.`,
-				aurora.BrightYellow(outputType),
-				aurora.BrightYellow("events"),
-				aurora.BrightYellow("data"),
+				color.Aurora.BrightYellow(outputType),
+				color.Aurora.BrightYellow("events"),
+				color.Aurora.BrightYellow("data"),
 			)
 		}
 

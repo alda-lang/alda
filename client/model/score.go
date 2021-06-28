@@ -4,9 +4,9 @@ import (
 	"regexp"
 	"strconv"
 
+	"alda.io/client/color"
 	"alda.io/client/help"
 	"alda.io/client/json"
-	"github.com/logrusorgru/aurora"
 )
 
 // The ScoreUpdate interface is implemented by events that update a score.
@@ -186,9 +186,9 @@ func (score *Score) InterpretOffsetReference(
 Valid offset references include:
   • A minute-and-second time marking (e.g. %s)
   • The name of a marker in the score (e.g. %s)`,
-			aurora.BrightYellow(reference),
-			aurora.BrightYellow("0:30"),
-			aurora.BrightYellow("verse2"),
+			color.Aurora.BrightYellow(reference),
+			color.Aurora.BrightYellow("0:30"),
+			color.Aurora.BrightYellow("verse2"),
 		)
 	}
 

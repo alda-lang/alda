@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"alda.io/client/color"
 	"alda.io/client/generated"
 	"alda.io/client/help"
 	"alda.io/client/json"
@@ -24,7 +25,6 @@ import (
 	"github.com/google/shlex"
 	"github.com/google/uuid"
 	bencode "github.com/jackpal/bencode-go"
-	"github.com/logrusorgru/aurora"
 )
 
 const aldaASCIILogo = `
@@ -552,9 +552,9 @@ Is there an Alda REPL server running on that port? If not, you can start one
 by running:
 
   %s`,
-			aurora.Bold(client.serverAddr),
-			aurora.BgRed(err),
-			aurora.BrightYellow(
+			color.Aurora.Bold(client.serverAddr),
+			color.Aurora.BgRed(err),
+			color.Aurora.BrightYellow(
 				fmt.Sprintf("alda repl --server --port %d", client.serverAddr.Port),
 			),
 		)
@@ -1009,9 +1009,9 @@ func RunClient(serverHost string, serverPort int) error {
 
 	fmt.Printf(
 		"%s\n\n%s\n\n%s\n\n",
-		aurora.Blue(strings.Trim(aldaASCIILogo, "\n")),
-		aurora.Cyan(strings.Trim(aldaVersionText(serverVersion), "\n")),
-		aurora.Bold("Type :help for a list of available commands."),
+		color.Aurora.Blue(strings.Trim(aldaASCIILogo, "\n")),
+		color.Aurora.Cyan(strings.Trim(aldaVersionText(serverVersion), "\n")),
+		color.Aurora.Bold("Type :help for a list of available commands."),
 	)
 
 	err = os.MkdirAll(filepath.Dir(replHistoryFilepath), os.ModePerm)

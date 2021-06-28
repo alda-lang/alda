@@ -1,16 +1,17 @@
 package importer
 
 import (
-	log "alda.io/client/logging"
-	"alda.io/client/model"
 	"fmt"
-	"github.com/beevik/etree"
-	"github.com/go-test/deep"
-	"github.com/logrusorgru/aurora"
 	"math"
 	"reflect"
 	"strconv"
 	"strings"
+
+	"alda.io/client/color"
+	log "alda.io/client/logging"
+	"alda.io/client/model"
+	"github.com/beevik/etree"
+	"github.com/go-test/deep"
 )
 
 // elementHandler is a function that can handle the import of a MusicXML element
@@ -36,17 +37,17 @@ var handlers map[string]elementHandler
 
 func init() {
 	handlers = map[string]elementHandler{
-		"score-part":     scorePartHandler,
-		"part":           partHandler,
-		"measure":        measureHandler,
-		"barline":        barlineHandler,
-		"key":            keyHandler,
-		"dynamics":       dynamicsHandler,
-		"divisions":      divisionsHandler,
-		"transpose":      transposeHandler,
-		"note":           noteHandler,
-		"forward":        forwardHandler,
-		"backup":         backupHandler,
+		"score-part": scorePartHandler,
+		"part":       partHandler,
+		"measure":    measureHandler,
+		"barline":    barlineHandler,
+		"key":        keyHandler,
+		"dynamics":   dynamicsHandler,
+		"divisions":  divisionsHandler,
+		"transpose":  transposeHandler,
+		"note":       noteHandler,
+		"forward":    forwardHandler,
+		"backup":     backupHandler,
 	}
 }
 
@@ -76,15 +77,15 @@ func unsupportedHandler(elementName string, isPlanned bool) elementHandler {
 			log.Warn().Msg(fmt.Sprintf(
 				`%s with the <%s> tag are currently not supported for MusicXML import.
 We plan to add support for importing %s in the future.`,
-				aurora.BrightYellow(elementName),
-				aurora.BrightYellow(element.Tag),
-				aurora.BrightYellow(elementName),
+				color.Aurora.BrightYellow(elementName),
+				color.Aurora.BrightYellow(element.Tag),
+				color.Aurora.BrightYellow(elementName),
 			))
 		} else {
 			log.Warn().Msg(fmt.Sprintf(
 				`%s with the <%s> tag are not supported for MusicXML import.`,
-				aurora.BrightYellow(elementName),
-				aurora.BrightYellow(element.Tag),
+				color.Aurora.BrightYellow(elementName),
+				color.Aurora.BrightYellow(element.Tag),
 			))
 		}
 	}
@@ -120,7 +121,7 @@ func scorePartHandler(element *etree.Element, importer *musicXMLImporter) {
 
 		instrumentsList := model.InstrumentsList()
 		for _, instrumentID := range instrumentIDs {
-			instruments = append(instruments, instrumentsList[instrumentID - 1])
+			instruments = append(instruments, instrumentsList[instrumentID-1])
 		}
 	}
 
@@ -163,9 +164,9 @@ func addBarline(importer *musicXMLImporter) {
 			// For chords, we add the barline by recursing on the last event
 			if len(value.Events) > 0 {
 				if last, success := tryAddBarline(
-					value.Events[len(value.Events) - 1],
+					value.Events[len(value.Events)-1],
 				); success {
-					value.Events[len(value.Events) - 1] = last
+					value.Events[len(value.Events)-1] = last
 					return value, true
 				}
 			}
@@ -177,7 +178,7 @@ func addBarline(importer *musicXMLImporter) {
 	last := importer.last()
 	if last, ok := tryAddBarline(last); ok {
 		updates := importer.updates()
-		updates[len(updates) - 1] = last
+		updates[len(updates)-1] = last
 		importer.setAll(updates)
 	} else {
 		importer.append(model.Barline{})
@@ -218,7 +219,7 @@ func partHandler(element *etree.Element, importer *musicXMLImporter) {
 			padVoiceToPresent(child, importer)
 
 			// We add barlines to create more idiomatic Alda
-			if i < len(element.ChildElements()) - 1 {
+			if i < len(element.ChildElements())-1 {
 				addBarline(importer)
 			}
 		}
@@ -513,7 +514,7 @@ func translateDuration(
 	// This is a geometric series with sum (1 - r^(n + 1)) / (1 - r), r = 1/2
 	duration, _ := strconv.ParseFloat(element.FindElement("duration").Text(), 8)
 	if dots > 0 {
-		divisor := (1 - math.Pow(0.5, float64(dots + 1))) / 0.5
+		divisor := (1 - math.Pow(0.5, float64(dots+1))) / 0.5
 		duration = duration / divisor
 	}
 
@@ -666,7 +667,7 @@ func noteHandler(element *etree.Element, importer *musicXMLImporter) {
 			isTieStop = true
 		}
 	}
-	if reflect.TypeOf(noteUpdates[len(noteUpdates) - 1]) != noteType {
+	if reflect.TypeOf(noteUpdates[len(noteUpdates)-1]) != noteType {
 		// rests cannot be tied
 		isTieStop = false
 	}
@@ -675,7 +676,7 @@ func noteHandler(element *etree.Element, importer *musicXMLImporter) {
 		// In MusicXML, a tied note is represented by tie start & stop tags
 		// A note with a tie stop tag is tied to the previous note with the
 		// same pitch. So we start by finding this previous note
-		note := noteUpdates[len(noteUpdates) - 1].(model.Note)
+		note := noteUpdates[len(noteUpdates)-1].(model.Note)
 		notePitch := note.Pitch.(model.LetterAndAccidentals)
 
 		getOctaveChange := func(update model.ScoreUpdate) int64 {
@@ -790,7 +791,7 @@ func noteHandler(element *etree.Element, importer *musicXMLImporter) {
 			// Create a chord from the previous updates and new note updates
 			chord := model.Chord{Events: make(
 				[]model.ScoreUpdate,
-				len(importer.updates()) - lastDurationNI.last(),
+				len(importer.updates())-lastDurationNI.last(),
 			)}
 			copy(chord.Events, importer.updates()[lastDurationNI.last():])
 			chord.Events = append(chord.Events, noteUpdates...)

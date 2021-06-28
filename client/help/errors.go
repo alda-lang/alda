@@ -5,8 +5,8 @@ import (
 	"os"
 	"strings"
 
+	"alda.io/client/color"
 	"alda.io/client/text"
-	"github.com/logrusorgru/aurora"
 	"github.com/spf13/cobra"
 )
 
@@ -62,7 +62,7 @@ func (ue *UsageError) Error() string {
 	return fmt.Sprintf(
 		"%s\n\n---\n\nUsage error:\n\n%s\n",
 		strings.TrimRight(ue.Cmd.UsageString(), "\n"),
-		aurora.Red(text.Indent(1, strings.TrimRight(ue.Err.Error(), "\n"))),
+		color.Aurora.Red(text.Indent(1, strings.TrimRight(ue.Err.Error(), "\n"))),
 	)
 }
 
@@ -84,9 +84,9 @@ This might be a bug. For help, consider filing an issue at:
 
 Or come chat with us on Slack:
   %s`+"\n",
-			aurora.BgRed(err),
-			aurora.Underline("https://github.com/alda-lang/alda/issues/new/choose"),
-			aurora.Underline("https://slack.alda.io"),
+			color.Aurora.BgRed(err),
+			color.Aurora.Underline("https://github.com/alda-lang/alda/issues/new/choose"),
+			color.Aurora.Underline("https://slack.alda.io"),
 		)
 	}
 }

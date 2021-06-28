@@ -1,12 +1,13 @@
 package importer
 
 import (
+	"io"
+	"sort"
+
+	"alda.io/client/color"
 	"alda.io/client/help"
 	"alda.io/client/model"
 	"github.com/beevik/etree"
-	"github.com/logrusorgru/aurora"
-	"io"
-	"sort"
 )
 
 // musicXMLImporter contains global state for importing a MusicXML file
@@ -114,10 +115,10 @@ type musicXMLVoice struct {
 func newMusicXMLVoice() *musicXMLVoice {
 	return &musicXMLVoice{
 		// We import into an event sequence so we can always use recursion
-		updates:     []model.ScoreUpdate{model.EventSequence{}},
-		beats:       0,
-		octave:      4, // 4 is the default Alda octave
-		slurs:       0, // By default a note is not slurred
+		updates: []model.ScoreUpdate{model.EventSequence{}},
+		beats:   0,
+		octave:  4, // 4 is the default Alda octave
+		slurs:   0, // By default a note is not slurred
 
 		// To handle octave setting in repeats
 		sectionStartOctave: 4,
@@ -143,19 +144,19 @@ func ImportMusicXML(r io.Reader) ([]model.ScoreUpdate, error) {
 	if scorePartwise == nil && scoreTimewise != nil {
 		return nil, help.UserFacingErrorf(
 			`Issue importing MusicXML file: please convert to %s instead of %s using XSLT before importing`,
-			aurora.BrightYellow("score-partwise"),
-			aurora.BrightYellow("score-timewise"),
+			color.Aurora.BrightYellow("score-partwise"),
+			color.Aurora.BrightYellow("score-timewise"),
 		)
 	} else if scorePartwise == nil {
 		return nil, help.UserFacingErrorf(
 			`Issue importing MusicXML file: could not last %s root tag`,
-			aurora.BrightYellow("score-partwise"),
+			color.Aurora.BrightYellow("score-partwise"),
 		)
 	}
 
 	importer := newMusicXMLImporter()
 	handle(scorePartwise, importer)
- 	postProcess(importer)
+	postProcess(importer)
 
 	return importer.generateScoreUpdates(), nil
 }
@@ -184,7 +185,7 @@ func (importer *musicXMLImporter) updates() []model.ScoreUpdate {
 // last returns the last update in the current active list of model.ScoreUpdate
 func (importer *musicXMLImporter) last() model.ScoreUpdate {
 	updates := importer.updates()
-	return updates[len(updates) - 1]
+	return updates[len(updates)-1]
 }
 
 // append appends updates to the current slice to import into
@@ -236,7 +237,7 @@ func (importer *musicXMLImporter) modifyAt(
 		depth := 1
 		var modifyAtNested func(updates []model.ScoreUpdate) []model.ScoreUpdate
 		modifyAtNested = func(updates []model.ScoreUpdate) []model.ScoreUpdate {
-			if depth == len(ni.indices) - 1 {
+			if depth == len(ni.indices)-1 {
 				// Base level
 				updates[ni.indices[depth]] = modify(updates[ni.indices[depth]])
 				return updates

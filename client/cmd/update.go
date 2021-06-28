@@ -13,6 +13,7 @@ import (
 	"sync"
 	"time"
 
+	"alda.io/client/color"
 	"alda.io/client/generated"
 	"alda.io/client/help"
 	"alda.io/client/json"
@@ -20,7 +21,6 @@ import (
 	"alda.io/client/system"
 	"alda.io/client/text"
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/logrusorgru/aurora"
 	"github.com/spf13/cobra"
 	"github.com/vbauerster/mpb/v6"
 	"github.com/vbauerster/mpb/v6/decor"
@@ -69,9 +69,9 @@ func displayVersionInfo(json *json.Container) {
 
 %s
 %s`,
-				aurora.Bold("Alda "+version),
+				color.Aurora.Bold("Alda "+version),
 				date,
-				aurora.Bold("Changelog:"),
+				color.Aurora.Bold("Changelog:"),
 				text.Indent(1, changelog),
 			),
 		),
@@ -193,7 +193,7 @@ func installAsset(indir string, asset releaseAsset) error {
 
 	fmt.Printf(
 		"%s\n",
-		aurora.Bold(fmt.Sprintf("Installing %s...", asset.assetName)),
+		color.Aurora.Bold(fmt.Sprintf("Installing %s...", asset.assetName)),
 	)
 
 	// Naïvely, you would think we could simply replace `alda` with the new
@@ -391,7 +391,7 @@ func installVersion(json *json.Container) error {
 
 	fmt.Printf(
 		"%s",
-		aurora.Bold(fmt.Sprintf("Downloading Alda %s...\n", versionString(json))),
+		color.Aurora.Bold(fmt.Sprintf("Downloading Alda %s...\n", versionString(json))),
 	)
 
 	return downloadAndInstallAssets(assets)
@@ -454,7 +454,7 @@ func fetchReleaseInfo(version string) (*json.Container, error) {
 	case 404:
 		return nil, help.UserFacingErrorf(
 			`The requested Alda version, %s, was not found.`,
-			aurora.Bold(version),
+			color.Aurora.Bold(version),
 		)
 	default:
 		return nil, errUnexpectedAldaApiResponse(response)
@@ -470,8 +470,8 @@ func promptAndInstallVersion(json *json.Container) error {
 	if !assumeYes && !text.PromptForConfirmation(
 		fmt.Sprintf(
 			"Alda %s is currently installed. Install version %s?",
-			aurora.Bold(generated.ClientVersion),
-			aurora.Bold(versionString(json)),
+			color.Aurora.Bold(generated.ClientVersion),
+			color.Aurora.Bold(versionString(json)),
 		),
 		true, // default to "yes"
 	) {
@@ -499,7 +499,7 @@ func installCorrectAldaPlayerVersion() error {
 
 	fmt.Printf(
 		"%s",
-		aurora.Bold(fmt.Sprintf("Downloading alda-player %s...\n", version)),
+		color.Aurora.Bold(fmt.Sprintf("Downloading alda-player %s...\n", version)),
 	)
 
 	var aldaPlayerAsset releaseAsset

@@ -11,12 +11,12 @@ import (
 	"runtime"
 	"time"
 
+	"alda.io/client/color"
 	"alda.io/client/generated"
 	"alda.io/client/help"
 	log "alda.io/client/logging"
 	"alda.io/client/system"
 	"alda.io/client/text"
-	"github.com/logrusorgru/aurora"
 	"github.com/spf13/cobra"
 )
 
@@ -120,7 +120,7 @@ If you wish to disable anonymous usage reporting, you can run:
 
   %s`,
 				telemetryExplanation,
-				aurora.BrightYellow("alda telemetry --disable"),
+				color.Aurora.BrightYellow("alda telemetry --disable"),
 			),
 		)+"\n\n",
 	)
@@ -146,7 +146,7 @@ func informUserOfTelemetryIfNeeded() {
 }
 
 func reportTelemetryStatus(status string) {
-	fmt.Printf("Telemetry is %s.\n", aurora.Bold(status))
+	fmt.Printf("Telemetry is %s.\n", color.Aurora.Bold(status))
 }
 
 func enableTelemetry() error {
@@ -201,9 +201,9 @@ var telemetryCmd = &cobra.Command{
 				`%s and %s cannot be used together.
 
 See %s for more information.`,
-				aurora.BrightYellow("--enable"),
-				aurora.BrightYellow("--disable"),
-				aurora.BrightYellow("alda telemetry --help"),
+				color.Aurora.BrightYellow("--enable"),
+				color.Aurora.BrightYellow("--disable"),
+				color.Aurora.BrightYellow("alda telemetry --help"),
 			)
 		}
 

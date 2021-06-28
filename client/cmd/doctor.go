@@ -13,6 +13,7 @@ import (
 	"syscall"
 	"time"
 
+	"alda.io/client/color"
 	"alda.io/client/help"
 	"alda.io/client/model"
 	"alda.io/client/parser"
@@ -22,7 +23,6 @@ import (
 	"alda.io/client/transmitter"
 	"alda.io/client/util"
 	"github.com/daveyarwood/go-osc/osc"
-	"github.com/logrusorgru/aurora"
 	"github.com/spf13/cobra"
 	"gitlab.com/gomidi/midi/midimessage/channel"
 	"gitlab.com/gomidi/midi/midireader"
@@ -32,11 +32,11 @@ const reasonableTimeout = 20 * time.Second
 
 func step(action string, test func() error) error {
 	if err := test(); err != nil {
-		fmt.Printf("%s %s\n\n---\n\n", aurora.Red("ERR"), action)
+		fmt.Printf("%s %s\n\n---\n\n", color.Aurora.Red("ERR"), action)
 		return err
 	}
 
-	fmt.Printf("%s %s\n", aurora.Green("OK "), action)
+	fmt.Printf("%s %s\n", color.Aurora.Green("OK "), action)
 	return nil
 }
 
@@ -201,8 +201,8 @@ var doctorCmd = &cobra.Command{
 					if !text.PromptForConfirmation(
 						fmt.Sprintf(
 							"\n%s does not appear to be installed.\nInstall %s now?",
-							aurora.Bold("alda-player"),
-							aurora.Bold("alda-player"),
+							color.Aurora.Bold("alda-player"),
+							color.Aurora.Bold("alda-player"),
 						),
 						true,
 					) {
@@ -244,9 +244,9 @@ var doctorCmd = &cobra.Command{
 					fmt.Sprintf(
 						"\nThe versions of %s and %s that you have installed are "+
 							"different.\nInstall the correct version of %s?",
-						aurora.Bold("alda"),
-						aurora.Bold("alda-player"),
-						aurora.Bold("alda-player"),
+						color.Aurora.Bold("alda"),
+						color.Aurora.Bold("alda-player"),
+						color.Aurora.Bold("alda-player"),
 					),
 					true,
 				) {
@@ -256,10 +256,10 @@ This might cause unexpected problems.
 
 For best results, run %s and follow the prompt to install the correct
 version of %s.`,
-						aurora.Bold("alda"),
-						aurora.Bold("alda-player"),
-						aurora.BrightYellow("alda doctor"),
-						aurora.Bold("alda-player"),
+						color.Aurora.Bold("alda"),
+						color.Aurora.Bold("alda-player"),
+						color.Aurora.BrightYellow("alda doctor"),
+						color.Aurora.Bold("alda-player"),
 					)
 				}
 

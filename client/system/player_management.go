@@ -10,10 +10,10 @@ import (
 	"regexp"
 	"strings"
 
+	"alda.io/client/color"
 	"alda.io/client/generated"
 	"alda.io/client/help"
 	log "alda.io/client/logging"
-	"github.com/logrusorgru/aurora"
 )
 
 // PlayerState describes the current state of a player process. These states are
@@ -85,12 +85,12 @@ The %s command-line client needs to spawn %s processes in order to play audio
 in the background.
 
 To install %s, run %s and answer %s when prompted.`,
-		aurora.Bold("alda-player"),
-		aurora.Bold("alda"),
-		aurora.Bold("alda-player"),
-		aurora.Bold("alda-player"),
-		aurora.BrightYellow("alda doctor"),
-		aurora.Bold("y"),
+		color.Aurora.Bold("alda-player"),
+		color.Aurora.Bold("alda"),
+		color.Aurora.Bold("alda-player"),
+		color.Aurora.Bold("alda-player"),
+		color.Aurora.BrightYellow("alda doctor"),
+		color.Aurora.Bold("y"),
 	)
 
 	playerLogFile := CachePath("logs", "alda-player.log")
@@ -114,11 +114,11 @@ To troubleshoot:
 
   • Try to make it play something:
       %s`,
-		aurora.BrightYellow("alda doctor"),
-		aurora.BrightYellow("alda ps"),
-		aurora.BrightYellow(playerLogFile),
-		aurora.BrightYellow("alda-player -v run -p 27278"),
-		aurora.BrightYellow("alda -v2 play -p 27278 -c \"piano: c12 e g > c4\""),
+		color.Aurora.BrightYellow("alda doctor"),
+		color.Aurora.BrightYellow("alda ps"),
+		color.Aurora.BrightYellow(playerLogFile),
+		color.Aurora.BrightYellow("alda-player -v run -p 27278"),
+		color.Aurora.BrightYellow("alda -v2 play -p 27278 -c \"piano: c12 e g > c4\""),
 	)
 }
 
@@ -166,10 +166,10 @@ To list the current player processes, you can run %s.
 
 You can also omit the %s / %s option, and Alda will find a player process
 for you automatically.`,
-		aurora.BrightYellow(id),
-		aurora.BrightYellow("alda ps"),
-		aurora.BrightYellow("-i"),
-		aurora.BrightYellow("--player-id"),
+		color.Aurora.BrightYellow(id),
+		color.Aurora.BrightYellow("alda ps"),
+		color.Aurora.BrightYellow("-i"),
+		color.Aurora.BrightYellow("--player-id"),
 	)
 }
 

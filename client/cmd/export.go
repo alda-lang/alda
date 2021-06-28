@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"alda.io/client/color"
 	"alda.io/client/help"
 	log "alda.io/client/logging"
 	"alda.io/client/model"
@@ -16,7 +17,6 @@ import (
 	"alda.io/client/system"
 	"alda.io/client/transmitter"
 	"alda.io/client/util"
-	"github.com/logrusorgru/aurora"
 	"github.com/spf13/cobra"
 )
 
@@ -94,8 +94,8 @@ output formats like MusicXML.
 				`%s is not a supported output format.
 
 Currently, the only supported output format is %s.`,
-				aurora.BrightYellow(outputFormat),
-				aurora.BrightYellow("midi"),
+				color.Aurora.BrightYellow(outputFormat),
+				color.Aurora.BrightYellow("midi"),
 			)
 		}
 

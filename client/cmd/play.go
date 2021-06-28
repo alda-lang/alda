@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"alda.io/client/color"
 	"alda.io/client/help"
 	log "alda.io/client/logging"
 	"alda.io/client/model"
@@ -13,7 +14,6 @@ import (
 	"alda.io/client/system"
 	"alda.io/client/transmitter"
 	"alda.io/client/util"
-	"github.com/logrusorgru/aurora"
 	"github.com/spf13/cobra"
 )
 
@@ -110,10 +110,10 @@ func parseStdin() ([]model.ScoreUpdate, error) {
 	return parser.ParseString(string(bytes))
 }
 
-func sourceCodeInputOptions(command string, color bool) string {
+func sourceCodeInputOptions(command string, useColor bool) string {
 	maybeColor := func(s string) string {
-		if color {
-			return fmt.Sprintf("%s", aurora.BrightYellow(s))
+		if useColor {
+			return fmt.Sprintf("%s", color.Aurora.BrightYellow(s))
 		}
 
 		return s

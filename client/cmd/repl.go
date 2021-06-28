@@ -6,11 +6,11 @@ import (
 	"os/signal"
 	"syscall"
 
+	"alda.io/client/color"
 	"alda.io/client/help"
 	"alda.io/client/json"
 	"alda.io/client/repl"
 	"alda.io/client/system"
-	"github.com/logrusorgru/aurora"
 	"github.com/spf13/cobra"
 )
 
@@ -55,8 +55,8 @@ func errInvalidNREPLMessage(message string) error {
 Here is an example of a valid nREPL message:
 
   %s`,
-		aurora.BgRed(message),
-		aurora.Bold(`{"op": "eval-and-play", "code": "banjo: c"}`),
+		color.Aurora.BgRed(message),
+		color.Aurora.Bold(`{"op": "eval-and-play", "code": "banjo: c"}`),
 	)
 }
 
@@ -107,8 +107,8 @@ connect to it by running:
 
 See %s for more information about starting Alda REPL servers and
 clients.`,
-	aurora.BrightYellow("alda repl --client --port 12345"),
-	aurora.BrightYellow("alda repl --help"),
+	color.Aurora.BrightYellow("alda repl --client --port 12345"),
+	color.Aurora.BrightYellow("alda repl --help"),
 )
 
 var replCmd = &cobra.Command{
