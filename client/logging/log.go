@@ -10,7 +10,13 @@ import (
 )
 
 func logger(writer io.Writer) zerolog.Logger {
-	output := zerolog.ConsoleWriter{Out: writer, TimeFormat: time.Stamp}
+	output := zerolog.ConsoleWriter{
+		Out:        writer,
+		TimeFormat: time.Stamp,
+		// HACK: Ideally, zerolog would support NO_COLOR, but at least they give us
+		// a config option so that we can disable color manually.
+		NoColor: len(os.Getenv("NO_COLOR")) > 0,
+	}
 	return zerolog.New(output).With().Timestamp().Caller().Logger()
 }
 
