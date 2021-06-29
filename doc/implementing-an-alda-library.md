@@ -54,7 +54,6 @@ programming language and you will end up with a library that lets you write code
 in that language that lets you do fun and exciting things with Alda as a
 platform for generative music.
 
-
 ## Features of an Alda library
 
 At a minimum, an Alda library for a programming language needs to provide these
@@ -96,20 +95,13 @@ console.log(versionOutput);
 And it would capture the output of `alda version` and print it:
 
 ```
-Client version: 1.4.2
-Server version: [27713] 1.4.2
-```
-
-To start the Alda server, we could run:
-
-```javascript
-// We are ignoring the output here, so we aren't printing it.
-alda("up");
+alda 2.0.0
 ```
 
 To play an Alda source file, we could run:
 
 ```javascript
+// We are ignoring the output here, so we aren't printing it.
 alda("play", "-f", "/home/dave/alda-scores/we-built-this-city.alda");
 ```
 
@@ -117,160 +109,28 @@ Most server-side programming languages have good functionality in the standard
 library for working with subshells / child processes. With Node.js, for example,
 we could use the [`child_process`][child-process] module that comes with Node.
 
-### Step 2: Keep track of history
+Now that you have an `alda` CLI wrapper function, you can use it to play
+arbitrary strings of Alda code, like this:
 
-> **NOTE**: This step is no longer necessary in Alda 2, which was released in
-> May 2021. However, we do have to do something different (and easier) in its
-> place.
->
-> Please bear with us until we can update this part for Alda 2!
-
-In the current version of Alda (v1), there is no out-of-the-box way to
-"continue" a score once we've started it. By that, I mean, if we evaluate the
-following Alda code:
-
-```alda
-harmonica: o5 c8 d e
+```javascript
+alda("play", "-c", "harp: o5 g16 f+ d+ < a g+ > e a- > c");
 ```
 
-And then we want to have the harmonica play some additional notes:
+You can even define a `play` command to make this a little more concise:
 
-```alda
-f g a b > c
+```javascript
+play("harp: o5 g16 f+ d+ < a g+ > e a- > c");
 ```
 
-The Alda server, at that point, will not "remember" any details about our score,
-such as:
+### Step 2: Come up with an API
 
-* The current instrument is a harmonica.
-* It's playing in the 5th octave.
-* It's playing eighth notes.
-
-The `alda play` command has a couple of options that make this type of workflow
-possible:
-
-```
-$ alda play --help
-Evaluate and play Alda code
-Usage: play [options]
-  Options:
-    ...
-
-    -i, --history
-       Alda code that can be referenced but will not be played
-       Default: <empty string>
-    -I, --history-file
-       A file containing Alda code that can be referenced but will not be played
-
-    ...
-```
-
-If we were working directly at the command line, we could make the harmonica
-example above work by running these commands:
+This still isn't much better than just typing into your terminal:
 
 ```bash
-# Play the first 3 notes.
-$ alda play --code 'harmonica: o5 c8 d e'
-
-# Play a few more notes.
-$ alda play --history 'harmonica: o5 c8 d e' --code 'f g a'
-
-# Play the rest of the notes.
-$ alda play --history 'harmonica: o5 c8 d e f g a' --code 'b > c'
+alda play -c "harp: o5 g16 f+ d+ < a g+ > e a- > c"
 ```
 
-> Quick digression:
->
-> To avoid some technical gotchas, you should actually separate each piece of
-> input with a **line break**, not a space. I used a space instead in the
-> example above because to do this properly in Bash would make it kind of hard
-> to read, and I didn't want to confuse you. I mean, look at this:
->
-> ```bash
-> $ alda play --history "$(echo -e "harmonica: o5 c8 d e\nf g a")" --code "b > c"
-> ```
->
-> Yuck!
->
-> Unless you're trying to write an Alda library for Bash (which might be kind of
-> cool, actually), you probably won't have to deal with these sorts of escaping
-> issues.
->
-> If you do end up running into escaping issues, the `--history-file` option is
-> a nice alternative. You can simply append each line of input to the end of a
-> temporary file and then include the path to that file with every `alda
-> play` command:
->
->
-> ```bash
-> # Create an empty file to store history in.
-> $ history_file="$(mktemp)"
->
-> # Play the first 3 notes.
-> $ code="harmonica: o5 c8 d e"
-> $ alda play --history-file "$history_file" --code "$code" && echo "$code" >> "$history_file"
->
-> # Play a few more notes.
-> $ code="f g a"
-> $ alda play --history-file "$history_file" --code "$code" && echo "$code" >> "$history_file"
->
-> # Play the rest of the notes.
-> $ code="b > c"
-> $ alda play --history-file "$history_file" --code "$code" && echo "$code" >> "$history_file"
-> ```
-
-In JavaScript, our history-handling code might look something like this:
-
-```javascript
-var history = "";
-
-function playWithHistory(code) {
-  // Play the code, passing along the history for context.
-  alda("play", "--history", history, "--code", code);
-
-  // If that last "play" command was successful, then add the new code to the
-  // history on a new line.
-  history = history + code + "\n";
-}
-```
-
-For bonus points, we can provide a public function to clear out the history and
-allow the user to start over with a new score in a clean state.
-
-```javascript
-function clearHistory() {
-  history = "";
-}
-```
-
-At this point, you should have a function that you can use to play snippets of
-Alda code and your library will keep track of the history and pass it along with
-each subsequent call to the "play" function:
-
-```javascript
-// Play the first 3 notes.
-playWithHistory("harmonica: o5 c8 d e");
-
-// Play a few more notes.
-playWithHistory("f g a");
-
-// Play the rest of the notes.
-playWithHistory("b > c");
-```
-
-### Step 3: Come up with an API
-
-Up until now, we've been dealing with the low-level command-line interface to
-Alda, using strings of Alda source code to make music. We've got that part
-pretty well encapsulated at this point. We have a simple function that we can
-hand a string of Alda code, and it will handle all of the details of translating
-that string of Alda code into a working `alda play` command. It will even
-remember what instrument, octave, note length, etc. we were last using. Cool!
-
-Now, we can turn our focus to providing **an API for the programmatic creation
-of music**.
-
-What does that *mean*, exactly?
+We can do better.
 
 The problem that we're trying to solve here is that we want to be able to write
 programs that operate on musical **domain objects**, not clumsy strings of text.
@@ -402,7 +262,7 @@ score.play();
 There is no right or wrong answer when it comes to what the API should look like
 or how it's implemented. It's up to you, the library author!
 
-### Step 4: Generate Alda code
+### Step 3: Generate Alda code
 
 The key idea behind a successful Alda library is that we separate the concerns
 of
@@ -429,7 +289,7 @@ function play(...objects) {
     return code + stringify(object) + " ";
   }, "");
 
-  playWithHistory(aldaCode);
+  alda("play", "-c", aldaCode);
 }
 ```
 
@@ -475,8 +335,171 @@ note("c", noteLength(8)).stringify() // => "c8"
 chord(note1, note2, note3).stringify() // => "c/e/g"
 ```
 
-Like I said before in Step 3, there is no right or wrong way to do this. As the
+Like I said before in Step 2, there is no right or wrong way to do this. As the
 library author, you have the freedom to do it any way you'd like!
+
+### _(optional)_ Step 4: REPL integration
+
+By now, if you've been following along at home, you have created a good Alda
+library for your programming language of choice. You can use it as a CLI wrapper
+to issue arbitrary Alda commands like `alda ps` and `alda doctor`. More
+importantly, you can use the functions provided by your library to build scores
+in a programmatic way and have some fun creating algorithmic compositions. Nice
+work! :tada:
+
+If you'd like to go a step further, you can give your library the ability to
+integrate with Alda REPL servers. This would make your library suitable for
+**live coding**. The idea there is that you can start to play a fragment of a
+musical score (a musical idea of some sort) and then add more fragments onto the
+end _while the score is playing_.
+
+> Another benefit is that multiple users of your library can connect to the
+> _same_ Alda REPL server and compose music together in real time!
+
+This is similar to the interactive REPL experience that you get when you run
+`alda repl` at the command line. You can build up your score incrementally in
+small pieces.
+
+In an Alda REPL session, you can evaluate the following Alda code:
+
+```alda
+harmonica: o5 c d e f g a
+```
+
+And then, if you immediately type the following in and press enter:
+
+```alda
+b > c
+```
+
+You will hear those last two notes played in time after the first ones, because
+the second line that you entered is actually just a continuation of the score
+that you started on the first line.
+
+You can see the full score text by typing `:score text` into the REPL prompt. It
+will output something like:
+
+```
+harmonica: o5 c d e f g a
+b > c
+```
+
+What's happening here is that there is an Alda REPL server running in the
+background, and it's keeping track of the details of our score, including
+important facts like:
+
+* The current instrument is a harmonica.
+* It's playing in the 5th octave.
+* It's playing quarter notes.
+
+If you're interested in **repl**icating (_I'm sorry, I had to_) this behavior in
+your library, you're in luck. The Alda REPL server has a simple JSON API and you
+can send it messages via the Alda CLI.
+
+To see this workflow in action, open two terminals. In one terminal, start an
+Alda REPL server by running the following command:
+
+```bash
+alda repl --server
+```
+
+The output of this command tells you which port the Alda REPL server is
+listening on:
+
+```
+nREPL server started on port 34223 on host localhost - nrepl://localhost:34223
+```
+
+The REPL server process also writes the port number into a file in the current
+directory:
+
+```
+$ cat .alda-nrepl-port
+34223
+```
+
+With this port number in hand, you can use the Alda CLI to send messages to the
+Alda REPL server:
+
+```
+$ alda repl --client --port 34223 --message '{"op": "eval-and-play", "code": "harmonica: c8 d e f"}'
+{"id":"17aa14c2-fa23-4bde-af4d-85839a85fc5d","session":"2d9ca3d1-2bcb-4e8b-9344-957ee4e4bdd9","status":["done"]}
+
+$ alda repl --client --port 34223 --message '{"op": "eval-and-play", "code": "g f e d c2"}'
+{"id":"27612a45-7d4a-4f7e-b65d-be6cf5107abf","session":"60f70325-efd6-492c-9e8f-279eba76a4d7","status":["done"]}
+
+$ alda repl --client --port 34223 --message '{"op": "score-text"}'
+{"id":"f1f45d28-d7f3-4fc2-b605-0fbc2b8d4ae1","session":"3da40081-1007-4630-bb38-b19abeaeef0a","status":["done"],"text":"harmonica: c8 d e f\ng f e d c2\n"}
+```
+
+> For a comprehensive list of what other operations are available and
+> information about the parameters that they take, see the [Alda REPL server
+> API][alda-repl-server-api] documentation.
+
+The library that we built in the previous steps already has an `alda` function
+that can shell out to the Alda CLI. We can build a few more functions on top of
+that to achieve something analagous to the REPL workflow above:
+
+```javascript
+const fs = require('fs');
+
+let replPort = null;
+
+// connect(12345);  <- connect to the Alda server on port 12345
+// connect();       <- read the port number from the .alda-nrepl-port file
+function connect(port) {
+  if (port) {
+    replPort = port;
+  } else {
+    replPort = fs.readFileSync(".alda-nrepl-port", "utf8");
+  }
+}
+
+function disconnect() {
+  replPort = null;
+}
+
+function sendReplMessage(message) {
+  let output = alda(
+    "repl",
+    "--client",
+    "--port", replPort,
+    "--message", JSON.stringify(message)
+  );
+
+  return JSON.parse(output);
+}
+
+function play(...objects) {
+  let aldaCode = objects.reduce((code, object) => {
+    return code + stringify(object) + " ";
+  }, "");
+
+  return sendReplMessage({"op": "eval-and-play", "code": aldaCode});
+}
+```
+
+Now, you should be able to evaluate the following `play` expressions one at a
+time and hear the notes played back to back, as part of the same score:
+
+```javascript
+play(
+  part("harmonica"),
+  octave(5),
+  note(pitch("c"), noteLength(8)),
+  note(pitch("d")),
+  note(pitch("e")),
+  note(pitch("f")),
+  note(pitch("g")),
+  note(pitch("a"))
+);
+
+play(
+  note(pitch("b")),
+  octaveUp(),
+  note(pitch("c"))
+);
+```
 
 ## That's it!
 
@@ -494,4 +517,5 @@ programmatically][writing-music-programmatically] article!
 [writing-music-programmatically]: writing-music-programmatically.md
 [alda-clj]: https://github.com/daveyarwood/alda-clj
 [child-process]: https://nodejs.org/api/child_process.html
+[alda-repl-server-api]: alda-repl-server-api.adoc
 [alda-slack]: http://slack.alda.io/
