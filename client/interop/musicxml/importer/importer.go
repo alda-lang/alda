@@ -165,10 +165,10 @@ func ImportMusicXML(r io.Reader) ([]model.ScoreUpdate, error) {
 	importer := newMusicXMLImporter()
 	handle(scorePartwise, importer)
 
-	// We postprocess the updates for each voice to generate more idiomatic Alda
+	// We optimize the updates for each voice to generate more idiomatic Alda
 	for _, part := range importer.parts {
 		for _, voice := range part.voices {
-			voice.updates = postProcess(voice.updates)
+			voice.updates = optimize(voice.updates)
 		}
 	}
 	return importer.generateScoreUpdates(), nil
