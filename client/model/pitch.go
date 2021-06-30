@@ -203,7 +203,10 @@ func (mnn MidiNoteNumber) CalculateMidiNote(
 	return mnn.MidiNote + transposition
 }
 
-func (mnn MidiNoteNumber) ToNoteAndOctave() (LetterAndAccidentals, int32) {
+// ToLetterAndAccidentalsAndOctave translates a MidiNoteNumber to an equivalent
+// pitch representation consisting of a LetterAndAccidentals and an octave
+func (mnn MidiNoteNumber) ToLetterAndAccidentalsAndOctave(
+) (LetterAndAccidentals, int32) {
 	quotient := (mnn.MidiNote - 24) / 12
 	remainder := (mnn.MidiNote - 24) % 12
 
