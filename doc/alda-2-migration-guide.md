@@ -1,6 +1,6 @@
 # Alda 2 migration guide
 
-Alda 2.0.0 was released in May 2021. Whereas Alda 1 had been written mostly in
+Alda 2.0.0 was released in June 2021. Whereas Alda 1 had been written mostly in
 Clojure (with a thin Java client for faster command line interactions), Alda 2
 is a from-scratch rewrite in Go and Kotlin.
 
