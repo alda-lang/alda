@@ -1,9 +1,8 @@
 package model
 
 import (
-	"fmt"
-
 	"alda.io/client/json"
+	"fmt"
 )
 
 // NoteLetter represents a note letter in Western standard musical notation.
@@ -25,6 +24,10 @@ const (
 	// G is the note "G" in Western standard musical notation.
 	G
 )
+
+var NoteLetterIntervals = map[NoteLetter]int32{
+	C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11,
+}
 
 func (nl NoteLetter) String() string {
 	switch nl {
@@ -160,11 +163,8 @@ func (laa LetterAndAccidentals) JSON() *json.Container {
 func (laa LetterAndAccidentals) CalculateMidiNote(
 	octave int32, keySignature KeySignature, transposition int32,
 ) int32 {
-	intervals := map[NoteLetter]int32{
-		C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11,
-	}
-
-	baseMidiNoteNumber := ((octave + 1) * 12) + intervals[laa.NoteLetter]
+	baseMidiNoteNumber := ((octave + 1) * 12) +
+		NoteLetterIntervals[laa.NoteLetter]
 
 	var accidentals []Accidental
 	if laa.Accidentals == nil {
@@ -201,4 +201,31 @@ func (mnn MidiNoteNumber) CalculateMidiNote(
 	octave int32, keySignature KeySignature, transposition int32,
 ) int32 {
 	return mnn.MidiNote + transposition
+}
+
+func (mnn MidiNoteNumber) ToNoteAndOctave() (LetterAndAccidentals, int32) {
+	quotient := (mnn.MidiNote - 24) / 12
+	remainder := (mnn.MidiNote - 24) % 12
+
+	octave := quotient + 1
+
+	// Find the closest letter than is above the current remainder
+	noteLetter := C
+	for letter, interval := range NoteLetterIntervals {
+		if interval <= remainder && interval > NoteLetterIntervals[noteLetter] {
+			noteLetter = letter
+		}
+	}
+
+	// Add necessary accidentals
+	var sharps []Accidental
+
+	for i := NoteLetterIntervals[noteLetter]; i < remainder; i++ {
+		sharps = append(sharps, Sharp)
+	}
+
+	return LetterAndAccidentals{
+		NoteLetter:  noteLetter,
+		Accidentals: sharps,
+	}, octave
 }

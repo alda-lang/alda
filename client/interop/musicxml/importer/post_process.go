@@ -20,15 +20,16 @@ type postProcessor struct {
 	currentNoteState    map[model.NoteLetter]bool
 	currentKeySignature model.KeySignature
 
-	// currentDuration stores the last duration encountered in a rest or note
-	// currentDuration is reset in various situations such as nested structures
-	// and barlines
-	currentDuration     model.Duration
+	// currentDuration and currentOctave maintain the last encountered duration
+	// and octave values
+	// Both attributes are reset in various situations such as nested structures
+	// and barlines to ensure integrity across complex Alda structures
+	currentDuration model.Duration
+	currentOctave   int32
 }
 
 func newPostProcessor() postProcessor {
 	processor := postProcessor{
-		currentDuration:     model.Duration{},
 		currentKeySignature: model.KeySignatureFromCircleOfFifths(0),
 		currentNoteState:    make(map[model.NoteLetter]bool),
 	}
@@ -38,13 +39,17 @@ func newPostProcessor() postProcessor {
 }
 
 func (processor *postProcessor) resetNoteState() {
-	for _, letter := range noteLetters {
-		processor.currentNoteState[letter] = false
+	for noteLetter, _ := range model.NoteLetterIntervals {
+		processor.currentNoteState[noteLetter] = false
 	}
 }
 
 func (processor *postProcessor) resetDuration() {
 	processor.currentDuration = model.Duration{}
+}
+
+func (processor *postProcessor) resetOctave() {
+	processor.currentOctave = -1
 }
 
 func (processor *postProcessor) hasDuration() bool {
@@ -54,9 +59,15 @@ func (processor *postProcessor) hasDuration() bool {
 func (processor *postProcessor) processAll(
 	updates []model.ScoreUpdate,
 ) []model.ScoreUpdate {
-	// We standardize barlines in post processing to improve duration removal
+	// Required: standardizeBarlines < removeRedundantDurations
+	// So we can remove durations for the last note in a bar that originally has
+	// the barline imported as the last duration component
 	updates = standardizeBarlines(updates)
 	updates = processor.removeRedundantAccidentals(updates)
+
+	// Required: translateMidiNotePitches < removeRedundantDurations
+	// So unpitched percussion notes can have redundant durations removed too
+	updates = processor.translateMidiNotePitches(updates)
 	updates = processor.removeRedundantDurations(updates)
 	return updates
 }
@@ -109,22 +120,10 @@ func (processor *postProcessor) removeRedundantAccidentals(
 					}
 				}
 			}
-		case model.Barline:
+		}
+
+		if isOrContainsBarline(update) {
 			processor.resetNoteState()
-		}
-
-		// Process a note or rest's duration components to detect barlines
-		var durationComponents []model.DurationComponent
-		if reflect.TypeOf(update) == noteType {
-			durationComponents = update.(model.Note).Duration.Components
-		} else if reflect.TypeOf(update) == restType {
-			durationComponents = update.(model.Rest).Duration.Components
-		}
-
-		for _, duration := range durationComponents {
-			if reflect.TypeOf(duration) == barlineType {
-				processor.resetNoteState()
-			}
 		}
 
 		return update
@@ -154,59 +153,24 @@ func (processor *postProcessor) removeRedundantAccidentals(
 func (processor *postProcessor) removeRedundantDurations(
 	updates []model.ScoreUpdate,
 ) []model.ScoreUpdate {
-	getDuration := func(
-		update model.ScoreUpdate,
-	) model.Duration {
-		if reflect.TypeOf(update) == noteType {
-			return update.(model.Note).Duration
-		} else if reflect.TypeOf(update) == restType {
-			return update.(model.Rest).Duration
-		} else {
-			return model.Duration{}
-		}
-	}
-
-	setDuration := func(
-		update model.ScoreUpdate, duration model.Duration,
-	) model.ScoreUpdate {
-		switch typedUpdate := update.(type) {
-		case model.Note:
-			typedUpdate.Duration = duration
-			update = typedUpdate
-		case model.Rest:
-			typedUpdate.Duration = duration
-			update = typedUpdate
-		}
-		return update
-	}
-
 	modify := func(update model.ScoreUpdate) model.ScoreUpdate {
-		// We reset duration at every barline
-		if reflect.TypeOf(update) == barlineType {
+		if isOrContainsBarline(update) {
 			processor.resetDuration()
 			return update
 		}
 
-		duration := getDuration(update)
+		duration := getNoteOrRestDuration(update)
 
 		// If there are no duration components, we just skip
 		if len(duration.Components) == 0 {
 			return update
 		}
 
-		// If the duration contains a barline, we reset
-		for _, component := range duration.Components {
-			if reflect.TypeOf(component) == barlineType {
-				processor.resetDuration()
-				return update
-			}
-		}
-
 		if processor.hasDuration() {
 			difference := deep.Equal(processor.currentDuration, duration)
 			if len(difference) == 0 {
 				// This is a repeated duration, we set it to nil
-				update = setDuration(update, model.Duration{})
+				update = setNoteOrRestDuration(update, model.Duration{})
 			}
 		}
 
@@ -219,16 +183,78 @@ func (processor *postProcessor) removeRedundantDurations(
 
 		// Recurse process through nested score updates
 		if _, ok := getNestedUpdates(update, false); ok {
-			// We reset upon entering and returning from a nested layer
 			processor.resetDuration()
 
-			modified, _ := modifyNestedUpdates(update, processor.processAll)
+			modified, _ := modifyNestedUpdates(
+				update, processor.removeRedundantDurations,
+			)
 			update = modified
 
 			processor.resetDuration()
 		}
 
 		updates[i] = update
+	}
+
+	return updates
+}
+
+// translateMidiNotePitches takes all imported notes with the
+// model.MidiNoteNumber pitch identifier and translates these to
+// model.LetterAndAccidentals following standard pitched notes
+func (processor *postProcessor) translateMidiNotePitches(
+	updates []model.ScoreUpdate,
+) []model.ScoreUpdate {
+	// We track octave sets that need to be inserted
+	var octaveSetIndices []int
+	var octaveSetOctaves []int32
+
+	for i, update := range updates {
+		// Translate note pitch
+		switch typedUpdate := update.(type) {
+		case model.Note:
+			if reflect.TypeOf(typedUpdate.Pitch) == midiNoteNumberType {
+				midiNoteNumber := typedUpdate.Pitch.(model.MidiNoteNumber)
+				pitch, octave := midiNoteNumber.ToNoteAndOctave()
+
+				typedUpdate.Pitch = pitch
+				update = typedUpdate
+
+				if octave != processor.currentOctave {
+					octaveSetIndices = append(octaveSetIndices, i)
+					octaveSetOctaves = append(octaveSetOctaves, octave)
+					processor.currentOctave = octave
+				}
+			}
+		}
+
+		// Reset
+		if isOrContainsBarline(update) {
+			processor.resetOctave()
+		}
+
+		// Recurse process through nested score updates
+		if _, ok := getNestedUpdates(update, false); ok {
+			processor.resetOctave()
+
+			modified, _ := modifyNestedUpdates(
+				update, processor.translateMidiNotePitches,
+			)
+			update = modified
+
+			processor.resetOctave()
+		}
+
+		updates[i] = update
+	}
+
+	// Insert all octave sets
+	for i := len(octaveSetIndices) - 1; i >= 0; i-- {
+		octaveSet := model.AttributeUpdate{PartUpdate: model.OctaveSet{
+			OctaveNumber: octaveSetOctaves[i],
+		}}
+
+		updates = insert(octaveSet, updates, octaveSetIndices[i])
 	}
 
 	return updates
