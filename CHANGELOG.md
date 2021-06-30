@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 1.5.0 (2021-06-30)
+
+* Updated the `alda update` mechanism to support updating to Alda 2.x.
+
+* Print a PSA that Alda 2 is available on startup.
+
 ## 1.4.4 (2021-03-06)
 
 * Added a `-c / --client` option to the `alda version` command. When included,
