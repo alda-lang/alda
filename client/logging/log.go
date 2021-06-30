@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"alda.io/client/color"
 	"github.com/rs/zerolog"
 )
 
@@ -15,7 +16,9 @@ func logger(writer io.Writer) zerolog.Logger {
 		TimeFormat: time.Stamp,
 		// HACK: Ideally, zerolog would support NO_COLOR, but at least they give us
 		// a config option so that we can disable color manually.
-		NoColor: len(os.Getenv("NO_COLOR")) > 0,
+		//
+		// See the longer comment above color.EnableColor.
+		NoColor: !color.EnableColor,
 	}
 	return zerolog.New(output).With().Timestamp().Caller().Logger()
 }
