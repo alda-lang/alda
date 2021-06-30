@@ -6,13 +6,13 @@ import (
 	"reflect"
 )
 
-// postProcess applies various modifications to generate more idiomatic Alda
-func postProcess(updates []model.ScoreUpdate) []model.ScoreUpdate {
-	processor := newPostProcessor()
-	return processor.processAll(updates)
+// optimize applies various modifications to generate more idiomatic Alda
+func optimize(updates []model.ScoreUpdate) []model.ScoreUpdate {
+	opt := newOptimizer()
+	return opt.optimizeAll(updates)
 }
 
-type postProcessor struct {
+type optimizer struct {
 	// currentNoteState is true if the last occurrence of a note had accidentals
 	// different from the key signature
 	// This signifies that the next redundant accidental (same as key signature)
@@ -28,47 +28,47 @@ type postProcessor struct {
 	currentOctave   int32
 }
 
-func newPostProcessor() postProcessor {
-	processor := postProcessor{
+func newOptimizer() optimizer {
+	opt := optimizer{
 		currentKeySignature: model.KeySignatureFromCircleOfFifths(0),
 		currentNoteState:    make(map[model.NoteLetter]bool),
 	}
 
-	processor.resetNoteState()
-	return processor
+	opt.resetNoteState()
+	return opt
 }
 
-func (processor *postProcessor) resetNoteState() {
+func (opt *optimizer) resetNoteState() {
 	for noteLetter, _ := range model.NoteLetterIntervals {
-		processor.currentNoteState[noteLetter] = false
+		opt.currentNoteState[noteLetter] = false
 	}
 }
 
-func (processor *postProcessor) resetDuration() {
-	processor.currentDuration = model.Duration{}
+func (opt *optimizer) resetDuration() {
+	opt.currentDuration = model.Duration{}
 }
 
-func (processor *postProcessor) resetOctave() {
-	processor.currentOctave = -1
+func (opt *optimizer) resetOctave() {
+	opt.currentOctave = -1
 }
 
-func (processor *postProcessor) hasDuration() bool {
-	return len(processor.currentDuration.Components) != 0
+func (opt *optimizer) hasDuration() bool {
+	return len(opt.currentDuration.Components) != 0
 }
 
-func (processor *postProcessor) processAll(
+func (opt *optimizer) optimizeAll(
 	updates []model.ScoreUpdate,
 ) []model.ScoreUpdate {
 	// Required: standardizeBarlines < removeRedundantDurations
 	// So we can remove durations for the last note in a bar that originally has
 	// the barline imported as the last duration component
 	updates = standardizeBarlines(updates)
-	updates = processor.removeRedundantAccidentals(updates)
+	updates = opt.removeRedundantAccidentals(updates)
 
 	// Required: translateMidiNotePitches < removeRedundantDurations
 	// So unpitched percussion notes can have redundant durations removed too
-	updates = processor.translateMidiNotePitches(updates)
-	updates = processor.removeRedundantDurations(updates)
+	updates = opt.translateMidiNotePitches(updates)
+	updates = opt.removeRedundantDurations(updates)
 	return updates
 }
 
@@ -77,7 +77,7 @@ func (processor *postProcessor) processAll(
 // the key signature
 // While having an accidental to return to a key signature is not necessary in
 // Alda, it exists in all sheet music, so makes sense to have here
-func (processor *postProcessor) removeRedundantAccidentals(
+func (opt *optimizer) removeRedundantAccidentals(
 	updates []model.ScoreUpdate,
 ) []model.ScoreUpdate {
 	modify := func(update model.ScoreUpdate) model.ScoreUpdate {
@@ -87,12 +87,12 @@ func (processor *postProcessor) removeRedundantAccidentals(
 			switch typedPartUpdate := typedUpdate.PartUpdate.(type) {
 			case model.KeySignatureSet:
 				different := len(deep.Equal(
-					processor.currentKeySignature, typedPartUpdate.KeySignature,
+					opt.currentKeySignature, typedPartUpdate.KeySignature,
 				)) > 0
 
 				if different {
-					processor.resetNoteState()
-					processor.currentKeySignature = typedPartUpdate.KeySignature
+					opt.resetNoteState()
+					opt.currentKeySignature = typedPartUpdate.KeySignature
 				}
 			}
 		// Accidentals
@@ -101,7 +101,7 @@ func (processor *postProcessor) removeRedundantAccidentals(
 			case model.LetterAndAccidentals:
 				letter := typedPitchIdentifier.NoteLetter
 				accidentals := typedPitchIdentifier.Accidentals
-				keySignatureAccidentals := processor.currentKeySignature[letter]
+				keySignatureAccidentals := opt.currentKeySignature[letter]
 
 				different := len(deep.Equal(
 					accidentals, keySignatureAccidentals,
@@ -110,9 +110,9 @@ func (processor *postProcessor) removeRedundantAccidentals(
 				if different {
 					// When accidentals are different than the key, we just
 					// update our current note state
-					processor.currentNoteState[letter] = true
+					opt.currentNoteState[letter] = true
 				} else {
-					if !processor.currentNoteState[letter] {
+					if !opt.currentNoteState[letter] {
 						// Clear accidentals (redundant)
 						typedPitchIdentifier.Accidentals = nil
 						typedUpdate.Pitch = typedPitchIdentifier
@@ -123,7 +123,7 @@ func (processor *postProcessor) removeRedundantAccidentals(
 		}
 
 		if isOrContainsBarline(update) {
-			processor.resetNoteState()
+			opt.resetNoteState()
 		}
 
 		return update
@@ -132,9 +132,9 @@ func (processor *postProcessor) removeRedundantAccidentals(
 	for i, update := range updates {
 		update = modify(update)
 
-		// Recurse process through nested score updates
+		// Recursively optimize through nested score updates
 		if modified, ok := modifyNestedUpdates(
-			update, processor.removeRedundantAccidentals,
+			update, opt.removeRedundantAccidentals,
 		); ok {
 			update = modified
 		}
@@ -150,12 +150,12 @@ func (processor *postProcessor) removeRedundantAccidentals(
 // structures and new measures
 // This is so we only remove durations that are truly unnecessary, but keep
 // those that are visually important for the Alda code
-func (processor *postProcessor) removeRedundantDurations(
+func (opt *optimizer) removeRedundantDurations(
 	updates []model.ScoreUpdate,
 ) []model.ScoreUpdate {
 	modify := func(update model.ScoreUpdate) model.ScoreUpdate {
 		if isOrContainsBarline(update) {
-			processor.resetDuration()
+			opt.resetDuration()
 			return update
 		}
 
@@ -166,31 +166,31 @@ func (processor *postProcessor) removeRedundantDurations(
 			return update
 		}
 
-		if processor.hasDuration() {
-			difference := deep.Equal(processor.currentDuration, duration)
+		if opt.hasDuration() {
+			difference := deep.Equal(opt.currentDuration, duration)
 			if len(difference) == 0 {
 				// This is a repeated duration, we set it to nil
 				update = setNoteOrRestDuration(update, model.Duration{})
 			}
 		}
 
-		processor.currentDuration = duration
+		opt.currentDuration = duration
 		return update
 	}
 
 	for i, update := range updates {
 		update = modify(update)
 
-		// Recurse process through nested score updates
+		// Recursively optimize through nested score updates
 		if _, ok := getNestedUpdates(update, false); ok {
-			processor.resetDuration()
+			opt.resetDuration()
 
 			modified, _ := modifyNestedUpdates(
-				update, processor.removeRedundantDurations,
+				update, opt.removeRedundantDurations,
 			)
 			update = modified
 
-			processor.resetDuration()
+			opt.resetDuration()
 		}
 
 		updates[i] = update
@@ -202,7 +202,7 @@ func (processor *postProcessor) removeRedundantDurations(
 // translateMidiNotePitches takes all imported notes with the
 // model.MidiNoteNumber pitch identifier and translates these to
 // model.LetterAndAccidentals following standard pitched notes
-func (processor *postProcessor) translateMidiNotePitches(
+func (opt *optimizer) translateMidiNotePitches(
 	updates []model.ScoreUpdate,
 ) []model.ScoreUpdate {
 	// We track octave sets that need to be inserted
@@ -220,29 +220,29 @@ func (processor *postProcessor) translateMidiNotePitches(
 				typedUpdate.Pitch = pitch
 				update = typedUpdate
 
-				if octave != processor.currentOctave {
+				if octave != opt.currentOctave {
 					octaveSetIndices = append(octaveSetIndices, i)
 					octaveSetOctaves = append(octaveSetOctaves, octave)
-					processor.currentOctave = octave
+					opt.currentOctave = octave
 				}
 			}
 		}
 
 		// Reset
 		if isOrContainsBarline(update) {
-			processor.resetOctave()
+			opt.resetOctave()
 		}
 
-		// Recurse process through nested score updates
+		// Recursively optimize through nested score updates
 		if _, ok := getNestedUpdates(update, false); ok {
-			processor.resetOctave()
+			opt.resetOctave()
 
 			modified, _ := modifyNestedUpdates(
-				update, processor.translateMidiNotePitches,
+				update, opt.translateMidiNotePitches,
 			)
 			update = modified
 
-			processor.resetOctave()
+			opt.resetOctave()
 		}
 
 		updates[i] = update
