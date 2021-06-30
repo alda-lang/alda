@@ -323,33 +323,13 @@ func TestPercussion(t *testing.T) {
 		expected: `
 midi-percussion "Triangle": 
 	(key-signature "")
-	(note (midi-note 80) (note-length 1))
-	| 
-	(note (midi-note 81) (note-length 1))
-	| 
-	r1
-	| 
-	(note (midi-note 80) (note-length 1))
-	|
-	(note (midi-note 81) (note-length 4))
-	(note (midi-note 81))
-	(note (midi-note 80))
-	(note (midi-note 80))
+	o5 g+1 | o5 a1 | r1 | o5 g+1 |
+	o5 a4 a g+ g+ 
 
 midi-percussion "Wood_Blocks": 
 	(key-signature "")
-	(note (midi-note 76) (note-length 4))
-	(note (midi-note 76))
-	(note (midi-note 77))
-	(note (midi-note 77))
-	| 
-	(note (midi-note 76) (note-length 1))
-	|
-	(note (midi-note 76) (note-length 1))
-	| 
-	(note (midi-note 77) (note-length 1))
-	| 
-	r1
+	o5 e4 e f f |
+	o5 e1 | o5 e1 | o5 f1 | r1
 `,
 	})
 }

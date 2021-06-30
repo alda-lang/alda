@@ -19,10 +19,7 @@ var repetitionType = reflect.TypeOf(model.OnRepetitions{})
 var barlineType = reflect.TypeOf(model.Barline{})
 var lispListType = reflect.TypeOf(model.LispList{})
 var noteLengthType = reflect.TypeOf(model.NoteLength{})
-
-var noteLetters = []model.NoteLetter{
-	model.A, model.B, model.C, model.D, model.E, model.F, model.G,
-}
+var midiNoteNumberType = reflect.TypeOf(model.MidiNoteNumber{})
 
 // warnWhileParsing displays a standard importing warning to the user
 func warnWhileParsing(element *etree.Element, message string) {
@@ -251,6 +248,51 @@ func filterType(requiredType reflect.Type) func(update model.ScoreUpdate) bool {
 	}
 }
 
+// percussionPartNameToAlias translates a MusicXML instrument part name into a
+// format acceptable for Alda instrument alias
 func percussionPartNameToAlias(name string) string {
 	return strings.Join(strings.Split(name, " "), "_")
+}
+
+// getNoteOrRestDuration gets the duration of a note or rest
+func getNoteOrRestDuration(update model.ScoreUpdate) model.Duration {
+	if reflect.TypeOf(update) == noteType {
+		return update.(model.Note).Duration
+	} else if reflect.TypeOf(update) == restType {
+		return update.(model.Rest).Duration
+	} else {
+		return model.Duration{}
+	}
+}
+
+// setNoteOrRestDuration sets the duration of a note or rest
+func setNoteOrRestDuration(
+	update model.ScoreUpdate, duration model.Duration,
+) model.ScoreUpdate {
+	switch typedUpdate := update.(type) {
+	case model.Note:
+		typedUpdate.Duration = duration
+		update = typedUpdate
+	case model.Rest:
+		typedUpdate.Duration = duration
+		update = typedUpdate
+	}
+	return update
+}
+
+// isOrContainsBarline returns whether an update is a barline or directly
+// contains one in its duration (note / rest)
+func isOrContainsBarline(update model.ScoreUpdate) bool {
+	if reflect.TypeOf(update) == barlineType {
+		return true
+	}
+
+	duration := getNoteOrRestDuration(update)
+	for _, component := range duration.Components {
+		if reflect.TypeOf(component) == barlineType {
+			return true
+		}
+	}
+
+	return false
 }
