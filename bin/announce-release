@@ -59,9 +59,7 @@ _To get the latest version of Alda, go to https://alda.io/install or run \`alda 
 EOF
 )"
 
-# TODO: Change this to "general" when we're ready to start announcing releases
-# this way.
-slack_channel="dave-testing"
+slack_channel="general"
 
 curl \
   -X POST \
