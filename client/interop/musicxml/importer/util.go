@@ -269,7 +269,8 @@ func toLetterAndAccidentalsAndOctave(
 	// Find the closest letter than is above the current remainder
 	noteLetter := model.C
 	for letter, interval := range model.NoteLetterIntervals {
-		if interval <= remainder && interval > model.NoteLetterIntervals[noteLetter] {
+		if interval <= remainder &&
+			interval > model.NoteLetterIntervals[noteLetter] {
 			noteLetter = letter
 		}
 	}
