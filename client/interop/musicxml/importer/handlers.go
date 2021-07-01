@@ -103,31 +103,53 @@ func scorePartHandler(element *etree.Element, importer *musicXMLImporter) {
 	// Create the part
 	id := element.SelectAttr("id")
 
-	var instruments []string
+	part := newMusicXMLPart()
+	importer.parts[id.Value] = part
 
 	midiInstruments := element.FindElements("midi-instrument")
 	if len(midiInstruments) == 0 {
 		// If no instruments are listed, we default to a piano
-		instruments = []string{"piano"}
+		part.instruments = []string{"piano"}
+	} else if len(element.FindElements("midi-instrument/midi-unpitched")) > 0 {
+		// We're dealing with an unpitched percussion part
+		// We must setup additional attributes of our musicXMLPart
+		part.instruments = []string{"midi-percussion"}
+
+		// part.alias will be the Alda alias for the midi-percussion instrument
+		part.alias = percussionPartNameToAlias(
+			element.FindElement("part-name").Text(),
+		)
+
+		// part.unpitched will be a map that tells us the MIDI pitches for the
+		// midi-percussion instruments
+		for _, instrument := range midiInstruments {
+			instrumentNumber, _ := strconv.ParseInt(
+				instrument.FindElement("midi-unpitched").Text(), 10, 8,
+			)
+
+			instrumentId := instrument.SelectAttrValue("id", "")
+
+			part.unpitched[instrumentId] = int32(instrumentNumber - 1)
+		}
 	} else {
-		// If instruments are listed, we find each MIDI ID and obtain their name
+		// We're dealing with pitched instruments
+		// We use midi-program to identify what MIDI instrument is referenced
 		var instrumentIDs []int64
-		for _, midiInstrument := range midiInstruments {
+		for _, instrument := range midiInstruments {
 			instrumentID, _ := strconv.ParseInt(
-				midiInstrument.FindElement("midi-program").Text(), 10, 8,
+				instrument.FindElement("midi-program").Text(), 10, 8,
 			)
 			instrumentIDs = append(instrumentIDs, instrumentID)
 		}
 
+		var instruments []string
 		instrumentsList := model.InstrumentsList()
 		for _, instrumentID := range instrumentIDs {
 			instruments = append(instruments, instrumentsList[instrumentID-1])
 		}
-	}
 
-	part := newMusicXMLPart()
-	part.instruments = instruments
-	importer.parts[id.Value] = part
+		part.instruments = instruments
+	}
 }
 
 // addBarline adds a barline to represent a measure passing
@@ -236,7 +258,7 @@ func padVoiceToPresent(element *etree.Element, importer *musicXMLImporter) {
 		// If we must handle this case, importing would have to support changes
 		// by beats / duration. This would be non-trivial
 		warnWhileParsing(
-			element, `voice is behind in beats, output will be incorrect.`,
+			element, `Voice is behind in beats, output will be incorrect.`,
 		)
 	} else if beatDifference > 0 {
 		// We update without using append and moving the part-level beats here
@@ -541,6 +563,7 @@ func translateNote(
 ) ([]model.ScoreUpdate, int64, float64, int64) {
 	noteType := element.FindElement("type")
 
+	// A note can be a cue note, grace note, or full note
 	if cue := element.FindElement("cue"); cue != nil ||
 		noteType != nil && noteType.SelectAttrValue("type", "full") == "cue" {
 		// Cue notes are category (3) as they do not change music sound directly
@@ -557,8 +580,24 @@ func translateNote(
 		return nil, 0, 0, 0
 	}
 
-	// We should be dealing with a full note now, with duration
+	// We are dealing with a full note now
+	// We start by obtaining common information
+
+	// Duration
 	duration, durationValue := translateDuration(element, importer)
+
+	// Slur
+	var slurChange int64 = 0
+	for _, slur := range element.FindElements("notations/slur") {
+		switch slurType := slur.SelectAttrValue("type", "none"); slurType {
+		case "start":
+			slurChange += 1
+		case "stop":
+			slurChange -= 1
+		}
+	}
+
+	slurred := (importer.voice().slurs + slurChange) > 0
 
 	// A full note can be pitched, unpitched, or a rest
 	if pitch := element.FindElement("pitch"); pitch != nil {
@@ -569,22 +608,12 @@ func translateNote(
 			[]rune(strings.ToLower(step.Text()))[0],
 		)
 
-		// Slurs
-		var slurChange int64 = 0
-		for _, slur := range element.FindElements("notations/slur") {
-			switch slurType := slur.SelectAttrValue("type", "none"); slurType {
-			case "start":
-				slurChange += 1
-			case "stop":
-				slurChange -= 1
-			}
-		}
-
-		slurred := (importer.voice().slurs + slurChange) > 0
-
 		// Accidentals
 		var accidentals []model.Accidental
-		if alter := pitch.FindElement("alter"); alter != nil {
+		if accidental := element.FindElement("accidental"); accidental != nil &&
+			accidental.Text() == "natural" {
+			accidentals = []model.Accidental{model.Natural}
+		} else if alter := pitch.FindElement("alter"); alter != nil {
 			alterAmount, _ := strconv.ParseInt(alter.Text(), 10, 8)
 
 			var accidental model.Accidental
@@ -629,7 +658,10 @@ func translateNote(
 			Slurred:  slurred,
 		}
 
-		return append(octaveUpdates, note), octaveVal, durationValue, slurChange
+		return append(octaveUpdates, note),
+			octaveVal,
+			durationValue,
+			slurChange
 	} else if rest := element.FindElement("rest"); rest != nil {
 		restScoreUpdate := model.Rest{
 			Duration: duration,
@@ -640,8 +672,38 @@ func translateNote(
 			durationValue,
 			0
 	} else {
-		unsupportedHandler("unpitched notes", true)(element, importer)
-		return nil, 0, 0, 0
+		// Unpitched note
+		instrument := element.FindElement("instrument")
+		instrumentId := instrument.SelectAttrValue("id", "")
+		if instrumentNumber, ok := importer.part().unpitched[instrumentId]; ok {
+			note := model.Note{
+				Pitch: model.MidiNoteNumber{
+					MidiNote: instrumentNumber,
+				},
+				Duration: duration,
+				Slurred:  slurred,
+			}
+
+			return []model.ScoreUpdate{note},
+				// For unpitched percussion parts, we do not maintain the octave
+				// This is because we represent model.Note pitches with
+				// model.MidiNoteNumber, which includes octave information
+				// (in comparison to model.PitchIdentifier which does not)
+				importer.voice().octave,
+				durationValue,
+				slurChange
+		} else {
+			warnWhileParsing(element, `Could not find instrument for unpitched note. Note will be replaced with a rest.`)
+
+			restScoreUpdate := model.Rest{
+				Duration: duration,
+			}
+
+			return []model.ScoreUpdate{restScoreUpdate},
+				importer.voice().octave,
+				durationValue,
+				slurChange
+		}
 	}
 }
 
@@ -764,7 +826,7 @@ func noteHandler(element *etree.Element, importer *musicXMLImporter) {
 			importer.setAt(tieStartNI, tieStartNote)
 		} else {
 			// We ignore a note that is in a nonadjacent tie
-			warnWhileParsing(element, `found nonadjacent tied note`)
+			warnWhileParsing(element, `Found nonadjacent tied note.`)
 			return
 		}
 	} else if isChord {
@@ -776,7 +838,7 @@ func noteHandler(element *etree.Element, importer *musicXMLImporter) {
 		if !lastDurationNI.valid(importer) {
 			// We continue by considering the note as not part of a chord
 			warnWhileParsing(
-				element, `note found in chord with no starting note. The note will be ignored.`,
+				element, `Note found in chord with no starting note. The note will be ignored.`,
 			)
 			return
 		}

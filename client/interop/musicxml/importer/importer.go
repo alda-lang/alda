@@ -52,6 +52,11 @@ type musicXMLPart struct {
 	currentVoice *musicXMLVoice
 	divisions    int
 	beats        float64
+
+	// We maintain the following information for unpitched percussion parts
+	// unpitched maps a part's instrument ID to the corresponding MIDI pitch
+	unpitched map[string]int32
+	alias     string
 }
 
 func newMusicXMLPart() *musicXMLPart {
@@ -59,12 +64,15 @@ func newMusicXMLPart() *musicXMLPart {
 		voices:    make(map[int32]*musicXMLVoice),
 		divisions: 1, // Divisions for a part are set in the first measure
 		beats:     0,
+		unpitched: make(map[string]int32),
+		alias:     "",
 	}
 }
 
 func (part *musicXMLPart) generateScoreUpdates() []model.ScoreUpdate {
 	partDeclaration := model.PartDeclaration{
 		Names: part.instruments,
+		Alias: part.alias,
 	}
 
 	updates := []model.ScoreUpdate{partDeclaration}
@@ -156,8 +164,13 @@ func ImportMusicXML(r io.Reader) ([]model.ScoreUpdate, error) {
 
 	importer := newMusicXMLImporter()
 	handle(scorePartwise, importer)
-	postProcess(importer)
 
+	// We optimize the updates for each voice to generate more idiomatic Alda
+	for _, part := range importer.parts {
+		for _, voice := range part.voices {
+			voice.updates = optimize(voice.updates)
+		}
+	}
 	return importer.generateScoreUpdates(), nil
 }
 

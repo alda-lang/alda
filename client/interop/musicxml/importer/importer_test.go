@@ -14,7 +14,7 @@ func TestNote(t *testing.T) {
 		expected: `
 midi-acoustic-grand-piano: 
 	(key-signature "") 
-	> c4 d4 e4 f4 | g1
+	> c4 d e f | g1
 `,
 	})
 }
@@ -26,7 +26,7 @@ func TestKeySignature(t *testing.T) {
 		expected: `
 midi-acoustic-grand-piano: 
 	(key-signature "f+ c+ g+ d+") 
-	> c+4 d+4 e4 f+4 | g+1
+	> c4 d e f | g1
 `,
 	})
 }
@@ -38,7 +38,22 @@ func TestAccidental(t *testing.T) {
 		expected: `
 midi-acoustic-grand-piano: 
 	(key-signature "") 
-	> c4 d+4 e4 f-4 | g++1
+	> c4 d+ e f- | g++1
+`,
+	})
+}
+
+func TestAccidental2(t *testing.T) {
+	executeImporterTestCases(t, importerTestCase{
+		label: "complex key signatures and accidentals (for postprocessing)",
+		file:  "../examples/accidental2.musicxml",
+		expected: `
+midi-acoustic-grand-piano:
+	(key-signature "f+ c+ g+ d+")
+	> d4 d_ d+ d_ |
+	(key-signature "b- e- a- d-")
+	d4 d-- d++ d-8 d_ |
+	d1
 `,
 	})
 }
@@ -50,7 +65,7 @@ func TestOctave(t *testing.T) {
 		expected: `
 midi-acoustic-grand-piano: 
 	(key-signature "") 
-	< b4 >> c4 < a4 > d4 | << b4 >>> d4 << b4 > e4
+	< b4 >> c < a > d | << b4 >>> d << b > e
 `,
 	})
 }
@@ -62,7 +77,7 @@ func TestRest(t *testing.T) {
 		expected: `
 midi-acoustic-grand-piano: 
 	(key-signature "") 
-	> c2 r2 | d4 r4 e8 r8 f16 r16 g32 r32 r16 | a4 r2.
+	> c2 r | d4 r e8 r f16 r g32 r r16 | a4 r2.
 `,
 	})
 }
@@ -74,7 +89,7 @@ func TestSlurs(t *testing.T) {
 		expected: `
 midi-acoustic-grand-piano: 
 	(key-signature "") 
-	c4 d4~ e4~ f4~ | g4~ a4 b4~ > c4
+	c4 d~ e~ f~ | g4~ a b~ > c
 `,
 	})
 }
@@ -86,7 +101,7 @@ func TestChord(t *testing.T) {
 		expected: `
 midi-acoustic-grand-piano: 
 	(key-signature "") 
-	d2/g2/b2 f2 | c1/e1/g1/>c1
+	d2/g/b f2 | c1/e/g/>c
 `,
 	})
 }
@@ -98,7 +113,7 @@ func TestTies1(t *testing.T) {
 		expected: `
 midi-acoustic-grand-piano: 
 	(key-signature "") 
-	> d1~ | 1~ | 4 f8~8 f8 f8 < f8~8
+	> d1~ | 1~ | 4 f8~8 f8 f < f8~8
 `,
 	})
 }
@@ -110,7 +125,7 @@ func TestTies2(t *testing.T) {
 		expected: `
 midi-acoustic-grand-piano:
 	(key-signature "")
-	a4/>c4~4 < g4 > d2~ | 4~4 e4~4/g4~4
+	a4/>c4~4 < g4 > d2~ | 4~4 e4~4/g
 `,
 		postprocess: func(updates []model.ScoreUpdate) []model.ScoreUpdate {
 			// The OctaveDown before the g is parsed into the chord
@@ -145,7 +160,7 @@ func TestTies3(t *testing.T) {
 		expected: `
 midi-acoustic-grand-piano: 
 	(key-signature "") 
-	c4/e4/g4/>c4~4 e8/g8~8 d8~8
+	c4/e/g/>c4~4 e8/g8~8 d8~8
 `,
 	})
 }
@@ -168,8 +183,8 @@ func TestVoices1(t *testing.T) {
 		file:  "../examples/voices1.musicxml",
 		expected: `
 midi-acoustic-grand-piano:  
-	V1: (key-signature "") e4 f4 g4 a4 | b4 > c4 d4 e4
-	V2: c4 d4 e4 f4 | g4 a4 b4 > c4
+	V1: (key-signature "") e4 f g a | b4 > c d e
+	V2: c4 d e f | g4 a b > c
 `,
 	})
 }
@@ -180,10 +195,10 @@ func TestVoices2(t *testing.T) {
 		file:  "../examples/voices2.musicxml",
 		expected: `
 midi-acoustic-grand-piano:  
-	V1: (key-signature "") > c4 d4 e4 f4 | g4 a4 b4 > c4
-	V2: r1 | r2 > g2
+	V1: (key-signature "") > c4 d e f | g4 a b > c
+	V2: r1 | r2 > g
 	V3: r4 g2 r4 | g1 
-	V4: c4 r4 c4 r4 | r1 
+	V4: c4 r c r | r1 
 `,
 	})
 }
@@ -195,21 +210,21 @@ func TestParts(t *testing.T) {
 		expected: `
 midi-flute: 
 	(key-signature "") 
-	c4 d4 e4 f4 | g4 a4 b4 > c4 | < b4 a4 g4 f4 | e4 d4 c2
+	c4 d e f | g4 a b > c | < b4 a g f | e4 d c2
 midi-oboe: 
 	(key-signature "") 
-	c4 e4 g4 > c4 | < g4 e4 c2 | g1 | c1
+	c4 e g > c | < g4 e c2 | g1 | c1
 midi-clarinet: 
 	(key-signature "f+ c+") 
 	(transpose -2)
-	d4 d4 d4 d4 | r1 | d4 d4 d4 d4 | r1
+	d4 d d d | r1 | d4 d d d | r1
 midi-bassoon: 
 	(key-signature "") 
 	< c1 | g1 | c1 | c1
 midi-french-horn: 
 	(key-signature "f+") 
 	(transpose -7)
-	g4 b4 g4 b4 | > d4 < b4 g2 | r1 | g1
+	g4 b g b | > d4 < b g2 | r1 | g1
 `,
 	})
 }
@@ -292,11 +307,48 @@ func TestDynamics(t *testing.T) {
 midi-acoustic-grand-piano: 
 	(key-signature "")
 	(f) > c4
-	(ff) (mp) d4
-	e4
-	f4
+	(ff) (mp) d
+	e
+	f
 	| 
 	g1 (p)
+`,
+	})
+}
+
+func TestPercussion(t *testing.T) {
+	executeImporterTestCases(t, importerTestCase{
+		label: "percussion instruments",
+		file:  "../examples/percussion.musicxml",
+		expected: `
+midi-percussion "Triangle": 
+	(key-signature "")
+	o5 g+1 | o5 a1 | r1 | o5 g+1 |
+	o5 a4 a g+ g+ 
+
+midi-percussion "Wood_Blocks": 
+	(key-signature "")
+	o5 e4 e f f |
+	o5 e1 | o5 e1 | o5 f1 | r1
+`,
+	})
+}
+
+func TestDuration(t *testing.T) {
+	executeImporterTestCases(t, importerTestCase{
+		label: "different redundant durations",
+		file:  "../examples/duration.musicxml",
+		expected: `
+midi-acoustic-grand-piano: 
+	(key-signature "")
+	c8~8 e c8~8/e/g e8~8 | 
+	c2/e/g c4../e/g r16 | 
+	c2 e | 
+	[
+		g2 r | 
+		e2 c
+	]*2 | 
+	e2 r
 `,
 	})
 }
