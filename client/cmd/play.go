@@ -171,6 +171,17 @@ var playCmd = &cobra.Command{
 		sourceCodeInputOptions("play", false),
 	),
 	RunE: func(_ *cobra.Command, args []string) error {
+		// Everything in this command is done via parsed CLI options, never
+		// positional args. It's easy for a new user to try something like:
+		//
+		//   alda play my-score.alda
+		//
+		// Which is incorrect, so we recognize that error here and guide them
+		// towards success.
+		if len(args) > 0 {
+			return userFacingNoInputSuppliedError("play")
+		}
+
 		var scoreUpdates []model.ScoreUpdate
 		var err error
 
