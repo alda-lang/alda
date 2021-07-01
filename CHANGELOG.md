@@ -1,5 +1,24 @@
 # CHANGELOG
 
+## Unreleased
+
+* Prior to this release, it wasn't obvious that it's incorrect to enter a
+  command like:
+
+  ```
+  alda play my-score.alda
+  ```
+
+  The correct way to specify a score file to read is to use the `-f, --file`
+  option:
+
+  ```
+  alda play -f my-score.alda
+  ```
+
+  Instead of silently ignoring the provided file name, the Alda CLI will now
+  print a useful error message.
+
 ## 2.0.0 (2021-06-30)
 
 Alda 2 is a from-the-ground-up rewrite, optimized for simpler architecture,
