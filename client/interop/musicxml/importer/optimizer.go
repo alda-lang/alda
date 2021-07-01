@@ -215,7 +215,7 @@ func (opt *optimizer) translateMidiNotePitches(
 		case model.Note:
 			if reflect.TypeOf(typedUpdate.Pitch) == midiNoteNumberType {
 				midiNoteNumber := typedUpdate.Pitch.(model.MidiNoteNumber)
-				laa, octave := midiNoteNumber.ToLetterAndAccidentalsAndOctave()
+				laa, octave := toLetterAndAccidentalsAndOctave(midiNoteNumber)
 
 				typedUpdate.Pitch = laa
 				update = typedUpdate

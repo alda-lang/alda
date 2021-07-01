@@ -202,33 +202,3 @@ func (mnn MidiNoteNumber) CalculateMidiNote(
 ) int32 {
 	return mnn.MidiNote + transposition
 }
-
-// ToLetterAndAccidentalsAndOctave translates a MidiNoteNumber to an equivalent
-// pitch representation consisting of a LetterAndAccidentals and an octave
-func (mnn MidiNoteNumber) ToLetterAndAccidentalsAndOctave(
-) (LetterAndAccidentals, int32) {
-	quotient := (mnn.MidiNote - 24) / 12
-	remainder := (mnn.MidiNote - 24) % 12
-
-	octave := quotient + 1
-
-	// Find the closest letter than is above the current remainder
-	noteLetter := C
-	for letter, interval := range NoteLetterIntervals {
-		if interval <= remainder && interval > NoteLetterIntervals[noteLetter] {
-			noteLetter = letter
-		}
-	}
-
-	// Add necessary accidentals
-	var sharps []Accidental
-
-	for i := NoteLetterIntervals[noteLetter]; i < remainder; i++ {
-		sharps = append(sharps, Sharp)
-	}
-
-	return LetterAndAccidentals{
-		NoteLetter:  noteLetter,
-		Accidentals: sharps,
-	}, octave
-}

@@ -254,6 +254,39 @@ func percussionPartNameToAlias(name string) string {
 	return strings.Join(strings.Split(name, " "), "_")
 }
 
+// toLetterAndAccidentalsAndOctave translates a MidiNoteNumber to an equivalent
+// pitch representation consisting of a LetterAndAccidentals and an octave
+// toLetterAndAccidentalsAndOctave naively generates a note letter with either
+// no accidentals or a sharp, and does not consider key signature or scale type
+func toLetterAndAccidentalsAndOctave(
+	number model.MidiNoteNumber,
+) (model.LetterAndAccidentals, int32) {
+	quotient := (number.MidiNote - 24) / 12
+	remainder := (number.MidiNote - 24) % 12
+
+	octave := quotient + 1
+
+	// Find the closest letter than is above the current remainder
+	noteLetter := model.C
+	for letter, interval := range model.NoteLetterIntervals {
+		if interval <= remainder && interval > model.NoteLetterIntervals[noteLetter] {
+			noteLetter = letter
+		}
+	}
+
+	// Add sharps as necessary
+	var sharps []model.Accidental
+
+	for i := model.NoteLetterIntervals[noteLetter]; i < remainder; i++ {
+		sharps = append(sharps, model.Sharp)
+	}
+
+	return model.LetterAndAccidentals{
+		NoteLetter:  noteLetter,
+		Accidentals: sharps,
+	}, octave
+}
+
 // getNoteOrRestDuration gets the duration of a note or rest
 func getNoteOrRestDuration(update model.ScoreUpdate) model.Duration {
 	if reflect.TypeOf(update) == noteType {
