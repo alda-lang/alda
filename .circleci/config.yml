@@ -184,10 +184,9 @@ jobs:
           command: |
             export ALDA_DISABLE_SPAWNING=yes
             export ALDA_DISABLE_TELEMETRY=yes
-            # TODO: Test with a 2.x version
-            alda -v3 update --yes --version 1.4.4
-            alda version --client | grep 1.4.4
-            # alda-player info | grep 1.4.4
+            alda -v3 update --yes --version 2.0.0
+            alda version | grep 2.0.0
+            alda-player info | grep 2.0.0
 
   test_macos:
     macos:
@@ -228,10 +227,9 @@ jobs:
           command: |
             export ALDA_DISABLE_SPAWNING=yes
             export ALDA_DISABLE_TELEMETRY=yes
-            # TODO: Test with a 2.x version
-            alda -v3 update --yes --version 1.4.4
-            alda version --client | grep 1.4.4
-            # alda-player info | grep 1.4.4
+            alda -v3 update --yes --version 2.0.0
+            alda version | grep 2.0.0
+            alda-player info | grep 2.0.0
 
   test_windows:
     executor: win/default
@@ -267,20 +265,9 @@ jobs:
             $env:PATH = "$env:PATH;C:\Program Files\Alda\bin"
             $env:ALDA_DISABLE_SPAWNING = "yes"
             $env:ALDA_DISABLE_TELEMETRY = "yes"
-            # TODO: Test with a 2.x version
-            alda -v3 update --yes --version 1.4.4
-
-            # FIXME: Disabling this for now because we're using Alda 1.x to
-            # test, and that's a Java/Clojure program that we compiled without
-            # quite the right setup to specify the right Java path. As a result,
-            # after installing Alda 1.x, attempting to run it produces the
-            # message:
-            #
-            #   This application requires a Java Runtime Environment 1.7.0
-            #
-            # TODO: Test with a 2.x version, and re-enable these version checks.
-            # if (alda version --client | Select-String -Pattern 1.4.4 -quiet) { true } else { false }
-            # if (alda-player info | Select-String -Pattern 1.4.4 -quiet) { true } else { false }
+            alda -v3 update --yes --version 2.0.0
+            if (alda version | Select-String -Pattern 2.0.0 -quiet) { true } else { false }
+            if (alda-player info | Select-String -Pattern 2.0.0 -quiet) { true } else { false }
 
       - run:
           name: "Troubleshooting: player logs"
