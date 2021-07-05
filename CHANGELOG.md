@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+* Alda will now attempt to detect if it's running in an environment (e.g.
+  the CMD program that ships with Windows 7) that does not support ANSI escape
+  codes to display colored text. If the environment does not appear to support
+  ANSI escape codes, Alda will not display colored text (which is better in that
+  case because otherwise you would see a bunch of weird-looking characters in
+  places where there should be colored text!).
+
 * Prior to this release, it wasn't obvious that it's incorrect to enter a
   command like:
 
