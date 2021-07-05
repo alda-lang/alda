@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## 2.0.1 (2021-07-05)
 
 * Alda will now attempt to detect if it's running in an environment (e.g.
   the CMD program that ships with Windows 7) that does not support ANSI escape
