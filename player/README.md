@@ -2,9 +2,9 @@
 
 Alda is designed so that playback is asynchronous. When you use the Alda
 [client](../client) to play a score, the client sends a bunch of
-[OSC][osc-intro] messages to a player process running in the background.
+[OSC][osc-page] messages to a player process running in the background.
 
-[osc-intro]: http://opensoundcontrol.org/introduction-osc
+[osc-page]: http://opensoundcontrol.org
 
 The player process is agnostic of the Alda language. It simply receives and
 handles OSC messages containing lower-level instructions pertaining to audio
