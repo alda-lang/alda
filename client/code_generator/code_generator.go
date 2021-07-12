@@ -14,69 +14,40 @@ type generator struct {
 	tokens []parser.Token
 }
 
-func (g *generator) generate(scoreUpdates []model.ScoreUpdate) {
-	for _, update := range scoreUpdates {
-		switch value := update.(type) {
-		case model.AttributeUpdate:
-			// TODO
-		case model.GlobalAttributeUpdate:
-			// TODO
-		case model.Barline:
-			barlineGenerator(value, g)
-		case model.Chord:
-			chordGenerator(value, g)
-		case model.Cram:
-			cramGenerator(value, g)
-		case model.EventSequence:
-			eventSequenceGenerator(value, g)
-		case model.LispNil:
-			// TODO
-		case model.LispList:
-			// TODO
-		case model.Marker:
-			markerGenerator(value, g)
-		case model.AtMarker:
-			atMarkerGenerator(value, g)
-		case model.Note:
-			noteGenerator(value, g)
-		case model.Rest:
-			restGenerator(value, g)
-		case model.PartDeclaration:
-			partDeclarationGenerator(value, g)
-		case model.Repeat:
-			repeatGenerator(value, g)
-		case model.OnRepetitions:
-			onRepetitionsGenerator(value, g)
-		case model.VariableDefinition:
-			variableDeclarationGenerator(value, g)
-		case model.VariableReference:
-			variableReferenceGenerator(value, g)
-		case model.VoiceMarker:
-			voiceMarkerGenerator(value, g)
-		case model.VoiceGroupEndMarker:
-			voiceGroupEndMarkerGenerator(value, g)
-		}
-	}
-}
-
 func (g *generator) addToken(tokenType parser.TokenType, text string) {
 	g.tokens = append(g.tokens, parser.Token{TokenType: tokenType, Text: text})
 }
 
-func Generate(scoreUpdates []model.ScoreUpdate) []parser.Token {
-	var g generator
-	g.generate(scoreUpdates)
-	g.addToken(parser.EOF, "")
-	return g.tokens
+func (g *generator) generateAttributeUpdate(au model.AttributeUpdate) {
+	switch partUpdate := au.PartUpdate.(type) {
+	case model.OctaveSet:
+		g.addToken(
+			parser.OctaveSet, fmt.Sprintf("o%d", partUpdate.OctaveNumber),
+		)
+	case model.OctaveUp:
+		g.addToken(parser.OctaveUp, ">")
+	case model.OctaveDown:
+		g.addToken(parser.OctaveDown, "<")
+	default:
+		// No other AttributeUpdates can be introduced directly into Alda
+		log.Error().Msg("Alda code generator cannot process non-octave AttributeUpdates")
+	}
 }
 
-func barlineGenerator(_ model.Barline, g *generator) {
+func (g *generator) generateGlobalAttributeUpdate(
+	ga model.GlobalAttributeUpdate,
+) {
+	// GlobalAttributeUpdates can only be introduced using Lisp
+	log.Error().Msg("Alda code generator cannot process GlobalAttributeUpdates")
+}
+
+func (g *generator) generateBarline(_ model.Barline) {
 	g.addToken(parser.Barline, "|")
 }
 
-func chordGenerator(chord model.Chord, g *generator) {
+func (g *generator) generateChord(chord model.Chord) {
 	for index, update := range chord.Events {
-		g.generate([]model.ScoreUpdate{update})
+		g.generateTokens([]model.ScoreUpdate{update})
 
 		if index < len(chord.Events) - 1 {
 			g.addToken(parser.Separator, "/")
@@ -84,33 +55,32 @@ func chordGenerator(chord model.Chord, g *generator) {
 	}
 }
 
-func cramGenerator(cram model.Cram, g *generator) {
+func (g *generator) generateCram(cram model.Cram) {
 	g.addToken(parser.CramOpen, "{")
-	g.generate(cram.Events)
+	g.generateTokens(cram.Events)
 	g.addToken(parser.CramClose, "}")
 }
 
-func eventSequenceGenerator(es model.EventSequence, g *generator) {
+func (g *generator) generateEventSequence(es model.EventSequence) {
 	g.addToken(parser.EventSeqOpen, "[")
-	g.generate(es.Events)
+	g.generateTokens(es.Events)
 	g.addToken(parser.EventSeqClose, "]")
 }
 
-func markerGenerator(marker model.Marker, g *generator) {
+func (g *generator) generateMarker(marker model.Marker) {
 	g.addToken(parser.Marker, "%" + marker.Name)
 }
 
-func atMarkerGenerator(atMarker model.AtMarker, g *generator) {
+func (g *generator) generateAtMarker(atMarker model.AtMarker) {
 	g.addToken(parser.AtMarker, "@" + atMarker.Name)
 }
 
-func pitchGenerator(pitch model.PitchIdentifier, g *generator) {
+func (g *generator) generatePitch(pitch model.PitchIdentifier) {
 	// PitchIdentifier can be a LetterAndAccidentals or a MidiNoteNumber
 	// However, note's are never generated directly with a MidiNoteNumber pitch
 	// When parsing Alda itself, MidiNoteNumber is only used with Lisp
 	// When building Alda from the MusicXML importer, MidiNoteNumbers are
 	// transformed to LetterAndAccidentals during optimization
-	// Then it is valid to assume that any pitch here is a LetterAndAccidentals
 	if reflect.TypeOf(pitch) == reflect.TypeOf(model.MidiNoteNumber{}) {
 		log.Error().Msg(`Alda code generator cannot process note with pitch type MidiNoteNumber`)
 	}
@@ -130,11 +100,11 @@ func pitchGenerator(pitch model.PitchIdentifier, g *generator) {
 	}
 }
 
-func durationGenerator(duration model.Duration, g *generator) {
+func (g *generator) generateDuration(duration model.Duration) {
 	for _, component := range duration.Components {
 		switch value := component.(type) {
 		case model.Barline:
-			barlineGenerator(value, g)
+			g.generateBarline(value)
 		case model.NoteLength:
 			noteLength := fmt.Sprintf("%f", value.Denominator) +
 				strings.Repeat(".", int(value.Dots))
@@ -149,20 +119,20 @@ func durationGenerator(duration model.Duration, g *generator) {
 	}
 }
 
-func noteGenerator(note model.Note, g *generator) {
-	pitchGenerator(note.Pitch, g)
-	durationGenerator(note.Duration, g)
+func (g *generator) generateNote(note model.Note) {
+	g.generatePitch(note.Pitch)
+	g.generateDuration(note.Duration)
 	if note.Slurred {
 		g.addToken(parser.Tie, "~")
 	}
 }
 
-func restGenerator(rest model.Rest, g *generator) {
+func (g *generator) generateRest(rest model.Rest) {
 	g.addToken(parser.RestLetter, "r")
-	durationGenerator(rest.Duration, g)
+	g.generateDuration(rest.Duration)
 }
 
-func partDeclarationGenerator(decl model.PartDeclaration, g *generator) {
+func (g *generator) generatePartDeclaration(decl model.PartDeclaration) {
 	for i, name := range decl.Names {
 		if i > 0 {
 			g.addToken(parser.Separator, "/")
@@ -177,13 +147,13 @@ func partDeclarationGenerator(decl model.PartDeclaration, g *generator) {
 	g.addToken(parser.Colon, ":")
 }
 
-func repeatGenerator(repeat model.Repeat, g *generator) {
-	g.generate([]model.ScoreUpdate{repeat.Event})
+func (g *generator) generateRepeat(repeat model.Repeat) {
+	g.generateTokens([]model.ScoreUpdate{repeat.Event})
 	g.addToken(parser.Repeat, "*" + strconv.Itoa(int(repeat.Times)))
 }
 
-func onRepetitionsGenerator(or model.OnRepetitions, g *generator) {
-	g.generate([]model.ScoreUpdate{or.Event})
+func (g *generator) generateOnRepetitions(or model.OnRepetitions) {
+	g.generateTokens([]model.ScoreUpdate{or.Event})
 
 	repetitionsText := "'"
 	for i, repetition := range or.Repetitions {
@@ -202,23 +172,81 @@ func onRepetitionsGenerator(or model.OnRepetitions, g *generator) {
 	g.addToken(parser.Repetitions, repetitionsText)
 }
 
-func variableDeclarationGenerator(vd model.VariableDefinition, g *generator) {
+func (g *generator) generateVariableDeclaration(vd model.VariableDefinition) {
 	g.addToken(parser.Name, vd.VariableName)
 	g.addToken(parser.Equals, "=")
-	g.generate(vd.Events)
+	g.generateTokens(vd.Events)
 }
 
-func variableReferenceGenerator(vr model.VariableReference, g *generator) {
+func (g *generator) generateVariableReference(vr model.VariableReference) {
 	g.addToken(parser.Name, vr.VariableName)
 }
 
-func voiceMarkerGenerator(vm model.VoiceMarker, g *generator) {
+func (g *generator) generateVoiceMarker(vm model.VoiceMarker) {
 	g.addToken(
 		parser.VoiceMarker,
 		"V" + strconv.Itoa(int(vm.VoiceNumber)) + ":",
 	)
 }
 
-func voiceGroupEndMarkerGenerator(_ model.VoiceGroupEndMarker, g *generator) {
+func (g *generator) generateVoiceGroupEndMarker(_ model.VoiceGroupEndMarker) {
 	g.addToken(parser.VoiceMarker, "V0:")
+}
+
+func (g *generator) generateTokens(scoreUpdates []model.ScoreUpdate) {
+	for _, update := range scoreUpdates {
+		switch value := update.(type) {
+		case model.AttributeUpdate:
+			g.generateAttributeUpdate(value)
+		case model.GlobalAttributeUpdate:
+			g.generateGlobalAttributeUpdate(value)
+		case model.Barline:
+			g.generateBarline(value)
+		case model.Chord:
+			g.generateChord(value)
+		case model.Cram:
+			g.generateCram(value)
+		case model.EventSequence:
+			g.generateEventSequence(value)
+		case model.LispNil:
+			// TODO
+		case model.LispList:
+			// TODO
+		case model.Marker:
+			g.generateMarker(value)
+		case model.AtMarker:
+			g.generateAtMarker(value)
+		case model.Note:
+			g.generateNote(value)
+		case model.Rest:
+			g.generateRest(value)
+		case model.PartDeclaration:
+			g.generatePartDeclaration(value)
+		case model.Repeat:
+			g.generateRepeat(value)
+		case model.OnRepetitions:
+			g.generateOnRepetitions(value)
+		case model.VariableDefinition:
+			g.generateVariableDeclaration(value)
+		case model.VariableReference:
+			g.generateVariableReference(value)
+		case model.VoiceMarker:
+			g.generateVoiceMarker(value)
+		case model.VoiceGroupEndMarker:
+			g.generateVoiceGroupEndMarker(value)
+		}
+	}
+}
+
+// Generate transforms Alda score updates into tokens for the purpose of
+// generating idiomatic Alda as the first step of the Alda decompiler
+// Generate does not generate tokens equivalent to parsed tokens, and instead
+// drops token literals as they are unnecessary for formatting token text
+// Generate operates on a subset of valid Alda, currently only supporting Alda
+// that can be parsed from valid code
+func Generate(scoreUpdates []model.ScoreUpdate) []parser.Token {
+	var g generator
+	g.generateTokens(scoreUpdates)
+	g.addToken(parser.EOF, "")
+	return g.tokens
 }
