@@ -1,12 +1,9 @@
 package cmd
 
 import (
-	"fmt"
-	"os"
-	"strings"
+	"alda.io/client/code_formatter"
+	"alda.io/client/code_generator"
 	"alda.io/client/color"
-	"alda.io/client/formatter"
-	"alda.io/client/generator"
 	"alda.io/client/help"
 	"alda.io/client/interop/musicxml/importer"
 	log "alda.io/client/logging"
@@ -14,7 +11,10 @@ import (
 	"alda.io/client/system"
 	"alda.io/client/transmitter"
 	"alda.io/client/util"
+	"fmt"
 	"github.com/spf13/cobra"
+	"os"
+	"strings"
 )
 
 var outputAldaFilename string
@@ -122,18 +122,18 @@ Currently, the only supported output format is %s.`,
 			return err
 		}
 
-		tokens := generator.Generate(scoreUpdates)
+		tokens := code_generator.Generate(scoreUpdates)
 
 		if outputAldaFilename == "" {
 			// When no output filename is specified, we write directly to stdout
-			formatter.Format(tokens, os.Stdout)
+			code_formatter.Format(tokens, os.Stdout)
 		} else {
 			file, err := os.Create(outputAldaFilename)
 			if err != nil {
 				return err
 			}
 
-			formatter.Format(tokens, file)
+			code_formatter.Format(tokens, file)
 
 			fmt.Fprintf(os.Stderr, "Imported score to %s\n", outputAldaFilename)
 			if err := file.Close(); err != nil {

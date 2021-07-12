@@ -1,4 +1,4 @@
-package formatter
+package code_formatter
 
 import (
 	"alda.io/client/parser"
