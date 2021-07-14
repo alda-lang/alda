@@ -19,6 +19,13 @@ func (g *generator) addToken(tokenType parser.TokenType, text string) {
 	g.tokens = append(g.tokens, parser.Token{TokenType: tokenType, Text: text})
 }
 
+func (g *generator) logError(structure interface{}) {
+	log.Error().Msg(fmt.Sprintf(
+		`Alda code generator cannot process struct with type %s`,
+		color.Aurora.BrightYellow(reflect.TypeOf(structure).Name()),
+	))
+}
+
 func (g *generator) generateAttributeUpdate(au model.AttributeUpdate) {
 	switch partUpdate := au.PartUpdate.(type) {
 	case model.OctaveSet:
@@ -33,13 +40,6 @@ func (g *generator) generateAttributeUpdate(au model.AttributeUpdate) {
 		// No other AttributeUpdates can be introduced directly into Alda
 		g.logError(partUpdate)
 	}
-}
-
-func (g *generator) logError(structure interface{}) {
-	log.Error().Msg(fmt.Sprintf(
-		`Alda code generator cannot process struct with type %s`,
-		color.Aurora.BrightYellow(reflect.TypeOf(structure).Name()),
-	))
 }
 
 func (g *generator) generateGlobalAttributeUpdate(
@@ -80,28 +80,7 @@ func (g *generator) generateLispNil(n model.LispNil) {
 }
 
 func (g *generator) generateLispList(l model.LispList) {
-	for _, element := range l.Elements {
-		switch lispForm := element.(type) {
-		case model.LispNumber:
-			g.addToken(parser.Number, fmt.Sprintf("%f", lispForm.Value))
-		case model.LispString:
-			g.addToken(parser.String, lispForm.Value)
-		case model.LispSymbol:
-			g.addToken(parser.Symbol, lispForm.Name)
-		case model.LispSpecialFormQuote:
-		case model.LispAny:
-		case model.LispVariadic:
-		case model.LispFunction:
-		case model.LispNil:
-		case model.LispQuotedForm:
-		case model.LispScoreUpdate:
-		case model.LispPitch:
-		case model.LispDuration:
-		case model.LispList:
-		default:
-			g.logError(element)
-		}
-	}
+	g.logError(l)
 }
 
 func (g *generator) generateMarker(marker model.Marker) {
