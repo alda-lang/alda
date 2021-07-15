@@ -54,12 +54,22 @@ func (g *generator) generateBarline(_ model.Barline) {
 }
 
 func (g *generator) generateChord(chord model.Chord) {
-	for index, update := range chord.Events {
-		g.generateTokens([]model.ScoreUpdate{update})
+	hasNoteOrRestBeenEncountered := false
 
-		if index < len(chord.Events) - 1 {
+	for _, update := range chord.Events {
+		updateType := reflect.TypeOf(update)
+		isNoteOrRest := updateType == reflect.TypeOf(model.Note{}) ||
+			updateType == reflect.TypeOf(model.Rest{})
+
+		if isNoteOrRest && hasNoteOrRestBeenEncountered {
 			g.addToken(parser.Separator, "/")
 		}
+
+		if isNoteOrRest {
+			hasNoteOrRestBeenEncountered = true
+		}
+
+		g.generateTokens([]model.ScoreUpdate{update})
 	}
 }
 
@@ -67,6 +77,7 @@ func (g *generator) generateCram(cram model.Cram) {
 	g.addToken(parser.CramOpen, "{")
 	g.generateTokens(cram.Events)
 	g.addToken(parser.CramClose, "}")
+	g.generateDuration(cram.Duration)
 }
 
 func (g *generator) generateEventSequence(es model.EventSequence) {
@@ -117,19 +128,32 @@ func (g *generator) generatePitch(pitch model.PitchIdentifier) {
 }
 
 func (g *generator) generateDuration(duration model.Duration) {
+	hasEncounteredNonBarline := false
+	encounterBarline := func() {
+		if hasEncounteredNonBarline {
+			g.addToken(parser.Tie, "~")
+		}
+		hasEncounteredNonBarline = true
+	}
+
 	for _, component := range duration.Components {
 		switch value := component.(type) {
 		case model.Barline:
 			g.generateBarline(value)
 		case model.NoteLength:
-			noteLength := fmt.Sprintf("%f", value.Denominator) +
+			encounterBarline()
+
+			noteLength := formatFloat(value.Denominator) +
 				strings.Repeat(".", int(value.Dots))
 			g.addToken(parser.NoteLength, noteLength)
 		case model.NoteLengthMs:
-			noteLengthMs := fmt.Sprintf("%f", value.Quantity) + "ms"
+			encounterBarline()
+
+			noteLengthMs := formatFloat(value.Quantity) + "ms"
 			g.addToken(parser.NoteLengthMs, noteLengthMs)
-		case model.NoteLengthBeats:
+		default:
 			// NoteLengthBeats is only generated from Lisp
+			// Duration can only be nested... TODO
 			g.logError(component)
 		}
 	}
