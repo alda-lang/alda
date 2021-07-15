@@ -91,6 +91,7 @@ func (g *generator) generateLispNil(n model.LispNil) {
 }
 
 func (g *generator) generateLispList(l model.LispList) {
+	// The MusicXML importer currently has no use for Lisp
 	g.logError(l)
 }
 
@@ -103,27 +104,29 @@ func (g *generator) generateAtMarker(atMarker model.AtMarker) {
 }
 
 func (g *generator) generatePitch(pitch model.PitchIdentifier) {
-	// PitchIdentifier can be a LetterAndAccidentals or a MidiNoteNumber
-	// However, note's are never generated directly with a MidiNoteNumber pitch
-	// When parsing Alda itself, MidiNoteNumber is only used with Lisp
-	// When building Alda from the MusicXML importer, MidiNoteNumbers are
-	// transformed to LetterAndAccidentals during optimization
-	if reflect.TypeOf(pitch) == reflect.TypeOf(model.MidiNoteNumber{}) {
-		g.logError(pitch)
-	}
+	switch typedPitch := pitch.(type) {
+	case model.LetterAndAccidentals:
+		g.addToken(
+			parser.NoteLetter,
+			strings.ToLower(typedPitch.NoteLetter.String()),
+		)
 
-	laa := pitch.(model.LetterAndAccidentals)
-	g.addToken(parser.NoteLetter, strings.ToLower(laa.NoteLetter.String()))
-
-	for _, accidental := range laa.Accidentals {
-		switch accidental {
-		case model.Flat:
-			g.addToken(parser.Flat, "-")
-		case model.Natural:
-			g.addToken(parser.Natural, "_")
-		case model.Sharp:
-			g.addToken(parser.Sharp, "+")
+		for _, accidental := range typedPitch.Accidentals {
+			switch accidental {
+			case model.Flat:
+				g.addToken(parser.Flat, "-")
+			case model.Natural:
+				g.addToken(parser.Natural, "_")
+			case model.Sharp:
+				g.addToken(parser.Sharp, "+")
+			}
 		}
+	default:
+		// MidiNoteNumber has no direct representation in Alda syntax, and is
+		// only ever obtained from Lisp
+		// The MusicXML parser uses MidiNoteNumber pitches for percussion notes
+		// but translates this to LetterAndAccidentals in the optimization phase
+		g.logError(pitch)
 	}
 }
 
@@ -153,7 +156,7 @@ func (g *generator) generateDuration(duration model.Duration) {
 			g.addToken(parser.NoteLengthMs, noteLengthMs)
 		default:
 			// NoteLengthBeats is only generated from Lisp
-			// Duration can only be nested... TODO
+			// Duration cannot be nested in Alda
 			g.logError(component)
 		}
 	}
