@@ -47,7 +47,7 @@ this repo.
 ### Player
 
 Alda is designed so that playback is asynchronous. When you use the Alda client
-to play a score, the client sends a bunch of [OSC][osc-intro] messages to a
+to play a score, the client sends a bunch of [OSC][osc-page] messages to a
 separate player process running in the background.
 
 The player process is agnostic of the Alda language. It simply receives and
@@ -60,5 +60,5 @@ loop patterns during playback.
 For more info, see the [README](player/README.md) in the `player/` folder of
 this repo.
 
-[osc-intro]: http://opensoundcontrol.org/introduction-osc
+[osc-page]: http://opensoundcontrol.org
 

@@ -1,49 +1,14 @@
 package importer
 
 import (
+	"alda.io/client/color"
+	"alda.io/client/help"
+	"github.com/beevik/etree"
 	"io"
 	"sort"
 
-	"alda.io/client/color"
-	"alda.io/client/help"
 	"alda.io/client/model"
-	"github.com/beevik/etree"
 )
-
-// musicXMLImporter contains global state for importing a MusicXML file
-type musicXMLImporter struct {
-	parts       map[string]*musicXMLPart
-	currentPart *musicXMLPart
-
-	// unsupported stores the tags of unsupported elements that have been
-	// encountered, so we don't warn the user multiple times for each tag type
-	unsupported []string
-}
-
-func newMusicXMLImporter() *musicXMLImporter {
-	return &musicXMLImporter{
-		parts: make(map[string]*musicXMLPart),
-	}
-}
-
-func (importer *musicXMLImporter) generateScoreUpdates() []model.ScoreUpdate {
-	var updates []model.ScoreUpdate
-
-	// We process parts in order of ID
-	var partIDs []string
-	for id := range importer.parts {
-		partIDs = append(partIDs, id)
-	}
-
-	sort.Sort(sort.StringSlice(partIDs))
-
-	for _, id := range partIDs {
-		part := importer.parts[id]
-		updates = append(updates, part.generateScoreUpdates()...)
-	}
-
-	return updates
-}
 
 // musicXMLPart contains part-specific information necessary for import
 type musicXMLPart struct {
@@ -138,40 +103,39 @@ func (voice *musicXMLVoice) generateScoreUpdates() []model.ScoreUpdate {
 	return voice.updates[0].(model.EventSequence).Events
 }
 
-func ImportMusicXML(r io.Reader) ([]model.ScoreUpdate, error) {
-	doc := etree.NewDocument()
+// musicXMLImporter contains global state for importing a MusicXML file
+type musicXMLImporter struct {
+	parts       map[string]*musicXMLPart
+	currentPart *musicXMLPart
 
-	_, err := doc.ReadFrom(r)
-	if err != nil {
-		return nil, err
+	// unsupported stores the tags of unsupported elements that have been
+	// encountered, so we don't warn the user multiple times for each tag type
+	unsupported []string
+}
+
+func newMusicXMLImporter() *musicXMLImporter {
+	return &musicXMLImporter{
+		parts: make(map[string]*musicXMLPart),
+	}
+}
+
+func (importer *musicXMLImporter) generateScoreUpdates() []model.ScoreUpdate {
+	var updates []model.ScoreUpdate
+
+	// We process parts in order of ID
+	var partIDs []string
+	for id := range importer.parts {
+		partIDs = append(partIDs, id)
 	}
 
-	scorePartwise := doc.SelectElement("score-partwise")
-	scoreTimewise := doc.SelectElement("score-timewise")
+	sort.Sort(sort.StringSlice(partIDs))
 
-	if scorePartwise == nil && scoreTimewise != nil {
-		return nil, help.UserFacingErrorf(
-			`Issue importing MusicXML file: please convert to %s instead of %s using XSLT before importing`,
-			color.Aurora.BrightYellow("score-partwise"),
-			color.Aurora.BrightYellow("score-timewise"),
-		)
-	} else if scorePartwise == nil {
-		return nil, help.UserFacingErrorf(
-			`Issue importing MusicXML file: could not last %s root tag`,
-			color.Aurora.BrightYellow("score-partwise"),
-		)
+	for _, id := range partIDs {
+		part := importer.parts[id]
+		updates = append(updates, part.generateScoreUpdates()...)
 	}
 
-	importer := newMusicXMLImporter()
-	handle(scorePartwise, importer)
-
-	// We optimize the updates for each voice to generate more idiomatic Alda
-	for _, part := range importer.parts {
-		for _, voice := range part.voices {
-			voice.updates = optimize(voice.updates)
-		}
-	}
-	return importer.generateScoreUpdates(), nil
+	return updates
 }
 
 func (importer *musicXMLImporter) part() *musicXMLPart {
@@ -379,4 +343,42 @@ func findLastWithStateRecursive(
 		}
 	}
 	return nil, nestedIndex{indices: nil}, curr
+}
+
+// ImportMusicXML translates a MusicXML file into Alda score updates
+// ImportMusicXML requires valid MusicXML with a "score-partwise" root tag
+func ImportMusicXML(r io.Reader) ([]model.ScoreUpdate, error) {
+	doc := etree.NewDocument()
+
+	_, err := doc.ReadFrom(r)
+	if err != nil {
+		return nil, err
+	}
+
+	scorePartwise := doc.SelectElement("score-partwise")
+	scoreTimewise := doc.SelectElement("score-timewise")
+
+	if scorePartwise == nil && scoreTimewise != nil {
+		return nil, help.UserFacingErrorf(
+			`Issue importing MusicXML file: please convert to %s instead of %s using XSLT before importing`,
+			color.Aurora.BrightYellow("score-partwise"),
+			color.Aurora.BrightYellow("score-timewise"),
+		)
+	} else if scorePartwise == nil {
+		return nil, help.UserFacingErrorf(
+			`Issue importing MusicXML file: could not last %s root tag`,
+			color.Aurora.BrightYellow("score-partwise"),
+		)
+	}
+
+	importer := newMusicXMLImporter()
+	handle(scorePartwise, importer)
+
+	// We optimize the updates for each voice to generate more idiomatic Alda
+	for _, part := range importer.parts {
+		for _, voice := range part.voices {
+			voice.updates = optimize(voice.updates)
+		}
+	}
+	return importer.generateScoreUpdates(), nil
 }
