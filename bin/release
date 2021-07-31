@@ -32,8 +32,16 @@ git tag -a "$release_tag" -m "$release_tag"
 git push --tags
 
 # HACK: Wait for a bit for CircleCI to create the build pipeline.
-# TODO: Maybe `watch-circleci-pipeline` should check in a loop whether the
-# pipeline exists.
+#
+# `watch-circleci-pipeline` will wait until a build pipeline exists for the
+# current commit, however, given that we just pushed a tag for the current
+# commit, there might be multiple builds, one of which is for just the commit
+# (which isn't a release build) and the other is the one that we just triggered
+# by pushing a tag (the release build). As a workaround, for now we just wait 5
+# seconds so that we get the most recent build.
+#
+# TODO: Add some kind of argument to `watch-circleci-pipeline` so that we can
+# specify that we're interested in the build for $release_tag.
 sleep 5
 
 "$(dirname "$0")/watch-circleci-pipeline"

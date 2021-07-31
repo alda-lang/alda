@@ -11,7 +11,7 @@ if [[ -z "$CIRCLECI_API_TOKEN" ]]; then
   exit 1
 fi
 
-if ! which jq > /dev/null; then
+if ! command -v jq > /dev/null; then
   echo "jq must be on the PATH."
   exit 1
 fi
@@ -24,19 +24,23 @@ current_commit="$(git rev-parse HEAD)"
 echo \
   "Finding the most recent build pipeline for git commit $current_commit..."
 
-pipeline="$(curl -Ls --fail \
-    -H "Circle-Token: $CIRCLECI_API_TOKEN" \
-    "$circleci_api_base_url/project/$circleci_project/pipeline" \
-    | jq "[.items[]
-           | select(.vcs.revision == \"$current_commit\")][0]")"
+while true; do
+  pipeline="$(curl -Ls --fail \
+      -H "Circle-Token: $CIRCLECI_API_TOKEN" \
+      "$circleci_api_base_url/project/$circleci_project/pipeline" \
+      | jq "[.items[]
+             | select(.vcs.revision == \"$current_commit\")][0]")"
 
-pipeline_id="$(jq -r ".id" <(echo "$pipeline"))"
-pipeline_number="$(jq -r ".number" <(echo "$pipeline"))"
+  pipeline_id="$(jq -r ".id" <(echo "$pipeline"))"
+  pipeline_number="$(jq -r ".number" <(echo "$pipeline"))"
 
-if [[ -z "$pipeline_id" ]]; then
-  echo "No build pipeline found."
-  exit 1
-fi
+  if [[ -n "$pipeline_id" ]]; then
+    break
+  fi
+
+  echo "No build pipeline found. Trying again..."
+  sleep 1
+done
 
 echo "Pipeline: $pipeline_id"
 
