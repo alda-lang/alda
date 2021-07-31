@@ -26,10 +26,12 @@ if [[ -z "$ALDA_SLACK_WEBHOOK_URL" ]]; then
   exit 1
 fi
 
-if ! which jo > /dev/null; then
-  echo "This script requires \`jo\` to be installed."
-  exit 1
-fi
+for cmd in jo curl; do
+  if ! command -v "$cmd" > /dev/null; then
+    echo "This script requires \`$cmd\` to be installed."
+    exit 1
+  fi
+done
 
 ################################################################################
 # Fetch release notes
@@ -43,6 +45,23 @@ changelog="$(mktemp)"
 curl -s --fail "$changelog_url" \
   >> "$changelog" \
   || (echo "404: $changelog_url"; exit 1) \
+
+################################################################################
+# Wait until release is available via the Alda API
+################################################################################
+
+alda_api_url="https://api.alda.io/release/$release_version"
+
+while true; do
+  echo "Waiting for the release to become available via the Alda API..."
+
+  if curl -s --fail "$alda_api_url" >/dev/null; then
+    echo "Release available."
+    break
+  fi
+
+  sleep 10
+done
 
 ################################################################################
 # Announce release on Slack
