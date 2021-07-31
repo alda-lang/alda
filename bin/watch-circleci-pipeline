@@ -16,25 +16,48 @@ if ! command -v jq > /dev/null; then
   exit 1
 fi
 
+if [[ $# -eq 0 ]]; then
+  current_commit="$(git rev-parse HEAD)"
+
+  echo \
+    "Finding the most recent build pipeline for git commit $current_commit..."
+
+  predicate=".vcs.revision == \"$current_commit\""
+elif [[ $# -eq 1 ]]; then
+  tag="$1"
+
+  echo \
+    "Finding the most recent build pipeline for git tag $tag..."
+
+  predicate=".vcs.tag == \"$tag\""
+else
+  cat <<EOF
+Usage:
+
+  # Watch the most recent build pipeline for the current git commit
+  $(basename "$0")
+
+  # Watch the most recent build pipeline for the provided git tag
+  $(basename "$0") TAG
+
+EOF
+
+  exit 1
+fi
+
 circleci_api_base_url="https://circleci.com/api/v2"
 circleci_project="gh/alda-lang/alda"
-
-current_commit="$(git rev-parse HEAD)"
-
-echo \
-  "Finding the most recent build pipeline for git commit $current_commit..."
 
 while true; do
   pipeline="$(curl -Ls --fail \
       -H "Circle-Token: $CIRCLECI_API_TOKEN" \
       "$circleci_api_base_url/project/$circleci_project/pipeline" \
-      | jq "[.items[]
-             | select(.vcs.revision == \"$current_commit\")][0]")"
+      | jq "[.items[] | select($predicate)][0]")"
 
   pipeline_id="$(jq -r ".id" <(echo "$pipeline"))"
   pipeline_number="$(jq -r ".number" <(echo "$pipeline"))"
 
-  if [[ -n "$pipeline_id" ]]; then
+  if [[ -n "$pipeline_id" ]] && [[ "$pipeline_id" != "null" ]]; then
     break
   fi
 
