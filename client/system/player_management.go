@@ -2,6 +2,7 @@ package system
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -9,12 +10,76 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
 	"alda.io/client/color"
 	"alda.io/client/generated"
 	"alda.io/client/help"
 	log "alda.io/client/logging"
 )
+
+// Each `alda-player` process creates a state file where it tracks its own
+// state. The `alda` client uses this information to list player processes
+// (`alda ps`) or to find an available player process to play a score.
+//
+// Each player process deletes its own state file when it exits, but this
+// doesn't happen in exceptional scenarios like an out of memory error or the
+// process being forcibly terminated (e.g. `kill -9`).
+//
+// Because it will always be possible for player processes to die before they
+// can clean up their own state files, both `alda-player` and `alda` routinely
+// check for and clean up stale player state files.
+func CleanUpStaleStateFiles() error {
+	stateDir := CachePath("state", "players")
+
+	if err := filepath.WalkDir(
+		stateDir,
+		func(path string, info os.DirEntry, err error) error {
+			if info.IsDir() {
+				return nil
+			}
+
+			fileInfo, err := os.Stat(path)
+			if errors.Is(err, os.ErrNotExist) {
+				return nil
+			} else if err != nil {
+				return err
+			}
+
+			timeSinceModified := time.Since(fileInfo.ModTime())
+
+			if timeSinceModified > time.Minute*2 {
+				log.Debug().
+					Float64("seconds-since-modified", timeSinceModified.Seconds()).
+					Str("path", path).
+					Msg("Deleting stale file.")
+
+				err := os.Remove(path)
+				if err != nil && !errors.Is(err, os.ErrNotExist) {
+					return err
+				}
+				return nil
+			}
+
+			return nil
+		},
+	); err != nil {
+		return err
+	}
+
+	// NOTE: I initially also walked the directory a second time and attempted to
+	// delete empty directories, but I found that it was too easy to run into a
+	// race condition where the directory, so we delete it, but right before we
+	// delete it, a player starts up and puts a file in the directory, and then
+	// the directory gets deleted even though it isn't actually empty at that
+	// point.
+	//
+	// Player processes also delete empty directories for old versions, and it
+	// seems to behave well, so we don't need to include the deletion of empty
+	// directories part here in the client.
+
+	return nil
+}
 
 // PlayerState describes the current state of a player process. These states are
 // continously written to files by each player process. (See: StateManager.kt.)
@@ -32,6 +97,10 @@ type PlayerState struct {
 //
 // Returns an error if something goes wrong.
 func ReadPlayerStates() ([]PlayerState, error) {
+	if err := CleanUpStaleStateFiles(); err != nil {
+		log.Warn().Err(err).Msg("Failed to clean up stale state files.")
+	}
+
 	playersDir := CachePath("state", "players", generated.ClientVersion)
 	if err := os.MkdirAll(playersDir, os.ModePerm); err != nil {
 		return nil, err

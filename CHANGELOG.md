@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## 2.0.2 (2021-07-31)
+
+* Fixed a "stale state" bug where Alda would occasionally attempt to use old
+  player processes that are no longer running. Whereas before, only player
+  processes would clean up stale state files, now the client cleans them up too,
+  to ensure that the information is up to date at the point in time when the
+  client needs it.
+
+  For more information, see [issue #369][issue-369].
+
+* Related to the above, the `alda` client and `alda-player` processes now
+  consider a state file to be "stale" if it hasn't been updated in 2 minutes,
+  instead of 10 minutes.
+
+[issue-369]: https://github.com/alda-lang/alda/issues/369
+
 ## 2.0.1 (2021-07-05)
 
 * Alda will now attempt to detect if it's running in an environment (e.g.

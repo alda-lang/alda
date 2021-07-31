@@ -77,7 +77,7 @@ class StateManager(val port : Int) {
       val lastModified = Instant.ofEpochMilli(it.lastModified())
       val now = Instant.now()
       val age = Duration.between(lastModified, now)
-      val maxAge = Duration.ofMinutes(10)
+      val maxAge = Duration.ofMinutes(2)
 
       if (age.compareTo(maxAge) > 0) {
         log.debug {
