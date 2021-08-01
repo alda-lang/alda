@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## Unreleased
+
+* Fixed a bug where input like `[c1s]` (a duration in seconds at the end of an
+  event sequence) was causing a parse error.
+
 ## 2.0.2 (2021-07-31)
 
 * Fixed a "stale state" bug where Alda would occasionally attempt to use old

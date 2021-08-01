@@ -105,5 +105,37 @@ func TestEventSequences(t *testing.T) {
 				),
 			},
 		},
+		parseTestCase{
+			label: "event sequence containing a note",
+			given: "[c1]",
+			expect: []model.ScoreUpdate{
+				eventSequence(
+					model.Note{
+						Pitch: model.LetterAndAccidentals{NoteLetter: model.C},
+						Duration: model.Duration{
+							Components: []model.DurationComponent{
+								model.NoteLength{Denominator: 1},
+							},
+						},
+					},
+				),
+			},
+		},
+		parseTestCase{
+			label: "event sequence containing a note w/ duration in seconds",
+			given: "[c1s]",
+			expect: []model.ScoreUpdate{
+				eventSequence(
+					model.Note{
+						Pitch: model.LetterAndAccidentals{NoteLetter: model.C},
+						Duration: model.Duration{
+							Components: []model.DurationComponent{
+								model.NoteLengthMs{Quantity: 1000},
+							},
+						},
+					},
+				),
+			},
+		},
 	)
 }

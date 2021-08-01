@@ -348,7 +348,12 @@ type noteLength struct {
 }
 
 func terminatesNoteLength(c rune) bool {
-	return c == ' ' || c == '\r' || c == '\n' || c == '/' || c == '~'
+	switch c {
+	case ' ', '\r', '\n', '/', '~', ']', '}':
+		return true
+	}
+
+	return false
 }
 
 func (s *scanner) parseNoteLength() {
