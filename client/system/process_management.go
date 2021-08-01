@@ -21,6 +21,14 @@ func cleanUpStaleStateFiles(stateDir string) error {
 	if err := filepath.WalkDir(
 		stateDir,
 		func(path string, info os.DirEntry, err error) error {
+			if errors.Is(err, os.ErrNotExist) {
+				return nil
+			}
+
+			if err != nil {
+				return err
+			}
+
 			if info.IsDir() {
 				return nil
 			}

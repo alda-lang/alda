@@ -5,6 +5,10 @@
 * Fixed a bug where input like `[c1s]` (a duration in seconds at the end of an
   event sequence) was causing a parse error.
 
+* Fixed a sporadic runtime error where this message would appear:
+
+  `panic: runtime error: invalid memory address or nil pointer dereference`
+
 * `alda ps` output now includes Alda REPL servers in addition to player
   processes. Example output:
 
