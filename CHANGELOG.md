@@ -1,9 +1,25 @@
 # CHANGELOG
 
-## Unreleased
+## 2.0.3 (2021-08-01)
 
 * Fixed a bug where input like `[c1s]` (a duration in seconds at the end of an
   event sequence) was causing a parse error.
+
+* `alda ps` output now includes Alda REPL servers in addition to player
+  processes. Example output:
+
+  ```
+  $ bin/run ps | column -t -s $'\t'
+  id   port   state   expiry              type
+  itv  33659  ready   5 minutes from now  player
+  lhx  36583  active  5 minutes from now  player
+  olt  34539  ready   5 minutes from now  player
+  utj  40235  ready   5 minutes from now  player
+  yae  35935  ready   7 minutes from now  player
+  zew  40425  ready   6 minutes from now  player
+  itp  33643  -       -                   repl-server
+  jom  34191  -       -                   repl-server
+  ```
 
 ## 2.0.2 (2021-07-31)
 
