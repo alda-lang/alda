@@ -87,7 +87,7 @@ much as we possibly can.
 
 ## Player management
 
-> Relevant files: `system/player_management.go`, `cmd/root.go`
+> Relevant files: `system/process_management.go`, `cmd/root.go`
 
 When you play a score using the Alda CLI (i.e. `alda play -f some-file.alda`),
 the playback occurs asynchronously in a background `alda-player` process. These
