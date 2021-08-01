@@ -13,7 +13,7 @@
   processes. Example output:
 
   ```
-  $ bin/run ps | column -t -s $'\t'
+  $ alda ps | column -t -s $'\t'
   id   port   state   expiry              type
   itv  33659  ready   5 minutes from now  player
   lhx  36583  active  5 minutes from now  player
