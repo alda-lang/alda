@@ -169,7 +169,15 @@ func (server *Server) writeStateFile() {
 		return
 	}
 
-	if err := os.WriteFile(server.stateFile(), stateJSON, 0644); err != nil {
+	stateFile := server.stateFile()
+
+	if err := os.MkdirAll(filepath.Dir(stateFile), os.ModePerm); err != nil {
+		log.Warn().
+			Err(err).
+			Msg("Failed to create parent directories for REPL server state file.")
+	}
+
+	if err := os.WriteFile(stateFile, stateJSON, 0644); err != nil {
 		log.Warn().
 			Err(err).
 			Msg("Failed to write REPL server state file.")
