@@ -11,7 +11,7 @@ output="$(mktemp)"
 
 found_version=no
 
-while read -r line; do
+while IFS= read -r line; do
   # Skip all lines before the heading for the version we're looking for.
   if [[ "$found_version" != yes ]]; then
     version_prefix="## $version"
