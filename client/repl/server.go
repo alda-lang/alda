@@ -1,6 +1,7 @@
 package repl
 
 import (
+	encjson "encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -35,6 +36,8 @@ type nREPLRequest struct {
 
 // Server is a stateful Alda REPL server object.
 type Server struct {
+	// A short, generated ID that appears in `alda ps` output.
+	id string
 	// The Port on which the server listens for nREPL messages from clients.
 	Port int
 	// The string of input that is built up over time as clients submit code, line
@@ -53,6 +56,10 @@ type Server struct {
 	// a time. Therefore, messages can be received asynchronously, but results are
 	// processed synchronously to avoid concurrency issues due to global state.
 	requestQueue chan nREPLRequest
+}
+
+func (server *Server) stateFile() string {
+	return system.CachePath("state", "repl-servers", server.id+".json")
 }
 
 func (server *Server) respond(
@@ -116,9 +123,26 @@ func (server *Server) resetState() error {
 	return nil
 }
 
+// Adapted from: https://www.calhoun.io/creating-random-strings-in-go/
+func generateId() string {
+	const charset = "abcdefghijklmnopqrstuvwxyz"
+	var seededRand = rand.New(rand.NewSource(time.Now().UnixNano()))
+
+	b := make([]byte, 3)
+	for i := range b {
+		b[i] = charset[seededRand.Intn(len(charset))]
+	}
+
+	return string(b)
+}
+
 // NewServer returns an initialized instance of an Alda REPL server.
 func NewServer(port int) *Server {
-	server := &Server{Port: port, requestQueue: make(chan nREPLRequest)}
+	server := &Server{
+		id:           generateId(),
+		Port:         port,
+		requestQueue: make(chan nREPLRequest),
+	}
 	server.resetState()
 	return server
 }
@@ -129,11 +153,58 @@ const nREPLPortFile = ".alda-nrepl-port"
 // directory. This makes it easy for a client started in the same directory to
 // discover what port the server is running on.
 func (server *Server) writePortFile() {
-	ioutil.WriteFile(nREPLPortFile, []byte(strconv.Itoa(server.Port)), 0644)
+	os.WriteFile(nREPLPortFile, []byte(strconv.Itoa(server.Port)), 0644)
+}
+
+func (server *Server) writeStateFile() {
+	state := system.REPLServerState{ID: server.id, Port: server.Port}
+
+	stateJSON, err := encjson.Marshal(state)
+	if err != nil {
+		log.Warn().
+			Err(err).
+			Interface("state", state).
+			Msg("Failed to serialize REPL state JSON.")
+
+		return
+	}
+
+	if err := os.WriteFile(server.stateFile(), stateJSON, 0644); err != nil {
+		log.Warn().
+			Err(err).
+			Msg("Failed to write REPL server state file.")
+	}
+}
+
+func (server *Server) touchStateFile() {
+	now := time.Now()
+
+	if err := os.Chtimes(server.stateFile(), now, now); err != nil {
+		log.Warn().
+			Err(err).
+			Msg("Failed to touch REPL server state file.")
+	}
+}
+
+func (server *Server) manageStateFile() {
+	// NOTE: We don't yet have a use case for exposing information about the
+	// server that updates regularly. Therefore, to avoid doing unnecessary work,
+	// we will just write the state file once and then we'll just continuously
+	// update the last modified time without re-writing the file.
+	server.writeStateFile()
+
+	for {
+		server.touchStateFile()
+		time.Sleep(10 * time.Second)
+	}
 }
 
 func (server *Server) removePortFile() {
 	os.Remove(nREPLPortFile)
+}
+
+func (server *Server) removeStateFile() {
+	os.Remove(server.stateFile())
 }
 
 // Close cleans up after a server is done serving.
@@ -141,6 +212,7 @@ func (server *Server) removePortFile() {
 // This includes actions like removing the nREPL port file.
 func (server *Server) Close() {
 	server.removePortFile()
+	server.removeStateFile()
 }
 
 // RunServer creates a running Alda REPL server instance and returns it.
@@ -161,6 +233,10 @@ func RunServer(port int) (*Server, error) {
 	// This writes an .alda-nrepl-port file, which gets cleaned up when `Close()`
 	// is invoked.
 	server.writePortFile()
+
+	// Continuously writes a state file so that this REPL server can be included
+	// in the output of `alda ps`. This file also gets cleaned up by `Close()`.
+	go server.manageStateFile()
 
 	// See repl/player_management.go
 	go server.managePlayers()

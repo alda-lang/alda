@@ -91,6 +91,15 @@ type PlayerState struct {
 	ReadError error
 }
 
+// REPLServerState describes the current state of an Alda REPL server process.
+// These states are continously written to files by each Alda REPL process.
+// (See: repl/server.go.)
+type REPLServerState struct {
+	Port      int    `json:"port"`
+	ID        string `json:"id"`
+	ReadError error  `json:"-"`
+}
+
 // ReadPlayerStates reads all of the player state files in the Alda cache
 // directory and returns a list of player state structs describing the current
 // state of each player process.
