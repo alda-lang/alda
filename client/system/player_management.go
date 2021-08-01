@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -100,6 +99,29 @@ type REPLServerState struct {
 	ReadError error  `json:"-"`
 }
 
+func processFiles(
+	directory string,
+	process func(filename string, contents []byte, readError error),
+) error {
+	if err := os.MkdirAll(directory, os.ModePerm); err != nil {
+		return err
+	}
+
+	files, err := os.ReadDir(directory)
+	if err != nil {
+		return err
+	}
+
+	for _, file := range files {
+		filename := file.Name()
+		filepath := filepath.Join(directory, filename)
+		contents, readError := os.ReadFile(filepath)
+		process(filename, contents, readError)
+	}
+
+	return nil
+}
+
 // ReadPlayerStates reads all of the player state files in the Alda cache
 // directory and returns a list of player state structs describing the current
 // state of each player process.
@@ -110,39 +132,58 @@ func ReadPlayerStates() ([]PlayerState, error) {
 		log.Warn().Err(err).Msg("Failed to clean up stale state files.")
 	}
 
-	playersDir := CachePath("state", "players", generated.ClientVersion)
-	if err := os.MkdirAll(playersDir, os.ModePerm); err != nil {
-		return nil, err
-	}
-
-	files, err := ioutil.ReadDir(playersDir)
-	if err != nil {
-		return nil, err
-	}
-
 	states := []PlayerState{}
 
-	for _, file := range files {
-		filepath := filepath.Join(playersDir, file.Name())
+	if err := processFiles(
+		CachePath("state", "players", generated.ClientVersion),
+		func(filename string, contents []byte, readError error) {
+			var state PlayerState
 
-		var readError error
-		var state PlayerState
-
-		contents, err := ioutil.ReadFile(filepath)
-		if err != nil {
-			readError = err
-		} else {
-			err := json.Unmarshal(contents, &state)
-			if err != nil {
-				readError = err
+			if readError == nil {
+				err := json.Unmarshal(contents, &state)
+				if err != nil {
+					readError = err
+				}
 			}
-		}
 
-		state.ID = strings.Replace(file.Name(), ".json", "", 1)
-		state.ReadError = readError
+			state.ID = strings.Replace(filename, ".json", "", 1)
+			state.ReadError = readError
 
-		states = append(states, state)
+			states = append(states, state)
+		},
+	); err != nil {
+		return nil, err
 	}
+
+	return states, nil
+}
+
+// ReadREPLServerStates reads all of the REPL server state files in the Alda
+// cache directory and returns a list of REPLServerState structs describing the
+// current state of each player process.
+//
+// Returns an error if something goes wrong.
+func ReadREPLServerStates() ([]REPLServerState, error) {
+	states := []REPLServerState{}
+
+	processFiles(
+		CachePath("state", "repl-servers"),
+		func(filename string, contents []byte, readError error) {
+			var state REPLServerState
+
+			if readError == nil {
+				err := json.Unmarshal(contents, &state)
+				if err != nil {
+					readError = err
+				}
+			}
+
+			state.ID = strings.Replace(filename, ".json", "", 1)
+			state.ReadError = readError
+
+			states = append(states, state)
+		},
+	)
 
 	return states, nil
 }

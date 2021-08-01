@@ -655,6 +655,33 @@ version of %s.`,
 		//////////////////////////////////////////////////
 
 		if err := step(
+			"Find the REPL server",
+			func() error {
+				return util.Await(
+					func() error {
+						servers, err := system.ReadREPLServerStates()
+						if err != nil {
+							return err
+						}
+
+						for _, s := range servers {
+							if s.Port == replServer.Port {
+								return nil
+							}
+						}
+
+						return fmt.Errorf("REPL server state file not found")
+					},
+					reasonableTimeout,
+				)
+			},
+		); err != nil {
+			return err
+		}
+
+		//////////////////////////////////////////////////
+
+		if err := step(
 			"Interact with the REPL server",
 			func() error {
 				client, err := repl.NewClient("localhost", replServer.Port)
@@ -668,6 +695,35 @@ version of %s.`,
 				// communication between an Alda REPL server and client.
 				_, err = client.StartSession()
 				return err
+			},
+		); err != nil {
+			return err
+		}
+
+		//////////////////////////////////////////////////
+
+		if err := step(
+			"Shut down the REPL server",
+			func() error {
+				replServer.Close()
+
+				return util.Await(
+					func() error {
+						servers, err := system.ReadREPLServerStates()
+						if err != nil {
+							return err
+						}
+
+						for _, s := range servers {
+							if s.Port == replServer.Port {
+								return fmt.Errorf("REPL server state file still exists")
+							}
+						}
+
+						return nil
+					},
+					reasonableTimeout,
+				)
 			},
 		); err != nil {
 			return err
