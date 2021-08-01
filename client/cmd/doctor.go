@@ -590,7 +590,27 @@ version of %s.`,
 		if err := step(
 			"Shut the player down",
 			func() error {
-				return sendShutdownMessage(client)
+				if err := sendShutdownMessage(client); err != nil {
+					return err
+				}
+
+				return util.Await(
+					func() error {
+						players, err := system.ReadPlayerStates()
+						if err != nil {
+							return err
+						}
+
+						for _, p := range players {
+							if p.Port == player.Port {
+								return fmt.Errorf("player state file still exists")
+							}
+						}
+
+						return nil
+					},
+					reasonableTimeout,
+				)
 			},
 		); err != nil {
 			return err
