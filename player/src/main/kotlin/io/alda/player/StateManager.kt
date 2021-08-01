@@ -53,6 +53,9 @@ class StateManager(val port : Int) {
   val stateFilesDir =
     Paths.get(projDirs.cacheDir, "state", "players").toString()
 
+  val replServerStateFilesDir =
+    Paths.get(projDirs.cacheDir, "state", "repl-servers").toString()
+
   val stateFilePath =
     Paths.get(stateFilesDir, playerVersion, playerId + ".json").toString()
 
@@ -62,18 +65,13 @@ class StateManager(val port : Int) {
     stateFile.writeText(json.toJsonString(state))
   }
 
-  init {
-    stateFile.getParentFile().mkdirs()
-    stateFile.createNewFile()
-    stateFile.deleteOnExit()
-    writeStateFile()
-
+  fun cleanUpStaleStateFiles(dir : String) {
     // Clean up the state files directory. This is important because even though
     // we have a shutdown hook that removes a player's state file before
     // exiting, it won't run in all scenarios (e.g. OOM error, kill -9).
-    log.info { "Cleaning up stale files in ${stateFilesDir}..." }
+    log.info { "Cleaning up stale files in ${dir}..." }
 
-    File(stateFilesDir).walkTopDown().filter { it.isFile() }.forEach {
+    File(dir).walkTopDown().filter { it.isFile() }.forEach {
       val lastModified = Instant.ofEpochMilli(it.lastModified())
       val now = Instant.now()
       val age = Duration.between(lastModified, now)
@@ -88,12 +86,21 @@ class StateManager(val port : Int) {
       }
     }
 
-    File(stateFilesDir).walkBottomUp().filter { it.isDirectory() }.forEach {
+    File(dir).walkBottomUp().filter { it.isDirectory() }.forEach {
       if (it.list().size == 0) {
         log.debug { "Deleting empty directory ${it.getAbsolutePath()}" }
         it.delete()
       }
     }
+  }
+
+  init {
+    stateFile.getParentFile().mkdirs()
+    stateFile.createNewFile()
+    stateFile.deleteOnExit()
+    writeStateFile()
+    cleanUpStaleStateFiles(stateFilesDir)
+    cleanUpStaleStateFiles(replServerStateFilesDir)
   }
 
   fun isExpired() = System.currentTimeMillis() > state.expiry

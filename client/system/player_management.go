@@ -17,20 +17,7 @@ import (
 	log "alda.io/client/logging"
 )
 
-// Each `alda-player` process creates a state file where it tracks its own
-// state. The `alda` client uses this information to list player processes
-// (`alda ps`) or to find an available player process to play a score.
-//
-// Each player process deletes its own state file when it exits, but this
-// doesn't happen in exceptional scenarios like an out of memory error or the
-// process being forcibly terminated (e.g. `kill -9`).
-//
-// Because it will always be possible for player processes to die before they
-// can clean up their own state files, both `alda-player` and `alda` routinely
-// check for and clean up stale player state files.
-func CleanUpStaleStateFiles() error {
-	stateDir := CachePath("state", "players")
-
+func cleanUpStaleStateFiles(stateDir string) error {
 	if err := filepath.WalkDir(
 		stateDir,
 		func(path string, info os.DirEntry, err error) error {
@@ -76,6 +63,30 @@ func CleanUpStaleStateFiles() error {
 	// Player processes also delete empty directories for old versions, and it
 	// seems to behave well, so we don't need to include the deletion of empty
 	// directories part here in the client.
+
+	return nil
+}
+
+// Each `alda-player` process creates a state file where it tracks its own
+// state. The `alda` client uses this information to list player processes
+// (`alda ps`) or to find an available player process to play a score.
+//
+// Each player process deletes its own state file when it exits, but this
+// doesn't happen in exceptional scenarios like an out of memory error or the
+// process being forcibly terminated (e.g. `kill -9`).
+//
+// Because it will always be possible for player processes to die before they
+// can clean up their own state files, both `alda-player` and `alda` routinely
+// check for and clean up stale player state files.
+func CleanUpStaleStateFiles() error {
+	for _, stateDir := range []string{
+		CachePath("state", "players"),
+		CachePath("state", "repl-servers"),
+	} {
+		if err := cleanUpStaleStateFiles(stateDir); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
