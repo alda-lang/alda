@@ -485,5 +485,23 @@ func TestNotes(t *testing.T) {
 				expectMidiNoteNumbers(67),
 			},
 		},
+		scoreUpdateTestCase{
+			label: "alda-code notes",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "tempo"},
+					LispNumber{Value: 120},
+				}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "alda-code"},
+					LispString{Value: "c+2 f+ a"},
+				}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectNoteDurations(1000, 1000, 1000),
+				expectMidiNoteNumbers(61, 65, 68),
+			},
+		},
 	)
 }

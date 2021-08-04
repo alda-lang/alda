@@ -8,6 +8,24 @@ import (
 
 	"alda.io/client/json"
 	log "alda.io/client/logging"
+
+	// FIXME: This doesn't work because the `parser` package depends on the
+	// `model` package, so attempting to import the `parser` package _from_ the
+	// `model` package results in a cyclic import error:
+	//
+	// package alda.io/client
+	//         imports alda.io/client/cmd
+	//         imports alda.io/client/code-generator
+	//         imports alda.io/client/model
+	//         imports alda.io/client/parser
+	//         imports alda.io/client/model: import cycle not allowed
+	// package alda.io/client
+	//         imports alda.io/client/cmd
+	//         imports alda.io/client/code-generator
+	//         imports alda.io/client/model
+	//         imports alda.io/client/parser
+	//         imports alda.io/client/model: import cycle not allowed
+	"alda.io/client/parser"
 )
 
 // Alda includes a minimal Lisp implementation as a subset of the language, in
@@ -1005,7 +1023,7 @@ func init() {
 	for marking := range DynamicVolumes {
 		defattribute([]string{marking},
 			attributeFunctionSignature{
-				argumentTypes: []LispForm{},
+				argumentTypes:  []LispForm{},
 				implementation: dynamicImplementation(marking),
 			},
 		)
@@ -1312,6 +1330,27 @@ func init() {
 						"only notes can be slurred. Expected Note, got: %#v", scoreUpdate,
 					)
 				}
+			},
+		},
+	)
+
+	defn("alda-code",
+		FunctionSignature{
+			ArgumentTypes: []LispForm{LispString{}},
+			Implementation: func(args ...LispForm) (LispForm, error) {
+				stringLiteral := args[0].(LispString)
+
+				// FIXME: This doesn't work because of a cyclic import error. See
+				// comment at the top of this file for more details.
+				scoreUpdates, err := parser.ParseString(stringLiteral.Value)
+				if err != nil {
+					return nil, &AldaSourceError{
+						Context: stringLiteral.SourceContext,
+						Err:     err,
+					}
+				}
+
+				return EventSequence{Events: scoreUpdates}, nil
 			},
 		},
 	)
