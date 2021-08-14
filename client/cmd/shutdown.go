@@ -24,6 +24,11 @@ var shutdownCmd = &cobra.Command{
 	Use:   "shutdown",
 	Short: "Shut down background processes",
 	RunE: func(_ *cobra.Command, args []string) error {
+		// It's a good idea to print something here to indicate to the user that we
+		// did what they asked. Otherwise, it might not be obvious that we did
+		// anything.
+		fmt.Fprintln(os.Stderr, "Shutting down player processes.")
+
 		players := []system.PlayerState{}
 
 		// Determine the players to which to send a "shutdown" message based on the
@@ -63,11 +68,6 @@ var shutdownCmd = &cobra.Command{
 					Msg("Sent \"shutdown\" message to player process.")
 			}
 		}
-
-		// We don't have to print something here, but it's a good idea because it
-		// indicates to the user that we did what they asked. Otherwise, it might
-		// not be obvious that we did anything.
-		fmt.Fprintln(os.Stderr, "Shutting down player processes.")
 
 		return nil
 	},
