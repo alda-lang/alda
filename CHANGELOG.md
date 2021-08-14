@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## Unreleased
+
+* `alda shutdown` now prints a helpful message letting you know what it is
+  doing (shutting down player processes).
+
 ## 2.0.3 (2021-08-01)
 
 * Fixed a bug where input like `[c1s]` (a duration in seconds at the end of an

@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"fmt"
+	"os"
+
 	log "alda.io/client/logging"
 	"alda.io/client/system"
 	"alda.io/client/transmitter"
@@ -57,6 +60,11 @@ var shutdownCmd = &cobra.Command{
 				Interface("player", player).
 				Msg("Sent \"shutdown\" message to player process.")
 		}
+
+		// We don't have to print something here, but it's a good idea because it
+		// indicates to the user that we did what they asked. Otherwise, it might
+		// not be obvious that we did anything.
+		fmt.Fprintln(os.Stderr, "Shutting down player processes.")
 
 		return nil
 	},
