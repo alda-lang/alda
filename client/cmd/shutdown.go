@@ -53,12 +53,15 @@ var shutdownCmd = &cobra.Command{
 		for _, player := range players {
 			transmitter := transmitter.OSCTransmitter{Port: player.Port}
 			if err := transmitter.TransmitShutdownMessage(0); err != nil {
-				return err
+				log.Warn().
+					Interface("player", player).
+					Err(err).
+					Msg("Failed to send \"shutdown\" message to player process.")
+			} else {
+				log.Info().
+					Interface("player", player).
+					Msg("Sent \"shutdown\" message to player process.")
 			}
-
-			log.Info().
-				Interface("player", player).
-				Msg("Sent \"shutdown\" message to player process.")
 		}
 
 		// We don't have to print something here, but it's a good idea because it

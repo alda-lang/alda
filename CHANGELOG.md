@@ -5,6 +5,11 @@
 * `alda shutdown` now prints a helpful message letting you know what it is
   doing (shutting down player processes).
 
+* If `alda stop` or `alda shutdown` fails to send a "stop" or "shutdown" message
+  to a player process, it will now print a warning and continue instead of
+  printing an error and exiting. (This scenario is usually not a critical
+  problem, and it will resolve itself within a couple of minutes.)
+
 ## 2.0.3 (2021-08-01)
 
 * Fixed a bug where input like `[c1s]` (a duration in seconds at the end of an
