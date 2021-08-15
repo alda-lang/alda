@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## 2.0.4 (2021-08-14)
 
 * `alda shutdown` now prints a helpful message letting you know what it is
   doing (shutting down player processes).
