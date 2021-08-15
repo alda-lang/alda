@@ -22,6 +22,22 @@ import (
 
 const reasonableTimeout = 20 * time.Second
 
+func DeletePlayerStateFile(playerID string) error {
+	path := CachePath(
+		"state", "players", generated.ClientVersion, playerID+".json",
+	)
+
+	log.Debug().
+		Str("path", path).
+		Msg("Deleting player state file.")
+
+	err := os.Remove(path)
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return err
+	}
+	return nil
+}
+
 func cleanUpStaleStateFiles(stateDir string) error {
 	if err := filepath.WalkDir(
 		stateDir,

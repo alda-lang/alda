@@ -15,6 +15,7 @@ import (
 
 	"alda.io/client/color"
 	"alda.io/client/help"
+	log "alda.io/client/logging"
 	"alda.io/client/model"
 	"alda.io/client/parser"
 	"alda.io/client/repl"
@@ -102,6 +103,42 @@ var doctorCmd = &cobra.Command{
 			"Generate score model",
 			func() error {
 				return score.Update(scoreUpdates...)
+			},
+		); err != nil {
+			return err
+		}
+
+		//////////////////////////////////////////////////
+
+		if err := step(
+			"Ensure that there are no stale player processes",
+			func() error {
+				players, err := system.ReadPlayerStates()
+				if err != nil {
+					return err
+				}
+
+				for _, player := range players {
+					// Disregard player processes that are starting up as a result of
+					// running `alda doctor`. We're really looking for older player
+					// processes that died mysteriously.
+					if player.State == "starting" {
+						continue
+					}
+
+					if _, err := system.PingPlayer(player.Port); err != nil {
+						log.Warn().
+							Interface("player", player).
+							Err(err).
+							Msg("Failed to reach player process. Deleting state file.")
+
+						if err := system.DeletePlayerStateFile(player.ID); err != nil {
+							return err
+						}
+					}
+				}
+
+				return nil
 			},
 		); err != nil {
 			return err
