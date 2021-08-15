@@ -225,10 +225,6 @@ Currently, the only supported output format is %s.`,
 		}
 
 		for _, player := range players {
-			if _, err := ping(player.Port); err != nil {
-				return err
-			}
-
 			transmitter := transmitter.OSCTransmitter{Port: player.Port}
 
 			var transmissionError error

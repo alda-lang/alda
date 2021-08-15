@@ -305,14 +305,6 @@ var playCmd = &cobra.Command{
 			Msg("Sending messages to players.")
 
 		for _, player := range players {
-			log.Debug().
-				Interface("player", player).
-				Msg("Waiting for player to respond to ping.")
-
-			if _, err := ping(player.Port); err != nil {
-				return err
-			}
-
 			xmitter := transmitter.OSCTransmitter{Port: player.Port}
 
 			var transmissionError error

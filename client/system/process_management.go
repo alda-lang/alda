@@ -15,7 +15,12 @@ import (
 	"alda.io/client/generated"
 	"alda.io/client/help"
 	log "alda.io/client/logging"
+	"alda.io/client/util"
+
+	"github.com/daveyarwood/go-osc/osc"
 )
+
+const reasonableTimeout = 20 * time.Second
 
 func cleanUpStaleStateFiles(stateDir string) error {
 	if err := filepath.WalkDir(
@@ -260,8 +265,45 @@ To troubleshoot:
 	)
 }
 
-// FindAvailablePlayer finds a player that is in an available state and returns
-// current information about its state.
+// PingPlayer sends a ping message to the specified port number, where a player
+// process is expected to be listening.
+//
+// If the first ping doesn't go through, it is tried repeatedly for the
+// `reasonableTimeout` duration, so as to avoid concluding too hastily that a
+// player process is not reachable (e.g. it might be in the process of coming up
+// and will be available shortly).
+//
+// If the player is reachable, the OSC client that we created in order to ping
+// the player process is returned, so that it can be reused if desired.
+//
+// Returns an error if the player isn't reachable after the timeout duration.
+func PingPlayer(port int) (*osc.Client, error) {
+	log.Debug().
+		Int("port", port).
+		Msg("Waiting for player to respond to ping.")
+
+	client := osc.NewClient("localhost", port, osc.ClientProtocol(osc.TCP))
+
+	err := util.Await(
+		func() error {
+			return client.Send(osc.NewMessage("/ping"))
+		},
+		reasonableTimeout,
+	)
+
+	return client, err
+}
+
+// FindAvailablePlayer finds a player that is in an available state, confirms
+// that it can be reached by sending a ping, and returns current information
+// about the player's state.
+//
+// In the case where a player appears to exist in the available state, but is
+// not reachable (e.g. if the player suddenly died and wasn't able to clean up
+// its own state file), FindAvailablePlayer will delete that player's state file
+// and try again with other players that appear to be in the available state,
+// and will also fill the player pool to help ensure that we don't run out of
+// players.
 //
 // Returns `ErrNoPlayersAvailable` if no player is currently in an available
 // state.
@@ -272,9 +314,28 @@ func FindAvailablePlayer() (PlayerState, error) {
 	}
 
 	for _, player := range players {
-		if player.State == "ready" {
-			return player, nil
+		if player.State != "ready" {
+			continue
 		}
+
+		if _, err := PingPlayer(player.Port); err != nil {
+			log.Warn().
+				Interface("player", player).
+				Err(err).
+				Msg("Failed to reach player process. Will try another one.")
+
+			if err := DeletePlayerStateFile(player.ID); err != nil {
+				return PlayerState{}, err
+			}
+
+			if err := FillPlayerPool(); err != nil {
+				return PlayerState{}, err
+			}
+
+			return FindAvailablePlayer()
+		}
+
+		return player, nil
 	}
 
 	return PlayerState{}, ErrNoPlayersAvailable

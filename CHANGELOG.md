@@ -10,6 +10,23 @@
   printing an error and exiting. (This scenario is usually not a critical
   problem, and it will resolve itself within a couple of minutes.)
 
+* `alda play` and `alda export` are now more resilient against scenarios where
+  old player processes died mysteriously and left around stale state files that
+  suggest they are still reachable.
+
+  In scenarios like those, there will now be a long pause while the Alda client
+  attempts to reach the dead player process, then it will print a warning saying
+  it was unable to do so, and proceed to try another player process. This might
+  happen a few times, but Alda will eventually recover and proceed to
+  play/export your score.
+
+  Note that this should rarely, if ever, happen! If you are seeing this happen a
+  lot, then there is probably something weird going on with your player
+  processes. Please have a look at the player logs (run `alda-player info` to
+  learn where to find the logs) and let us know if you see any errors or
+  stacktraces. This information will help us make further improvements in the
+  future!
+
 ## 2.0.3 (2021-08-01)
 
 * Fixed a bug where input like `[c1s]` (a duration in seconds at the end of an

@@ -157,14 +157,6 @@ Currently, the only supported output format is %s.`,
 			transmitter.LoadOnly(),
 		}
 
-		log.Debug().
-			Interface("player", player).
-			Msg("Waiting for player to respond to ping.")
-
-		if _, err = ping(player.Port); err != nil {
-			return err
-		}
-
 		transmitter := transmitter.OSCTransmitter{Port: player.Port}
 
 		if err := transmitter.TransmitScore(score, transmitOpts...); err != nil {

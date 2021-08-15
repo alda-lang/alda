@@ -40,19 +40,6 @@ func step(action string, test func() error) error {
 	return nil
 }
 
-func ping(port int) (*osc.Client, error) {
-	client := osc.NewClient("localhost", port, osc.ClientProtocol(osc.TCP))
-
-	err := util.Await(
-		func() error {
-			return client.Send(osc.NewMessage("/ping"))
-		},
-		reasonableTimeout,
-	)
-
-	return client, err
-}
-
 func sendShutdownMessage(client *osc.Client) error {
 	msg := osc.NewMessage("/system/shutdown")
 	msg.Append(int32(0))
@@ -310,7 +297,7 @@ version of %s.`,
 		if err := step(
 			"Ping player process",
 			func() error {
-				pingClient, err := ping(playerPort)
+				pingClient, err := system.PingPlayer(playerPort)
 				if err != nil {
 					return err
 				}
@@ -572,7 +559,7 @@ version of %s.`,
 		if err := step(
 			"Ping the player",
 			func() error {
-				pingClient, err := ping(player.Port)
+				pingClient, err := system.PingPlayer(player.Port)
 				if err != nil {
 					return err
 				}
