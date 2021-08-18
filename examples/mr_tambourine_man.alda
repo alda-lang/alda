@@ -1,0 +1,28 @@
+# This is Mr. Tambourine Man as I would play it on a guitar with barre chords,
+# with 8 strums (up-down is 2 strums).
+
+# Chords with different durations, e.g "gc" is a G barre chord on guitar
+# with duration of 1 bar. e.g. "gc3" is a G chord with duration of 3 beats
+# (3 eights).
+gc =  o2 g8>/d/g/b>/d/g~
+gc2 = o2 g4>/d/g/b>/d/g~
+gc3 = o2 g4.>/d/g/b>/d/g~
+
+# "gb" is a G-chord bar. "Strums" on 1st, 4th, 6th and 7th beat
+gb = gc3 gc2 gc gc2
+
+ac =  o2 a8>/e/a>/c+/e/a~
+ac2 = o2 a4>/e/a>/c+/e/a~
+ac3 = o2 a4.>/e/a>/c+/e/a~
+ab = ac3 ac2 ac ac2
+
+dc =  o3 d8/a>/d/f+/a~
+dc2 = o3 d4/a>/d/f+/a~
+dc3 = o3 d4./a>/d/f+/a~
+db = dc3 dc2 dc dc2
+
+midi-acoustic-guitar-steel:
+  gb ab db gb
+  db gb ab ab
+  gb ab db gb
+  db gb ab db
