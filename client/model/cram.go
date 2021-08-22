@@ -103,7 +103,6 @@ func (cram Cram) UpdateScore(score *Score) error {
 
 	for _, part := range score.CurrentParts {
 		timeScale, err := timeScale(cram, part)
-
 		if err != nil {
 			return err
 		}
