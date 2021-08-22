@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## Unreleased
+
+* Fixed [a bug][issue-388] where using an octave change inside a chord inside a
+  cram expression produced unexpected results.
+
+[issue-388]: https://github.com/alda-lang/alda/issues/388
+
 ## 2.0.4 (2021-08-14)
 
 * `alda shutdown` now prints a helpful message letting you know what it is

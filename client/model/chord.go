@@ -91,7 +91,13 @@ func (chord Chord) DurationMs(part *Part) float64 {
 
 	for _, event := range chord.Events {
 		durationMs := event.DurationMs(part)
-		shortestDurationMs = math.Min(shortestDurationMs, durationMs)
+
+		// Octave changes can be chord events, and they have no duration, so we need
+		// to ignore those here when determining the event with the shortest
+		// duration.
+		if durationMs > 0 {
+			shortestDurationMs = math.Min(shortestDurationMs, durationMs)
+		}
 	}
 
 	return shortestDurationMs
