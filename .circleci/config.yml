@@ -165,12 +165,12 @@ jobs:
             alda version
             alda-player info
 
-      - run:
-          name: alda doctor
-          command: |
-            export ALDA_DISABLE_SPAWNING=yes
-            export ALDA_DISABLE_TELEMETRY=yes
-            alda -v3 doctor --no-audio
+      # - run:
+      #     name: alda doctor
+      #     command: |
+      #       export ALDA_DISABLE_SPAWNING=yes
+      #       export ALDA_DISABLE_TELEMETRY=yes
+      #       alda -v3 doctor --no-audio
 
       - run:
           name: "Troubleshooting: player logs"
@@ -208,12 +208,12 @@ jobs:
             alda version
             alda-player info
 
-      - run:
-          name: alda doctor
-          command: |
-            export ALDA_DISABLE_SPAWNING=yes
-            export ALDA_DISABLE_TELEMETRY=yes
-            alda -v3 doctor --no-audio
+      # - run:
+      #     name: alda doctor
+      #     command: |
+      #       export ALDA_DISABLE_SPAWNING=yes
+      #       export ALDA_DISABLE_TELEMETRY=yes
+      #       alda -v3 doctor --no-audio
 
       - run:
           name: "Troubleshooting: player logs"
@@ -249,13 +249,13 @@ jobs:
             alda version
             alda-player info
 
-      - run:
-          name: alda doctor
-          command: |
-            $env:PATH = "$env:PATH;C:\Program Files\Alda\bin"
-            $env:ALDA_DISABLE_SPAWNING = "yes"
-            $env:ALDA_DISABLE_TELEMETRY = "yes"
-            alda -v3 doctor --no-audio
+      # - run:
+      #     name: alda doctor
+      #     command: |
+      #       $env:PATH = "$env:PATH;C:\Program Files\Alda\bin"
+      #       $env:ALDA_DISABLE_SPAWNING = "yes"
+      #       $env:ALDA_DISABLE_TELEMETRY = "yes"
+      #       alda -v3 doctor --no-audio
 
       - run:
           name: "Test `alda update` mechanism"
