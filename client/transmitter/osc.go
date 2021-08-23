@@ -1,8 +1,10 @@
 package transmitter
 
 import (
+	"encoding/binary"
 	"fmt"
 	"math"
+	"os"
 	"sort"
 	"time"
 
@@ -407,5 +409,14 @@ func (oe OSCTransmitter) TransmitScore(
 		Interface("bundle", bundle).
 		Msg("Sending OSC bundle.")
 
-	return oscClient(oe.Port).Send(bundle)
+	// return oscClient(oe.Port).Send(bundle)
+
+	bytes, err := bundle.MarshalBinary()
+	if err != nil {
+		return err
+	}
+
+	binary.Write(os.Stdout, binary.LittleEndian, bytes)
+
+	return nil
 }

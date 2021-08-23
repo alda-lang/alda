@@ -13,7 +13,6 @@ import (
 	"alda.io/client/parser"
 	"alda.io/client/system"
 	"alda.io/client/transmitter"
-	"alda.io/client/util"
 	"github.com/spf13/cobra"
 )
 
@@ -242,97 +241,98 @@ var playCmd = &cobra.Command{
 			Str("took", fmt.Sprintf("%s", time.Since(start))).
 			Msg("Constructed score.")
 
-		var players []system.PlayerState
+			// var players []system.PlayerState
 
-		// Determine the port to use based on the provided CLI options.
-		switch {
+			// // Determine the port to use based on the provided CLI options.
+			// switch {
 
-		// Port is explicitly specified, so use that port.
-		case playerPort != -1:
-			player := system.PlayerState{
-				ID:    "unknown",
-				State: "unknown",
-				Port:  playerPort,
-			}
-			players = []system.PlayerState{player}
+			// // Port is explicitly specified, so use that port.
+			// case playerPort != -1:
+			// 	player := system.PlayerState{
+			// 		ID:    "unknown",
+			// 		State: "unknown",
+			// 		Port:  playerPort,
+			// 	}
+			// 	players = []system.PlayerState{player}
 
-		// Player ID is specified; look up the player by ID and use its port.
-		case playerID != "":
-			player, err := system.FindPlayerByID(playerID)
-			if err != nil {
-				return err
-			}
-			players = []system.PlayerState{player}
+			// // Player ID is specified; look up the player by ID and use its port.
+			// case playerID != "":
+			// 	player, err := system.FindPlayerByID(playerID)
+			// 	if err != nil {
+			// 		return err
+			// 	}
+			// 	players = []system.PlayerState{player}
 
-		// We're actually unpausing, not playing, so send the message to all active
-		// player processes so that if any of them are paused, they'll resume
-		// playing.
-		case action == "unpause":
-			allPlayers, err := system.ReadPlayerStates()
-			if err != nil {
-				return err
-			}
-			players = []system.PlayerState{}
-			for _, player := range allPlayers {
-				if player.State == "active" {
-					players = append(players, player)
-				}
-			}
+			// // We're actually unpausing, not playing, so send the message to all active
+			// // player processes so that if any of them are paused, they'll resume
+			// // playing.
+			// case action == "unpause":
+			// 	allPlayers, err := system.ReadPlayerStates()
+			// 	if err != nil {
+			// 		return err
+			// 	}
+			// 	players = []system.PlayerState{}
+			// 	for _, player := range allPlayers {
+			// 		if player.State == "active" {
+			// 			players = append(players, player)
+			// 		}
+			// 	}
 
-		// Find an available player process to use.
-		default:
-			system.StartingPlayerProcesses()
+			// // Find an available player process to use.
+			// default:
+			// 	system.StartingPlayerProcesses()
 
-			if err := util.Await(
-				func() error {
-					player, err := system.FindAvailablePlayer()
-					if err != nil {
-						return err
-					}
+			// 	if err := util.Await(
+			// 		func() error {
+			// 			player, err := system.FindAvailablePlayer()
+			// 			if err != nil {
+			// 				return err
+			// 			}
 
-					players = []system.PlayerState{player}
-					return nil
-				},
-				reasonableTimeout,
-			); err != nil {
-				return err
-			}
+			// 			players = []system.PlayerState{player}
+			// 			return nil
+			// 		},
+			// 		reasonableTimeout,
+			// 	); err != nil {
+			// 		return err
+			// 	}
+			// }
+
+			// log.Info().
+			// 	Interface("players", players).
+			// 	Str("action", action).
+			// 	Msg("Sending messages to players.")
+
+			// for _, player := range players {
+		player := system.PlayerState{}
+		xmitter := transmitter.OSCTransmitter{Port: player.Port}
+
+		var transmissionError error
+		if action == "unpause" {
+			transmissionError = xmitter.TransmitPlayMessage()
+		} else {
+			transmissionError = xmitter.TransmitScore(
+				score,
+				transmitter.TransmitFrom(optionFrom),
+				transmitter.TransmitTo(optionTo),
+				transmitter.OneOff(),
+			)
+		}
+		if transmissionError != nil {
+			return transmissionError
 		}
 
-		log.Info().
-			Interface("players", players).
-			Str("action", action).
-			Msg("Sending messages to players.")
-
-		for _, player := range players {
-			xmitter := transmitter.OSCTransmitter{Port: player.Port}
-
-			var transmissionError error
-			if action == "unpause" {
-				transmissionError = xmitter.TransmitPlayMessage()
-			} else {
-				transmissionError = xmitter.TransmitScore(
-					score,
-					transmitter.TransmitFrom(optionFrom),
-					transmitter.TransmitTo(optionTo),
-					transmitter.OneOff(),
-				)
-			}
-			if transmissionError != nil {
-				return transmissionError
-			}
-
-			log.Info().
-				Interface("player", player).
-				Msg("Sent OSC messages to player.")
-		}
+		// log.Info().
+		// 	Interface("player", player).
+		// 	Msg("Sent OSC messages to player.")
+		// }
 
 		// We don't have to print something here, but it's a good idea because it
 		// indicates to the user that we did what they asked. Otherwise, it might
 		// not be obvious that we did anything, especially in cases where there is
 		// no audible output, e.g. `alda play -c "c d e"` (valid syntax, but no
 		// audible output because no part was indicated).
-		fmt.Fprintln(os.Stderr, "Playing...")
+		// fmt.Fprintln(os.Stderr, "Playing...")
 
 		return nil
 	},
