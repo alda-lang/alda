@@ -267,7 +267,9 @@ class MidiEngine {
 
   fun scheduleShutdown(offsetMs : Int) {
     val now = Math.round(currentOffset()).toInt()
-    scheduleMetaMsg(now + offsetMs, CustomMetaMessage.SHUTDOWN)
+    val shutdownOffsetMs = now + offsetMs
+    log.debug { "Scheduling shutdown for ${shutdownOffsetMs}" }
+    scheduleMetaMsg(shutdownOffsetMs, CustomMetaMessage.SHUTDOWN)
   }
 
   init {
@@ -286,6 +288,7 @@ class MidiEngine {
     sequencer.addMetaEventListener(MetaEventListener { msg ->
       when (val msgType = msg.getType()) {
         CustomMetaMessage.CONTINUE.type -> {
+          log.debug { "Received CONTINUE meta event" }
           synchronized(isPlaying) {
             if (isPlaying) sequencer.start()
           }
@@ -293,11 +296,18 @@ class MidiEngine {
 
         CustomMetaMessage.PERCUSSION.type -> {
           val trackNumber = msg.getData().first().toInt()
+          log.debug {
+            "Received PERCUSSION meta event for track ${trackNumber}"
+          }
           track(trackNumber).useMidiPercussionChannel()
         }
 
         CustomMetaMessage.EVENT.type -> {
           val pendingEvent = String(msg.getData())
+
+          log.debug {
+            "Received EVENT meta event for pending event: ${pendingEvent}"
+          }
 
           synchronized(pendingEvents) {
             pendingEvents.get(pendingEvent)?.also { latch ->
@@ -310,15 +320,18 @@ class MidiEngine {
         }
 
         CustomMetaMessage.SHUTDOWN.type -> {
+          log.debug { "Received SHUTDOWN meta event" }
           isRunning = false
         }
 
         MIDI_END_OF_TRACK -> {
+          log.debug { "Received End of Track meta event" }
           // This metamessage is sent automatically when the end of the sequence
           // is reached.
         }
 
         MIDI_SET_TEMPO -> {
+          log.debug { "Received Set Tempo meta event" }
           // This metamessage is handled by the Sequencer out of the box.
         }
 
