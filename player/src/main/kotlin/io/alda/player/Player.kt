@@ -413,11 +413,6 @@ private fun applyUpdates(updates : Updates) {
   if (updates.systemActions.contains(SystemAction.SHUTDOWN))
     isRunning = false
 
-  updates.systemEvents.filter { it is ShutdownEvent }.forEach {
-    val shutdownEvent = it as ShutdownEvent
-    midi().scheduleShutdown(shutdownEvent.offset)
-  }
-
   if (updates.systemActions.contains(SystemAction.STOP))
     midi().stopSequencer()
 
@@ -479,6 +474,16 @@ private fun applyUpdates(updates : Updates) {
     if (actions.contains(TrackAction.UNMUTE)) {
       track(trackNumber).unmute()
     }
+  }
+
+  // PHASE 6: Scheduled shutdown
+  // (It's important that we do this sometime _after_ handling tempo events.
+  // Otherwise, the timing of the shutdown can be off. The scheduling of the
+  // shutdown needs to be done with an awareness of all of the tempo changes
+  // that will occur in the score.)
+  updates.systemEvents.filter { it is ShutdownEvent }.forEach {
+    val shutdownEvent = it as ShutdownEvent
+    midi().scheduleShutdown(shutdownEvent.offset)
   }
 
   // NB: We don't actually start the sequencer here; that action needs to be

@@ -5,7 +5,11 @@
 * Fixed [a bug][issue-388] where using an octave change inside a chord inside a
   cram expression produced unexpected results.
 
+* Fixed [a bug][issue-389] where playback was sometimes ending abruptly before
+  the end of the score.
+
 [issue-388]: https://github.com/alda-lang/alda/issues/388
+[issue-389]: https://github.com/alda-lang/alda/issues/389
 
 ## 2.0.4 (2021-08-14)
 
