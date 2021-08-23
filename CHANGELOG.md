@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## 2.0.5 (2021-08-22)
 
 * Fixed [a bug][issue-388] where using an octave change inside a chord inside a
   cram expression produced unexpected results.
