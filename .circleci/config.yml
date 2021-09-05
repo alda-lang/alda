@@ -274,7 +274,7 @@ jobs:
 
   store_artifacts:
     docker:
-      - image: circleci/buildpack-deps:bionic
+      - image: cimg/base:2021.07
 
     steps:
       - attach_workspace:
