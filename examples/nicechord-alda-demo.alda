@@ -1,0 +1,248 @@
+# NiceChord Alda Demo
+# Composed by Wiwi Kuan (2021)
+# License: CC BY-SA 4.0
+# NiceChord.com
+
+(tempo! 200)
+
+# intro
+
+midi-seashore:
+    (ff)
+    o3 c0.25~0.25 # 8 bars
+
+midi-applause:
+    (f)
+    o3 r1 | r | c0.5~0.25 # 8 bars
+
+midi-bird-tweet:
+    (f)
+    o3 r1 | e | r | r |
+    g2 b | r1 | d | r |
+
+midi-steel-drums:
+    (f)
+    V1:
+    r1*7 | o4 {r b b b >c d}1
+
+    V2:
+    r1*7 | o4 {r g g g a b}1 %section-a
+
+midi-percussion:
+    (ff)
+    # drum fill
+    r1*7 | o3 r8 c16 c c8 c <a4 c/e/>c+
+
+# section-a (16-bar)
+
+midi-steel-drums:
+    @section-a
+    V0:
+    (f)
+    (key-signature "f+")
+    o4 b4/>d {<b >d <b >d <b >d <b >d <b >d <b >d <b}2. |
+    o5 d2 r8 c <b >c |
+    o4 g4/b d/g c8/e c/e r <a/>d |
+    r1 |
+    o4 r8 g b >d g f16 e d8 e |
+    d e c <b a g a >c |
+    <b >c d <b a g r d |
+    (mp)
+    {o3 a8 >d <a >d <a >d <a >d <a >d <a >d <a >d2}1
+
+midi-marimba:
+    @section-a
+    (mf)
+    (key-signature "f+")
+    [o3 b4 >d/g c8 e/g r d | r f/a r c r e/g r <b]*7
+    o3 b4 >d/g c8 e/g r d | r f/a r c r e/g r r |
+
+midi-trumpet:
+    @section-a
+    (ff)
+    (key-signature "f+")
+    (quant 70)
+    V1:
+    r1*7 | o4 r8 g a b >c d e f |
+    o5 g2 e4. f8 | r8 f r4 r2 |
+    o5 g2 e4. f8 | r8 f r4 r8 d f a |
+    o5 g2 e4. f8 | r8 f r4 r4 d8 r |
+    o5 g2 e4. f8 | r8 f e e (mf) {d2  c16 <b a g f e d c b}4. r8 %section-b
+
+    V2:
+    r1*7 | o4 r8 g a b >c d e f |
+    o4 b2 g4. a8 | r8 a r4 r2 |
+    o4 b2 g4. a8 | r8 a r4 r2 |
+    o4 b2 g4. a8 | r8 a r4 r2 |
+    o4 b2 g4. a8 | r8 a g g f+ r r r |
+
+midi-bright-acoustic-piano:
+    @section-a
+    (f)
+    (key-signature "f+")
+    (quant 50)
+    r1*8
+    [o5 r4 d/g/>d o5 d/g/>d r | o5 d4./a/>d o5 d4./a/>d o5 d4/a/>d]*3 # 2 bar * 3
+    o5 r4 d/g/>d o5 d/g/>d r | o5 d4./a/>d o5 (quant 150) d8/a/>d {c <b a g f_ e d c b a g}4 r4 # slide fill
+
+midi-percussion:
+    @section-a
+    V1: # clave
+    (mp)
+    [o2 r4 c+ c+ r | c+4. c+ c+4]*8 # 2 bar * 8
+
+    V2: # kick
+    (ffff)
+    [o2 c2 c | c c]*8 # 2x8 bars
+
+    V3: # snare
+    (f)
+    [o2 r4 r e r8 e | r4. e8 r2]*3         # 6 bars
+    o2 r4 r e r8 e | o3 r8 d d d d <b g r  # 2-bar fill
+    (fff)
+    [o2 r4 r e r8 e | r4. e8 r2]*3         # 6 bars
+    o2 r4 r e r8 e | o3 r8 d16 d d8 d <e b g e  # 2-bar fill
+
+    V4: # cowbell
+    (f)
+    [o3 g+2*4]*4
+
+    V5: # cymbals
+
+    (f) o3 g4 (mp) < f+ f+ f+8 a+ | r8 f+ f+4 f+ f+ # splash
+    f+4 f+ f+ f+8 a+ | r8 f+ f+ f+ f+4 f+
+    f+4 f+ f+ f+8 a+ | r8 f+ f+4 f+ f+
+    f+4 f+ f+ f+8 a+ | r8 f+ f+ f+ f+4 f+
+    (f) o3 c+4 (mp) <f+ f+ f+8 a+ | r8 f+ f+4 f+ f+ # crash
+    f+4 f+ f+ f+8 a+ | r8 f+ f+ f+ f+4 f+
+    f+4 f+ f+ f+8 a+ | r8 f+ f+4 f+ f+
+    f+4 f+ f+ f+8 a+ | r8 f+ f+ f+ f+4 f+
+
+    V6: # congas
+    (p)
+    [o4 r8 r e r d+ r e e | r e r e d r e r]*4
+
+    V7: # ride
+    (f)
+    r1*8
+    o3 [d+4 d+ d+ d+]*7 r1
+
+    V8: # clap
+    (mp)
+    r1*8
+    o2 [r2 d+ r d+]*4
+
+midi-acoustic-bass:
+    @section-a
+    (ffff)
+    o1 g4. >c4. d4~4. c4. <g4~4. # 2 bars per line
+    >c4. d4~4. c4. <g4~4.
+    >c4. d4~4. c4. <g4~4.
+    >c4. d4~4. c8 r d e g
+    o1 g4. >c4. d4~4. c4. <g4~4. # repeat
+    >c4. d4~4. c4. <g4~4.
+    >c4. d4~4. c4. <g4~4.
+    >c4. d4~4. c8 r d e g
+
+midi-harmonica:
+    @section-a
+    (fff)
+    r1*15 | o3 {r12 r4 r r4. b4 >e4. f+4 g4. a4}1
+
+# section-b
+
+midi-harmonica:
+    @section-b
+    (fff)
+    (quant 80)
+    o4 {r12 r4 b g+ a b >c e g}1 | {r32 b8 >c r46 c+8 d <b4}2.  {f+1 g4 g+}4
+    a4. g8 {r16 f+4. g4}4 {r16 f+4. e4}4 | {d+4. <b4}4 {>f+4. e4}4 r2
+
+midi-percussive-organ:
+    @section-b
+    (mf)
+    (quant 100)
+    (key-signature "")
+    V1:
+    r1*3 | o4 {r48 {r4. b4}4 {>e4. f+4}4 {g4. a4}4 {b4. g4}4}1 |
+    o5 e-4./g/b- o5 c8/f/a r4 o5 d4~1~1/f/g |
+    (quant 80)
+    o5 {f4. e-4 c4. <b-4}2 e-4 > {d/g4. d/g4}4
+    r1
+
+midi-trumpet:
+    @section-b
+    (mf)
+    (quant 80)
+    (key-signature "")
+    r1*4
+    o5 d4./>d o5 c8/>c r4 o4 b-4~1~4/>b- |
+    o4 d4/g g/b- b-/>d | (quant 70) o5 (f) {f4. e-4 c4. <b-4}2 e-8 r8 > (ff) {d4./g d4/g}4
+
+midi-bright-acoustic-piano:
+    @section-b
+    (f)
+    (quant 70)
+    (key-signature "")
+    V1: # RH
+    o4 a4./>e/a o4 a8/>e/a r4 o5 c4~1/g/>c |
+    o5 d4./f+/b o5 d8/f+/b r4 o4 b4~1/>e/a |
+    o4 g4./b-/>e- o4 a8/>c/f_ r4 o4 b-4~1/>d/g |
+    (quant 500) r4 o6 {g d c < g d c}2 < (quant 100) g4 | r4 r r {o6 d4./g d4/g}4
+
+    V2: # LH
+    o3 b4./>c/e o3 b8/>c/e r4 o3 a4~1/>d+/g |
+    o3 g4./>d/f+ o3 g8/>d/f+ r4 o3 g4~1/>c+/f+ |
+    o3 g4./b-/>e- o3 a8/>c/f_ r4 o3 b-4~1/>d/g |
+    (quant 100) o3 r4 b-4/>d/g o3 b-4/>d o3 b-4 | o4 {f4. e-4 c4. <b-4}2 e-4 o4 {d4./g d4/g}4
+
+    V3: # Final Notes Workaround
+    r1*7 | r4 r r o3 {a4. a4}4
+
+    V4: # Final Notes Workaround
+    r1*7 | r4 r r o5 {g4. g4}4
+
+midi-acoustic-bass:
+    @section-b
+    (ffff)
+    o1 f+4. >c8 r4 <b4~4 b4 >b <b |
+    o1 e4. b8 r4 a4~4 a4 {a4. >e4}4 a4 |
+    o2 c4. d8 r4 e-4~1 |
+    o1 {e-4. b-4}4 >e-2. | o2 {f4. e-4 c4. <b-4}2 e-4 {g4. g4}4
+    r1
+
+midi-percussion:
+    @section-b
+    V1: # kick
+    (ffff)
+    o2 c4 r {r r c}4 c | r {r r c}4 r4 c |
+    o2 c4 r {r r c}4 c | r {r r c}4 r4 c |
+    o2 c4. c8 r4 c | r4 c {r4. c4}4 c |
+    o2 {r4. c4}4 r4 {r4. c4}4 r4 | c2 r4 {r4. c4}4
+    r1 # extra rest
+
+    V2: # snare and toms
+    (ffff)
+    o2 r2 e | {r r (p) e}4 r4 (ffff) e r |
+    r2 e | {r r (p) e}4 r4 (ffff) e {r4 (mf) e e}4|
+    (ffff) r4. e8 r4 e | o3 {r4. d4}4 {c4. c4}4 o2 {b4. r4}4 {(ffffff) e16 (ffff) e2}4  |
+    {(ffff) e (ppp) e (ffff) e (ppp) e (mf) e (f) e}2*2 | {e4. r4 r4. (f) e4}2 (fffff) e4 (ffff) {e4. e4}4
+    r1
+
+    V4: # cowbell
+    (ff)
+    [o3 g+2*4]*2
+
+    V6: # congas
+    (mf)
+    [o4 r8 r e r d+ r {e4. e4}4 | {r4. e4 r4. e4 d4. r4 e4. r4}1 ]*2
+
+    V7: # cymbals
+    o3 (ff) c+2 (f) f4 (p) d+ | (f) f4 (p) d+ (f) f4 (p) d+
+    (f) f4 (p) d+ (f) f4 (p) d+ | (f) f4 (p) d+ (fff) g4 (p) d+
+    o3 c+4. a8 r4 g | o2 r4 a+2 a+4 |
+    o2 g+4*4 | a+2 r4 {a+4. (fffff) >g4}4
+
+    V8: # clap
+    (f)
+    o2 [r2 d+ r d+]*2

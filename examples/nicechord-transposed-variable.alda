@@ -1,0 +1,9 @@
+(tempo! 130)
+
+nicebass = [o2 c8. > c16 < r8 e4 f8 f+ g]
+
+midi-acoustic-bass:
+    nicebass*2
+    (transpose 5) nicebass*2
+    (transpose 7) nicebass*2
+    (transpose 0) o3 c8 c c c < g a b > c
