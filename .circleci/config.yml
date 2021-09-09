@@ -145,7 +145,7 @@ jobs:
 
   test_ubuntu_18_04:
     docker:
-      - image: circleci/openjdk:8
+      - image: cimg/openjdk:8.0
 
     steps:
       - attach_workspace:
