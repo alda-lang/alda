@@ -49,8 +49,8 @@ features like keyboard shortcuts to play the Alda code that you're editing.
     <tr>
       <td>Sublime Text</td>
       <td>
-        <a href="https://github.com/archimedespi/sublime-alda">
-          archimedespi/sublime-alda
+        <a href="https://github.com/erinzm/sublime-alda">
+          erinzm/sublime-alda
         </a>
       </td>
     </tr>
