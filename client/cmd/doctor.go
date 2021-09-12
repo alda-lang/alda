@@ -313,6 +313,7 @@ version of %s.`,
 				}
 
 				cmd := exec.Command(aldaPlayer, playerArgs...)
+				cmd.Env = os.Environ()
 
 				if verbosity > 1 {
 					cmd.Stdout = os.Stdout
@@ -530,7 +531,9 @@ version of %s.`,
 					playerArgs = append(playerArgs, "--lazy-audio")
 				}
 
-				return exec.Command(aldaPlayer, playerArgs...).Start()
+				cmd := exec.Command(aldaPlayer, playerArgs...)
+				cmd.Env = os.Environ()
+				return cmd.Start()
 			},
 		); err != nil {
 			return err

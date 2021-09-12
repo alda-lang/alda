@@ -407,6 +407,7 @@ func AldaPlayerPath() (playerPath string, sameVersion bool, err error) {
 	}
 
 	infoCmd := exec.Command(aldaPlayer, "info")
+	infoCmd.Env = os.Environ()
 	infoCmd.Stdout = nil
 	infoCmd.Stderr = nil
 	outputBytes, err := infoCmd.Output()
@@ -445,6 +446,7 @@ func AldaPlayerPath() (playerPath string, sameVersion bool, err error) {
 // they aren't.
 func spawnPlayer(playerPath string) error {
 	runCmd := exec.Command(playerPath, "run")
+	runCmd.Env = os.Environ()
 	if err := runCmd.Start(); err != nil {
 		return err
 	}
