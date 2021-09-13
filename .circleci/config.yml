@@ -79,7 +79,7 @@ workflows:
 jobs:
   build_client:
     docker:
-      - image: cimg/golang:1.16.8
+      - image: cimg/go:1.16.8
 
     steps:
       - checkout
