@@ -85,7 +85,7 @@ func updateDefaultDuration(part *Part, duration Duration) {
 	}
 }
 
-func addNoteOrRest(score *Score, noteOrRest ScoreUpdate) {
+func addNoteOrRest(score *Score, noteOrRest ScoreUpdate) error {
 	// Avoid applying the same global attribute change multiple times if we're in
 	// a chord.
 	//
@@ -101,6 +101,10 @@ func addNoteOrRest(score *Score, noteOrRest ScoreUpdate) {
 		specifiedDuration = noteOrRest.(Note).Duration
 	case Rest:
 		specifiedDuration = noteOrRest.(Rest).Duration
+	}
+
+	if err := specifiedDuration.Validate(); err != nil {
+		return err
 	}
 
 	for _, part := range score.CurrentParts {
@@ -150,14 +154,15 @@ func addNoteOrRest(score *Score, noteOrRest ScoreUpdate) {
 
 		updateDefaultDuration(part, duration)
 	}
+
+	return nil
 }
 
 // UpdateScore implements ScoreUpdate.UpdateScore by adding a note to the score
 // for all current parts and adjusting the parts' CurrentOffset, LastOffset, and
 // Duration accordingly.
 func (note Note) UpdateScore(score *Score) error {
-	addNoteOrRest(score, note)
-	return nil
+	return addNoteOrRest(score, note)
 }
 
 // DurationMs implements ScoreUpdate.DurationMs by returning the duration of the
@@ -205,8 +210,7 @@ func (rest Rest) JSON() *json.Container {
 // UpdateScore implements ScoreUpdate.UpdateScore by adjusting the
 // CurrentOffset, LastOffset, and Duration of all current parts.
 func (rest Rest) UpdateScore(score *Score) error {
-	addNoteOrRest(score, rest)
-	return nil
+	return addNoteOrRest(score, rest)
 }
 
 // DurationMs implements ScoreUpdate.DurationMs by returning the duration of the

@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 2.0.6 (2021-10-04)
+
+* Fixed a bug where a note length of 0 (e.g. `c0`) was accepted, and the note
+  would play forever. A note length of `0`, `0s` or `0ms` now results in a
+  validation error.
+
 ## 2.0.5 (2021-08-22)
 
 * Fixed [a bug][issue-388] where using an octave change inside a chord inside a

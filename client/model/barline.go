@@ -10,6 +10,10 @@ type Barline struct {
 	SourceContext AldaSourceContext
 }
 
+func (Barline) Validate() error {
+	return nil
+}
+
 // GetSourceContext implements HasSourceContext.GetSourceContext.
 func (barline Barline) GetSourceContext() AldaSourceContext {
 	return barline.SourceContext

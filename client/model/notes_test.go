@@ -487,3 +487,31 @@ func TestNotes(t *testing.T) {
 		},
 	)
 }
+
+func TestNoteValidation(t *testing.T) {
+	for _, durationComponent := range []DurationComponent{
+		NoteLength{Denominator: -1},
+		NoteLength{Denominator: 0},
+		NoteLengthBeats{Quantity: -1},
+		NoteLengthBeats{Quantity: 0},
+		NoteLengthMs{Quantity: -1},
+		NoteLengthMs{Quantity: 0},
+	} {
+		score := NewScore()
+		err := score.Update(
+			PartDeclaration{Names: []string{"piano"}},
+			Note{
+				Pitch: LetterAndAccidentals{NoteLetter: C},
+				Duration: Duration{
+					Components: []DurationComponent{durationComponent},
+				},
+			},
+		)
+
+		if err == nil {
+			t.Errorf(
+				"unexpected success: duration component %#v\n", durationComponent,
+			)
+		}
+	}
+}

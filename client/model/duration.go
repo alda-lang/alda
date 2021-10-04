@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 
+	"alda.io/client/help"
 	"alda.io/client/json"
 )
 
@@ -17,6 +18,9 @@ type DurationComponent interface {
 
 	// Ms returns the duration of a DurationComponent in milliseconds.
 	Ms(tempo float64) float64
+
+	// Validate returns an error if the DurationComponent is invalid.
+	Validate() error
 }
 
 // A NoteLength represents a standard note length in Western classical music
@@ -48,6 +52,16 @@ type NoteLength struct {
 	Dots int32
 }
 
+func (nl NoteLength) Validate() error {
+	if nl.Denominator <= 0 {
+		return help.UserFacingErrorf(
+			`The note length must be a positive number.`,
+		)
+	}
+
+	return nil
+}
+
 // JSON implements RepresentableAsJSON.JSON.
 func (nl NoteLength) JSON() *json.Container {
 	return json.Object(
@@ -73,6 +87,16 @@ type NoteLengthBeats struct {
 	Quantity float64
 }
 
+func (nl NoteLengthBeats) Validate() error {
+	if nl.Quantity <= 0 {
+		return help.UserFacingErrorf(
+			`The number of beats must be positive.`,
+		)
+	}
+
+	return nil
+}
+
 // JSON implements RepresentableAsJSON.JSON.
 func (nl NoteLengthBeats) JSON() *json.Container {
 	return json.Object("beats", nl.Quantity)
@@ -93,6 +117,16 @@ func (nl NoteLengthBeats) Ms(tempo float64) float64 {
 // NoteLengthMs expresses a duration as a specific number of milliseconds.
 type NoteLengthMs struct {
 	Quantity float64
+}
+
+func (nl NoteLengthMs) Validate() error {
+	if nl.Quantity <= 0 {
+		return help.UserFacingErrorf(
+			`The number of milliseconds must be positive.`,
+		)
+	}
+
+	return nil
 }
 
 // JSON implements RepresentableAsJSON.JSON.
@@ -120,6 +154,16 @@ func (nl NoteLengthMs) Ms(tempo float64) float64 {
 // Duration describes the length of time occupied by a note or other event.
 type Duration struct {
 	Components []DurationComponent
+}
+
+func (d Duration) Validate() error {
+	for _, component := range d.Components {
+		if err := component.Validate(); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // JSON implements RepresentableAsJSON.JSON.
