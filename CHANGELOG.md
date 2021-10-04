@@ -2,9 +2,11 @@
 
 ## 2.0.6 (2021-10-04)
 
-* Fixed a bug where a note length of 0 (e.g. `c0`) was accepted, and the note
-  would play forever. A note length of `0`, `0s` or `0ms` now results in a
-  validation error.
+* Fixed [a bug][issue-398] where a note length of 0 (e.g. `c0`) was accepted,
+  and the note would play forever. A note length of `0`, `0s` or `0ms` now
+  results in a validation error.
+
+[issue-398]: https://github.com/alda-lang/alda/issues/398
 
 ## 2.0.5 (2021-08-22)
 
