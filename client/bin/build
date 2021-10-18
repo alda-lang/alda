@@ -88,7 +88,8 @@ done
 # Reference:
 # https://zchee.github.io/golang-wiki/GoArm/
 # https://www.thepolyglotdeveloper.com/2017/04/cross-compiling-golang-applications-raspberry-pi/
-build linux arm 7
+build linux arm 7  # a.k.a. ARM 7
+build linux arm64  # a.k.a. ARM 8 (GOARM env var no longer needed)
 
 echo "Done."
 
