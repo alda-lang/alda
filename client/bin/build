@@ -38,6 +38,8 @@ function build() {
 
   if [[ -n "$arm" ]]; then
     arm_ext="-$3"
+  else
+    arm_ext=""
   fi
 
   if [[ "$os" == "windows" ]]; then
