@@ -34,6 +34,11 @@ go test $(go list ./...)
 function build() {
   os="$1"
   arch="$2"
+  arm="$3"
+
+  if [[ -n "$arm" ]]; then
+    arm_ext="-$3"
+  fi
 
   if [[ "$os" == "windows" ]]; then
     ext=".exe"
@@ -41,12 +46,12 @@ function build() {
     ext=""
   fi
 
-  output_filename="target/$build_sha/$os-$arch/alda$ext"
+  output_filename="target/$build_sha/$os-$arch$arm_ext/alda$ext"
 
   echo "Building $output_filename..."
 
   # Install the standard packages locally to speed up subsequent builds.
-  GOOS="$os" GOARCH="$arch" go install
+  GOOS="$os" GOARCH="$arch" GOARM="$arm" go install
 
   # Build.
   #
@@ -55,7 +60,7 @@ function build() {
   #   we need because otherwise, the full path to the executable (at build time!
   #   like, it contains "/home/circleci"!) ends up in the log output.
   #   Reference: https://github.com/rs/zerolog/issues/133#issuecomment-464404901
-  CGO_ENABLED=0 GOOS="$os" GOARCH="$arch" \
+  CGO_ENABLED=0 GOOS="$os" GOARCH="$arch" GOARM="$arm" \
     go build \
     -tags netgo \
     -ldflags '-w -extldflags "-static"' \
@@ -75,6 +80,13 @@ for os in windows darwin linux; do
     build $os $arch
   done
 done
+
+# ARM build, with a specific goal of supporting Raspberry Pi
+#
+# Reference:
+# https://zchee.github.io/golang-wiki/GoArm/
+# https://www.thepolyglotdeveloper.com/2017/04/cross-compiling-golang-applications-raspberry-pi/
+build linux arm 7
 
 echo "Done."
 
