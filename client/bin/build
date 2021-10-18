@@ -83,11 +83,12 @@ for os in windows darwin linux; do
   done
 done
 
-# ARM build, with a specific goal of supporting Raspberry Pi
+# ARM build, with a specific goal of supporting recent Raspberry Pi models
 #
 # Reference:
 # https://zchee.github.io/golang-wiki/GoArm/
 # https://www.thepolyglotdeveloper.com/2017/04/cross-compiling-golang-applications-raspberry-pi/
+build linux arm 6  # a.k.a. ARM 6
 build linux arm 7  # a.k.a. ARM 7
 build linux arm64  # a.k.a. ARM 8 (GOARM env var no longer needed)
 
