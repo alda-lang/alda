@@ -27,9 +27,9 @@ dependencies {
   // logging
   implementation("io.github.microutils:kotlin-logging:1.7.7")
   implementation("org.slf4j:slf4j-api:1.7.30")
-  implementation("org.apache.logging.log4j:log4j-slf4j-impl:2.13.0")
-  implementation("org.apache.logging.log4j:log4j-api:2.13.0")
-  implementation("org.apache.logging.log4j:log4j-core:2.13.0")
+  implementation("org.apache.logging.log4j:log4j-slf4j-impl:2.16.0")
+  implementation("org.apache.logging.log4j:log4j-api:2.16.0")
+  implementation("org.apache.logging.log4j:log4j-core:2.16.0")
 
   testImplementation(kotlin("test"))
   testImplementation(kotlin("test-junit"))

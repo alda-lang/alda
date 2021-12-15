@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2.0.7 (2021-12-15)
+
+* Security update: upgraded log4j to version 2.16.0 to patch CVEs.
+
 ## 2.0.6 (2021-10-04)
 
 * Fixed [a bug][issue-398] where a note length of 0 (e.g. `c0`) was accepted,
