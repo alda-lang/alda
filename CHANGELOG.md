@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2.0.8 (2021-12-20)
+
+* Security update: upgraded log4j to version 2.17.0 to patch CVEs.
+
 ## 2.0.7 (2021-12-15)
 
 * Security update: upgraded log4j to version 2.16.0 to patch CVEs.
