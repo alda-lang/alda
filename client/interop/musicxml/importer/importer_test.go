@@ -1,8 +1,9 @@
 package importer
 
 import (
-	"alda.io/client/model"
 	"testing"
+
+	"alda.io/client/model"
 
 	_ "alda.io/client/testing"
 )
@@ -12,8 +13,8 @@ func TestNotes(t *testing.T) {
 		label: "simple notes",
 		file:  "../examples/note.musicxml",
 		expected: `
-			midi-acoustic-grand-piano: 
-				(key-signature "") 
+			midi-acoustic-grand-piano:
+				(key-signature "")
 				> c4 d e f | g1
 		`,
 	})
@@ -24,8 +25,8 @@ func TestKeySignatures(t *testing.T) {
 		label: "simple traditional key signature",
 		file:  "../examples/key_signature.musicxml",
 		expected: `
-			midi-acoustic-grand-piano: 
-				(key-signature "f+ c+ g+ d+") 
+			midi-acoustic-grand-piano:
+				(key-signature "f+ c+ g+ d+")
 				> c4 d e f | g1
 		`,
 	})
@@ -36,8 +37,8 @@ func TestAccidentals(t *testing.T) {
 		label: "simple accidentals",
 		file:  "../examples/accidental.musicxml",
 		expected: `
-			midi-acoustic-grand-piano: 
-				(key-signature "") 
+			midi-acoustic-grand-piano:
+				(key-signature "")
 				> c4 d+ e f- | g++1
 		`,
 	}, importerTestCase{
@@ -59,8 +60,8 @@ func TestOctaves(t *testing.T) {
 		label: "simple octave switching",
 		file:  "../examples/octave.musicxml",
 		expected: `
-midi-acoustic-grand-piano: 
-	(key-signature "") 
+midi-acoustic-grand-piano:
+	(key-signature "")
 	< b4 >> c < a > d | << b4 >>> d << b > e
 `,
 	})
@@ -71,8 +72,8 @@ func TestRests(t *testing.T) {
 		label: "simple rests",
 		file:  "../examples/rest.musicxml",
 		expected: `
-			midi-acoustic-grand-piano: 
-				(key-signature "") 
+			midi-acoustic-grand-piano:
+				(key-signature "")
 				> c2 r | d4 r e8 r f16 r g32 r r16 | a4 r2.
 		`,
 	})
@@ -83,8 +84,8 @@ func TestSlurs(t *testing.T) {
 		label: "simple slurs",
 		file:  "../examples/slurs.musicxml",
 		expected: `
-			midi-acoustic-grand-piano: 
-				(key-signature "") 
+			midi-acoustic-grand-piano:
+				(key-signature "")
 				c4 d~ e~ f~ | g4~ a b~ > c
 		`,
 	})
@@ -95,8 +96,8 @@ func TestChords(t *testing.T) {
 		label: "simple chords",
 		file:  "../examples/chord.musicxml",
 		expected: `
-			midi-acoustic-grand-piano: 
-				(key-signature "") 
+			midi-acoustic-grand-piano:
+				(key-signature "")
 				d2/g/b f2 | c1/e/g/>c
 		`,
 	})
@@ -107,8 +108,8 @@ func TestTies(t *testing.T) {
 		label: "simple ties",
 		file:  "../examples/ties1.musicxml",
 		expected: `
-			midi-acoustic-grand-piano: 
-				(key-signature "") 
+			midi-acoustic-grand-piano:
+				(key-signature "")
 				> d1~ | 1~ | 4 f8~8 f8 f < f8~8
 		`,
 	}, importerTestCase{
@@ -146,8 +147,8 @@ func TestTies(t *testing.T) {
 		label: "complex ties",
 		file:  "../examples/ties3.musicxml",
 		expected: `
-			midi-acoustic-grand-piano: 
-				(key-signature "") 
+			midi-acoustic-grand-piano:
+				(key-signature "")
 				c4/e/g/>c4~4 e8/g8~8 d8~8
 		`,
 	})
@@ -158,8 +159,8 @@ func TestDots(t *testing.T) {
 		label: "simple dotted notes",
 		file:  "../examples/dots.musicxml",
 		expected: `
-			midi-acoustic-grand-piano: 
-				(key-signature "") 
+			midi-acoustic-grand-piano:
+				(key-signature "")
 				g4.... r64 a4... r32 | r4. r8 b2 ~ | 2. r8.. r32
 		`,
 	})
@@ -170,7 +171,7 @@ func TestVoices(t *testing.T) {
 		label: "simple voices",
 		file:  "../examples/voices1.musicxml",
 		expected: `
-			midi-acoustic-grand-piano:  
+			midi-acoustic-grand-piano:
 				V1: (key-signature "") e4 f g a | b4 > c d e
 				V2: c4 d e f | g4 a b > c
 		`,
@@ -178,11 +179,11 @@ func TestVoices(t *testing.T) {
 		label: "complex voices with padding, backup, and forward",
 		file:  "../examples/voices2.musicxml",
 		expected: `
-			midi-acoustic-grand-piano:  
+			midi-acoustic-grand-piano:
 				V1: (key-signature "") > c4 d e f | g4 a b > c
 				V2: r1 | r2 > g
-				V3: r4 g2 r4 | g1 
-				V4: c4 r c r | r1 
+				V3: r4 g2 r4 | g1
+				V4: c4 r c r | r1
 		`,
 	})
 }
@@ -192,21 +193,21 @@ func TestParts(t *testing.T) {
 		label: "simple parts (wind quintet) with transpositions",
 		file:  "../examples/parts.musicxml",
 		expected: `
-			midi-flute: 
-				(key-signature "") 
+			midi-flute:
+				(key-signature "")
 				c4 d e f | g4 a b > c | < b4 a g f | e4 d c2
-			midi-oboe: 
-				(key-signature "") 
+			midi-oboe:
+				(key-signature "")
 				c4 e g > c | < g4 e c2 | g1 | c1
-			midi-clarinet: 
-				(key-signature "f+ c+") 
+			midi-clarinet:
+				(key-signature "f+ c+")
 				(transpose -2)
 				d4 d d d | r1 | d4 d d d | r1
-			midi-bassoon: 
-				(key-signature "") 
+			midi-bassoon:
+				(key-signature "")
 				< c1 | g1 | c1 | c1
-			midi-french-horn: 
-				(key-signature "f+") 
+			midi-french-horn:
+				(key-signature "f+")
 				(transpose -7)
 				g4 b g b | > d4 < b g2 | r1 | g1
 		`,
@@ -240,11 +241,11 @@ func TestRepeats(t *testing.T) {
 		file:  "../examples/repeat4.musicxml",
 		expected: `
 			midi-acoustic-grand-piano:
-				[	
+				[
 					(key-signature "")
 					> c1 |
 					[e1 <]'1
-					| 
+					|
 					[g1]'2
 				]*2
 		`,
@@ -255,7 +256,7 @@ func TestRepeats(t *testing.T) {
 			midi-acoustic-grand-piano:
 				[
 					(key-signature "")
-					> c1 | 
+					> c1 |
 					[d1 <]'1
 					|
 					[e1 <]'2
@@ -272,13 +273,13 @@ func TestDynamics(t *testing.T) {
 		label: "simple dynamics",
 		file:  "../examples/dynamics.musicxml",
 		expected: `
-			midi-acoustic-grand-piano: 
+			midi-acoustic-grand-piano:
 				(key-signature "")
 				(f) > c4
 				(ff) (mp) d
 				e
 				f
-				| 
+				|
 				g1 (p)
 		`,
 	})
@@ -289,12 +290,12 @@ func TestPercussion(t *testing.T) {
 		label: "percussion instruments",
 		file:  "../examples/percussion.musicxml",
 		expected: `
-			midi-percussion "Triangle": 
+			midi-percussion "Triangle":
 				(key-signature "")
 				o5 g+1 | o5 a1 | r1 | o5 g+1 |
-				o5 a4 a g+ g+ 
-			
-			midi-percussion "Wood_Blocks": 
+				o5 a4 a g+ g+
+
+			midi-percussion "Wood_Blocks":
 				(key-signature "")
 				o5 e4 e f f |
 				o5 e1 | o5 e1 | o5 f1 | r1
@@ -307,15 +308,15 @@ func TestDurations(t *testing.T) {
 		label: "different redundant durations",
 		file:  "../examples/duration.musicxml",
 		expected: `
-			midi-acoustic-grand-piano: 
+			midi-acoustic-grand-piano:
 				(key-signature "")
-				c8~8 e c8~8/e/g e8~8 | 
-				c2/e/g c4../e/g r16 | 
-				c2 e | 
+				c8~8 e c8~8/e/g e8~8 |
+				c2/e/g c4../e/g r16 |
+				c2 e |
 				[
-					g2 r | 
+					g2 r |
 					e2 c
-				]*2 | 
+				]*2 |
 				e2 r
 		`,
 	})
