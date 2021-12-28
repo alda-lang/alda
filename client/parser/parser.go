@@ -65,6 +65,12 @@ func (p *parser) previous() Token {
 	return p.input[p.current-1]
 }
 
+// CAUTION: This will panic if the _current_ token is EOF, because that means
+// there is no next token, so the index will be out of bounds.
+func (p *parser) next() Token {
+	return p.input[p.current+1]
+}
+
 func (p *parser) check(types ...TokenType) bool {
 	for _, tokenType := range types {
 		if p.peek().tokenType == tokenType {
@@ -132,25 +138,28 @@ func (p *parser) consume(tokenType TokenType, context string) (Token, error) {
 	return Token{}, p.unexpectedTokenError(p.peek(), context)
 }
 
-func (p *parser) lispForm(context string) (model.LispForm, error) {
+func (p *parser) lispForm(context string) (ASTNode, error) {
 	if token, matched := p.match(Symbol); matched {
-		return model.LispSymbol{
+		return ASTNode{
+			Type:          LispSymbolNode,
 			SourceContext: p.sourceContext(token),
-			Name:          token.text,
+			Literal:       token.text,
 		}, nil
 	}
 
 	if token, matched := p.match(Number); matched {
-		return model.LispNumber{
+		return ASTNode{
+			Type:          LispNumberNode,
 			SourceContext: p.sourceContext(token),
-			Value:         token.literal.(float64),
+			Literal:       token.literal,
 		}, nil
 	}
 
 	if token, matched := p.match(String); matched {
-		return model.LispString{
+		return ASTNode{
+			Type:          LispStringNode,
 			SourceContext: p.sourceContext(token),
-			Value:         token.literal.(string),
+			Literal:       token.literal,
 		}, nil
 	}
 
@@ -158,59 +167,72 @@ func (p *parser) lispForm(context string) (model.LispForm, error) {
 		return p.lispList()
 	}
 
-	return nil, p.unexpectedTokenError(p.peek(), context)
+	return ASTNode{}, p.unexpectedTokenError(p.peek(), context)
 }
 
-func (p *parser) lispList() (model.LispList, error) {
+func (p *parser) lispList() (ASTNode, error) {
 	// NB: This assumes the initial LeftParen token was already consumed.
-	list := model.LispList{SourceContext: p.sourceContext(p.previous())}
+	list := ASTNode{
+		SourceContext: p.sourceContext(p.previous()),
+		Type:          LispListNode,
+	}
 
 	for token := p.peek(); token.tokenType != RightParen; token = p.peek() {
 		if _, matched := p.match(EOF); matched {
-			return list, p.errorAtToken(token, "Unterminated S-expression.")
+			return ASTNode{}, p.errorAtToken(token, "unterminated S-expression")
 		}
 
 		quoteToken, quoted := p.match(SingleQuote)
 
 		form, err := p.lispForm("in S-expression")
 		if err != nil {
-			return list, err
+			return ASTNode{}, err
 		}
 
 		if quoted {
-			form = model.LispQuotedForm{
+			form = ASTNode{
+				Type:          LispQuotedFormNode,
 				SourceContext: p.sourceContext(quoteToken),
-				Form:          form,
+				Children:      []ASTNode{form},
 			}
 		}
 
-		list.Elements = append(list.Elements, form)
+		list.Children = append(list.Children, form)
 	}
 
 	if _, err := p.consume(RightParen, "in S-expression"); err != nil {
-		return list, err
+		return ASTNode{}, err
 	}
 
 	return list, nil
 }
 
-func (p *parser) sexp() ([]model.ScoreUpdate, error) {
+func (p *parser) sexp() (ASTNode, error) {
 	// NB: This assumes the initial LeftParen token was already consumed.
 	list, err := p.lispList()
 	if err != nil {
-		return nil, err
+		return ASTNode{}, err
 	}
 
-	return []model.ScoreUpdate{p.singleOrRepeated(list)}, nil
+	return p.singleOrRepeated(list), nil
 }
 
-func (p *parser) part() ([]model.ScoreUpdate, error) {
+func (p *parser) partDeclaration() (ASTNode, error) {
+	nameNode := func(nameToken Token) ASTNode {
+		return ASTNode{
+			Type:          PartNameNode,
+			SourceContext: p.sourceContext(nameToken),
+			Literal:       nameToken.text,
+		}
+	}
+
 	// NB: This assumes the initial Name token was already consumed.
 	nameToken := p.previous()
 
-	partDecl := model.PartDeclaration{
+	namesNode := ASTNode{
+		Type:          PartNamesNode,
 		SourceContext: p.sourceContext(nameToken),
-		Names:         []string{nameToken.text},
+		Children:      []ASTNode{nameNode(nameToken)},
 	}
 
 	for {
@@ -220,39 +242,132 @@ func (p *parser) part() ([]model.ScoreUpdate, error) {
 
 		name, err := p.consume(Name, "in part declaration")
 		if err != nil {
-			return nil, err
+			return ASTNode{}, err
 		}
 
-		partDecl.Names = append(partDecl.Names, name.text)
+		namesNode.Children = append(namesNode.Children, nameNode(name))
 	}
 
-	if _, matched := p.match(Alias); matched {
-		partDecl.Alias = p.previous().literal.(string)
+	partDecl := ASTNode{
+		Type:          PartDeclarationNode,
+		SourceContext: p.sourceContext(nameToken),
+		Children:      []ASTNode{namesNode},
+	}
+
+	if alias, matched := p.match(Alias); matched {
+		partDecl.Children = append(
+			partDecl.Children,
+			ASTNode{
+				Type:          PartAliasNode,
+				SourceContext: p.sourceContext(alias),
+				Literal:       alias.literal,
+			},
+		)
 	}
 
 	if _, err := p.consume(Colon, "in part declaration"); err != nil {
-		return nil, err
+		return ASTNode{}, err
 	}
 
-	return []model.ScoreUpdate{partDecl}, nil
+	return partDecl, nil
 }
 
-func (p *parser) variableDefinition() ([]model.ScoreUpdate, error) {
+func (p *parser) looksLikePartDeclaration() bool {
+	current := p.peek().tokenType
+
+	if current == EOF {
+		return false
+	}
+
+	next := p.next().tokenType
+
+	return current == Name &&
+		(next == Alias || next == Separator || next == Colon)
+}
+
+func (p *parser) partEvents() (ASTNode, error) {
+	partEvents := ASTNode{
+		Type:          EventSequenceNode,
+		SourceContext: p.sourceContext(p.peek()),
+		Children:      []ASTNode{},
+	}
+
+	// Keep consuming events until we reach either a part declaration or EOF.
+	for {
+		if p.check(EOF) || p.looksLikePartDeclaration() {
+			break
+		}
+
+		event, err := p.innerEvent()
+		if err != nil {
+			return ASTNode{}, err
+		}
+
+		partEvents.Children = append(partEvents.Children, event)
+	}
+
+	return partEvents, nil
+}
+
+func (p *parser) part() (ASTNode, error) {
 	// NB: This assumes the initial Name token was already consumed.
 	nameToken := p.previous()
 
-	definition := model.VariableDefinition{
-		SourceContext: p.sourceContext(nameToken),
-		VariableName:  nameToken.text,
+	partDecl, err := p.partDeclaration()
+	if err != nil {
+		return ASTNode{}, err
 	}
+
+	partEvents, err := p.partEvents()
+	if err != nil {
+		return ASTNode{}, err
+	}
+
+	return ASTNode{
+		Type:          PartNode,
+		SourceContext: p.sourceContext(nameToken),
+		Children:      []ASTNode{partDecl, partEvents},
+	}, nil
+}
+
+// An "implicit part" is an AST node that can contain:
+//
+// * Initial variable definitions at the top of the file
+// * Initial S-expressions at the top of the file, like global attributes
+// * Events (see `innerEvent`) without a part definition, in the context of
+//   continuing a previous score, e.g. in REPL input.
+func (p *parser) implicitPart() (ASTNode, error) {
+	partEvents, err := p.partEvents()
+	if err != nil {
+		return ASTNode{}, err
+	}
+
+	return ASTNode{
+		Type:          ImplicitPartNode,
+		SourceContext: partEvents.SourceContext,
+		Children:      []ASTNode{partEvents},
+	}, nil
+}
+
+func (p *parser) variableDefinition() (ASTNode, error) {
+	// NB: This assumes the initial Name token was already consumed.
+	nameToken := p.previous()
+
+	nameNode := ASTNode{
+		Type:          VariableNameNode,
+		SourceContext: p.sourceContext(nameToken),
+		Literal:       nameToken.text,
+	}
+
 	definitionLine := nameToken.sourceContext.Line
 
-	if _, err := p.consume(Equals, "in variable definition"); err != nil {
-		return nil, err
+	equalsToken, err := p.consume(Equals, "in variable definition")
+	if err != nil {
+		return ASTNode{}, err
 	}
 
-	if p.peek().tokenType == EOF || p.peek().sourceContext.Line > definitionLine {
-		return nil, &model.AldaSourceError{
+	if p.check(EOF) || p.peek().sourceContext.Line > definitionLine {
+		return ASTNode{}, &model.AldaSourceError{
 			Context: nameToken.sourceContext,
 			Err: fmt.Errorf(
 				"there must be at least one event on the same line as the '='",
@@ -260,66 +375,91 @@ func (p *parser) variableDefinition() ([]model.ScoreUpdate, error) {
 		}
 	}
 
+	eventsNode := ASTNode{
+		Type:          EventSequenceNode,
+		SourceContext: p.sourceContext(p.peek()),
+		Children:      []ASTNode{},
+	}
+
 	for t := p.peek(); t.sourceContext.Line == definitionLine; t = p.peek() {
 		if t.tokenType == EOF {
 			break
 		}
 
-		events, err := p.topLevel()
+		node, err := p.innerEvent()
 		if err != nil {
-			return nil, err
+			return ASTNode{}, err
 		}
-		definition.Events = append(definition.Events, events...)
+
+		eventsNode.Children = append(eventsNode.Children, node)
 	}
 
-	return []model.ScoreUpdate{definition}, nil
+	definitionNode := ASTNode{
+		Type:          VariableDefinitionNode,
+		SourceContext: p.sourceContext(equalsToken),
+		Children:      []ASTNode{nameNode, eventsNode},
+	}
+
+	return definitionNode, nil
 }
 
-func (p *parser) singleOrRepeated(update model.ScoreUpdate) model.ScoreUpdate {
+func (p *parser) singleOrRepeated(node ASTNode) ASTNode {
 	if token, matched := p.match(Repeat); matched {
-		return model.Repeat{
+		return ASTNode{
 			SourceContext: p.sourceContext(token),
-			Event:         update,
-			Times:         token.literal.(int32),
+			Type:          RepeatNode,
+			Children: []ASTNode{
+				node,
+				{
+					Type:    TimesNode,
+					Literal: token.literal,
+				},
+			},
 		}
 	}
 
-	return update
+	return node
 }
 
-func (p *parser) variableReference() ([]model.ScoreUpdate, error) {
+func (p *parser) variableReference() (ASTNode, error) {
 	// NB: This assumes the initial Name token was already consumed.
 	nameToken := p.previous()
 
-	reference := model.VariableReference{
+	reference := ASTNode{
+		Type:          VariableReferenceNode,
 		SourceContext: p.sourceContext(nameToken),
-		VariableName:  nameToken.text,
+		Literal:       nameToken.text,
 	}
 
-	return []model.ScoreUpdate{p.singleOrRepeated(reference)}, nil
+	return p.singleOrRepeated(reference), nil
 }
 
-func (p *parser) partOrVariableOp() ([]model.ScoreUpdate, error) {
+func (p *parser) variableDefinitionOrReference() (ASTNode, error) {
 	// NB: This assumes the initial Name token was already consumed.
-	switch p.peek().tokenType {
-	case Equals:
+	if p.check(Equals) {
 		return p.variableDefinition()
-	case Alias, Separator, Colon:
-		return p.part()
-	default:
-		return p.variableReference()
 	}
+
+	return p.variableReference()
 }
 
-func (p *parser) octaveSet() ([]model.ScoreUpdate, error) {
+func (p *parser) partOrVariableDefinition() (ASTNode, error) {
+	// NB: This assumes the initial Name token was already consumed.
+	if p.check(Equals) {
+		return p.variableDefinition()
+	}
+
+	return p.part()
+}
+
+func (p *parser) octaveSet() (ASTNode, error) {
 	// NB: This assumes the OctaveSet token was already consumed.
 	token := p.previous()
 
-	return []model.ScoreUpdate{
-		model.AttributeUpdate{
-			SourceContext: p.sourceContext(token),
-			PartUpdate:    model.OctaveSet{OctaveNumber: token.literal.(int32)},
-		},
+	return ASTNode{
+		Type:          OctaveSetNode,
+		SourceContext: p.sourceContext(token),
+		Literal:       token.literal,
 	}, nil
 }
 
@@ -327,40 +467,54 @@ func (p *parser) matchDurationComponent() (Token, bool) {
 	return p.match(NoteLength, NoteLengthMs)
 }
 
-func (p *parser) durationComponent() model.DurationComponent {
+func (p *parser) durationComponent() ASTNode {
 	// NB: This assumes the duration component token was already consumed.
 	token := p.previous()
 
 	switch token.tokenType {
 	case NoteLength:
-		nl := token.literal.(noteLength)
-		return model.NoteLength{
-			Denominator: nl.denominator,
-			Dots:        nl.dots,
+		return ASTNode{
+			Type:          NoteLengthNode,
+			SourceContext: p.sourceContext(token),
+			Literal:       token.literal,
 		}
 	case NoteLengthMs:
-		return model.NoteLengthMs{Quantity: token.literal.(float64)}
+		return ASTNode{
+			Type:          NoteLengthMsNode,
+			SourceContext: p.sourceContext(token),
+			Literal:       token.literal,
+		}
 	}
 
 	// We shouldn't get here.
-	return nil
+	return ASTNode{}
 }
 
-func (p *parser) duration() model.Duration {
-	// NB: This assumes the initial duration component token was already consumed.
-	duration := model.Duration{
-		Components: []model.DurationComponent{p.durationComponent()},
+func (p *parser) duration() ASTNode {
+	durationNode := func(componentNodes []ASTNode) ASTNode {
+		return ASTNode{
+			Type:          DurationNode,
+			SourceContext: componentNodes[0].SourceContext,
+			Children:      componentNodes,
+		}
 	}
+
+	barlineNode := func(token Token) ASTNode {
+		return ASTNode{
+			Type:          BarlineNode,
+			SourceContext: p.sourceContext(token),
+		}
+	}
+
+	// NB: This assumes the initial duration component token was already consumed.
+	componentNodes := []ASTNode{p.durationComponent()}
 
 	// Repeatedly parse duration components.
 	for {
 		// Repeatedly parse barlines amongst the duration components.
 		for {
 			if token, matched := p.match(Barline); matched {
-				duration.Components = append(
-					duration.Components,
-					model.Barline{SourceContext: p.sourceContext(token)},
-				)
+				componentNodes = append(componentNodes, barlineNode(token))
 			} else {
 				break
 			}
@@ -373,20 +527,17 @@ func (p *parser) duration() model.Duration {
 		beforeTies := p.current
 
 		if _, matched := p.match(Tie); !matched {
-			return duration
+			return durationNode(componentNodes)
 		}
 
 		// We'll stash any barlines that we encounter here temporarily. We'll add
 		// them to the duration components iff we aren't going to backtrack and
 		// consume them outside of the duration.
-		barlines := []model.DurationComponent{}
+		barlines := []ASTNode{}
 
 		for {
 			if token, matched := p.match(Barline); matched {
-				barlines = append(
-					barlines,
-					model.Barline{SourceContext: p.sourceContext(token)},
-				)
+				barlines = append(barlines, barlineNode(token))
 			} else {
 				break
 			}
@@ -403,68 +554,99 @@ func (p *parser) duration() model.Duration {
 
 		if _, matched := p.matchDurationComponent(); !matched {
 			p.current = beforeTies
-			return duration
+			return durationNode(componentNodes)
 		}
 
-		duration.Components = append(duration.Components, barlines...)
-		duration.Components = append(duration.Components, p.durationComponent())
+		componentNodes = append(componentNodes, barlines...)
+		componentNodes = append(componentNodes, p.durationComponent())
 	}
 }
 
-func (p *parser) note() (model.Note, error) {
+func (p *parser) note() (ASTNode, error) {
 	// NB: This assumes the initial NoteLetter token was already consumed.
-	token := p.previous()
+	noteLetterToken := p.previous()
 
-	noteLetter, err := model.NewNoteLetter(token.literal.(rune))
-	if err != nil {
-		return model.Note{}, err
+	laaNode := ASTNode{
+		Type:          NoteLetterAndAccidentalsNode,
+		SourceContext: p.sourceContext(noteLetterToken),
+		Children: []ASTNode{
+			{
+				Type:          NoteLetterNode,
+				SourceContext: p.sourceContext(noteLetterToken),
+				Literal:       noteLetterToken.literal,
+			},
+		},
 	}
 
-	pitch := model.LetterAndAccidentals{NoteLetter: noteLetter}
+	accidentalNodes := []ASTNode{}
 
 AccidentalsLoop:
 	for {
-		if _, matched := p.match(Flat); matched {
-			pitch.Accidentals = append(pitch.Accidentals, model.Flat)
-		} else if _, matched := p.match(Natural); matched {
-			pitch.Accidentals = append(pitch.Accidentals, model.Natural)
-		} else if _, matched := p.match(Sharp); matched {
-			pitch.Accidentals = append(pitch.Accidentals, model.Sharp)
+		if token, matched := p.match(Flat); matched {
+			accidentalNodes = append(accidentalNodes, ASTNode{
+				Type:          FlatNode,
+				SourceContext: p.sourceContext(token),
+			})
+		} else if token, matched := p.match(Natural); matched {
+			accidentalNodes = append(accidentalNodes, ASTNode{
+				Type:          NaturalNode,
+				SourceContext: p.sourceContext(token),
+			})
+		} else if token, matched := p.match(Sharp); matched {
+			accidentalNodes = append(accidentalNodes, ASTNode{
+				Type:          SharpNode,
+				SourceContext: p.sourceContext(token),
+			})
 		} else {
 			break AccidentalsLoop
 		}
 	}
 
-	note := model.Note{
-		SourceContext: p.sourceContext(token),
-		Pitch:         pitch,
+	if len(accidentalNodes) > 0 {
+		laaNode.Children = append(laaNode.Children, ASTNode{
+			Type:          NoteAccidentalsNode,
+			SourceContext: accidentalNodes[0].SourceContext,
+			Children:      accidentalNodes,
+		})
+	}
+
+	noteNode := ASTNode{
+		Type:          NoteNode,
+		SourceContext: p.sourceContext(noteLetterToken),
+		Children:      []ASTNode{laaNode},
 	}
 
 	if _, matched := p.matchDurationComponent(); matched {
-		note.Duration = p.duration()
+		noteNode.Children = append(noteNode.Children, p.duration())
 	}
 
-	if _, matched := p.match(Tie); matched {
-		note.Slurred = true
+	if tie, matched := p.match(Tie); matched {
+		noteNode.Children = append(noteNode.Children, ASTNode{
+			Type:          TieNode,
+			SourceContext: p.sourceContext(tie),
+		})
 	}
 
-	return note, nil
+	return noteNode, nil
 }
 
-func (p *parser) rest() model.Rest {
+func (p *parser) rest() ASTNode {
 	// NB: This assumes the initial RestLetter token was already consumed.
 	token := p.previous()
 
-	rest := model.Rest{SourceContext: p.sourceContext(token)}
+	rest := ASTNode{
+		Type:          RestNode,
+		SourceContext: p.sourceContext(token),
+	}
 
 	if _, matched := p.matchDurationComponent(); matched {
-		rest.Duration = p.duration()
+		rest.Children = []ASTNode{p.duration()}
 	}
 
 	return rest
 }
 
-func (p *parser) noteOrRest() (model.ScoreUpdate, error) {
+func (p *parser) noteOrRest() (ASTNode, error) {
 	// NB: This assumes the initial NoteLetter/RestLetter was already consumed.
 	switch letter := p.previous(); letter.tokenType {
 	case NoteLetter:
@@ -472,30 +654,30 @@ func (p *parser) noteOrRest() (model.ScoreUpdate, error) {
 	case RestLetter:
 		return p.rest(), nil
 	default:
-		return nil, p.unexpectedTokenError(letter, "in note/rest")
+		return ASTNode{}, p.unexpectedTokenError(letter, "in note/rest")
 	}
 }
 
-func (p *parser) updatesBetweenNotesInChord() ([]model.ScoreUpdate, error) {
-	updates := []model.ScoreUpdate{}
+func (p *parser) nodesBetweenNotesInChord() ([]ASTNode, error) {
+	updates := []ASTNode{}
 
 	for {
 		if token, matched := p.match(OctaveUp); matched {
-			updates = append(updates, model.AttributeUpdate{
+			updates = append(updates, ASTNode{
+				Type:          OctaveUpNode,
 				SourceContext: p.sourceContext(token),
-				PartUpdate:    model.OctaveUp{},
 			})
 		} else if token, matched := p.match(OctaveDown); matched {
-			updates = append(updates, model.AttributeUpdate{
+			updates = append(updates, ASTNode{
+				Type:          OctaveDownNode,
 				SourceContext: p.sourceContext(token),
-				PartUpdate:    model.OctaveDown{},
 			})
 		} else if _, matched := p.match(OctaveSet); matched {
-			octaveSetUpdates, err := p.octaveSet()
+			octaveSetNode, err := p.octaveSet()
 			if err != nil {
 				return nil, err
 			}
-			updates = append(updates, octaveSetUpdates...)
+			updates = append(updates, octaveSetNode)
 		} else if _, matched := p.match(LeftParen); matched {
 			sexp, err := p.lispList()
 			if err != nil {
@@ -510,210 +692,306 @@ func (p *parser) updatesBetweenNotesInChord() ([]model.ScoreUpdate, error) {
 
 // Parses a note or chord. A chord contains multiple chords and rests, not to
 // mention attribute changes, so any of those will be parsed too in the process.
-func (p *parser) noteRestOrChord() ([]model.ScoreUpdate, error) {
+func (p *parser) noteRestOrChord() (ASTNode, error) {
 	// NB: This assumes the initial NoteLetter/RestLetter was already consumed.
 
-	// The cumulative list of updates. Depending on whether this is a chord, the
-	// updates will either be emitted as part of the chord, or emitted
-	// individually.
-	allUpdates := []model.ScoreUpdate{}
+	// The cumulative list of nodes. Depending on whether this is a chord, the
+	// nodes will either be emitted as part of the chord, or emitted individually.
+	allNodes := []ASTNode{}
+
+	type maybeRepeat struct {
+		sourceContext model.AldaSourceContext
+		times         int32
+	}
 
 	// We're essentially using this as a nil value. Below, we check whether
-	// `repeat.Times` > 0, which will be true if we don't reassign `repeat`.
-	repeat := model.Repeat{}
+	// `repeat.times` > 0, which will be true if we don't reassign `repeat`.
+	repeat := maybeRepeat{}
 
 	for {
 		noteOrRest, err := p.noteOrRest()
 		if err != nil {
-			return nil, err
+			return ASTNode{}, err
 		}
 
 		if token, matched := p.match(Repeat); matched {
-			allUpdates = append(allUpdates, noteOrRest)
-			repeat = model.Repeat{
-				SourceContext: p.sourceContext(token),
-				Times:         token.literal.(int32),
+			allNodes = append(allNodes, noteOrRest)
+			repeat = maybeRepeat{
+				sourceContext: p.sourceContext(token),
+				times:         token.literal.(int32),
 			}
 			break
 		}
 
-		// The updates for just this repetition of the loop
-		updates := []model.ScoreUpdate{noteOrRest}
+		// The nodes for just this iteration of the loop
+		nodes := []ASTNode{noteOrRest}
 
-		updatesBeforeSeparator, err := p.updatesBetweenNotesInChord()
+		// HACK to work around the complexity that comes with allowing chords to
+		// include attribute changes in between the notes. This is all easier if we
+		// can make this function return a single node and not a list of nodes (see
+		// how we are using it in `innerEvent`.) That's easy enough if the result of
+		// the parsing that this function does is a single node, like a note, a
+		// rest, or a chord. However, if we start to parse a chord, and we parse
+		// something like:
+		//
+		// * note, (e.g. `a4`)
+		// * octave up (`>`)
+		// * something besides `/`
+		//
+		// Then we just want this function to return the note, and we want to
+		// backtrack so that the next invocation of `innerEvent` can parse the
+		// octave up and all subsequent events separately.
+		//
+		// Here, we capture the current parser position after we parse each note or
+		// rest in the chord, so that we can backtrack to that position if needed.
+		backtrackPosition := p.current
+
+		nodesBeforeSeparator, err := p.nodesBetweenNotesInChord()
 		if err != nil {
-			return nil, err
+			return ASTNode{}, err
 		}
-		updates = append(updates, updatesBeforeSeparator...)
 
 		if _, matched := p.match(Separator); !matched {
-			allUpdates = append(allUpdates, updates...)
+			// See HACK comment above.
+			p.current = backtrackPosition
+
+			allNodes = append(allNodes, nodes...)
+
 			break
 		}
 
-		updatesAfterSeparator, err := p.updatesBetweenNotesInChord()
-		if err != nil {
-			return nil, err
-		}
-		updates = append(updates, updatesAfterSeparator...)
+		nodes = append(nodes, nodesBeforeSeparator...)
 
-		allUpdates = append(allUpdates, updates...)
+		nodesAfterSeparator, err := p.nodesBetweenNotesInChord()
+		if err != nil {
+			return ASTNode{}, err
+		}
+		nodes = append(nodes, nodesAfterSeparator...)
+
+		allNodes = append(allNodes, nodes...)
 
 		if _, matched := p.match(NoteLetter, RestLetter); !matched {
-			return nil, p.unexpectedTokenError(p.peek(), "in chord")
+			return ASTNode{}, p.unexpectedTokenError(p.peek(), "in chord")
 		}
 	}
 
 	notesCount := 0
-	for _, update := range allUpdates {
-		switch update.(type) {
-		case model.Note, model.Rest:
+	for _, node := range allNodes {
+		switch node.Type {
+		case NoteNode, RestNode:
 			notesCount++
 		}
 	}
 
 	if notesCount > 1 {
-		allUpdates = []model.ScoreUpdate{
-			model.Chord{
-				SourceContext: allUpdates[0].GetSourceContext(),
-				Events:        allUpdates,
+		allNodes = []ASTNode{
+			{
+				Type:          ChordNode,
+				SourceContext: allNodes[0].SourceContext,
+				Children:      allNodes,
 			},
 		}
 	}
 
-	if repeat.Times > 0 {
-		if len(allUpdates) != 1 {
-			panic(fmt.Sprintf("Expected a single update in %#v", allUpdates))
+	if repeat.times > 0 {
+		if len(allNodes) != 1 {
+			panic(fmt.Sprintf("Expected a single node in %#v", allNodes))
 		}
 
-		repeat.Event = allUpdates[0]
-
-		return []model.ScoreUpdate{repeat}, nil
-	}
-
-	return allUpdates, nil
-}
-
-func (p *parser) repetitions() ([]model.RepetitionRange, error) {
-	// NB: This assumes the Repetitions token was already consumed.
-	token := p.previous()
-
-	repetitions := []model.RepetitionRange{}
-
-	for _, er := range token.literal.([]repetitionRange) {
-		repetitionRange := model.RepetitionRange{First: er.first, Last: er.last}
-		repetitions = append(repetitions, repetitionRange)
-	}
-
-	return repetitions, nil
-}
-
-func (p *parser) eventSeq() ([]model.ScoreUpdate, error) {
-	// NB: This assumes the initial EventSeqOpen token was already consumed.
-	eventSeqOpenToken := p.previous()
-
-	allEvents := []model.ScoreUpdate{}
-
-	for token := p.peek(); token.tokenType != EventSeqClose; token = p.peek() {
-		if _, matched := p.match(EOF); matched {
-			return nil, p.errorAtToken(token, "Unterminated event sequence.")
-		}
-
-		events, err := p.topLevel()
-		if err != nil {
-			return nil, err
-		}
-
-		if token, matched := p.match(Repetitions); matched {
-			repetitions, err := p.repetitions()
-			if err != nil {
-				return nil, err
-			}
-
-			lastI := len(events) - 1
-			events[lastI] = model.OnRepetitions{
-				SourceContext: p.sourceContext(token),
-				Repetitions:   repetitions,
-				Event:         events[lastI],
-			}
-		}
-
-		allEvents = append(allEvents, events...)
-	}
-
-	if _, err := p.consume(EventSeqClose, "in event sequence"); err != nil {
-		return nil, err
-	}
-
-	eventSeq := model.EventSequence{
-		SourceContext: p.sourceContext(eventSeqOpenToken),
-		Events:        allEvents,
-	}
-
-	return []model.ScoreUpdate{p.singleOrRepeated(eventSeq)}, nil
-}
-
-func (p *parser) cram() ([]model.ScoreUpdate, error) {
-	// NB: This assumes the initial CramOpen token was already consumed.
-	cramOpenToken := p.previous()
-
-	allEvents := []model.ScoreUpdate{}
-
-	for token := p.peek(); token.tokenType != CramClose; token = p.peek() {
-		if _, matched := p.match(EOF); matched {
-			return nil, p.errorAtToken(token, "Unterminated cram expression.")
-		}
-
-		events, err := p.topLevel()
-		if err != nil {
-			return nil, err
-		}
-		allEvents = append(allEvents, events...)
-	}
-
-	if _, err := p.consume(CramClose, "in cram expression"); err != nil {
-		return nil, err
-	}
-
-	cram := model.Cram{
-		SourceContext: p.sourceContext(cramOpenToken),
-		Events:        allEvents,
-	}
-
-	if _, matched := p.matchDurationComponent(); matched {
-		cram.Duration = p.duration()
-	}
-
-	return []model.ScoreUpdate{p.singleOrRepeated(cram)}, nil
-}
-
-func (p *parser) voiceMarker() ([]model.ScoreUpdate, error) {
-	// NB: This assumes the VoiceMarker token was already consumed.
-	token := p.previous()
-
-	voiceNumber := token.literal.(int32)
-
-	if voiceNumber == 0 {
-		return []model.ScoreUpdate{
-			model.VoiceGroupEndMarker{SourceContext: p.sourceContext(token)},
+		return ASTNode{
+			SourceContext: repeat.sourceContext,
+			Type:          RepeatNode,
+			Children: []ASTNode{
+				allNodes[0],
+				{
+					Type:    TimesNode,
+					Literal: repeat.times,
+				},
+			},
 		}, nil
 	}
 
-	return []model.ScoreUpdate{
-		model.VoiceMarker{
-			SourceContext: p.sourceContext(token),
-			VoiceNumber:   voiceNumber,
-		},
+	return allNodes[0], nil
+}
+
+func (p *parser) eventSeq() (ASTNode, error) {
+	// NB: This assumes the initial EventSeqOpen token was already consumed.
+	eventSeqOpenToken := p.previous()
+
+	eventNodes := []ASTNode{}
+
+	for token := p.peek(); token.tokenType != EventSeqClose; token = p.peek() {
+		if _, matched := p.match(EOF); matched {
+			return ASTNode{}, p.errorAtToken(token, "unterminated event sequence")
+		}
+
+		eventNode, err := p.innerEvent()
+		if err != nil {
+			return ASTNode{}, err
+		}
+
+		if token, matched := p.match(Repetitions); matched {
+			repetitionsNode := ASTNode{
+				Type:          RepetitionsNode,
+				SourceContext: p.sourceContext(token),
+				Literal:       token.literal,
+			}
+
+			eventNode = ASTNode{
+				Type:          OnRepetitionsNode,
+				SourceContext: p.sourceContext(token),
+				Children:      []ASTNode{eventNode, repetitionsNode},
+			}
+		}
+
+		eventNodes = append(eventNodes, eventNode)
+	}
+
+	if _, err := p.consume(EventSeqClose, "in event sequence"); err != nil {
+		return ASTNode{}, err
+	}
+
+	eventSeq := ASTNode{
+		Type:          EventSequenceNode,
+		SourceContext: p.sourceContext(eventSeqOpenToken),
+		Children:      eventNodes,
+	}
+
+	return p.singleOrRepeated(eventSeq), nil
+}
+
+func (p *parser) cram() (ASTNode, error) {
+	// NB: This assumes the initial CramOpen token was already consumed.
+	cramOpenToken := p.previous()
+
+	allEvents := []ASTNode{}
+
+	for token := p.peek(); token.tokenType != CramClose; token = p.peek() {
+		if _, matched := p.match(EOF); matched {
+			return ASTNode{}, p.errorAtToken(token, "unterminated cram expression")
+		}
+
+		event, err := p.innerEvent()
+		if err != nil {
+			return ASTNode{}, err
+		}
+		allEvents = append(allEvents, event)
+	}
+
+	if _, err := p.consume(CramClose, "in cram expression"); err != nil {
+		return ASTNode{}, err
+	}
+
+	eventsNode := ASTNode{
+		Type:          EventSequenceNode,
+		SourceContext: allEvents[0].SourceContext,
+		Children:      allEvents,
+	}
+
+	cram := ASTNode{
+		Type:          CramNode,
+		SourceContext: p.sourceContext(cramOpenToken),
+		Children:      []ASTNode{eventsNode},
+	}
+
+	if _, matched := p.matchDurationComponent(); matched {
+		cram.Children = append(cram.Children, p.duration())
+	}
+
+	return p.singleOrRepeated(cram), nil
+}
+
+func (p *parser) voiceNumber() (ASTNode, error) {
+	// NB: This assumes the VoiceMarker token was already consumed.
+	token := p.previous()
+
+	return ASTNode{
+		Type:          VoiceNumberNode,
+		SourceContext: p.sourceContext(token),
+		Literal:       token.literal.(int32),
 	}, nil
 }
 
-func (p *parser) topLevel() ([]model.ScoreUpdate, error) {
+func (p *parser) voice() (ASTNode, error) {
+	// NB: This assumes the VoiceMarker token was already consumed.
+
+	voiceNumber, err := p.voiceNumber()
+	if err != nil {
+		return ASTNode{}, err
+	}
+
+	voiceEvents := ASTNode{
+		Type:          EventSequenceNode,
+		SourceContext: p.sourceContext(p.peek()),
+		Children:      []ASTNode{},
+	}
+
+	// Keep consuming events until we reach another voice marker (including a
+	// voice group end marker), a new part, EOF, or a closing ] or }.
+	for {
+		if p.check(EOF, VoiceMarker, EventSeqClose, CramClose) ||
+			p.looksLikePartDeclaration() {
+			break
+		}
+
+		event, err := p.innerEvent()
+		if err != nil {
+			return ASTNode{}, err
+		}
+
+		voiceEvents.Children = append(voiceEvents.Children, event)
+	}
+
+	return ASTNode{
+		Type:          VoiceNode,
+		SourceContext: voiceNumber.SourceContext,
+		Children:      []ASTNode{voiceNumber, voiceEvents},
+	}, nil
+}
+
+func (p *parser) voiceGroup() (ASTNode, error) {
+	// NB: This assumes the first VoiceMarker token was already consumed.
+	firstVoiceMarkerToken := p.previous()
+
+	voiceGroupNode := ASTNode{
+		Type:          VoiceGroupNode,
+		SourceContext: firstVoiceMarkerToken.sourceContext,
+		Children:      []ASTNode{},
+	}
+
+	for {
+		voice, err := p.voice()
+		if err != nil {
+			return ASTNode{}, err
+		}
+
+		voiceGroupNode.Children = append(voiceGroupNode.Children, voice)
+
+		voiceMarker, matched := p.match(VoiceMarker)
+		if !matched {
+			break
+		}
+
+		if voiceMarker.literal.(int32) == 0 {
+			voiceGroupNode.Children = append(voiceGroupNode.Children, ASTNode{
+				Type:          VoiceGroupEndMarkerNode,
+				SourceContext: p.sourceContext(voiceMarker),
+			})
+
+			break
+		}
+	}
+
+	return voiceGroupNode, nil
+}
+
+func (p *parser) innerEvent() (ASTNode, error) {
 	if _, matched := p.match(LeftParen); matched {
 		return p.sexp()
 	}
 
 	if _, matched := p.match(Name); matched {
-		return p.partOrVariableOp()
+		return p.variableDefinitionOrReference()
 	}
 
 	if _, matched := p.match(OctaveSet); matched {
@@ -721,20 +999,16 @@ func (p *parser) topLevel() ([]model.ScoreUpdate, error) {
 	}
 
 	if token, matched := p.match(OctaveUp); matched {
-		return []model.ScoreUpdate{
-			model.AttributeUpdate{
-				SourceContext: p.sourceContext(token),
-				PartUpdate:    model.OctaveUp{},
-			},
+		return ASTNode{
+			Type:          OctaveUpNode,
+			SourceContext: p.sourceContext(token),
 		}, nil
 	}
 
 	if token, matched := p.match(OctaveDown); matched {
-		return []model.ScoreUpdate{
-			model.AttributeUpdate{
-				SourceContext: p.sourceContext(token),
-				PartUpdate:    model.OctaveDown{},
-			},
+		return ASTNode{
+			Type:          OctaveDownNode,
+			SourceContext: p.sourceContext(token),
 		}, nil
 	}
 
@@ -743,8 +1017,9 @@ func (p *parser) topLevel() ([]model.ScoreUpdate, error) {
 	}
 
 	if token, matched := p.match(Barline); matched {
-		return []model.ScoreUpdate{
-			model.Barline{SourceContext: p.sourceContext(token)},
+		return ASTNode{
+			Type:          BarlineNode,
+			SourceContext: p.sourceContext(token),
 		}, nil
 	}
 
@@ -757,28 +1032,51 @@ func (p *parser) topLevel() ([]model.ScoreUpdate, error) {
 	}
 
 	if _, matched := p.match(VoiceMarker); matched {
-		return p.voiceMarker()
+		return p.voiceGroup()
 	}
 
 	if token, matched := p.match(Marker); matched {
-		return []model.ScoreUpdate{
-			model.Marker{
-				SourceContext: p.sourceContext(token),
-				Name:          token.literal.(string),
-			},
+		return ASTNode{
+			Type:          MarkerNode,
+			SourceContext: p.sourceContext(token),
+			Literal:       token.literal,
 		}, nil
 	}
 
 	if token, matched := p.match(AtMarker); matched {
-		return []model.ScoreUpdate{
-			model.AtMarker{
-				SourceContext: p.sourceContext(token),
-				Name:          token.literal.(string),
-			},
+		return ASTNode{
+			Type:          AtMarkerNode,
+			SourceContext: p.sourceContext(token),
+			Literal:       token.literal,
 		}, nil
 	}
 
-	return nil, p.unexpectedTokenError(p.peek(), "at the top level")
+	return ASTNode{}, p.unexpectedTokenError(p.peek(), "in inner events")
+}
+
+func (p *parser) topLevel() (ASTNode, error) {
+	if p.looksLikePartDeclaration() {
+		p.consume(Name, "in part declaration")
+		return p.part()
+	}
+
+	return p.implicitPart()
+}
+
+func (p *parser) parseAST() (ASTNode, error) {
+	rootNode := ASTNode{Type: RootNode}
+
+	for t := p.peek(); t.tokenType != EOF; t = p.peek() {
+		// fmt.Printf("t: %s\n", t.String())
+		node, err := p.topLevel()
+		if err != nil {
+			return ASTNode{}, err
+		}
+
+		rootNode.Children = append(rootNode.Children, node)
+	}
+
+	return rootNode, nil
 }
 
 // Parse a string of input into a sequence of score updates.
@@ -803,20 +1101,12 @@ func Parse(
 
 	p := newParser(filepath, tokens, opts...)
 
-	for t := p.peek(); t.tokenType != EOF; t = p.peek() {
-		// log.Debug().Str("token", t.String()).Msg("Parsing token.")
-
-		updates, err := p.topLevel()
-		if err != nil {
-			return nil, err
-		}
-
-		for _, update := range updates {
-			p.addUpdate(update)
-		}
+	ast, err := p.parseAST()
+	if err != nil {
+		return nil, err
 	}
 
-	return p.updates, nil
+	return ast.Updates()
 }
 
 // ParseString reads and parses a string of input.
