@@ -221,7 +221,7 @@ func TestVariables(t *testing.T) {
 		// Regression test for https://github.com/alda-lang/alda-core/issues/64
 		// NB: the trailing newline was essential to reproducing the issue!
 		parseTestCase{
-			label: "variable definition ending with a variable reference",
+			label: "variable definition followed by a newline",
 			given: "foo = bar\n",
 			expect: []model.ScoreUpdate{
 				variableDefinition("foo", variableReference("bar")),
