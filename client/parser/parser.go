@@ -76,7 +76,7 @@ func (p *parser) check(types ...TokenType) bool {
 }
 
 func (p *parser) advance() Token {
-	if p.peek().tokenType != EOF {
+	if !p.check(EOF) {
 		p.current++
 	}
 
@@ -112,8 +112,13 @@ func (p *parser) unexpectedTokenError(
 		context = " " + context
 	}
 
+	tokenText := ""
+	if len(token.text) > 0 {
+		tokenText = fmt.Sprintf(" `%s`", token.text)
+	}
+
 	msg := fmt.Sprintf(
-		"Unexpected %s `%s`%s", token.tokenType.String(), token.text, context,
+		"Unexpected %s%s%s", token.tokenType.String(), tokenText, context,
 	)
 
 	return p.errorAtToken(token, msg)
