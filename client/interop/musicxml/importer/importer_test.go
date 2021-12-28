@@ -3,8 +3,6 @@ package importer
 import (
 	"testing"
 
-	"alda.io/client/model"
-
 	_ "alda.io/client/testing"
 )
 
@@ -120,29 +118,6 @@ func TestTies(t *testing.T) {
 				(key-signature "")
 				a4/>c4~4 < g4 > d2~ | 4~4 e4~4/g
 		`,
-		postprocess: func(updates []model.ScoreUpdate) []model.ScoreUpdate {
-			// The OctaveDown before the g is parsed into the chord
-			// We take it out
-			indexOfChord := 2
-
-			updates[indexOfChord], _ = modifyNestedUpdates(
-				updates[indexOfChord],
-				func(updates []model.ScoreUpdate) []model.ScoreUpdate {
-					return updates[:len(updates)-1]
-				},
-			)
-
-			// Then we insert it in the parsed location
-			updates = insert(
-				model.AttributeUpdate{PartUpdate: model.OctaveDown{}},
-				updates,
-				indexOfChord+1,
-			)
-
-			// This change produces equivalent Alda representation
-			// As we're just moving an octave change outside of the note itself
-			return updates
-		},
 	}, importerTestCase{
 		label: "complex ties",
 		file:  "../examples/ties3.musicxml",
