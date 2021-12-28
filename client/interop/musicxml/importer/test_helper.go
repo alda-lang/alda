@@ -1,11 +1,12 @@
 package importer
 
 import (
+	"os"
+	"testing"
+
 	"alda.io/client/model"
 	"alda.io/client/parser"
 	"github.com/go-test/deep"
-	"os"
-	"testing"
 )
 
 type importerTestCase struct {
