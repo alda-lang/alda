@@ -86,5 +86,20 @@ func TestChords(t *testing.T) {
 				},
 			},
 		},
+		parseTestCase{
+			label: "chord, then octave down, then note",
+			given: "c/e/g < c",
+			expect: []model.ScoreUpdate{
+				model.Chord{
+					Events: []model.ScoreUpdate{
+						model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
+						model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.E}},
+						model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.G}},
+					},
+				},
+				model.AttributeUpdate{PartUpdate: model.OctaveDown{}},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
+			},
+		},
 	)
 }
