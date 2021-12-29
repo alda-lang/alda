@@ -18,6 +18,8 @@ const (
 	BarlineNode
 	ChordNode
 	CramNode
+	DenominatorNode
+	DotsNode
 	DurationNode
 	EventSequenceNode
 	FlatNode
@@ -77,6 +79,10 @@ func (nt ASTNodeType) String() string {
 		return "ChordNode"
 	case CramNode:
 		return "CramNode"
+	case DenominatorNode:
+		return "DenominatorNode"
+	case DotsNode:
+		return "DotsNode"
 	case DurationNode:
 		return "DurationNode"
 	case EventSequenceNode:
@@ -184,12 +190,6 @@ func (node ASTNode) JSON() *json.Container {
 		switch node.Type {
 		case NoteLetterNode:
 			literal = fmt.Sprintf("%c", literal)
-		case NoteLengthNode:
-			nl := literal.(noteLength)
-			literal = json.Object(
-				"denominator", nl.denominator,
-				"dots", nl.dots,
-			)
 		}
 
 		nodeJSON.Set(literal, "literal")
@@ -237,13 +237,7 @@ func HumanReadableAST(ast *json.Container) string {
 
 		maybeLiteral := ""
 		if literal := node.Search("literal").Data(); literal != nil {
-			// HACK to make e.g. `map[string]interface{}{denominator: 4, dots: 2}`
-			// display as user-friendly JSON instead: `{"denominator":4,"dots":2}`
-			if mapLiteral, isMap := literal.(map[string]interface{}); isMap {
-				maybeLiteral = fmt.Sprintf(": %s", json.ToJSON(mapLiteral))
-			} else {
-				maybeLiteral = fmt.Sprintf(": %#v", literal)
-			}
+			maybeLiteral = fmt.Sprintf(": %#v", literal)
 		}
 
 		nodeString := fmt.Sprintf(
@@ -320,11 +314,30 @@ func duration(node ASTNode) (model.Duration, error) {
 			barline := model.Barline{SourceContext: componentNode.SourceContext}
 			duration.Components = append(duration.Components, barline)
 		case NoteLengthNode:
-			literal := componentNode.Literal.(noteLength)
-			noteLength := model.NoteLength{
-				Denominator: literal.denominator,
-				Dots:        literal.dots,
+			if err := componentNode.expectChildren(); err != nil {
+				return model.Duration{}, err
 			}
+
+			denom, err := componentNode.Children[0].expectNodeType(DenominatorNode)
+			if err != nil {
+				return model.Duration{}, err
+			}
+
+			dots := int32(0)
+			if len(componentNode.Children) > 1 {
+				dotsNode, err := componentNode.Children[1].expectNodeType(DotsNode)
+				if err != nil {
+					return model.Duration{}, err
+				}
+
+				dots = dotsNode.Literal.(int32)
+			}
+
+			noteLength := model.NoteLength{
+				Denominator: denom.Literal.(float64),
+				Dots:        dots,
+			}
+
 			duration.Components = append(duration.Components, noteLength)
 		case NoteLengthMsNode:
 			literal := componentNode.Literal.(float64)

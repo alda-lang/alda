@@ -473,11 +473,27 @@ func (p *parser) durationComponent() ASTNode {
 
 	switch token.tokenType {
 	case NoteLength:
-		return ASTNode{
+		noteLength := token.literal.(noteLength)
+
+		nlNode := ASTNode{
 			Type:          NoteLengthNode,
 			SourceContext: p.sourceContext(token),
-			Literal:       token.literal,
+			Children: []ASTNode{
+				{
+					Type:    DenominatorNode,
+					Literal: noteLength.denominator,
+				},
+			},
 		}
+
+		if noteLength.dots > 0 {
+			nlNode.Children = append(nlNode.Children, ASTNode{
+				Type:    DotsNode,
+				Literal: noteLength.dots,
+			})
+		}
+
+		return nlNode
 	case NoteLengthMs:
 		return ASTNode{
 			Type:          NoteLengthMsNode,

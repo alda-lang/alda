@@ -52,14 +52,9 @@ func writeNodeDefinition(node *json.Container, nodeID string) {
 	if literal := node.Search("literal").Data(); literal != nil {
 		var literalString string
 
-		switch literal.(type) {
-		case map[string]interface{}:
-			// HACK to make e.g. `map[string]interface{}{denominator: 4, dots: 2}`
-			// display as user-friendly JSON instead: `{"denominator":4,"dots":2}`
-			literalString = fmt.Sprintf("%s", json.ToJSON(literal))
-		case string:
-			literalString = literal.(string)
-		default:
+		if s, isString := literal.(string); isString {
+			literalString = s
+		} else {
 			literalString = fmt.Sprintf("%#v", literal)
 		}
 
