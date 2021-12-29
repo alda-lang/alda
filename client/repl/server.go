@@ -499,6 +499,16 @@ var ops = map[string]func(*Server, nREPLRequest){
 		server.respondDone(req, map[string]interface{}{"events": updates.String()})
 	},
 
+	"score-ast": func(server *Server, req nREPLRequest) {
+		ast, err := parser.ParseString(server.input)
+		if err != nil {
+			server.respondError(req, err.Error(), nil)
+			return
+		}
+
+		server.respondDone(req, map[string]interface{}{"ast": ast.JSON().String()})
+	},
+
 	"score-text": func(server *Server, req nREPLRequest) {
 		server.respondDone(req, map[string]interface{}{"text": server.input})
 	},

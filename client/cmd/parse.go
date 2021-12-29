@@ -43,6 +43,16 @@ var parseCmd = &cobra.Command{
 The -o / --output parameter determines what output is displayed.
 Options include:
 
+ast:
+
+  The AST that results from parsing the source code, represented as a JSON
+  object.
+
+ast-human:
+
+  The AST that results from parsing the source code, displayed in a more
+  human-readable way.
+
 events:
 
   A JSON array of objects, each of which represents an "event" parsed from the
@@ -59,12 +69,20 @@ data (default):
 	),
 	RunE: func(_ *cobra.Command, args []string) error {
 		switch outputType {
-		case "events", "data": // OK to proceed
+		case "ast", "ast-human", "events", "data": // OK to proceed
 		default:
 			return help.UserFacingErrorf(
 				`%s is not a supported output type.
 
 Please choose one of:
+
+  %s
+  The AST that results from parsing the source code, represented as a JSON
+  object.
+
+  %s
+  The AST that results from parsing the source code, displayed in a more
+  human-readable way.
 
   %s
   A JSON array of objects, each of which represents an "event" parsed from the
@@ -75,6 +93,8 @@ Please choose one of:
   source code into events and evaluating them in order within the context of a
   new score.`,
 				color.Aurora.BrightYellow(outputType),
+				color.Aurora.BrightYellow("ast"),
+				color.Aurora.BrightYellow("ast-human"),
 				color.Aurora.BrightYellow("events"),
 				color.Aurora.BrightYellow("data"),
 			)
@@ -118,6 +138,34 @@ Please choose one of:
 
 		if err != nil {
 			return err
+		}
+
+		if outputType == "ast" {
+			fmt.Println(ast.JSON().String())
+
+			return nil
+		}
+
+		if outputType == "ast-human" {
+			// HACK: Instead of the code below, we should really just be able to have
+			// this one line:
+			//
+			//   fmt.Println(parser.HumanReadableAST(ast.JSON()))
+			//
+			// However, for some bizarre reason, it only seems to work if we serialize
+			// the JSON directly emitted by ast.JSON() as a string, then parse the
+			// string to get a new object. I guess something about ast.JSON() is doing
+			// something weird with nested gabs.Containers, or something like that.
+			jsonObj := ast.JSON()
+			jsonStr := jsonObj.String()
+			parsedJsonObj, err := json.ParseJSON([]byte(jsonStr))
+			if err != nil {
+				return err
+			}
+
+			fmt.Println(parser.HumanReadableAST(parsedJsonObj))
+
+			return nil
 		}
 
 		scoreUpdates, err = ast.Updates()

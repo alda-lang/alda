@@ -1,11 +1,14 @@
 package parser
 
 import (
+	"bytes"
 	"fmt"
+	"reflect"
+	"strings"
 
-	text "alda.io/client/text"
-
-	model "alda.io/client/model"
+	"alda.io/client/json"
+	"alda.io/client/model"
+	"alda.io/client/text"
 )
 
 // An ASTNodeType is a type of AST node output by the parser.
@@ -160,30 +163,110 @@ func (nt ASTNodeType) String() string {
 	}
 }
 
-// PrettyPrint prints an ASTNode in a concise, easy to visualize format.
-func (node ASTNode) PrettyPrint() {
-	var recursivelyPrettyPrint func(ASTNode, int)
-	recursivelyPrettyPrint = func(node ASTNode, indentLevel int) {
-		maybeLiteral := ""
-		if node.Literal != nil {
-			literal := node.Literal
-			if node.Type == NoteLetterNode {
-				literal = string(node.Literal.(rune))
-			}
+// JSON returns a JSON representation of an ASTNode.
+func (node ASTNode) JSON() *json.Container {
+	nodeJSON := json.Object(
+		"type", node.Type.String(),
+	)
 
-			maybeLiteral = fmt.Sprintf(": %#v", literal)
-		}
-
-		fmt.Println(
-			text.Indent(indentLevel, node.Type.String()+maybeLiteral),
-		)
+	if len(node.Children) > 0 {
+		children := json.Array()
 
 		for _, child := range node.Children {
-			recursivelyPrettyPrint(child, indentLevel+1)
+			children.ArrayAppend(child.JSON())
+		}
+
+		nodeJSON.Set(children, "children")
+	}
+
+	if node.Literal != nil {
+		literal := node.Literal
+
+		switch node.Type {
+		case NoteLetterNode:
+			literal = fmt.Sprintf("%c", literal)
+		case NoteLengthNode:
+			nl := literal.(noteLength)
+			literal = json.Object(
+				"denominator", nl.denominator,
+				"dots", nl.dots,
+			)
+		}
+
+		nodeJSON.Set(literal, "literal")
+	}
+
+	if node.SourceContext.Line > 0 {
+		nodeJSON.Set(
+			json.Object(
+				"line", node.SourceContext.Line,
+				"column", node.SourceContext.Column,
+			),
+			"source-context")
+	}
+
+	return nodeJSON
+}
+
+// HumanReadableAST returns a human-readable textual representation of an AST.
+// It operates on the JSON output of ASTNode.JSON().
+//
+// NOTE: It kind of feels like a bad idea that this operates on the JSON output
+// instead of the ASTNode structure itself, because JSON() is lossy, but it does
+// make sense in the context of Alda REPL client/server interactions (the
+// `:score ast` REPL command), where the server is sending the JSON
+// representation of the AST over to the client, so the client doesn't have the
+// original AST structure in hand. The AST is a really simple structure, and the
+// JSON is a faithful representation of it, so I don't think the lossiness in
+// the translation will effectively cause any problems.
+func HumanReadableAST(ast *json.Container) string {
+	var buffer bytes.Buffer
+
+	var recursivelyWriteNodes func(*json.Container, int)
+	recursivelyWriteNodes = func(node *json.Container, indentAmount int) {
+		nodeType := node.Search("type").Data().(string)
+
+		maybeSourceContext := ""
+		sc, ok := node.Search("source-context").Data().(map[string]interface{})
+		if ok {
+			maybeSourceContext = fmt.Sprintf(
+				" [%d:%d]",
+				int(sc["line"].(float64)),
+				int(sc["column"].(float64)),
+			)
+		}
+
+		maybeLiteral := ""
+		literal := node.Search("literal").Data()
+		if literal = node.Search("literal").Data(); literal != nil {
+			// HACK to make e.g. `map[string]interface{}{denominator: 4, dots: 2}`
+			// display as user-friendly JSON instead: `{"denominator":4,"dots":2}`
+			if reflect.ValueOf(literal).Kind() == reflect.Map {
+				maybeLiteral = fmt.Sprintf(": %s", json.ToJSON(literal))
+			} else {
+				maybeLiteral = fmt.Sprintf(": %#v", literal)
+			}
+		}
+
+		nodeString := fmt.Sprintf(
+			"%s%s%s",
+			nodeType,
+			maybeSourceContext,
+			maybeLiteral,
+		)
+
+		buffer.WriteString(
+			text.Indent(indentAmount, nodeString) + "\n",
+		)
+
+		for _, child := range node.Search("children").Children() {
+			recursivelyWriteNodes(child, indentAmount+1)
 		}
 	}
 
-	recursivelyPrettyPrint(node, 0)
+	recursivelyWriteNodes(ast, 0)
+
+	return strings.TrimRight(buffer.String(), "\n")
 }
 
 func (node ASTNode) expectChildren() error {

@@ -118,6 +118,22 @@ Returns::
 * `status`
 * `problems` if there were any
 
+=== `score-ast`
+
+Returns the parsed AST of the current score. (This is the output that you get
+when you run `alda parse -o ast ...` at the command line.)
+
+Required parameters::
+{blank}
+
+Optional parameters::
+{blank}
+
+Returns::
+* `status`
+* `problems` if there were any
+* `ast` - the parsed AST of the current score, as a JSON string
+
 === `score-data`
 
 Returns a data representation of the current score. (This is the output that you
