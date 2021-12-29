@@ -114,7 +114,7 @@ Currently, the only supported output format is %s.`,
 			ast, err = parseStdin()
 		}
 
-		if err == errNoInputSupplied {
+		if err == system.ErrNoInputSupplied {
 			return userFacingNoInputSuppliedError("export")
 		}
 

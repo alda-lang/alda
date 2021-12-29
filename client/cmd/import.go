@@ -109,7 +109,7 @@ Currently, the only supported output format is %s.`,
 			scoreUpdates, err = importer.ImportMusicXML(reader)
 
 		default:
-			bytes, err := readStdin()
+			bytes, err := system.ReadStdin()
 			if err != nil {
 				return err
 			}

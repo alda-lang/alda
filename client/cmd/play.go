@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"time"
 
@@ -58,50 +57,14 @@ func init() {
 	)
 }
 
-// Returns true if input is being piped into stdin.
-//
-// Returns an error if something went wrong while trying to determine this.
-func isInputBeingPipedIn() (bool, error) {
-	stat, err := os.Stdin.Stat()
-	if err != nil {
-		return false, err
-	}
-
-	return stat.Mode()&os.ModeCharDevice == 0, nil
-}
-
-var errNoInputSupplied = fmt.Errorf("no input supplied")
-
-// Reads all bytes piped into stdin and returns them.
-//
-// Returns the error `errNoInputSupplied` if no input is being piped in, or a
-// different error if something else went wrong.
-func readStdin() ([]byte, error) {
-	isInputSupplied, err := isInputBeingPipedIn()
-	if err != nil {
-		return nil, err
-	}
-
-	if !isInputSupplied {
-		return nil, errNoInputSupplied
-	}
-
-	bytes, err := ioutil.ReadAll(os.Stdin)
-	if err != nil {
-		return nil, err
-	}
-
-	return bytes, nil
-}
-
 // Parses Alda source code piped into stdin and returns the parsed AST.
 //
-// Returns `errNoInputSupplied` if no input is being piped into stdin.
+// Returns `system.ErrNoInputSupplied` if no input is being piped into stdin.
 //
 // Returns a different error if the input couldn't be parsed as valid Alda code,
 // or if something else went wrong.
 func parseStdin() (parser.ASTNode, error) {
-	bytes, err := readStdin()
+	bytes, err := system.ReadStdin()
 	if err != nil {
 		return parser.ASTNode{}, err
 	}
@@ -201,7 +164,7 @@ var playCmd = &cobra.Command{
 
 		default:
 			ast, err = parseStdin()
-			if err == errNoInputSupplied {
+			if err == system.ErrNoInputSupplied {
 				action = "unpause"
 				err = nil
 			}

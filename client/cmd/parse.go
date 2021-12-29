@@ -10,6 +10,7 @@ import (
 	log "alda.io/client/logging"
 	"alda.io/client/model"
 	"alda.io/client/parser"
+	"alda.io/client/system"
 	"github.com/spf13/cobra"
 )
 
@@ -115,7 +116,7 @@ Please choose one of:
 			ast, err = parseStdin()
 		}
 
-		if err == errNoInputSupplied {
+		if err == system.ErrNoInputSupplied {
 			return userFacingNoInputSuppliedError("parse")
 		}
 
