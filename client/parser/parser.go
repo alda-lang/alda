@@ -847,10 +847,27 @@ func (p *parser) eventSeq() (ASTNode, error) {
 		}
 
 		if token, matched := p.match(Repetitions); matched {
+			repetitionRanges := token.literal.([]model.RepetitionRange)
+
 			repetitionsNode := ASTNode{
 				Type:          RepetitionsNode,
 				SourceContext: p.sourceContext(token),
-				Literal:       token.literal,
+			}
+
+			for _, repetitionRange := range repetitionRanges {
+				repetitionsNode.Children = append(repetitionsNode.Children, ASTNode{
+					Type: RepetitionRangeNode,
+					Children: []ASTNode{
+						{
+							Type:    FirstRepetitionNode,
+							Literal: repetitionRange.First,
+						},
+						{
+							Type:    LastRepetitionNode,
+							Literal: repetitionRange.Last,
+						},
+					},
+				})
 			}
 
 			eventNode = ASTNode{

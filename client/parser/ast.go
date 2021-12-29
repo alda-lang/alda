@@ -22,8 +22,10 @@ const (
 	DotsNode
 	DurationNode
 	EventSequenceNode
+	FirstRepetitionNode
 	FlatNode
 	ImplicitPartNode
+	LastRepetitionNode
 	LispListNode
 	LispNumberNode
 	LispQuotedFormNode
@@ -47,6 +49,7 @@ const (
 	PartNamesNode
 	PartNode
 	RepeatNode
+	RepetitionRangeNode
 	RepetitionsNode
 	RestNode
 	RootNode
@@ -87,10 +90,14 @@ func (nt ASTNodeType) String() string {
 		return "DurationNode"
 	case EventSequenceNode:
 		return "EventSequenceNode"
+	case FirstRepetitionNode:
+		return "FirstRepetitionNode"
 	case FlatNode:
 		return "FlatNode"
 	case ImplicitPartNode:
 		return "ImplicitPartNode"
+	case LastRepetitionNode:
+		return "LastRepetitionNode"
 	case LispListNode:
 		return "LispListNode"
 	case LispNumberNode:
@@ -137,6 +144,8 @@ func (nt ASTNodeType) String() string {
 		return "PartNode"
 	case RepeatNode:
 		return "RepeatNode"
+	case RepetitionRangeNode:
+		return "RepetitionRangeNode"
 	case RepetitionsNode:
 		return "RepetitionsNode"
 	case RestNode:
@@ -651,11 +660,38 @@ func (node ASTNode) Updates() ([]model.ScoreUpdate, error) {
 			return nil, err
 		}
 
+		if err := repetitions.expectChildren(); err != nil {
+			return nil, err
+		}
+
+		repetitionRanges := []model.RepetitionRange{}
+
+		for _, rrNode := range repetitions.Children {
+			if err := rrNode.expectNChildren(2); err != nil {
+				return nil, err
+			}
+
+			frNode, err := rrNode.Children[0].expectNodeType(FirstRepetitionNode)
+			if err != nil {
+				return nil, err
+			}
+
+			lrNode, err := rrNode.Children[1].expectNodeType(LastRepetitionNode)
+			if err != nil {
+				return nil, err
+			}
+
+			repetitionRanges = append(repetitionRanges, model.RepetitionRange{
+				First: frNode.Literal.(int32),
+				Last:  lrNode.Literal.(int32),
+			})
+		}
+
 		return []model.ScoreUpdate{
 			model.OnRepetitions{
 				SourceContext: node.SourceContext,
 				Event:         event,
-				Repetitions:   repetitions.Literal.([]model.RepetitionRange),
+				Repetitions:   repetitionRanges,
 			},
 		}, nil
 
