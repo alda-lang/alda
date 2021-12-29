@@ -94,17 +94,16 @@ func readStdin() ([]byte, error) {
 	return bytes, nil
 }
 
-// Parses Alda source code piped into stdin and returns the parsed score
-// updates.
+// Parses Alda source code piped into stdin and returns the parsed AST.
 //
 // Returns `errNoInputSupplied` if no input is being piped into stdin.
 //
 // Returns a different error if the input couldn't be parsed as valid Alda code,
 // or if something else went wrong.
-func parseStdin() ([]model.ScoreUpdate, error) {
+func parseStdin() (parser.ASTNode, error) {
 	bytes, err := readStdin()
 	if err != nil {
-		return nil, err
+		return parser.ASTNode{}, err
 	}
 
 	return parser.ParseString(string(bytes))
@@ -182,6 +181,7 @@ var playCmd = &cobra.Command{
 			return userFacingNoInputSuppliedError("play")
 		}
 
+		var ast parser.ASTNode
 		var scoreUpdates []model.ScoreUpdate
 		var err error
 
@@ -194,13 +194,13 @@ var playCmd = &cobra.Command{
 
 		switch {
 		case file != "":
-			scoreUpdates, err = parser.ParseFile(file)
+			ast, err = parser.ParseFile(file)
 
 		case code != "":
-			scoreUpdates, err = parser.ParseString(code)
+			ast, err = parser.ParseString(code)
 
 		default:
-			scoreUpdates, err = parseStdin()
+			ast, err = parseStdin()
 			if err == errNoInputSupplied {
 				action = "unpause"
 				err = nil
@@ -218,6 +218,22 @@ var playCmd = &cobra.Command{
 
 		if err != nil {
 			return err
+		}
+
+		if action != "unpause" {
+			scoreUpdates, err = ast.Updates()
+
+			// Errors with source context are presented to the user as-is.
+			//
+			// See TODO notes above.
+			switch err.(type) {
+			case *model.AldaSourceError:
+				err = &help.UserFacingError{Err: err}
+			}
+
+			if err != nil {
+				return err
+			}
 		}
 
 		score := model.NewScore()

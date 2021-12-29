@@ -26,7 +26,13 @@ func main() {
 
 	scoreFilename := os.Args[1]
 
-	scoreUpdates, err := parser.ParseFile(scoreFilename)
+	ast, err := parser.ParseFile(scoreFilename)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	scoreUpdates, err := ast.Updates()
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

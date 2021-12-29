@@ -28,13 +28,20 @@ func executeParseTestCases(t *testing.T, testCases ...parseTestCase) {
 		// By default, the actual list of updates will include source context, which
 		// would cause an avalanche of spurious test failures because the diff would
 		// show numerous differences in the source contexts.
-		actual, err := Parse(testCase.label, testCase.given, SuppressSourceContext)
+		actualAST, err :=
+			Parse(testCase.label, testCase.given, SuppressSourceContext)
 		if err != nil {
 			t.Errorf("%v\n", err)
 			return
 		}
 
-		if diff := deep.Equal(testCase.expect, actual); diff != nil {
+		actualUpdates, err := actualAST.Updates()
+		if err != nil {
+			t.Errorf("%v\n", err)
+			return
+		}
+
+		if diff := deep.Equal(testCase.expect, actualUpdates); diff != nil {
 			t.Error(testCase.label)
 			for _, diffItem := range diff {
 				t.Errorf("%v", diffItem)

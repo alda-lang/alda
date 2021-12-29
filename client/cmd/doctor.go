@@ -83,7 +83,12 @@ var doctorCmd = &cobra.Command{
 		if err := step(
 			"Parse source code",
 			func() error {
-				su, err := parser.ParseString(testInput)
+				ast, err := parser.ParseString(testInput)
+				if err != nil {
+					return err
+				}
+
+				su, err := ast.Updates()
 				if err != nil {
 					return err
 				}

@@ -37,7 +37,12 @@ func TestExamples(t *testing.T) {
 
 			fmt.Printf("● %s\n", path)
 
-			scoreUpdates, err := ParseFile(path)
+			ast, err := ParseFile(path)
+			if err != nil {
+				return err
+			}
+
+			scoreUpdates, err := ast.Updates()
 			if err != nil {
 				return err
 			}

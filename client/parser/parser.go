@@ -1079,10 +1079,10 @@ func (p *parser) parseAST() (ASTNode, error) {
 	return rootNode, nil
 }
 
-// Parse a string of input into a sequence of score updates.
+// Parse a string of input into a root ASTNode.
 func Parse(
 	filepath string, input string, opts ...parseOption,
-) ([]model.ScoreUpdate, error) {
+) (ASTNode, error) {
 	defer func(start time.Time) {
 		if r := recover(); r != nil {
 			panic(fmt.Sprintf("Critical error while parsing %s", filepath))
@@ -1096,30 +1096,25 @@ func Parse(
 
 	tokens, err := Scan(filepath, input)
 	if err != nil {
-		return nil, err
+		return ASTNode{}, err
 	}
 
 	p := newParser(filepath, tokens, opts...)
 
-	ast, err := p.parseAST()
-	if err != nil {
-		return nil, err
-	}
-
-	return ast.Updates()
+	return p.parseAST()
 }
 
 // ParseString reads and parses a string of input.
-func ParseString(input string) ([]model.ScoreUpdate, error) {
+func ParseString(input string) (ASTNode, error) {
 	return Parse("", input)
 }
 
 // ParseFile reads a file and parses the input.
-func ParseFile(filepath string) ([]model.ScoreUpdate, error) {
+func ParseFile(filepath string) (ASTNode, error) {
 	contents, err := ioutil.ReadFile(filepath)
 
 	if errors.Is(err, os.ErrNotExist) {
-		return nil, help.UserFacingErrorf(
+		return ASTNode{}, help.UserFacingErrorf(
 			`Failed to open %s. The file does not seem to exist.
 
 Please check that you haven't misspelled the file name, etc.`,
@@ -1128,7 +1123,7 @@ Please check that you haven't misspelled the file name, etc.`,
 	}
 
 	if err != nil {
-		return nil, err
+		return ASTNode{}, err
 	}
 
 	return Parse(filepath, string(contents))

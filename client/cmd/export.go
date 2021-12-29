@@ -99,24 +99,30 @@ Currently, the only supported output format is %s.`,
 			)
 		}
 
+		var ast parser.ASTNode
 		var scoreUpdates []model.ScoreUpdate
 		var err error
 
 		switch {
 		case file != "":
-			scoreUpdates, err = parser.ParseFile(file)
+			ast, err = parser.ParseFile(file)
 
 		case code != "":
-			scoreUpdates, err = parser.ParseString(code)
+			ast, err = parser.ParseString(code)
 
 		default:
-			scoreUpdates, err = parseStdin()
+			ast, err = parseStdin()
 		}
 
 		if err == errNoInputSupplied {
 			return userFacingNoInputSuppliedError("export")
 		}
 
+		if err != nil {
+			return err
+		}
+
+		scoreUpdates, err = ast.Updates()
 		if err != nil {
 			return err
 		}

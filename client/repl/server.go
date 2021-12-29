@@ -479,7 +479,13 @@ var ops = map[string]func(*Server, nREPLRequest){
 	},
 
 	"score-events": func(server *Server, req nREPLRequest) {
-		scoreUpdates, err := parser.ParseString(server.input)
+		ast, err := parser.ParseString(server.input)
+		if err != nil {
+			server.respondError(req, err.Error(), nil)
+			return
+		}
+
+		scoreUpdates, err := ast.Updates()
 		if err != nil {
 			server.respondError(req, err.Error(), nil)
 			return
@@ -554,7 +560,12 @@ func (server *Server) updateScoreWithInput(
 	// playing from when we want to play the new events.
 	eventIndex := server.eventIndex
 
-	scoreUpdates, err := parser.ParseString(input)
+	ast, err := parser.ParseString(input)
+	if err != nil {
+		return nil, err
+	}
+
+	scoreUpdates, err := ast.Updates()
 	if err != nil {
 		return nil, err
 	}

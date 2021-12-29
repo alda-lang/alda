@@ -80,18 +80,19 @@ Please choose one of:
 			)
 		}
 
+		var ast parser.ASTNode
 		var scoreUpdates []model.ScoreUpdate
 		var err error
 
 		switch {
 		case file != "":
-			scoreUpdates, err = parser.ParseFile(file)
+			ast, err = parser.ParseFile(file)
 
 		case code != "":
-			scoreUpdates, err = parser.ParseString(code)
+			ast, err = parser.ParseString(code)
 
 		default:
-			scoreUpdates, err = parseStdin()
+			ast, err = parseStdin()
 		}
 
 		if err == errNoInputSupplied {
@@ -110,6 +111,20 @@ Please choose one of:
 		// context, e.g. an editor plugin can easily parse out the line and column
 		// number and display the error message at the relevant position in the
 		// file.
+		switch err.(type) {
+		case *model.AldaSourceError:
+			err = &help.UserFacingError{Err: err}
+		}
+
+		if err != nil {
+			return err
+		}
+
+		scoreUpdates, err = ast.Updates()
+
+		// Errors with source context are presented to the user as-is.
+		//
+		// See TODO notes above.
 		switch err.(type) {
 		case *model.AldaSourceError:
 			err = &help.UserFacingError{Err: err}
