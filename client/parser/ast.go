@@ -3,7 +3,6 @@ package parser
 import (
 	"bytes"
 	"fmt"
-	"reflect"
 	"strings"
 
 	"alda.io/client/json"
@@ -237,12 +236,11 @@ func HumanReadableAST(ast *json.Container) string {
 		}
 
 		maybeLiteral := ""
-		literal := node.Search("literal").Data()
-		if literal = node.Search("literal").Data(); literal != nil {
+		if literal := node.Search("literal").Data(); literal != nil {
 			// HACK to make e.g. `map[string]interface{}{denominator: 4, dots: 2}`
 			// display as user-friendly JSON instead: `{"denominator":4,"dots":2}`
-			if reflect.ValueOf(literal).Kind() == reflect.Map {
-				maybeLiteral = fmt.Sprintf(": %s", json.ToJSON(literal))
+			if mapLiteral, isMap := literal.(map[string]interface{}); isMap {
+				maybeLiteral = fmt.Sprintf(": %s", json.ToJSON(mapLiteral))
 			} else {
 				maybeLiteral = fmt.Sprintf(": %#v", literal)
 			}
