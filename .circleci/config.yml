@@ -188,7 +188,7 @@ jobs:
 
   test_macos:
     macos:
-      xcode: 13.2.0
+      xcode: 13.2.1
 
     steps:
       - attach_workspace:
