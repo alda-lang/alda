@@ -195,7 +195,325 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
 
-      - macos/add-uitest-permissions
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceAll"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceExposureNotification"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceSystemPolicySysAdminFiles"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceAccessibility"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceFaceID"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceSystemPolicyAllFiles"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceAppleEvents"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceAddressBook"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceContactsLimited"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceContactsFull"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceCalendar"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceReminders"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceTwitter"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceFacebook"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceSinaWeibo"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceTencentWeibo"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceShareKit"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceLiverpool"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceUbiquity"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServicePhotos"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServicePhotosAdd"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceCamera"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceMicrophone"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceWillow"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceMediaLibrary"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceSiri"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceMotion"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceSpeechRecognition"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceUserTracking"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceBluetoothAlways"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceWebKitIntelligentTrackingPrevention"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServicePrototype3Rights"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServicePrototype4Rights"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceGameCenterFriends"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceBluetoothPeripheral"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceBluetoothWhileInUse"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceKeyboardNetwork"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceMSO"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceCalls"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceSensorKitMotion"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceSensorKitWatchMotion"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceSensorKitLocationMetrics"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceSensorKitAmbientLightSensor"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceSensorKitWatchAmbientLightSensor"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceSensorKitWatchHeartRate"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceSensorKitWatchOnWristState"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceSensorKitKeyboardMetrics"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceSensorKitWatchPedometer"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceSensorKitPedometer"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceSensorKitWatchFallStats"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceSensorKitWatchForegroundAppCategory"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceSensorKitForegroundAppCategory"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceSensorKitWatchSpeechMetrics"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceSensorKitSpeechMetrics"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceSensorKitMotionHeartRate"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceSensorKitOdometer"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceSensorKitElevation"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceSensorKitStrideCalibration"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceSensorKitDeviceUsage"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceSensorKitPhoneUsage"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceSensorKitMessageUsage"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceSensorKitFacialMetrics"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceExposureNotificationRegion"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceFallDetection"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceSensorKitBedSensing"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceSensorKitSoundDetection"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceSensorKitBedSensingWriting"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceLinkedIn"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServicePostEvent"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceListenEvent"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceSystemPolicyDeveloperFiles"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceScreenCapture"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceDeveloperTool"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceFileProviderPresence"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceFileProviderDomain"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceSystemPolicyRemovableVolumes"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceSystemPolicyNetworkVolumes"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceSystemPolicyDesktopFolder"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceSystemPolicyDownloadsFolder"
+
+      - macos/add-permission:
+          bundle-id: "com.apple.Terminal"
+          permission-type: "kTCCServiceSystemPolicyDocumentsFolder"
 
       - run:
           name: Install alda and alda-player
