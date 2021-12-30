@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## 2.1.0 (2021-12-29)
 
 * As a step to enable future work on exciting new features like automatic code
   formatting and importing from other formats like MusicXML, we have done some
