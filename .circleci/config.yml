@@ -195,6 +195,8 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
 
+      - macos/list-permissions
+
       - run:
           name: Install alda and alda-player
           working_directory: /tmp/workspace/build
