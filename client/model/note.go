@@ -127,6 +127,10 @@ func addNoteOrRest(score *Score, noteOrRest ScoreUpdate) error {
 				)
 
 				if midiNote < 0 || midiNote > 127 {
+					log.Debug().
+						Int("midiNote", int(midiNote)).
+						Msg("Midi note out of range.")
+
 					return help.UserFacingErrorf("Midi note out of the 0-127 range. Input note: %d", midiNote)
 				}
 
