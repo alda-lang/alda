@@ -109,6 +109,6 @@ go run dev/osc/main.go 27278 patchange
 
 ## License
 
-Copyright © 2019-2021 Dave Yarwood, et al
+Copyright © 2019-2022 Dave Yarwood, et al
 
 Distributed under the Eclipse Public License version 2.0.

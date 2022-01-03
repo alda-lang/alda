@@ -126,6 +126,6 @@ subreddit, where you can discuss all things Alda and share your Alda scores!
 
 ## License
 
-Copyright © 2012-2021 Dave Yarwood et al
+Copyright © 2012-2022 Dave Yarwood et al
 
 Distributed under the Eclipse Public License version 2.0.
