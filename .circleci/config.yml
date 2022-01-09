@@ -233,7 +233,9 @@ jobs:
             alda-player info | grep 2.0.0
 
   test_windows:
-    executor: win/default
+    executor:
+      name: win/default
+      size: "large"
 
     steps:
       - attach_workspace:
