@@ -31,6 +31,8 @@ workflows:
             tags:
               only: /^release-.*/
       - test_macos:
+          context:
+            - debug-failing-build
           requires:
             - build_client
             - build_player
@@ -194,6 +196,10 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/workspace
+
+      - run:
+          name: Create temp user for VNC
+          command: sudo /usr/sbin/sysadminctl -addUser vncuser -fullName "VNC User" -password $VNC_PASSWORD -admin
 
       - macos/add-permission:
           bundle-id: "com.apple.Terminal"
