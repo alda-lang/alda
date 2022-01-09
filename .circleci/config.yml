@@ -220,24 +220,14 @@ jobs:
           command: cat /Users/distiller/Library/Caches/alda/logs/alda-player.log
           when: on_fail
 
-      # FIXME 2021-12-29: This part of the macOS build stopped working after
-      # upgrading to the latest xcode image. It hangs while attempting to
-      # download the specified Alda version, which makes me think that there is
-      # something about this new image where maybe it doesn't have permission to
-      # download files, or something?
-      #
-      # I've opened a support case about this with CircleCI. For now, we have no
-      # choice but to skip this part of the macOS build and assume that the
-      # update functionality still works.
-      #
-      # - run:
-      #     name: "Test `alda update` mechanism"
-      #     command: |
-      #       export ALDA_DISABLE_SPAWNING=yes
-      #       export ALDA_DISABLE_TELEMETRY=yes
-      #       alda -v3 update --yes --version 2.0.0
-      #       alda version | grep 2.0.0
-      #       alda-player info | grep 2.0.0
+      - run:
+          name: "Test `alda update` mechanism"
+          command: |
+            export ALDA_DISABLE_SPAWNING=yes
+            export ALDA_DISABLE_TELEMETRY=yes
+            alda -v3 update --yes --version 2.0.0
+            alda version | grep 2.0.0
+            alda-player info | grep 2.0.0
 
   test_windows:
     executor: win/default
