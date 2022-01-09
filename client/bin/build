@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
+set -eo pipefail
 
 cd "$(dirname "$0")/../"
 
@@ -29,6 +29,7 @@ if [[ -d "target/$build_sha" ]]; then
 fi
 
 # Refuse to build unless the tests are all passing.
+# shellcheck disable=2046
 go test $(go list ./...)
 
 function build() {
