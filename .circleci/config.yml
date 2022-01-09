@@ -2,6 +2,7 @@ version: 2.1
 
 orbs:
   win: circleci/windows@2.2.0
+  macos: circleci/macos@2.0.1
 
 # All of the jobs below have filters that appear superfluous, but the filters
 # are actually required because if one job has tag filters, then every job
