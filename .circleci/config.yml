@@ -235,7 +235,7 @@ jobs:
   test_windows:
     executor:
       name: win/default
-      size: "large"
+      size: "xlarge"
 
     steps:
       - attach_workspace:
