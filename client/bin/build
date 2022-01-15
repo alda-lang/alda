@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
+set -eo pipefail
 
 cd "$(dirname "$0")/../"
 
@@ -29,7 +29,12 @@ if [[ -d "target/$build_sha" ]]; then
 fi
 
 # Refuse to build unless the tests are all passing.
+# shellcheck disable=2046
 go test $(go list ./...)
+
+# I first tried using an associative array for this, but those things behave
+# strangely in the face of concurrency. Falling back to using files instead.
+builds_dir="$(mktemp -d)"
 
 function build() {
   os="$1"
@@ -46,7 +51,12 @@ function build() {
   echo "Building $output_filename..."
 
   # Install the standard packages locally to speed up subsequent builds.
-  GOOS="$os" GOARCH="$arch" go install
+  GOOS="$os" GOARCH="$arch" go install || \
+    {
+      echo "$os-$arch build: ERROR"
+      echo "1" > "$builds_dir/$os-$arch"
+      return
+    }
 
   # Build.
   #
@@ -62,7 +72,15 @@ function build() {
     -gcflags="all=-trimpath=$PWD" \
     -asmflags="all=-trimpath=$PWD" \
     -o "$output_filename" \
-    main.go
+    main.go || \
+    {
+      echo "$os-$arch build: ERROR"
+      echo "1" > "$builds_dir/$os-$arch"
+      return
+    }
+
+    echo "$os-$arch build: OK"
+    echo "0" > "$builds_dir/$os-$arch"
 }
 
 for os in windows darwin linux; do
@@ -72,9 +90,33 @@ for os in windows darwin linux; do
       continue
     fi
 
-    build $os $arch
+    # Add an empty file in the builds directory right away, so that we can wait
+    # on a result in the main thread.
+    touch "$builds_dir/$os-$arch"
+
+    build $os $arch &
   done
 done
 
-echo "Done."
+declare -A build_results
 
+for file in "$builds_dir"/*; do
+  while true; do
+    if [[ -s "$file" ]]; then
+      build_results["$(basename "$file")"]="$(cat "$file")"
+      break
+    fi
+
+    sleep 0.5
+  done
+done
+
+for build_result in "${!build_results[@]}"; do
+  exit_code="${build_results[$build_result]}"
+
+  if [[ "$exit_code" -ne 0 ]]; then
+    exit "$exit_code"
+  fi
+done
+
+echo "All builds successful."

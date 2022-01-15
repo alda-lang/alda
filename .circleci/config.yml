@@ -84,6 +84,8 @@ jobs:
     docker:
       - image: cimg/go:1.16.8
 
+    resource_class: xlarge
+
     steps:
       - checkout
 
