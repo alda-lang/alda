@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Unreleased
+
+* On Mac computers, Alda now requires macOS 10.13 (High Sierra) or later.
+
 ## 2.1.0 (2021-12-29)
 
 * As a step to enable future work on exciting new features like automatic code
