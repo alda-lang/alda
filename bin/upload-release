@@ -50,9 +50,9 @@ version_changelog="$(mktemp)"
 
 echo "Uploading $artifacts_dir to $release_s3_url..."
 
-# First, upload all of the (non-Windows) `alda` and `alda-player` executables,
-# ensuring that they have the MIME type application/octet-stream. I noticed that
-# if we don't specify the content type, they end up having the content type
+# Upload all of the (non-Windows) `alda` and `alda-player` executables, ensuring
+# that they have the MIME type application/octet-stream. I noticed that if we
+# don't specify the content type, they end up having the content type
 # binary/octet-stream, which Firefox seems to think is a DEB file, for some
 # reason.
 spaces_s3 sync \
@@ -64,12 +64,23 @@ spaces_s3 sync \
   "$artifacts_dir" \
   "$release_s3_url"
 
-# Now, upload everything else, trusting that S3 is smart enough to infer the
-# correct content type.
+# Upload alda.wasm, making sure that the content type is correctly set to
+# application/wasm.
+spaces_s3 sync \
+  --acl public-read \
+  --exclude '*' \
+  --include '*/alda.wasm' \
+  --content-type application/wasm \
+  "$artifacts_dir" \
+  "$release_s3_url"
+
+# Upload everything else, trusting that S3 is smart enough to infer the correct
+# content type.
 spaces_s3 sync \
   --acl public-read \
   --exclude '*/alda' \
   --exclude '*/alda-player' \
+  --exclude '*/alda.wasm' \
   "$artifacts_dir" \
   "$release_s3_url"
 
