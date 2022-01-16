@@ -1,8 +1,17 @@
 # CHANGELOG
 
-## Unreleased
+## 2.2.0 (2022-01-15)
 
 * On Mac computers, Alda now requires macOS 10.13 (High Sierra) or later.
+
+* There is now an experimental WebAssembly build of Alda! You can't do much with
+  it yet, but hopefully in the near future, we'll be able to run Alda in the
+  browser! :open_mouth:
+
+  If you're interested in following the discussion (or maybe even
+  contributing!), see [this issue][alda-in-the-browser].
+
+[alda-in-the-browser]: https://github.com/alda-lang/alda/issues/392
 
 ## 2.1.0 (2021-12-29)
 
