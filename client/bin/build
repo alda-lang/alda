@@ -37,26 +37,40 @@ go test $(go list ./...)
 builds_dir="$(mktemp -d)"
 
 function build() {
-  os="$1"
-  arch="$2"
+  local os="$1"
+  local arch="$2"
 
-  if [[ "$os" == "windows" ]]; then
-    ext=".exe"
-  else
-    ext=""
-  fi
+  local ext=""
+  case "$os" in
+    windows)
+      ext=".exe"
+      ;;
+    js)
+      ext=".wasm"
+      ;;
+    *)
+      ext=""
+      ;;
+  esac
 
-  output_filename="target/$build_sha/$os-$arch/alda$ext"
+  local output_filename="target/$build_sha/$os-$arch/alda$ext"
 
   echo "Building $output_filename..."
 
-  # Install the standard packages locally to speed up subsequent builds.
-  GOOS="$os" GOARCH="$arch" go install || \
-    {
-      echo "$os-$arch build: ERROR"
-      echo "1" > "$builds_dir/$os-$arch"
-      return
-    }
+  if [[ "$os" != "js" ]]; then
+    # Install the standard packages locally to speed up subsequent builds.
+    GOOS="$os" GOARCH="$arch" go install || \
+      {
+        echo "$os-$arch build: ERROR"
+        echo "1" > "$builds_dir/$os-$arch"
+        return
+      }
+  fi
+
+  local input_filename="main.go"
+  if [[ "$os" == "js" ]]; then
+    input_filename="wasm/main.go"
+  fi
 
   # Build.
   #
@@ -72,7 +86,7 @@ function build() {
     -gcflags="all=-trimpath=$PWD" \
     -asmflags="all=-trimpath=$PWD" \
     -o "$output_filename" \
-    main.go || \
+    "$input_filename" || \
     {
       echo "$os-$arch build: ERROR"
       echo "1" > "$builds_dir/$os-$arch"
@@ -83,10 +97,16 @@ function build() {
     echo "0" > "$builds_dir/$os-$arch"
 }
 
-for os in windows darwin linux; do
-  for arch in 386 amd64; do
-    # Support for darwin/386 was apparently removed around Go 1.13.
+for os in windows darwin linux js; do
+  for arch in 386 amd64 wasm; do
+    # Support for darwin/386 was removed in Go 1.15.
     if [[ "$os" == darwin ]] && [[ "$arch" == 386 ]]; then
+      continue
+    fi
+
+    # js/wasm is the only possible combination involving one of those
+    if [[ ("$os" == js && "$arch" != wasm) || \
+          ("$arch" == wasm && "$os" != js) ]]; then
       continue
     fi
 

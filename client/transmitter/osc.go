@@ -198,11 +198,11 @@ func tempoMessages(
 	return messages
 }
 
-// TransmitScore implements Transmitter.TransmitScore by sending OSC messages to
-// instruct a player process how to perform the score.
-func (oe OSCTransmitter) TransmitScore(
+// ScoreToOSCBundle returns the OSC bundle that should be sent to an Alda player
+// process in order to transmit the provided score.
+func (oe OSCTransmitter) ScoreToOSCBundle(
 	score *model.Score, opts ...TransmissionOption,
-) error {
+) (*osc.Bundle, error) {
 	ctx := &TransmissionContext{toIndex: -1}
 	for _, opt := range opts {
 		opt(ctx)
@@ -224,7 +224,7 @@ func (oe OSCTransmitter) TransmitScore(
 	if ctx.from != "" {
 		offset, err := score.InterpretOffsetReference(ctx.from)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		startOffset = offset
@@ -233,7 +233,7 @@ func (oe OSCTransmitter) TransmitScore(
 	if ctx.to != "" {
 		offset, err := score.InterpretOffsetReference(ctx.to)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		endOffset = offset
@@ -391,7 +391,7 @@ func (oe OSCTransmitter) TransmitScore(
 
 			scoreLength = math.Max(scoreLength, offset+noteEvent.AudibleDuration)
 		default:
-			return fmt.Errorf("unsupported event: %#v", event)
+			return nil, fmt.Errorf("unsupported event: %#v", event)
 		}
 	}
 
@@ -401,6 +401,19 @@ func (oe OSCTransmitter) TransmitScore(
 
 	if ctx.oneOff {
 		bundle.Append(systemShutdownMsg(int32(math.Round(scoreLength + 10000))))
+	}
+
+	return bundle, nil
+}
+
+// TransmitScore implements Transmitter.TransmitScore by sending OSC messages to
+// instruct a player process how to perform the score.
+func (oe OSCTransmitter) TransmitScore(
+	score *model.Score, opts ...TransmissionOption,
+) error {
+	bundle, err := oe.ScoreToOSCBundle(score, opts...)
+	if err != nil {
+		return err
 	}
 
 	log.Debug().
