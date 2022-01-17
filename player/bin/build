@@ -71,16 +71,18 @@ template="launch4j-config-template.xml"
 
 export ALDA_EXE_FILE="$PWD/$windows_build"
 export ALDA_JAR_FILE="$PWD/$fat_jar"
-export ALDA_YEAR="$(date '+%Y')"
+ALDA_YEAR="$(date '+%Y')"
+export ALDA_YEAR
 
 # launch4j executables require 4 number segments (e.g. 1.2.3.4) for some dumb
 # reason. We use semantic(-ish) versioning (e.g. 1.2.3), so we have to add ".0"
 # to the end to get an equivalent 4-segment version number.
-export ALDA_VERSION="$(cat ../VERSION).0"
+ALDA_VERSION="$(cat ../VERSION).0"
+export ALDA_VERSION
 
 xml_jvm_opts=""
 for opt in $jvm_opts; do
-  xml_jvm_opts="$(printf "$xml_jvm_opts\n    <opt>$opt</opt>\n" "$opt")"
+  xml_jvm_opts="$(printf "%s\n    <opt>%s</opt>\n" "$xml_jvm_opts" "$opt")"
 done
 export ALDA_JVM_OPTS="$xml_jvm_opts"
 
@@ -93,7 +95,7 @@ for envvar in $(grep --o "ALDA_[0-9A-Z_]\+" "$template" | sort | uniq); do
 done
 
 launch4j_config=$(mktemp)
-cat "$template" | envsubst > "$launch4j_config"
+envsubst < "$template" > "$launch4j_config"
 
 launch4j "$launch4j_config"
 
