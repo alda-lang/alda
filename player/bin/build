@@ -31,6 +31,7 @@ fi
 fat_jar="build/libs/alda-player-fat.jar"
 
 echo "Building $fat_jar..."
+rm -rf "$fat_jar"
 ./gradlew build
 echo
 
