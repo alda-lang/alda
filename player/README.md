@@ -84,6 +84,37 @@ your choosing):
 gradle run --args "run -p 27278"
 ```
 
+### Compiling and testing alda-player.js
+
+alda-player.js is the in-browser version of the Alda player process. It depends
+on alda.wasm, which is compiled from the [Go client](../client) code.
+
+To compile the source in `src/jsMain` to alda-player.js, run:
+
+```bash
+gradlew jsBrowserProductionWebpack
+```
+
+This creates the optimized/minified JavaScript source file
+`build/distributions/alda-player.js`.
+
+Then, you can open [`test-page.html`](test-page.html), a simple HTML page with a
+script tag that loads the aforementioned JavaScript file, and play around in the
+JavaScript console in your browser.
+
+For added convenience, use Gradle's `-t` flag to watch the file system for
+changes and recompile alda-player.js every time you make changes to the source:
+
+```bash
+gradlew -t jsBrowserProductionWebpack
+```
+
+> NOTE: Kotlin's JS tooling also provides a `jsBrowserRun` task, which is
+> supposed to do hot code reloading, but I think that might only apply to React?
+> It didn't seem to work with straightforward normal script like we're using,
+> which I guess makes sense, because how would it know which part of the code to
+> reload?
+
 ## License
 
 Copyright © 2019-2022 Dave Yarwood, et al

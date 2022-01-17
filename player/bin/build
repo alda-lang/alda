@@ -26,25 +26,32 @@ if [[ -d "$build_dir" ]]; then
   exit 0
 fi
 
-### FAT JAR ##############################
+### BUILD ##############################
 
 fat_jar="build/libs/alda-player-fat.jar"
+alda_player_js="build/distributions/alda-player.js"
+alda_player_js_map="build/distributions/alda-player.js.map"
 
-echo "Building $fat_jar..."
-rm -rf "$fat_jar"
-./gradlew build
+echo "Building $fat_jar and $alda_player_js..."
+rm -rf "$fat_jar" "$alda_player_js"
+./gradlew buildAll
 echo
 
-if [[ ! -f "$fat_jar" ]]; then
-  echo "Gradle build failed to create $fat_jar."
-  exit 1
-fi
+for file in "$fat_jar" "$alda_player_js" "$alda_player_js_map"; do
+  if [[ ! -f "$file" ]]; then
+    echo "Gradle build failed to create $file."
+    exit 1
+  fi
+done
 
 mkdir -p "$build_dir/windows"
 mkdir -p "$build_dir/non-windows"
+mkdir -p "$build_dir/browser"
 
 windows_build="$build_dir/windows/alda-player.exe"
 non_windows_build="$build_dir/non-windows/alda-player"
+browser_build_js="$build_dir/browser/alda-player.js"
+browser_build_js_map="$build_dir/browser/alda-player.js.map"
 
 # The logPath system property is reconfigured when the application starts.
 # Defining an initial value here means that if some logging sneaks in before we
@@ -99,3 +106,11 @@ envsubst < "$template" > "$launch4j_config"
 
 launch4j "$launch4j_config"
 
+### BROWSER BUILD ##############################
+
+echo "Copying browser output files:"
+echo "=> $browser_build_js"
+echo "=> $browser_build_js_map"
+
+cp "$alda_player_js" "$browser_build_js"
+cp "$alda_player_js_map" "$browser_build_js_map"
