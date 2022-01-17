@@ -35,7 +35,7 @@ dependencies {
 }
 
 application {
-  mainClassName = "io.alda.player.MainKt"
+  mainClass.set("io.alda.player.MainKt")
 }
 
 val run by tasks.getting(JavaExec::class) {
