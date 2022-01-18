@@ -20,8 +20,11 @@ instead of whatever default, non-fat JAR approach it's using.
 But I can't, for the life of me, figure out how to replace/customize the `gradle
 build` task. If you know how to do this, please enlighten me!
 
-As a workaround, I am disabling the `gradle build` task. Instead, use my custom
-`gradle buildAll` task defined at the bottom of build.gradle.kts.
+As a workaround, I am disabling the `gradle build` task. Instead, use the
+`gradle fatJar` task directly to build  the JVM part.
+
+To build the JS part, run `bin/build-js`, which includes workarounds for the
+out-of-the-box flakiness of Kotlin JS tooling.
 -----------------------------------------------------------------------------"""
 )
 }
@@ -135,11 +138,4 @@ application {
 
 val run by tasks.getting(JavaExec::class) {
   standardInput = System.`in`
-}
-
-tasks {
-  register("buildAll") {
-    dependsOn("fatJar")
-    dependsOn("jsBrowserProductionWebpack")
-  }
 }

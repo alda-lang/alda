@@ -29,15 +29,25 @@ fi
 ### BUILD ##############################
 
 fat_jar="build/libs/alda-player-fat.jar"
+
+echo "Building $fat_jar..."
+rm -rf "$fat_jar"
+./gradlew fatJar
+echo
+
+if [[ ! -f "$fat_jar" ]]; then
+  echo "Gradle build failed to create $fat_jar."
+  exit 1
+fi
+
 alda_player_js="build/distributions/alda-player.js"
 alda_player_js_map="build/distributions/alda-player.js.map"
 
-echo "Building $fat_jar and $alda_player_js..."
-rm -rf "$fat_jar" "$alda_player_js"
-./gradlew buildAll
-echo
+echo "Building $alda_player_js..."
+rm -rf "$alda_player_js" "$alda_player_js_map"
+bin/build-js
 
-for file in "$fat_jar" "$alda_player_js" "$alda_player_js_map"; do
+for file in "$alda_player_js" "$alda_player_js_map"; do
   if [[ ! -f "$file" ]]; then
     echo "Gradle build failed to create $file."
     exit 1

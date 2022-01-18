@@ -92,28 +92,27 @@ on alda.wasm, which is compiled from the [Go client](../client) code.
 To compile the source in `src/jsMain` to alda-player.js, run:
 
 ```bash
-gradlew jsBrowserProductionWebpack
+bin/build-js
 ```
 
 This creates the optimized/minified JavaScript source file
-`build/distributions/alda-player.js`.
+`build/distributions/alda-player.js`, as well as the source map file
+`build/distributions/alda-player.js.map`.
 
 Then, you can open [`test-page.html`](test-page.html), a simple HTML page with a
 script tag that loads the aforementioned JavaScript file, and play around in the
 JavaScript console in your browser.
 
-For added convenience, use Gradle's `-t` flag to watch the file system for
-changes and recompile alda-player.js every time you make changes to the source:
-
-```bash
-gradlew -t jsBrowserProductionWebpack
-```
-
-> NOTE: Kotlin's JS tooling also provides a `jsBrowserRun` task, which is
-> supposed to do hot code reloading, but I think that might only apply to React?
-> It didn't seem to work with straightforward normal script like we're using,
-> which I guess makes sense, because how would it know which part of the code to
-> reload?
+> NOTE: Kotlin's JS tooling provides various tasks for JS development, including
+> `jsBrowserRun`, `jsBrowserWebpack`, and `jsBrowserProductionWebpack`, but I
+> consider it too buggy to be usable in the intended way. I've observed major
+> issues like the build succeeding but the output JS not getting updated. This
+> is why I wrote `bin/build-js`, which is slower than the out-of-the-box tooling,
+> but more reliable. It deletes the output files and then re-runs the
+> `jsBrowserProductionWebpack` task from scratch.
+>
+> It's a shame, because it would be nice to do things the official way and get
+> incremental compilation and whatnot.
 
 ## License
 
