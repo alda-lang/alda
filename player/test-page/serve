@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+set -eo pipefail
+
+for cmd in npx curl jq; do
+  if ! command -v "$cmd" >/dev/null; then
+    echo "This script requires \`$cmd\` to be available on your PATH."
+    exit 1
+  fi
+done
+
+cd "$(dirname "$0")"
+
+if ! [[ -f alda.wasm ]]; then
+  echo "Fetching release information from the Alda API..."
+
+  alda_wasm_url="$(curl -s --fail https://api.alda.io/releases/latest \
+                   | jq -r '.releases[0].assets
+                            | .["js-wasm"][]
+                            | select(.type == "wasm")
+                            | .url')"
+
+  echo "Downloading alda.wasm..."
+
+  curl -s "$alda_wasm_url" > alda.wasm
+fi
+
+npx http-server .

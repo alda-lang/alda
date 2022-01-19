@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>alda-player.js test page</title>
+</head>
+<body>
+  <script src="wasm_exec.js"></script>
+  <script>
+  if (!WebAssembly.instantiateStreaming) { // polyfill
+    WebAssembly.instantiateStreaming = async (resp, importObject) => {
+      const source = await (await resp).arrayBuffer();
+      return await WebAssembly.instantiate(source, importObject);
+    };
+  }
+
+  const go = new Go();
+  WebAssembly.instantiateStreaming(
+    fetch("alda.wasm"), go.importObject
+  ).then((result) => {
+    go.run(result.instance)
+    console.info(`alda.wasm ${Alda.VERSION} loaded`)
+  }).catch((err) => {
+    console.error(err);
+  });
+  </script>
+  <script src="alda-player.js"></script>
+  <p>IMPORTANT: For alda.wasm to work on this page:</p>
+  <ol>
+    <li>
+      <code>alda.wasm</code> must be present in the same directory.
+    </li>
+    <li>
+      You must view this page served on localhost, instead of viewing the HTML
+      file directly in your browser.
+    </li>
+  </ol>
+  <p>
+    The easiest way to get this test page working is to run the
+    <code>serve</code> script in this directory. The script will fetch the
+    latest version of <code>alda.wasm</code> and use the npm
+    <a href="https://www.npmjs.com/package/http-server">http-server</a> package
+    to serve the contents of this directory, including this page.
+  </p>
+</body>
+</html>

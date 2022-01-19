@@ -99,10 +99,6 @@ This creates the optimized/minified JavaScript source file
 `build/distributions/alda-player.js`, as well as the source map file
 `build/distributions/alda-player.js.map`.
 
-Then, you can open [`test-page.html`](test-page.html), a simple HTML page with a
-script tag that loads the aforementioned JavaScript file, and play around in the
-JavaScript console in your browser.
-
 > NOTE: Kotlin's JS tooling provides various tasks for JS development, including
 > `jsBrowserRun`, `jsBrowserWebpack`, and `jsBrowserProductionWebpack`, but I
 > consider it too buggy to be usable in the intended way. I've observed major
@@ -112,7 +108,12 @@ JavaScript console in your browser.
 > `jsBrowserProductionWebpack` task from scratch.
 >
 > It's a shame, because it would be nice to do things the official way and get
-> incremental compilation and whatnot.
+> incremental compilation and whatnot, but c'est la vie.
+
+Then, you can run the `test-page/serve` script, which serves a simple HTML test
+page on localhost. The page includes both alda.wasm and alda-player.js, so that
+both the `Alda` (provided by alda.wasm) and `AldaPlayer` (provided by
+alda-player.js) objects are available to use in the JS console.
 
 ## License
 
