@@ -95,7 +95,7 @@ kotlin {
   sourceSets {
     val commonMain by getting {
       dependencies {
-        // ...
+        implementation("io.github.microutils:kotlin-logging:2.1.21")
       }
     }
 
@@ -116,7 +116,6 @@ kotlin {
         implementation("io.github.soc:directories:11")
 
         // logging
-        implementation("io.github.microutils:kotlin-logging:1.7.7")
         implementation("org.slf4j:slf4j-api:1.7.30")
         implementation("org.apache.logging.log4j:log4j-slf4j-impl:2.17.0")
         implementation("org.apache.logging.log4j:log4j-api:2.17.0")
