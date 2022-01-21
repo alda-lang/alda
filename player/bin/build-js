@@ -7,11 +7,6 @@ set -eo pipefail
 # updated. Deleting the file and re-running the build task from scratch seems to
 # work as a workaround, so this script automates that.
 #
-# To automatically re-build whenever source files change, you can install entr
-# (https://eradman.com/entrproject/) and run this command:
-#
-#   find src/ -name '*.kt' -not -name 'Version.kt' | entr -r bin/build-js
-#
 # This is slower than it could be, which is a shame, but Kotlin JS tooling seems
 # to be a mess at this point. Maybe in the future it'll become more intuitive
 # and we can get the provided build tasks to work, including incremental
