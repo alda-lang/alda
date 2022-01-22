@@ -19,4 +19,4 @@ output_js_map="build/distributions/alda-player.js.map"
 
 rm -rf "$output_js" "$output_js_map"
 
-./gradlew jsBrowserProductionWebpack
+./gradlew jsBrowserProductionWebpack "$@"
