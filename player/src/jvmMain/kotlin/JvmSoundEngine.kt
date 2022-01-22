@@ -150,7 +150,7 @@ private fun setTempoMessage(bpm : Float) : MetaMessage {
   return MetaMessage(MIDI_SET_TEMPO, msgData, 3)
 }
 
-class MidiEngine {
+class JVMSoundEngine : SoundEngine {
   val sequencer = MidiSystem.getSequencer(false)
   val synthesizer = MidiSystem.getSynthesizer()
   val receiver = sequencer.getReceiver()
@@ -404,19 +404,19 @@ class MidiEngine {
     sequencer.setTickPosition(msToTicks(offsetMs * 1.0))
   }
 
-  fun patch(offset : Int, channel : Int, patch : Int) {
+  override fun midiPatch(offset : Int, channel : Int, patch : Int) {
     scheduleShortMsg(offset, ShortMessage.PROGRAM_CHANGE, channel, patch, 0)
   }
 
   // Immediately configure the track to use a percussion channel. That way, any
   // note messages in the same bundle will be scheduled on a percussion channel.
-  fun percussionImmediate(trackNumber : Int) {
+  override fun midiPercussionImmediate(trackNumber : Int) {
     track(trackNumber).useMidiPercussionChannel()
   }
 
   // Configure a track to be a percussion track in the future by scheduling a
   // metamessage that will do the above once the offset is reached.
-  fun percussionScheduled(trackNumber : Int, offset : Int) {
+  override fun midiPercussionScheduled(trackNumber : Int, offset : Int) {
     scheduleMetaMsg(
       offset,
       CustomMetaMessage.PERCUSSION,
@@ -425,7 +425,7 @@ class MidiEngine {
     )
   }
 
-  fun note(
+  override fun midiNote(
     startOffset : Int, endOffset : Int, channel : Int, noteNumber : Int,
     velocity : Int
   ) {
@@ -441,13 +441,13 @@ class MidiEngine {
     )
   }
 
-  fun volume(offset : Int, channel : Int, volume : Int) {
+  override fun midiVolume(offset : Int, channel : Int, volume : Int) {
     scheduleShortMsg(
       offset, ShortMessage.CONTROL_CHANGE, channel, MIDI_EXPRESSION, volume
     )
   }
 
-  fun panning(offset : Int, channel : Int, panning : Int) {
+  override fun midiPanning(offset : Int, channel : Int, panning : Int) {
     scheduleShortMsg(
       offset, ShortMessage.CONTROL_CHANGE, channel, MIDI_PANNING, panning
     )

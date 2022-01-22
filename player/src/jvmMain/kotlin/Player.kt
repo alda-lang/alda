@@ -12,14 +12,14 @@ private val log = KotlinLogging.logger {}
 
 val playerQueue = LinkedBlockingQueue<List<OSCMessage>>()
 
-private var _midi : MidiEngine? = null
+private var _engine : JVMSoundEngine? = null
 
-fun midi() : MidiEngine {
-  if (_midi == null) {
-    _midi = MidiEngine()
+fun engine() : JVMSoundEngine {
+  if (_engine == null) {
+    _engine = JVMSoundEngine()
   }
 
-  return _midi!!
+  return _engine!!
 }
 
 val availableChannels = ((0..15).toSet() - 9).toMutableSet()
@@ -81,20 +81,20 @@ class Track(val trackNumber : Int) {
       eventBufferQueue.clear()
       activeTasks.set(0)
       activePatterns.clear()
-      withMidiChannel { midi().clearChannel(it) }
+      withMidiChannel { engine().clearChannel(it) }
     }
   }
 
   fun mute() {
-    withMidiChannel { midi().muteChannel(it) }
+    withMidiChannel { engine().muteChannel(it) }
   }
 
   fun unmute() {
-    withMidiChannel { midi().unmuteChannel(it) }
+    withMidiChannel { engine().unmuteChannel(it) }
   }
 
   fun schedule(event : Schedulable) {
-    withMidiChannel { channel -> event.schedule(channel) }
+    withMidiChannel { channel -> event.schedule(engine(), channel) }
   }
 
   /**
@@ -141,7 +141,7 @@ class Track(val trackNumber : Int) {
 
         // This returns a CountDownLatch that starts at 1 and counts down to 0
         // when the `patternSchedule` offset is reached in the sequence.
-        val latch = midi().scheduleEvent(
+        val latch = engine().scheduleEvent(
           patternSchedule, patternEvent.patternName
         )
 
@@ -176,8 +176,10 @@ class Track(val trackNumber : Int) {
         // Now that we've scheduled at least one iteration, we can start
         // playing. (Unless we've already started playing, in which case this is
         // a no-op.)
-        synchronized(midi().isPlaying) {
-          if (midi().isPlaying) midi().startSequencer()
+        synchronized(engine().isPlaying) {
+          if (engine().isPlaying) {
+            engine().startSequencer()
+          }
         }
 
         // It's safe to filter a List<Event> down to just the ones that are
@@ -209,7 +211,7 @@ class Track(val trackNumber : Int) {
   private fun adjustStartOffset(_startOffset : Int) : Int {
     var startOffset = _startOffset
 
-    val now = Math.round(midi().currentOffset()).toInt()
+    val now = Math.round(engine().currentOffset()).toInt()
 
     // If we're not scheduling into the future, then whatever we're supposed to
     // be scheduling should happen ASAP.
@@ -217,7 +219,7 @@ class Track(val trackNumber : Int) {
 
     // Ensure that there is time to schedule the events before they're due to
     // come up in the sequence.
-    if (midi().isPlaying && (startOffset - now < SCHEDULE_BUFFER_TIME_MS)) {
+    if (engine().isPlaying && (startOffset - now < SCHEDULE_BUFFER_TIME_MS)) {
       log.trace { "The note would be due in ${startOffset - now} ms, so " +
                   "adding ${SCHEDULE_BUFFER_TIME_MS} to the scheduled offset" }
       startOffset += SCHEDULE_BUFFER_TIME_MS
@@ -237,9 +239,11 @@ class Track(val trackNumber : Int) {
       val event = it as MidiPercussionEvent
 
       if (event.offset == 0) {
-        midi().percussionImmediate(trackNumber)
+        engine().midiPercussionImmediate(trackNumber)
       } else {
-        midi().percussionScheduled(trackNumber, startOffset + event.offset)
+        engine().midiPercussionScheduled(
+          trackNumber, startOffset + event.offset
+        )
       }
     }
 
@@ -287,8 +291,10 @@ class Track(val trackNumber : Int) {
 
     // Now that all the notes have been scheduled, we can start the sequencer
     // (assuming it hasn't been started already, in which case this is a no-op).
-    synchronized(midi().isPlaying) {
-      if (midi().isPlaying) midi().startSequencer()
+    synchronized(engine().isPlaying) {
+      if (engine().isPlaying) {
+        engine().startSequencer()
+      }
     }
 
     // At this point, `noteEvents` should contain all of the notes we've
@@ -322,7 +328,7 @@ class Track(val trackNumber : Int) {
             thread {
               val event = it as FinishLoopEvent
               val offset = adjustStartOffset(startOffset) + event.offset
-              val latch = midi().scheduleEvent(offset, "FinishLoop")
+              val latch = engine().scheduleEvent(offset, "FinishLoop")
               latch.await()
               log.debug { "clearing active patterns" }
               activePatterns.clear()
@@ -414,7 +420,7 @@ private fun applyUpdates(updates : Updates) {
     isRunning = false
 
   if (updates.systemActions.contains(SystemAction.STOP))
-    midi().stopSequencer()
+    engine().stopSequencer()
 
   if (updates.systemActions.contains(SystemAction.CLEAR)) {
     tracks.forEach { _, track -> track.clear() }
@@ -423,7 +429,7 @@ private fun applyUpdates(updates : Updates) {
   updates.systemEvents.filter { it is SetOffsetEvent }.forEach {
     val setOffsetEvent = it as SetOffsetEvent
     awaitActiveTasks()
-    midi().setSequencerOffset(setOffsetEvent.offset)
+    engine().setSequencerOffset(setOffsetEvent.offset)
   }
 
   updates.trackActions.forEach { (trackNumber, actions) ->
@@ -446,7 +452,7 @@ private fun applyUpdates(updates : Updates) {
 
   updates.systemEvents.filter { it is TempoEvent }.forEach {
     val tempoEvent = it as TempoEvent
-    midi().setTempo(tempoEvent.offset, tempoEvent.bpm)
+    engine().setTempo(tempoEvent.offset, tempoEvent.bpm)
   }
 
   updates.patternEvents.forEach { (patternName, events) ->
@@ -465,7 +471,7 @@ private fun applyUpdates(updates : Updates) {
 
   updates.systemEvents.filter { it is MidiExportEvent }.forEach {
     awaitActiveTasks()
-    midi().export((it as MidiExportEvent).filepath)
+    engine().export((it as MidiExportEvent).filepath)
   }
 
   // PHASE 5: unmute/play
@@ -483,14 +489,14 @@ private fun applyUpdates(updates : Updates) {
   // that will occur in the score.)
   updates.systemEvents.filter { it is ShutdownEvent }.forEach {
     val shutdownEvent = it as ShutdownEvent
-    midi().scheduleShutdown(shutdownEvent.offset)
+    engine().scheduleShutdown(shutdownEvent.offset)
   }
 
   // NB: We don't actually start the sequencer here; that action needs to be
   // deferred until after a track thread finishes scheduling a buffer of events.
   if (updates.systemActions.contains(SystemAction.PLAY)) {
     awaitActiveTasks()
-    midi().isPlaying = true
+    engine().isPlaying = true
   }
 }
 
@@ -499,7 +505,10 @@ fun player() : Thread {
     while (!Thread.currentThread().isInterrupted()) {
       try {
         val instructions = playerQueue.take()
-        val updates = parseUpdates(instructions)
+        val updates = Updates(
+          instructions.map { Message(it.address, it.arguments) },
+          stateManager!!
+        )
         applyUpdates(updates)
       } catch (iex : InterruptedException) {
         Thread.currentThread().interrupt()

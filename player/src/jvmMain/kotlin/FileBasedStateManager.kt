@@ -15,7 +15,7 @@ private val log = KotlinLogging.logger {}
 
 class PlayerState(val port : Int, var expiry : Long, var state : String)
 
-class StateManager(val port : Int) {
+class FileBasedStateManager(val port : Int) : StateManager {
   val thread = thread(start = false) {
     while (!Thread.currentThread().isInterrupted()) {
       try {
@@ -115,11 +115,11 @@ class StateManager(val port : Int) {
     }
   }
 
-  fun delayExpiration() {
+  override fun delayExpiration() {
     delayExpiration(System.currentTimeMillis())
   }
 
-  fun setState(str : String) {
+  private fun setState(str : String) {
     synchronized(state) {
       if (state.state != str) {
         state.state = str
@@ -128,6 +128,6 @@ class StateManager(val port : Int) {
     }
   }
 
-  fun markReady() = setState("ready")
-  fun markActive() = setState("active")
+  override fun markReady() = setState("ready")
+  override fun markActive() = setState("active")
 }

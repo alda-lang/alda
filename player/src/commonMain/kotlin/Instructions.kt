@@ -1,6 +1,5 @@
 package io.alda.player
 
-import com.illposed.osc.OSCMessage
 import mu.KotlinLogging
 
 private val log = KotlinLogging.logger {}
@@ -23,7 +22,7 @@ interface Event {
 }
 
 interface Schedulable {
-  fun schedule(channel : Int)
+  fun schedule(soundEngine : SoundEngine, channel : Int)
 }
 
 class ShutdownEvent(val offset : Int) : Event {
@@ -55,8 +54,8 @@ class MidiPatchEvent(val offset : Int, val patch : Int) : Event, Schedulable {
     return MidiPatchEvent(offset + o, patch)
   }
 
-  override fun schedule(channel : Int) {
-    midi().patch(offset, channel, patch)
+  override fun schedule(soundEngine : SoundEngine, channel : Int) {
+    soundEngine.midiPatch(offset, channel, patch)
   }
 
   override fun endOffset() = 0
@@ -80,10 +79,12 @@ class MidiNoteEvent(
     )
   }
 
-  override fun schedule(channel : Int) {
+  override fun schedule(soundEngine : SoundEngine, channel : Int) {
     val noteStart = offset
     val noteEnd = noteStart + audibleDuration
-    midi().note(noteStart, noteEnd, channel, noteNumber, velocity)
+    soundEngine.midiNote(
+      noteStart, noteEnd, channel, noteNumber, velocity
+    )
   }
 
   override fun endOffset() = offset + duration
@@ -96,8 +97,8 @@ class MidiVolumeEvent(
     return MidiVolumeEvent(offset + o, volume)
   }
 
-  override fun schedule(channel : Int) {
-    midi().volume(offset, channel, volume)
+  override fun schedule(soundEngine : SoundEngine, channel : Int) {
+    soundEngine.midiVolume(offset, channel, volume)
   }
 
   override fun endOffset() = 0
@@ -110,8 +111,8 @@ class MidiPanningEvent(
     return MidiPanningEvent(offset + o, panning)
   }
 
-  override fun schedule(channel : Int) {
-    midi().panning(offset, channel, panning)
+  override fun schedule(soundEngine : SoundEngine, channel : Int) {
+    soundEngine.midiPanning(offset, channel, panning)
   }
 
   override fun endOffset() = 0
@@ -165,7 +166,9 @@ class MidiExportEvent(val filepath : String) : Event {
   override fun endOffset() = 0
 }
 
-class Updates() {
+data class Message(val address : String, val args : List<Any>) {}
+
+class Updates(val messages : List<Message>, val stateManager : StateManager) {
   var systemActions  = mutableSetOf<SystemAction>()
   var trackActions   = mutableMapOf<Int, Set<TrackAction>>()
   var patternActions = mutableMapOf<String, Set<PatternAction>>()
@@ -173,6 +176,12 @@ class Updates() {
   var systemEvents   = mutableListOf<Event>()
   var trackEvents    = mutableMapOf<Int, List<Event>>()
   var patternEvents  = mutableMapOf<String, List<Event>>()
+
+  init {
+    for (message in messages) {
+      parseMessage(message, stateManager)
+    }
+  }
 
   private fun addTrackAction(track : Int, action : TrackAction) {
     if (!trackActions.containsKey(track))
@@ -216,9 +225,9 @@ class Updates() {
     return pattern
   }
 
-  fun parse(msg : OSCMessage) {
-    val address = msg.getAddress()
-    val args    = msg.getArguments()
+  fun parseMessage(message : Message, stateManager : StateManager) {
+    val address = message.address
+    val args = message.args
 
     log.trace { "${address} ${args}" }
 
@@ -235,9 +244,9 @@ class Updates() {
         // /ping messages, which ensures that the player process will not expire
         // before the server is done using it.
         Regex("/ping").matches(address) -> {
-          log.debug("received ping")
-          stateManager!!.markActive()
-          stateManager!!.delayExpiration()
+          log.debug { "received ping" }
+          stateManager.markActive()
+          stateManager.delayExpiration()
         }
 
         Regex("/system/shutdown").matches(address) -> {
@@ -412,14 +421,7 @@ class Updates() {
         }
       }
     } catch (e : Throwable) {
-      log.warn { "Error while processing ${address} :: ${args}" }
-      e.printStackTrace()
+      log.warn(e) { "Error while processing ${address} :: ${args}" }
     }
   }
-}
-
-fun parseUpdates(instructions : List<OSCMessage>) : Updates {
-  val updates = Updates()
-  instructions.forEach { updates.parse(it) }
-  return updates
 }

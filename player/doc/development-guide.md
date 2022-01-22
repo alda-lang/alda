@@ -32,28 +32,27 @@ ps` to list running player processes).
 The location of the log files is based on platform-specific conventions (e.g.
 the XDG specification for Linux), as codified in the [directories-jvm] library.
 
-
 > See the `cacheDir` row in [this table][file-locations] for reference about
 > where to find the logs on your system. (Logs are also printed to stdout when
 > you're running the player process, which is usually good enough!)
 >
-> On my Ubuntu 16.04 machine, the current log file is
+> On my Ubuntu 20.04 machine, the current log file is
 `/home/dave/.cache/alda/logs/alda-player.log`. Older log files are found in the
 same directory, with names like `alda-player-2021-02-10.log`.
 
 ## State management
 
-> Relevant files: `StateManager.kt`
+> Relevant files: `FileBasedStateManager.kt`
 
 It is important that the Alda client can easily discover which player processes
 are available to play a score. When a player process comes up, it creates a
-StateManager instance, which runs a background thread that continuously updates
-a **state file** in the cache directory.
+FileBasedStateManager instance, which runs a background thread that continuously
+updates a **state file** in the cache directory.
 
 > See the `cacheDir` row in [this table][file-locations] if you need help
 > locating the player state files on your system.
 >
-> On my Ubuntu 16.04 machine, the player state files are found in
+> On my Ubuntu 20.04 machine, the player state files are found in
 > `/home/dave/.cache/alda/state/players/1.99.3/` (where `1.99.3` is the current
 > Alda version, controlled by the `VERSION` resource file in this repo).
 
@@ -90,7 +89,7 @@ in the order that they were received.
 
 ## MIDI
 
-> Relevant files: `MidiEngine.kt`
+> Relevant files: `JVMSoundEngine.kt`
 
 Although the [Java MIDI synthesizer][java-midi-synth] is currently Alda's only
 method of producing audio, there are plans to (eventually) include other types

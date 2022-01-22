@@ -19,7 +19,7 @@ import org.apache.logging.log4j.core.config.Configurator
 import org.apache.logging.log4j.Level
 
 var logger : KLogger? = null
-var stateManager : StateManager? = null
+var stateManager : FileBasedStateManager? = null
 
 var isRunning = true
 
@@ -65,7 +65,7 @@ class Run : CliktCommand(
   override fun run() {
     val log = logger!!
 
-    stateManager = StateManager(port)
+    stateManager = FileBasedStateManager(port)
     stateManager!!.start()
 
     log.info { "Starting receiver, listening on port $port..." }
@@ -77,7 +77,7 @@ class Run : CliktCommand(
         "Deferring audio initialization; --lazy-audio flag was provided."
       }
     } else {
-      midi()
+      engine()
     }
 
     val player = player()
