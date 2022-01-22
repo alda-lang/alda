@@ -103,7 +103,7 @@ for opt in $jvm_opts; do
 done
 export ALDA_JVM_OPTS="$xml_jvm_opts"
 
-for envvar in $(grep --o "ALDA_[0-9A-Z_]\+" "$template" | sort | uniq); do
+for envvar in $(grep -o "ALDA_[0-9A-Z_]\+" "$template" | sort | uniq); do
   if [[ "${!envvar-not_set}" == "not_set" ]]; then
     echo
     echo "Environment variable required by $template but not set: ${envvar}"
