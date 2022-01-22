@@ -422,6 +422,7 @@ class Updates(val messages : List<Message>, val stateManager : StateManager) {
       }
     } catch (e : Throwable) {
       log.warn(e) { "Error while processing ${address} :: ${args}" }
+      e.printStackTrace()
     }
   }
 }
