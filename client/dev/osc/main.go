@@ -10,8 +10,6 @@ import (
 	"github.com/daveyarwood/go-osc/osc"
 )
 
-var port int
-
 func appendAll(bundle *osc.Bundle, msgs []*osc.Message) {
 	for _, msg := range msgs {
 		bundle.Append(msg)

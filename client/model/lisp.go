@@ -211,7 +211,7 @@ func (f LispFunction) Validate() error {
 			case LispVariadic:
 				if i != len(signature.ArgumentTypes)-1 {
 					return fmt.Errorf(
-						"Varargs not at the end of the argument list: %#v",
+						"varargs not at the end of the argument list: %#v",
 						signature.ArgumentTypes,
 					)
 				}
@@ -314,7 +314,7 @@ func (f LispFunction) Operate(arguments []LispForm) (LispForm, error) {
 	}
 
 	return nil, fmt.Errorf(
-		`Provided arguments do not match the signature of %s
+		`provided arguments do not match the signature of %s
 
 Expected:
 %s
@@ -419,7 +419,7 @@ func positiveNumber(form LispForm) (float64, error) {
 	if number.Value < 1 {
 		return 0, &AldaSourceError{
 			Context: number.SourceContext,
-			Err:     fmt.Errorf("Expected positive number, got %f", number.Value),
+			Err:     fmt.Errorf("expected positive number, got %f", number.Value),
 		}
 	}
 
@@ -432,7 +432,7 @@ func nonNegativeNumber(form LispForm) (float64, error) {
 	if number.Value < 0 {
 		return 0, &AldaSourceError{
 			Context: number.SourceContext,
-			Err:     fmt.Errorf("Expected non-negative number, got %f", number.Value),
+			Err:     fmt.Errorf("expected non-negative number, got %f", number.Value),
 		}
 	}
 
@@ -445,7 +445,7 @@ func integer(form LispForm) (int32, error) {
 	if number.Value != float64(int32(number.Value)) {
 		return 0, &AldaSourceError{
 			Context: number.SourceContext,
-			Err:     fmt.Errorf("Expected integer, got %f", number.Value),
+			Err:     fmt.Errorf("expected integer, got %f", number.Value),
 		}
 	}
 
@@ -458,7 +458,7 @@ func percentage(form LispForm) (float64, error) {
 	if number.Value < 0 || number.Value > 100 {
 		return 0, &AldaSourceError{
 			Context: number.SourceContext,
-			Err:     fmt.Errorf("Value not between 0 and 100: %f", number.Value),
+			Err:     fmt.Errorf("value not between 0 and 100: %f", number.Value),
 		}
 	}
 
@@ -473,7 +473,7 @@ func noteLength(str string) (NoteLength, error) {
 	chars := []rune(str)
 
 	if len(str) == 0 || !isDigit(chars[0]) {
-		return NoteLength{}, fmt.Errorf("Invalid note length: %q", str)
+		return NoteLength{}, fmt.Errorf("invalid note length: %q", str)
 	}
 
 	i := 0
@@ -512,7 +512,7 @@ func noteLength(str string) (NoteLength, error) {
 	// At this point, we should be at the end of the string. If there's anything
 	// left over, consider the string invalid.
 	if i < len(chars)-1 {
-		return NoteLength{}, fmt.Errorf("Invalid note length: %q", str)
+		return NoteLength{}, fmt.Errorf("invalid note length: %q", str)
 	}
 
 	return NoteLength{Denominator: denominator, Dots: int32(dots)}, nil
@@ -546,7 +546,7 @@ func isNoteLetter(c rune) bool {
 
 func letterAndAccidentals(str string) (NoteLetter, []Accidental, error) {
 	validityError := fmt.Errorf(
-		"Invalid \"letter and accidentals\" component: %q", str,
+		"invalid \"letter and accidentals\" component: %q", str,
 	)
 
 	chars := []rune(str)
@@ -599,7 +599,7 @@ func keySignatureFromString(form LispForm) (KeySignature, error) {
 }
 
 func scaleType(forms []LispForm) (ScaleType, error) {
-	validityError := fmt.Errorf("Invalid scale type: %#v", forms)
+	validityError := fmt.Errorf("invalid scale type: %#v", forms)
 
 	// All of the currently supported scale types are a single word. If/when we
 	// add more that are multiple words, we'll need to adjust this function
@@ -634,7 +634,7 @@ func scaleType(forms []LispForm) (ScaleType, error) {
 }
 
 func keySignatureFromScaleName(forms []LispForm) (KeySignature, error) {
-	validityError := fmt.Errorf("Invalid scale name: %#v", forms)
+	validityError := fmt.Errorf("invalid scale name: %#v", forms)
 
 	letter := NoteLetter(0)
 	switch form := forms[0]; form.(type) {
@@ -659,9 +659,9 @@ func keySignatureFromScaleName(forms []LispForm) (KeySignature, error) {
 	remainingForms := []LispForm{}
 
 	for _, form := range forms[1:] {
-		switch form.(type) {
+		switch form := form.(type) {
 		case LispSymbol:
-			if accidental, err := NewAccidental(form.(LispSymbol).Name); err == nil {
+			if accidental, err := NewAccidental(form.Name); err == nil {
 				if passedAccidentals {
 					return KeySignature{}, validityError
 				}
@@ -687,7 +687,7 @@ func keySignatureFromScaleName(forms []LispForm) (KeySignature, error) {
 
 func keySignatureFromAccidentals(forms []LispForm) (KeySignature, error) {
 	validityError := fmt.Errorf(
-		"Expected pairs of note letter and accidentals, got %#v", forms,
+		"expected pairs of note letter and accidentals, got %#v", forms,
 	)
 
 	// We expect to be provided with a list of pairs of letters and accidentals,
@@ -717,9 +717,9 @@ func keySignatureFromAccidentals(forms []LispForm) (KeySignature, error) {
 		switch form := forms[i+1]; form.(type) {
 		case LispList:
 			for _, form := range form.(LispList).Elements {
-				switch form.(type) {
+				switch form := form.(type) {
 				case LispSymbol:
-					switch form.(LispSymbol).Name {
+					switch form.Name {
 					case "flat":
 						accidentals = append(accidentals, Flat)
 					case "sharp":
@@ -752,7 +752,7 @@ func keySignatureFromList(form LispForm) (KeySignature, error) {
 	}
 
 	forms := list.Elements
-	validityError := sourceError(fmt.Errorf("Invalid key signature: %#v", forms))
+	validityError := sourceError(fmt.Errorf("invalid key signature: %#v", forms))
 
 	if len(forms) < 2 {
 		return KeySignature{}, validityError
@@ -804,7 +804,7 @@ func init() {
 					return nil, &AldaSourceError{
 						Context: symbol.SourceContext,
 						Err: fmt.Errorf(
-							"Invalid argument to `octave`: %s", symbol.String(),
+							"invalid argument to `octave`: %s", symbol.String(),
 						),
 					}
 				}
@@ -1005,7 +1005,7 @@ func init() {
 	for marking := range DynamicVolumes {
 		defattribute([]string{marking},
 			attributeFunctionSignature{
-				argumentTypes: []LispForm{},
+				argumentTypes:  []LispForm{},
 				implementation: dynamicImplementation(marking),
 			},
 		)
@@ -1221,7 +1221,7 @@ func init() {
 			ArgumentTypes: []LispForm{LispList{}},
 			Implementation: func(args ...LispForm) (LispForm, error) {
 				forms := args[0].(LispList).Elements
-				validityError := fmt.Errorf("Invalid letter/accidentals: %#v", forms)
+				validityError := fmt.Errorf("invalid letter/accidentals: %#v", forms)
 
 				if len(forms) == 0 {
 					return nil, validityError
@@ -1252,9 +1252,9 @@ func init() {
 					accidentals := []Accidental{}
 
 					for _, form := range forms[1:] {
-						switch form.(type) {
+						switch form := form.(type) {
 						case LispSymbol:
-							accidental, err := NewAccidental(form.(LispSymbol).Name)
+							accidental, err := NewAccidental(form.Name)
 							if err != nil {
 								return nil, err
 							}
@@ -1302,11 +1302,10 @@ func init() {
 			Implementation: func(args ...LispForm) (LispForm, error) {
 				scoreUpdate := args[0].(LispScoreUpdate).ScoreUpdate
 
-				switch scoreUpdate.(type) {
+				switch scoreUpdate := scoreUpdate.(type) {
 				case Note:
-					note := scoreUpdate.(Note)
-					note.Slurred = true
-					return LispScoreUpdate{ScoreUpdate: note}, nil
+					scoreUpdate.Slurred = true
+					return LispScoreUpdate{ScoreUpdate: scoreUpdate}, nil
 				default:
 					return nil, fmt.Errorf(
 						"only notes can be slurred. Expected Note, got: %#v", scoreUpdate,
@@ -1425,7 +1424,7 @@ func (sym LispSymbol) Eval() (LispForm, error) {
 
 	return nil, &AldaSourceError{
 		Context: sym.SourceContext,
-		Err:     fmt.Errorf("Unresolvable symbol: %s", sym.Name),
+		Err:     fmt.Errorf("unresolvable symbol: %s", sym.Name),
 	}
 }
 
@@ -1639,24 +1638,24 @@ func (l LispList) Eval() (LispForm, error) {
 		arguments = append(arguments, value)
 	}
 
-	switch operator.(type) {
+	switch operator := operator.(type) {
 	case Operator:
-		result, err := operator.(Operator).Operate(arguments)
+		result, err := operator.Operate(arguments)
 		if err != nil {
 			return nil, sourceError(err)
 		}
 		return result, nil
 	default:
 		return nil, sourceError(
-			fmt.Errorf("Value is not an Operator: %#v", operator),
+			fmt.Errorf("value is not an Operator: %#v", operator),
 		)
 	}
 }
 
 func unpackScoreUpdate(form LispForm) ScoreUpdate {
-	switch form.(type) {
+	switch form := form.(type) {
 	case LispScoreUpdate:
-		return form.(LispScoreUpdate).ScoreUpdate
+		return form.ScoreUpdate
 	default:
 		log.Warn().
 			Interface("form", form).

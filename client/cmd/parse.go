@@ -213,7 +213,7 @@ Please choose one of:
 
 		log.Info().
 			Int("updates", len(scoreUpdates)).
-			Str("took", fmt.Sprintf("%s", time.Since(start))).
+			Str("took", time.Since(start).String()).
 			Msg("Constructed score.")
 
 		fmt.Println(score.JSON().String())

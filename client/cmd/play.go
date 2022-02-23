@@ -218,7 +218,7 @@ var playCmd = &cobra.Command{
 
 		log.Info().
 			Int("updates", len(scoreUpdates)).
-			Str("took", fmt.Sprintf("%s", time.Since(start))).
+			Str("took", time.Since(start).String()).
 			Msg("Constructed score.")
 
 		var players []system.PlayerState

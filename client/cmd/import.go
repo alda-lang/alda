@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"alda.io/client/code-generator"
+	code_generator "alda.io/client/code-generator"
 	"alda.io/client/color"
 	"alda.io/client/help"
 	"alda.io/client/interop/musicxml/importer"
@@ -104,9 +104,15 @@ Currently, the only supported output format is %s.`,
 			}
 
 			scoreUpdates, err = importer.ImportMusicXML(inputFile)
+			if err != nil {
+				return err
+			}
 		case code != "":
 			reader := strings.NewReader(code)
 			scoreUpdates, err = importer.ImportMusicXML(reader)
+			if err != nil {
+				return err
+			}
 
 		default:
 			bytes, err := system.ReadStdin()
@@ -116,10 +122,9 @@ Currently, the only supported output format is %s.`,
 
 			reader := strings.NewReader(string(bytes))
 			scoreUpdates, err = importer.ImportMusicXML(reader)
-		}
-
-		if err != nil {
-			return err
+			if err != nil {
+				return err
+			}
 		}
 
 		if outputAldaFilename == "" {

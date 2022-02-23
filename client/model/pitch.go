@@ -1,8 +1,9 @@
 package model
 
 import (
-	"alda.io/client/json"
 	"fmt"
+
+	"alda.io/client/json"
 )
 
 // NoteLetter represents a note letter in Western standard musical notation.
@@ -71,7 +72,7 @@ func NewNoteLetter(letter rune) (NoteLetter, error) {
 	case 'g':
 		return G, nil
 	default:
-		return -1, fmt.Errorf("Invalid note letter: %c", letter)
+		return -1, fmt.Errorf("invalid note letter: %c", letter)
 	}
 }
 
@@ -114,7 +115,7 @@ func NewAccidental(accidental string) (Accidental, error) {
 	case "sharp":
 		return Sharp, nil
 	default:
-		return -1, fmt.Errorf("Invalid accidental: %s", accidental)
+		return -1, fmt.Errorf("invalid accidental: %s", accidental)
 	}
 }
 

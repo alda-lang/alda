@@ -1,11 +1,12 @@
 package importer
 
 import (
+	"io"
+	"sort"
+
 	"alda.io/client/color"
 	"alda.io/client/help"
 	"github.com/beevik/etree"
-	"io"
-	"sort"
 
 	"alda.io/client/model"
 )
@@ -128,7 +129,7 @@ func (importer *musicXMLImporter) generateScoreUpdates() []model.ScoreUpdate {
 		partIDs = append(partIDs, id)
 	}
 
-	sort.Sort(sort.StringSlice(partIDs))
+	sort.Strings(partIDs)
 
 	for _, id := range partIDs {
 		part := importer.parts[id]

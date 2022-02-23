@@ -99,11 +99,6 @@ func (p *parser) match(types ...TokenType) (Token, bool) {
 	return Token{}, false
 }
 
-func (p *parser) addUpdate(update model.ScoreUpdate) {
-	log.Debug().Str("update", fmt.Sprintf("%#v", update)).Msg("Adding update.")
-	p.updates = append(p.updates, update)
-}
-
 func (p *parser) errorAtToken(token Token, msg string) *model.AldaSourceError {
 	return &model.AldaSourceError{
 		Context: token.sourceContext,
@@ -293,11 +288,7 @@ func (p *parser) partEvents() (ASTNode, error) {
 	}
 
 	// Keep consuming events until we reach either a part declaration or EOF.
-	for {
-		if p.check(EOF) || p.looksLikePartDeclaration() {
-			break
-		}
-
+	for !p.check(EOF) && !p.looksLikePartDeclaration() {
 		event, err := p.innerEvent()
 		if err != nil {
 			return ASTNode{}, err
@@ -441,15 +432,6 @@ func (p *parser) variableDefinitionOrReference() (ASTNode, error) {
 	}
 
 	return p.variableReference()
-}
-
-func (p *parser) partOrVariableDefinition() (ASTNode, error) {
-	// NB: This assumes the initial Name token was already consumed.
-	if p.check(Equals) {
-		return p.variableDefinition()
-	}
-
-	return p.part()
 }
 
 func (p *parser) octaveSet() (ASTNode, error) {
@@ -961,12 +943,8 @@ func (p *parser) voice() (ASTNode, error) {
 
 	// Keep consuming events until we reach another voice marker (including a
 	// voice group end marker), a new part, EOF, or a closing ] or }.
-	for {
-		if p.check(EOF, VoiceMarker, EventSeqClose, CramClose) ||
-			p.looksLikePartDeclaration() {
-			break
-		}
-
+	for !p.check(EOF, VoiceMarker, EventSeqClose, CramClose) &&
+		!p.looksLikePartDeclaration() {
 		event, err := p.innerEvent()
 		if err != nil {
 			return ASTNode{}, err
@@ -1123,7 +1101,7 @@ func Parse(
 
 		log.Info().
 			Str("filepath", filepath).
-			Str("took", fmt.Sprintf("%s", time.Since(start))).
+			Str("took", time.Since(start).String()).
 			Msg("Parsed input.")
 	}(time.Now())
 

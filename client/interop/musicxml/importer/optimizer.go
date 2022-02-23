@@ -1,9 +1,10 @@
 package importer
 
 import (
+	"reflect"
+
 	"alda.io/client/model"
 	"github.com/go-test/deep"
-	"reflect"
 )
 
 // optimize applies various modifications to generate more idiomatic Alda
@@ -39,7 +40,7 @@ func newOptimizer() optimizer {
 }
 
 func (opt *optimizer) resetNoteState() {
-	for noteLetter, _ := range model.NoteLetterIntervals {
+	for noteLetter := range model.NoteLetterIntervals {
 		opt.currentNoteState[noteLetter] = false
 	}
 }

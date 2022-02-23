@@ -40,6 +40,7 @@ func main() {
 
 // ClientVersion is the version of the Alda client.
 const ClientVersion = "{{.}}"`)
+	check(err)
 
 	err = tmpl.Execute(outputFile, version)
 	check(err)

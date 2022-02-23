@@ -20,6 +20,9 @@ func (testCase importerTestCase) evaluate() ([]model.ScoreUpdate, error) {
 	expectedAST, err := parser.Parse(
 		testCase.label, testCase.expected, parser.SuppressSourceContext,
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	expectedUpdates, err := expectedAST.Updates()
 	if err != nil {

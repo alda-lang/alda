@@ -399,11 +399,6 @@ func (s *scanner) parseNoteLength() {
 	s.addToken(NoteLength, noteLength{denominator: number, dots: int32(dots)})
 }
 
-func (s *scanner) parseInteger() {
-	s.consumeDigits()
-	s.addToken(Integer, s.parseIntegerFrom(s.start))
-}
-
 // This assumes that the initial digit (or minus sign, if it's a negative
 // number) was already consumed.
 func (s *scanner) parseNumber() {

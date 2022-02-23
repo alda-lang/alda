@@ -1,11 +1,12 @@
 package importer
 
 import (
+	"reflect"
+	"strings"
+
 	log "alda.io/client/logging"
 	"alda.io/client/model"
 	"github.com/beevik/etree"
-	"reflect"
-	"strings"
 )
 
 var noteType = reflect.TypeOf(model.Note{})
@@ -18,7 +19,6 @@ var repeatType = reflect.TypeOf(model.Repeat{})
 var repetitionType = reflect.TypeOf(model.OnRepetitions{})
 var barlineType = reflect.TypeOf(model.Barline{})
 var lispListType = reflect.TypeOf(model.LispList{})
-var noteLengthType = reflect.TypeOf(model.NoteLength{})
 var midiNoteNumberType = reflect.TypeOf(model.MidiNoteNumber{})
 
 // warnWhileParsing displays a standard importing warning to the user
@@ -96,7 +96,7 @@ func setNestedUpdates(
 		func(_ []model.ScoreUpdate) []model.ScoreUpdate {
 			return updates
 		},
- 	)
+	)
 }
 
 // getBeats counts beats for a slice of model.ScoreUpdate
@@ -136,7 +136,7 @@ func insert(
 	// Make space
 	updates = append(updates, model.Note{})
 	// Shift over
-	copy(updates[index + 1:], updates[index:])
+	copy(updates[index+1:], updates[index:])
 	// Set inserted element
 	updates[index] = update
 	return updates
@@ -154,8 +154,8 @@ func standardizeBarlines(updates []model.ScoreUpdate) []model.ScoreUpdate {
 			durations []model.DurationComponent,
 		) ([]model.DurationComponent, bool) {
 			if len(durations) > 0 &&
-				reflect.TypeOf(durations[len(durations) - 1]) == barlineType {
-				durations = durations[:len(durations) - 1]
+				reflect.TypeOf(durations[len(durations)-1]) == barlineType {
+				durations = durations[:len(durations)-1]
 				if len(durations) == 0 {
 					durations = nil
 				}
@@ -184,7 +184,7 @@ func standardizeBarlines(updates []model.ScoreUpdate) []model.ScoreUpdate {
 
 		updates[i] = update
 		if barlineAfter {
-			updates = insert(model.Barline{}, updates, i + 1)
+			updates = insert(model.Barline{}, updates, i+1)
 		}
 
 		// Recursively standardize barlines
@@ -231,7 +231,7 @@ func filterNestedImportableUpdate(update model.ScoreUpdate) bool {
 		if len(nested) == 0 {
 			return true
 		}
-		last := nested[len(nested) - 1]
+		last := nested[len(nested)-1]
 		_, nestedOk := getNestedUpdates(last, true)
 
 		// We stop if the nested layer does not have further nested layers

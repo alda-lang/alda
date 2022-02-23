@@ -6,7 +6,6 @@ import (
 )
 
 var typeString = reflect.TypeOf("")
-var typeInt = reflect.TypeOf(int(0))
 
 type requestValidationRule interface {
 	validate(request map[string]interface{}) []string

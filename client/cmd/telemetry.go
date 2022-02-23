@@ -89,7 +89,7 @@ func readTelemetryStatus() (TelemetryStatus, error) {
 	case "disabled":
 		return TelemetryDisabled, nil
 	default:
-		return -1, fmt.Errorf("Unrecognized telemetry file content: %s", str)
+		return -1, fmt.Errorf("unrecognized telemetry file content: %s", str)
 	}
 }
 
