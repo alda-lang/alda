@@ -441,9 +441,9 @@ version of %s.`,
 								return err
 							}
 
-							switch msg.(type) {
+							switch msg := msg.(type) {
 							case channel.NoteOn:
-								if msg.(channel.NoteOn).Key() == expectedNote {
+								if msg.Key() == expectedNote {
 									continue ExpectedNotesLoop
 								}
 							}

@@ -96,11 +96,11 @@ func addNoteOrRest(score *Score, noteOrRest ScoreUpdate) error {
 	}
 
 	var specifiedDuration Duration
-	switch noteOrRest.(type) {
+	switch noteOrRest := noteOrRest.(type) {
 	case Note:
-		specifiedDuration = noteOrRest.(Note).Duration
+		specifiedDuration = noteOrRest.Duration
 	case Rest:
-		specifiedDuration = noteOrRest.(Rest).Duration
+		specifiedDuration = noteOrRest.Duration
 	}
 
 	if err := specifiedDuration.Validate(); err != nil {
@@ -111,17 +111,15 @@ func addNoteOrRest(score *Score, noteOrRest ScoreUpdate) error {
 		duration := effectiveDuration(specifiedDuration, part)
 		durationMs := duration.Ms(part.Tempo) * part.TimeScale
 
-		switch noteOrRest.(type) {
+		switch noteOrRest := noteOrRest.(type) {
 		case Note:
-			note := noteOrRest.(Note)
-
 			audibleDurationMs := durationMs
-			if !note.Slurred {
+			if !noteOrRest.Slurred {
 				audibleDurationMs *= part.Quantization
 			}
 
 			if audibleDurationMs > 0 {
-				midiNote := note.Pitch.CalculateMidiNote(
+				midiNote := noteOrRest.Pitch.CalculateMidiNote(
 					part.Octave, part.KeySignature, part.Transposition,
 				)
 

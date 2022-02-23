@@ -325,10 +325,9 @@ func (oe OSCTransmitter) ScoreToOSCBundle(
 			break
 		}
 
-		switch event.(type) {
+		switch event := event.(type) {
 		case model.NoteEvent:
-			noteEvent := event.(model.NoteEvent)
-			track := tracks[noteEvent.Part]
+			track := tracks[event.Part]
 
 			// We subtract `startOffset` from the offset so that when the `--from`
 			// option is used (e.g. `--from 0:30`), we will shift all of the events
@@ -338,7 +337,7 @@ func (oe OSCTransmitter) ScoreToOSCBundle(
 			//
 			// By default, `startOffset` is 0, so the usual scenario is that the event
 			// offsets are not adjusted.
-			offset := noteEvent.Offset - startOffset
+			offset := event.Offset - startOffset
 
 			// When sync offsets are provided, we subtract the specified offset for
 			// each part from its events. (When syncOffsets isn't provided, or when
@@ -350,32 +349,32 @@ func (oe OSCTransmitter) ScoreToOSCBundle(
 			// If they are used together, the behavior is unspecified (we would
 			// probably subtract too much from each offset and the features wouldn't
 			// work the way they're supposed to.)
-			offset -= ctx.syncOffsets[noteEvent.Part]
+			offset -= ctx.syncOffsets[event.Part]
 
 			// The OSC API works with offsets that are ints, not floats, so we do the
 			// rounding here and work with the int value from here onward.
 			offsetRounded := int32(math.Round(offset))
 
-			if noteEvent.TrackVolume != currentVolume[track] {
-				currentVolume[track] = noteEvent.TrackVolume
+			if event.TrackVolume != currentVolume[track] {
+				currentVolume[track] = event.TrackVolume
 
 				bundle.Append(
 					midiVolumeMsg(
 						track,
 						offsetRounded,
-						int32(math.Round(noteEvent.TrackVolume*127)),
+						int32(math.Round(event.TrackVolume*127)),
 					),
 				)
 			}
 
-			if noteEvent.Panning != currentPanning[track] {
-				currentPanning[track] = noteEvent.Panning
+			if event.Panning != currentPanning[track] {
+				currentPanning[track] = event.Panning
 
 				bundle.Append(
 					midiPanningMsg(
 						track,
 						offsetRounded,
-						int32(math.Round(noteEvent.Panning*127)),
+						int32(math.Round(event.Panning*127)),
 					),
 				)
 			}
@@ -383,13 +382,13 @@ func (oe OSCTransmitter) ScoreToOSCBundle(
 			bundle.Append(midiNoteMsg(
 				track,
 				offsetRounded,
-				noteEvent.MidiNote,
-				int32(math.Round(noteEvent.Duration)),
-				int32(math.Round(noteEvent.AudibleDuration)),
-				int32(math.Round(noteEvent.Volume*127)),
+				event.MidiNote,
+				int32(math.Round(event.Duration)),
+				int32(math.Round(event.AudibleDuration)),
+				int32(math.Round(event.Volume*127)),
 			))
 
-			scoreLength = math.Max(scoreLength, offset+noteEvent.AudibleDuration)
+			scoreLength = math.Max(scoreLength, offset+event.AudibleDuration)
 		default:
 			return nil, fmt.Errorf("unsupported event: %#v", event)
 		}

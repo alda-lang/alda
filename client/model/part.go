@@ -280,7 +280,7 @@ func determineParts(decl PartDeclaration, score *Score) ([]*Part, error) {
 		// instrument, not the alias of an existing part.
 		if decl.Alias != "" && len(namedParts) > 0 {
 			return nil, fmt.Errorf(
-				"Can't assign alias \"%s\" to existing instance \"%s\"",
+				"can't assign alias \"%s\" to existing instance \"%s\"",
 				decl.Alias,
 				name,
 			)
@@ -289,7 +289,7 @@ func determineParts(decl PartDeclaration, score *Score) ([]*Part, error) {
 		// Can't redefine an existing alias.
 		if decl.Alias != "" && len(partsForAlias) > 0 {
 			return nil, fmt.Errorf(
-				"The alias \"%s\" has already been assigned to another part/group",
+				"the alias \"%s\" has already been assigned to another part/group",
 				decl.Alias,
 			)
 		}
@@ -370,7 +370,7 @@ func determineParts(decl PartDeclaration, score *Score) ([]*Part, error) {
 	// Can't use both named and stock instruments in a group.
 	if len(namedParts) > 0 && len(stockParts) > 0 {
 		return nil, fmt.Errorf(
-			"Invalid group \"%s\": can't use both stock instruments and named parts",
+			"invalid group \"%s\": can't use both stock instruments and named parts",
 			strings.Join(decl.Names, "/"),
 		)
 	}

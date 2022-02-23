@@ -534,7 +534,7 @@ func translateDuration(
 	// 2 dot - total duration = 1.75x
 	// This can be represented by sum from i = 0 to i = dots of (1/2)^dots
 	// This is a geometric series with sum (1 - r^(n + 1)) / (1 - r), r = 1/2
-	duration, _ := strconv.ParseFloat(element.FindElement("duration").Text(), 8)
+	duration, _ := strconv.ParseFloat(element.FindElement("duration").Text(), 64)
 	if dots > 0 {
 		divisor := (1 - math.Pow(0.5, float64(dots+1))) / 0.5
 		duration = duration / divisor

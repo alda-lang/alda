@@ -21,14 +21,12 @@ func (nte NoteTimingTransmitter) TransmitScore(score *model.Score) error {
 	fmt.Println("offset,duration,midi note")
 
 	for _, event := range score.Events {
-		switch event.(type) {
+		switch event := event.(type) {
 		case model.NoteEvent:
-			noteEvent := event.(model.NoteEvent)
+			offset := int32(math.Round(event.Offset))
+			duration := int32(math.Round(event.AudibleDuration))
 
-			offset := int32(math.Round(noteEvent.Offset))
-			duration := int32(math.Round(noteEvent.AudibleDuration))
-
-			fmt.Printf("%d,%d,%d\n", offset, duration, noteEvent.MidiNote)
+			fmt.Printf("%d,%d,%d\n", offset, duration, event.MidiNote)
 		default:
 			return fmt.Errorf("unsupported event: %#v", event)
 		}

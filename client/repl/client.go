@@ -1,5 +1,3 @@
-// vim: tabstop=2
-
 package repl
 
 import (

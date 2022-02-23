@@ -629,7 +629,7 @@ func TestParts(t *testing.T) {
 			},
 			errorExpectations: []scoreUpdateErrorExpectation{
 				func(err error) error {
-					if !strings.Contains(err.Error(), "Unrecognized instrument") {
+					if !strings.Contains(err.Error(), "unrecognized instrument") {
 						return err
 					}
 					return nil
@@ -646,7 +646,7 @@ func TestParts(t *testing.T) {
 			},
 			errorExpectations: []scoreUpdateErrorExpectation{
 				func(err error) error {
-					if !strings.Contains(err.Error(), "Unrecognized instrument") {
+					if !strings.Contains(err.Error(), "unrecognized instrument") {
 						return err
 					}
 					return nil
@@ -667,7 +667,7 @@ func TestParts(t *testing.T) {
 			},
 			errorExpectations: []scoreUpdateErrorExpectation{
 				func(err error) error {
-					if !strings.Contains(err.Error(), "Can't assign alias") {
+					if !strings.Contains(err.Error(), "can't assign alias") {
 						return err
 					}
 					return nil

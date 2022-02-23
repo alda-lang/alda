@@ -135,7 +135,7 @@ Currently, the only supported output format is %s.`,
 
 		log.Info().
 			Int("updates", len(scoreUpdates)).
-			Str("took", fmt.Sprintf("%s", time.Since(start))).
+			Str("took", time.Since(start).String()).
 			Msg("Constructed score.")
 
 		var player system.PlayerState
