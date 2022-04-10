@@ -486,10 +486,17 @@ func TestNotes(t *testing.T) {
 			},
 		},
 		scoreUpdateTestCase{
-			// (pause) c2.
-			label: "Pause without duration (implicit quarter note length)",
+			// r4. (pause) c2.
+			label: "Rest with implicit duration from previous rest",
 			updates: []ScoreUpdate{
 				PartDeclaration{Names: []string{"piano"}},
+				Rest{
+					Duration: Duration{
+						Components: []DurationComponent{
+							NoteLength{Denominator: 4, Dots: 1},
+						},
+					},
+				},
 				LispList{Elements: []LispForm{
 					LispSymbol{Name: "pause"},
 				}},
@@ -503,13 +510,43 @@ func TestNotes(t *testing.T) {
 				},
 			},
 			expectations: []scoreUpdateExpectation{
-				expectNoteOffsets(500),
+				expectNoteOffsets(1500),
 				expectNoteDurations(1500),
 			},
 		},
 		scoreUpdateTestCase{
+			// c4. (pause) c2.
+			label: "Rest with implicit duration from previous note",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				Note{
+					Pitch: LetterAndAccidentals{NoteLetter: C},
+					Duration: Duration{
+						Components: []DurationComponent{
+							NoteLength{Denominator: 4, Dots: 1},
+						},
+					},
+				},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "pause"},
+				}},
+				Note{
+					Pitch: LetterAndAccidentals{NoteLetter: C},
+					Duration: Duration{
+						Components: []DurationComponent{
+							NoteLength{Denominator: 2, Dots: 1},
+						},
+					},
+				},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectNoteOffsets(0, 1500),
+				expectNoteDurations(750, 1500),
+			},
+		},
+		scoreUpdateTestCase{
 			// (pause (note-length 4)) c2.
-			label: "Pause with note length 4",
+			label: "Rest with note length 4",
 			updates: []ScoreUpdate{
 				PartDeclaration{Names: []string{"piano"}},
 				LispList{Elements: []LispForm{
@@ -535,7 +572,7 @@ func TestNotes(t *testing.T) {
 		},
 		scoreUpdateTestCase{
 			// (pause (duration (ms 12345))) c2.
-			label: "Pause with duration of 12345ms",
+			label: "Rest with duration of 12345ms",
 			updates: []ScoreUpdate{
 				PartDeclaration{Names: []string{"piano"}},
 				LispList{Elements: []LispForm{
