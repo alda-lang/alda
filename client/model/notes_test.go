@@ -485,6 +485,83 @@ func TestNotes(t *testing.T) {
 				expectMidiNoteNumbers(67),
 			},
 		},
+		scoreUpdateTestCase{
+			//(pause) (note (pitch (c)) (duration (ms 1500)))"
+			label: "Pause no duration",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "pause"},
+				}},
+				Note{
+					Pitch: LetterAndAccidentals{NoteLetter: C},
+					Duration: Duration{
+						Components: []DurationComponent{
+							NoteLength{Denominator: 2, Dots: 1},
+						},
+					},
+				},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectNoteOffsets(500),
+				expectNoteDurations(1500),
+			},
+		},
+		scoreUpdateTestCase{
+			//(pause (note-length 4)) (note (pitch (c)) (duration (ms 1500)))"
+			label: "Pause with note-length 4",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "pause"},
+					LispList{Elements: []LispForm{
+						LispSymbol{Name: "note-length"},
+						LispNumber{Value: 4},
+					}},
+				}},
+				Note{
+					Pitch: LetterAndAccidentals{NoteLetter: C},
+					Duration: Duration{
+						Components: []DurationComponent{
+							NoteLength{Denominator: 2, Dots: 1},
+						},
+					},
+				},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectNoteOffsets(500),
+				expectNoteDurations(1500),
+			},
+		},
+		scoreUpdateTestCase{
+			//(pause (duration (ms 1000))) (note (pitch (c)) (duration (ms 1500)))"
+			label: "Pause with duration",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "pause"},
+					LispList{Elements: []LispForm{
+						LispSymbol{Name: "duration"},
+						LispList{Elements: []LispForm{
+							LispSymbol{Name: "ms"},
+							LispNumber{Value: 12345},
+						}},
+					}},
+				}},
+				Note{
+					Pitch: LetterAndAccidentals{NoteLetter: C},
+					Duration: Duration{
+						Components: []DurationComponent{
+							NoteLength{Denominator: 2, Dots: 1},
+						},
+					},
+				},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectNoteOffsets(12345),
+				expectNoteDurations(1500),
+			},
+		},
 	)
 }
 
