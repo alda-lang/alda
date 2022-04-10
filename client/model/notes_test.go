@@ -486,8 +486,8 @@ func TestNotes(t *testing.T) {
 			},
 		},
 		scoreUpdateTestCase{
-			//(pause) (note (pitch (c)) (duration (ms 1500)))"
-			label: "Pause no duration",
+			// (pause) c2.
+			label: "Pause without duration (implicit quarter note length)",
 			updates: []ScoreUpdate{
 				PartDeclaration{Names: []string{"piano"}},
 				LispList{Elements: []LispForm{
@@ -508,8 +508,8 @@ func TestNotes(t *testing.T) {
 			},
 		},
 		scoreUpdateTestCase{
-			//(pause (note-length 4)) (note (pitch (c)) (duration (ms 1500)))"
-			label: "Pause with note-length 4",
+			// (pause (note-length 4)) c2.
+			label: "Pause with note length 4",
 			updates: []ScoreUpdate{
 				PartDeclaration{Names: []string{"piano"}},
 				LispList{Elements: []LispForm{
@@ -534,8 +534,8 @@ func TestNotes(t *testing.T) {
 			},
 		},
 		scoreUpdateTestCase{
-			//(pause (duration (ms 1000))) (note (pitch (c)) (duration (ms 1500)))"
-			label: "Pause with duration",
+			// (pause (duration (ms 12345))) c2.
+			label: "Pause with duration of 12345ms",
 			updates: []ScoreUpdate{
 				PartDeclaration{Names: []string{"piano"}},
 				LispList{Elements: []LispForm{
