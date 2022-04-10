@@ -1300,19 +1300,19 @@ func init() {
 
 	defn("pause",
 		FunctionSignature{
+			ArgumentTypes: []LispForm{},
+			Implementation: func(args ...LispForm) (LispForm, error) {
+				pause := Rest{}
+				return LispScoreUpdate{ScoreUpdate: pause}, nil
+			},
+		},
+		FunctionSignature{
 			ArgumentTypes: []LispForm{LispDuration{}},
 			Implementation: func(args ...LispForm) (LispForm, error) {
 				duration := args[0].(LispDuration).DurationComponent
 				pause := Rest{
 					Duration: Duration{Components: []DurationComponent{duration}},
 				}
-				return LispScoreUpdate{ScoreUpdate: pause}, nil
-			},
-		},
-		FunctionSignature{
-			ArgumentTypes: []LispForm{},
-			Implementation: func(args ...LispForm) (LispForm, error) {
-				pause := Rest{}
 				return LispScoreUpdate{ScoreUpdate: pause}, nil
 			},
 		},
