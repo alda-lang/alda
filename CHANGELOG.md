@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## 2.2.1 (2022-04-10)
+
+* Re-added the `pause` (i.e. rest) Lisp function that was available prior to
+  Alda 2.0.0, but accidentally omitted during the rewrite.
+
+  Thanks, [JustinLocke] for the contribution, and [UlyssesZh] for
+  reporting [the issue][issue-382]! :raised_hands:
+
+[issue-382]: https://github.com/alda-lang/alda/issues/382
+
 ## 2.2.0 (2022-01-15)
 
 * On Mac computers, Alda now requires macOS 10.13 (High Sierra) or later.
@@ -235,3 +245,6 @@ the [Alda 2 migration guide][migration-guide]!
 
 * [1.0.0 - 1.X.X](CHANGELOG-1.X.X.md)
 * [0.1.0 - 0.X.X](CHANGELOG-0.X.X.md)
+
+[JustinLocke]: https://github.com/JustinLocke
+[UlyssesZh]: https://github.com/UlyssesZh

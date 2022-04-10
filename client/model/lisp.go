@@ -234,9 +234,11 @@ func argumentsMatchSignature(
 	}
 
 	variadic := false
-	switch signature.ArgumentTypes[totalArgs-1].(type) {
-	case LispVariadic:
-		variadic = true
+	if totalArgs > 0 {
+		switch signature.ArgumentTypes[totalArgs-1].(type) {
+		case LispVariadic:
+			variadic = true
+		}
 	}
 
 	fixedArgs := totalArgs
@@ -1292,6 +1294,26 @@ func init() {
 					Duration: Duration{Components: []DurationComponent{duration}},
 				}
 				return LispScoreUpdate{ScoreUpdate: note}, nil
+			},
+		},
+	)
+
+	defn("pause",
+		FunctionSignature{
+			ArgumentTypes: []LispForm{},
+			Implementation: func(args ...LispForm) (LispForm, error) {
+				pause := Rest{}
+				return LispScoreUpdate{ScoreUpdate: pause}, nil
+			},
+		},
+		FunctionSignature{
+			ArgumentTypes: []LispForm{LispDuration{}},
+			Implementation: func(args ...LispForm) (LispForm, error) {
+				duration := args[0].(LispDuration).DurationComponent
+				pause := Rest{
+					Duration: Duration{Components: []DurationComponent{duration}},
+				}
+				return LispScoreUpdate{ScoreUpdate: pause}, nil
 			},
 		},
 	)
