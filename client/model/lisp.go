@@ -1301,7 +1301,7 @@ func init() {
 			ArgumentTypes: []LispForm{LispDuration{}},
 			Implementation: func(args ...LispForm) (LispForm, error) {
 				duration := args[0].(LispDuration).DurationComponent
-				pause := Rest {
+				pause := Rest{
 					Duration: Duration{Components: []DurationComponent{duration}},
 				}
 				return LispScoreUpdate{ScoreUpdate: pause}, nil
@@ -1315,8 +1315,6 @@ func init() {
 			},
 		},
 	)
-
-	
 
 	defn("slur",
 		FunctionSignature{
