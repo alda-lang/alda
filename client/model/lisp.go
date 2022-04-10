@@ -234,9 +234,11 @@ func argumentsMatchSignature(
 	}
 
 	variadic := false
-	switch signature.ArgumentTypes[totalArgs-1].(type) {
-	case LispVariadic:
-		variadic = true
+	if totalArgs > 0 {
+		switch signature.ArgumentTypes[totalArgs-1].(type) {
+		case LispVariadic:
+			variadic = true
+		}
 	}
 
 	fixedArgs := totalArgs
