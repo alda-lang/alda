@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## Unreleased
+
+* Fixed a potential edge case where, when using the Alda REPL, if a player
+  process unexpectedly shuts down (not common), the Alda REPL session might
+  continue to try to use the same player process.
+
 ## 2.2.1 (2022-04-10)
 
 * Re-added the `pause` (i.e. rest) Lisp function that was available prior to

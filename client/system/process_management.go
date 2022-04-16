@@ -374,6 +374,12 @@ func FindPlayerByID(id string) (PlayerState, error) {
 		}
 	}
 
+	// FIXME: repl/player_management.go does a check whether the error message
+	// returned by FindPlayerByID starts with "No player was found". If we ever
+	// change the verbiage here, we'll need to adjust that other code accordingly.
+	//
+	// TODO: Consider adding an optional error code to UserFacingErrors that we
+	// could check for instead.
 	return PlayerState{}, help.UserFacingErrorf(
 		`No player was found with the ID %s.
 
