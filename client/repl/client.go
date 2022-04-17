@@ -461,18 +461,6 @@ arguments will save the updated score to the same file.`,
 			},
 		},
 
-		"stopall": {
-			helpSummary: "Stops all player process.",
-			run: func(client *Client, argsString string) error {
-				_, err := client.sendRequest(map[string]interface{}{"op": "stopall"})
-				if err != nil {
-					return err
-				}
-
-				return nil
-			},
-		},
-
 		"version": {
 			helpSummary: "Displays the version numbers of the Alda server and client.",
 			run: func(client *Client, argsString string) error {

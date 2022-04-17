@@ -513,28 +513,6 @@ var ops = map[string]func(*Server, nREPLRequest){
 		server.respondDone(req, map[string]interface{}{"text": server.input})
 	},
 
-	"stopall": func(server *Server, req nREPLRequest) {
-		players := []system.PlayerState{}
-		knownPlayers, _ := system.ReadPlayerStates()
-		players = append(players, knownPlayers...)
-
-		for _, player := range players {
-			transmitter := transmitter.OSCTransmitter{Port: player.Port}
-			if err := transmitter.TransmitStopMessage(); err != nil {
-				log.Warn().
-					Interface("player", player).
-					Err(err).
-					Msg("Failed to send \"stop\" message to player process.")
-			} else {
-				log.Info().
-					Interface("player", player).
-					Msg("Sent \"stop\" message to player process.")
-			}
-		}
-
-		server.respondDone(req, nil)
-	},
-
 	"stop": func(server *Server, req nREPLRequest) {
 		if err := server.withTransmitter(
 			func(transmitter transmitter.OSCTransmitter) error {
