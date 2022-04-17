@@ -123,20 +123,18 @@ func CleanUpStaleStateFiles() error {
 // PlayerState describes the current state of a player process. These states are
 // continously written to files by each player process. (See: StateManager.kt.)
 type PlayerState struct {
-	State     string
-	Port      int
-	Expiry    int64
-	ID        string
-	ReadError error
+	State  string
+	Port   int
+	Expiry int64
+	ID     string
 }
 
 // REPLServerState describes the current state of an Alda REPL server process.
 // These states are continously written to files by each Alda REPL process.
 // (See: repl/server.go.)
 type REPLServerState struct {
-	Port      int    `json:"port"`
-	ID        string `json:"id"`
-	ReadError error  `json:"-"`
+	Port int    `json:"port"`
+	ID   string `json:"id"`
 }
 
 func processFiles(
@@ -166,27 +164,44 @@ func processFiles(
 // directory and returns a list of player state structs describing the current
 // state of each player process.
 //
-// Returns an error if something goes wrong.
+// It's common for these files to be unreadable/empty, e.g. if a player process
+// is busy writing to the file. In the event that the file is unreadable or
+// cannot be parsed as JSON, we skip that file. The goal is that we end up with
+// a list of only known, valid player states.
+//
+// Returns an error if something goes horribly wrong, e.g. we cannot list the
+// files in the directory for some reason.
 func ReadPlayerStates() ([]PlayerState, error) {
 	if err := CleanUpStaleStateFiles(); err != nil {
 		log.Warn().Err(err).Msg("Failed to clean up stale state files.")
 	}
 
 	states := []PlayerState{}
-	var state PlayerState
 
 	if err := processFiles(
 		CachePath("state", "players", generated.ClientVersion),
 		func(filename string, contents []byte, readError error) {
+			var state PlayerState
+
+			// `readError` is initially a possible error reading the file.
 			if readError == nil {
-				err := json.Unmarshal(contents, &state)
-				if err != nil {
-					readError = err
-				}
+				readError = json.Unmarshal(contents, &state)
+			}
+
+			// Now, `readError` is either a possible error reading the file or a
+			// possible error parsing its contents as JSON.
+			//
+			// If either of these scenarios, we log a warning and move on to the next
+			// file.
+			if readError != nil {
+				log.Warn().
+					Err(readError).
+					Str("filename", filename).
+					Msg("Failed to read player state")
+				return
 			}
 
 			state.ID = strings.Replace(filename, ".json", "", 1)
-			state.ReadError = readError
 
 			states = append(states, state)
 		},
@@ -194,18 +209,20 @@ func ReadPlayerStates() ([]PlayerState, error) {
 		return nil, err
 	}
 
-	if state.ReadError != nil {
-		return nil, state.ReadError
-	}
-
 	return states, nil
 }
 
 // ReadREPLServerStates reads all of the REPL server state files in the Alda
 // cache directory and returns a list of REPLServerState structs describing the
-// current state of each player process.
+// current state of each REPL server process.
 //
-// Returns an error if something goes wrong.
+// It's common for these files to be unreadable/empty, e.g. if a REPL server
+// process is busy writing to the file. In the event that the file is unreadable
+// or cannot be parsed as JSON, we skip that file. The goal is that we end up
+// with a list of only known, valid REPL server states.
+//
+// Returns an error if something goes horribly wrong, e.g. we cannot list the
+// files in the directory for some reason.
 func ReadREPLServerStates() ([]REPLServerState, error) {
 	states := []REPLServerState{}
 
@@ -214,15 +231,25 @@ func ReadREPLServerStates() ([]REPLServerState, error) {
 		func(filename string, contents []byte, readError error) {
 			var state REPLServerState
 
+			// `readError` is initially a possible error reading the file.
 			if readError == nil {
-				err := json.Unmarshal(contents, &state)
-				if err != nil {
-					readError = err
-				}
+				readError = json.Unmarshal(contents, &state)
+			}
+
+			// Now, `readError` is either a possible error reading the file or a
+			// possible error parsing its contents as JSON.
+			//
+			// If either of these scenarios, we log a warning and move on to the next
+			// file.
+			if readError != nil {
+				log.Warn().
+					Err(readError).
+					Str("filename", filename).
+					Msg("Failed to read REPL server state")
+				return
 			}
 
 			state.ID = strings.Replace(filename, ".json", "", 1)
-			state.ReadError = readError
 
 			states = append(states, state)
 		},
