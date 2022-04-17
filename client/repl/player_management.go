@@ -84,7 +84,7 @@ func (server *Server) withTransmitter(
 // For practical purposes, if Port is 0, then we can be reasonably certain that
 // the server doesn't have a player to talk to.
 func (server *Server) hasPlayer() bool {
-	return server.player != system.PlayerState{}
+	return server.player.Port != 0
 }
 
 // The `managePlayers` loop regularly checks to see if the player process that
