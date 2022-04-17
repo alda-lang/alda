@@ -84,7 +84,7 @@ func (server *Server) withTransmitter(
 // For practical purposes, if Port is 0, then we can be reasonably certain that
 // the server doesn't have a player to talk to.
 func (server *Server) hasPlayer() bool {
-	return server.player.Port != 0
+	return server.player != system.PlayerState{}
 }
 
 // The `managePlayers` loop regularly checks to see if the player process that
@@ -142,7 +142,9 @@ func (server *Server) managePlayers() {
 			// TODO: Maybe UserFacingErrors could have an optional error code that we
 			// can depend on here?
 			if err == nil {
-				server.player = updatedState
+				if updatedState.Port != 0{
+					server.player = updatedState
+				}
 			} else if strings.HasPrefix(err.Error(), "No player was found") {
 				// If the state information tells us that the player process no longer
 				// exists, then we forget about that player process and a new one will be
@@ -162,7 +164,9 @@ func (server *Server) managePlayers() {
 				log.Warn().Err(err).Msg("No player processes available.")
 			} else {
 				log.Info().Interface("player", player).Msg("Found player process.")
-				server.player = player
+				if player.Port != 0{
+					server.player = player
+				}
 			}
 		}
 
