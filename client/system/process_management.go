@@ -173,11 +173,12 @@ func ReadPlayerStates() ([]PlayerState, error) {
 	}
 
 	states := []PlayerState{}
+	var state PlayerState
 
 	if err := processFiles(
 		CachePath("state", "players", generated.ClientVersion),
 		func(filename string, contents []byte, readError error) {
-			var state PlayerState
+			
 
 			if readError == nil {
 				err := json.Unmarshal(contents, &state)
@@ -193,6 +194,10 @@ func ReadPlayerStates() ([]PlayerState, error) {
 		},
 	); err != nil {
 		return nil, err
+	}
+
+	if state.ReadError != nil{
+		return nil, state.ReadError
 	}
 
 	return states, nil
