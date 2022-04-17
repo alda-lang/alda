@@ -160,6 +160,12 @@ func processFiles(
 	return nil
 }
 
+// FIXME: There is a lot of duplication between ReadPlayerStates and
+// ReadREPLServerStates because prior to Go 1.18, Go didn't have generics.
+//
+// TODO: Refactor these 2 functions into a generic function parameterized on the
+// kind of state (PlayerState vs. REPLServerState).
+
 // ReadPlayerStates reads all of the player state files in the Alda cache
 // directory and returns a list of player state structs describing the current
 // state of each player process.
