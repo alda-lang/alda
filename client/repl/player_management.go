@@ -142,7 +142,7 @@ func (server *Server) managePlayers() {
 			// TODO: Maybe UserFacingErrors could have an optional error code that we
 			// can depend on here?
 			if err == nil {
-				if updatedState.Port != 0{
+				if updatedState.Port != 0 {
 					server.player = updatedState
 				}
 			} else if strings.HasPrefix(err.Error(), "No player was found") {
@@ -164,7 +164,7 @@ func (server *Server) managePlayers() {
 				log.Warn().Err(err).Msg("No player processes available.")
 			} else {
 				log.Info().Interface("player", player).Msg("Found player process.")
-				if player.Port != 0{
+				if player.Port != 0 {
 					server.player = player
 				}
 			}
