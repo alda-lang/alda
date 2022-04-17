@@ -1,10 +1,24 @@
 # CHANGELOG
 
-## Unreleased
+## 2.2.2 (2022-04-17)
+
+This patch release is all about improvements to the way that player processes
+are managed in an Alda REPL session.
+
+Thanks to [elyisgreat] for [reporting the issue][issue-404] and to [ksiyuan] for
+investigating and [contributing a fix][pr-418]!
+
+* Fixed a bug causing `:stop` to sometimes not work in an Alda REPL session.
+
+* Fixed spurious "Failed to read player state" warnings that were often
+  happening briefly while a player process is starting.
 
 * Fixed a potential edge case where, when using the Alda REPL, if a player
   process unexpectedly shuts down (not common), the Alda REPL session might
   continue to try to use the same player process.
+
+[issue-404]: https://github.com/alda-lang/alda/issues/404
+[pr-418]: https://github.com/alda-lang/alda/pull/418
 
 ## 2.2.1 (2022-04-10)
 
@@ -254,3 +268,5 @@ the [Alda 2 migration guide][migration-guide]!
 
 [JustinLocke]: https://github.com/JustinLocke
 [UlyssesZh]: https://github.com/UlyssesZh
+[elyisgreat]: https://github.com/elyisgreat
+[ksiyuan]: https://github.com/ksiyuan
