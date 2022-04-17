@@ -170,10 +170,9 @@ func processFiles(
 // directory and returns a list of player state structs describing the current
 // state of each player process.
 //
-// It's common for these files to be unreadable/empty, e.g. if a player process
-// is busy writing to the file. In the event that the file is unreadable or
-// cannot be parsed as JSON, we skip that file. The goal is that we end up with
-// a list of only known, valid player states.
+// In the event that a state file is unreadable or cannot be parsed as JSON, we
+// skip that file. The goal is that we end up with a list of only known, valid
+// player states.
 //
 // Returns an error if something goes horribly wrong, e.g. we cannot list the
 // files in the directory for some reason.
@@ -187,6 +186,15 @@ func ReadPlayerStates() ([]PlayerState, error) {
 	if err := processFiles(
 		CachePath("state", "players", generated.ClientVersion),
 		func(filename string, contents []byte, readError error) {
+			// It's common for these files to be empty, e.g. when a player process is
+			// coming up and has created the file, but hasn't written to it yet.
+			//
+			// This isn't an exceptional situation. We can simply ignore this process
+			// and move onto the next state file.
+			if len(contents) == 0 {
+				return
+			}
+
 			var state PlayerState
 
 			// `readError` is initially a possible error reading the file.
@@ -222,10 +230,9 @@ func ReadPlayerStates() ([]PlayerState, error) {
 // cache directory and returns a list of REPLServerState structs describing the
 // current state of each REPL server process.
 //
-// It's common for these files to be unreadable/empty, e.g. if a REPL server
-// process is busy writing to the file. In the event that the file is unreadable
-// or cannot be parsed as JSON, we skip that file. The goal is that we end up
-// with a list of only known, valid REPL server states.
+// In the event that a state file is unreadable or cannot be parsed as JSON, we
+// skip that file. The goal is that we end up with a list of only known, valid
+// REPL server states.
 //
 // Returns an error if something goes horribly wrong, e.g. we cannot list the
 // files in the directory for some reason.
@@ -235,6 +242,16 @@ func ReadREPLServerStates() ([]REPLServerState, error) {
 	processFiles(
 		CachePath("state", "repl-servers"),
 		func(filename string, contents []byte, readError error) {
+			// It's common for these files to be empty, e.g. when a REPL server
+			// process is coming up and has created the file, but hasn't written to it
+			// yet.
+			//
+			// This isn't an exceptional situation. We can simply ignore this process
+			// and move onto the next state file.
+			if len(contents) == 0 {
+				return
+			}
+
 			var state REPLServerState
 
 			// `readError` is initially a possible error reading the file.
