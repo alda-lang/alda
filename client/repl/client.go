@@ -257,6 +257,37 @@ file into the REPL server.`,
 			},
 		},
 
+		"parts": {
+			helpSummary: "Displays instrument currently in use.",
+			run: func(client *Client, argsString string) error {
+				// Read and parse score information
+				scoreData, err := client.scoreData()
+					if err != nil {
+						return err
+					}
+
+				parts := scoreData.Search("parts")
+				if parts.Data() == nil {
+					return fmt.Errorf("Server response missing information about parts.")
+				}
+			
+				// Print instrument Names and IDs from current score
+				if len(parts.ChildrenMap()) == 0 {
+					fmt.Println("No instruments in current score.")
+				} else {
+					fmt.Println("Parts:")
+					for id, part := range parts.ChildrenMap() {
+						fmt.Printf(
+							"  %s (%s)\n",
+							id,
+							part.Search("stock-instrument").Data(),
+						)
+					}
+				}
+				return nil
+			},
+		},
+
 		"play": {
 			helpSummary: "Plays the current score.",
 			helpDetails: `Can take optional ` + "`from`" + `and ` + "`to`" +
