@@ -260,7 +260,7 @@ file into the REPL server.`,
 		"parts": {
 			helpSummary: "Displays instrument currently in use.",
 			run: func(client *Client, argsString string) error {
-				// Read and parse score information
+				// Read and parse score to extract instrument information 
 				scoreData, err := client.scoreData()
 					if err != nil {
 						return err
