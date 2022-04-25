@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## 2.2.3 (2022-04-24)
+
+* Added a new `:parts` command that can be used during an Alda REPL session. It
+  prints information about the parts in the current score.
+
+  (To display more information about the current score, you can also use the
+  existing `:score info` command.)
+
+  Thanks, [n-makim], for the contribution!
+
 ## 2.2.2 (2022-04-17)
 
 This patch release is all about improvements to the way that player processes
@@ -270,3 +280,4 @@ the [Alda 2 migration guide][migration-guide]!
 [UlyssesZh]: https://github.com/UlyssesZh
 [elyisgreat]: https://github.com/elyisgreat
 [ksiyuan]: https://github.com/ksiyuan
+[n-makim]: https://github.com/n-makim
