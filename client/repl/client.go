@@ -258,7 +258,7 @@ file into the REPL server.`,
 		},
 
 		"parts": {
-			helpSummary: "Displays instrument currently in use.",
+			helpSummary: "Displays information about the parts in the current score.",
 			run: func(client *Client, argsString string) error {
 				// Read and parse score to extract instrument information
 				scoreData, err := client.scoreData()
