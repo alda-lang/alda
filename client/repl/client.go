@@ -268,7 +268,7 @@ file into the REPL server.`,
 
 				parts := scoreData.Search("parts")
 				if parts.Data() == nil {
-					return fmt.Errorf("Server response missing information about parts.")
+					return fmt.Errorf("server response missing information about parts")
 				}
 
 				// Print instrument Names and IDs from current score
