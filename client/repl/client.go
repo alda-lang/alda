@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"alda.io/client/color"
 	"alda.io/client/generated"
 	"alda.io/client/help"
 	"alda.io/client/json"
@@ -20,10 +19,11 @@ import (
 	"alda.io/client/parser"
 	"alda.io/client/system"
 	"alda.io/client/util"
-	"github.com/chzyer/readline"
 	"github.com/google/shlex"
 	"github.com/google/uuid"
+	GookitColor "github.com/gookit/color"
 	bencode "github.com/jackpal/bencode-go"
+	"github.com/peterh/liner"
 )
 
 const aldaASCIILogo = `
@@ -583,9 +583,9 @@ Is there an Alda REPL server running on that port? If not, you can start one
 by running:
 
   %s`,
-			color.Aurora.Bold(client.serverAddr),
-			color.Aurora.BgRed(err),
-			color.Aurora.BrightYellow(
+			GookitColor.Bold.Render(client.serverAddr),
+			GookitColor.BgRed.Render(err),
+			GookitColor.HiYellow.Render(
 				fmt.Sprintf("alda repl --server --port %d", client.serverAddr.Port),
 			),
 		)
@@ -1063,9 +1063,9 @@ func RunClient(serverHost string, serverPort int) error {
 
 	fmt.Printf(
 		"%s\n\n%s\n\n%s\n\n",
-		color.Aurora.Blue(strings.Trim(aldaASCIILogo, "\n")),
-		color.Aurora.Cyan(strings.Trim(aldaVersionText(serverVersion), "\n")),
-		color.Aurora.Bold("Type :help for a list of available commands."),
+		GookitColor.Blue.Render(strings.Trim(aldaASCIILogo, "\n")),
+		GookitColor.Cyan.Render(strings.Trim(aldaVersionText(serverVersion), "\n")),
+		GookitColor.Bold.Render("Type :help for a list of available commands."),
 	)
 
 	err = os.MkdirAll(filepath.Dir(replHistoryFilepath), os.ModePerm)
@@ -1073,15 +1073,10 @@ func RunClient(serverHost string, serverPort int) error {
 		return err
 	}
 
-	console, err := readline.NewEx(&readline.Config{
-		Prompt:          "alda> ",
-		InterruptPrompt: "^C",
-		EOFPrompt:       "^D",
-		HistoryFile:     replHistoryFilepath,
-	})
-	if err != nil {
-		return err
-	}
+	// temp File to store history for reverseSearch, up down previous commands, etc.
+	var history_fn = filepath.Join(os.TempDir(), ".alda_history")
+
+	console := liner.NewLiner()
 
 	switch serverHost {
 	case "localhost", "127.0.0.1", "0.0.0.0":
@@ -1089,13 +1084,22 @@ func RunClient(serverHost string, serverPort int) error {
 	}
 
 	defer console.Close()
+	console.SetCtrlCAborts(true)
 
-	log.SetOutput(console.Stderr())
+	// need to test multiLineMode
+	console.SetMultiLineMode(true)
+	// os.Stderr for now, need to handle consoles Stderr
+	log.SetOutput(os.Stderr)
 
 	for client.running {
-		line, err := console.Readline()
 
-		if err == readline.ErrInterrupt {
+		if f, err := os.Open(history_fn); err == nil {
+			console.ReadHistory(f)
+			f.Close()
+		}
+
+		line, err := console.Prompt("alda> ")
+		if err == liner.ErrInvalidPrompt {
 			if len(line) == 0 {
 				break
 			} else {
@@ -1112,6 +1116,11 @@ func RunClient(serverHost string, serverPort int) error {
 		}
 
 		input := strings.TrimSpace(line)
+
+		if f, err := os.OpenFile(history_fn, os.O_APPEND|os.O_CREATE, 0660); err == nil {
+			f.WriteString(line + "\n")
+			f.Close()
+		}
 
 		if strings.HasPrefix(input, ":") && len(input) > 1 {
 			re := regexp.MustCompile(`^:([^ ]+) ?(.*)$`)

@@ -4,9 +4,9 @@ import (
 	"regexp"
 	"strconv"
 
-	"alda.io/client/color"
 	"alda.io/client/help"
 	"alda.io/client/json"
+	GookitColor "github.com/gookit/color"
 )
 
 // The ScoreUpdate interface is implemented by events that update a score.
@@ -186,9 +186,9 @@ func (score *Score) InterpretOffsetReference(
 Valid offset references include:
   • A minute-and-second time marking (e.g. %s)
   • The name of a marker in the score (e.g. %s)`,
-			color.Aurora.BrightYellow(reference),
-			color.Aurora.BrightYellow("0:30"),
-			color.Aurora.BrightYellow("verse2"),
+			GookitColor.HiYellow.Render(reference),
+			GookitColor.HiYellow.Render("0:30"),
+			GookitColor.HiYellow.Render("verse2"),
 		)
 	}
 

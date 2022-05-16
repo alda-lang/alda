@@ -7,10 +7,10 @@ import (
 	"os"
 	"time"
 
-	"alda.io/client/color"
 	"alda.io/client/help"
 	log "alda.io/client/logging"
 	model "alda.io/client/model"
+	GookitColor "github.com/gookit/color"
 )
 
 type parser struct {
@@ -1129,7 +1129,7 @@ func ParseFile(filepath string) (ASTNode, error) {
 			`Failed to open %s. The file does not seem to exist.
 
 Please check that you haven't misspelled the file name, etc.`,
-			color.Aurora.BrightYellow(filepath),
+			GookitColor.HiYellow.Render(filepath),
 		)
 	}
 

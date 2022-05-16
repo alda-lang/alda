@@ -4,9 +4,9 @@ import (
 	"io"
 	"sort"
 
-	"alda.io/client/color"
 	"alda.io/client/help"
 	"github.com/beevik/etree"
+	GookitColor "github.com/gookit/color"
 
 	"alda.io/client/model"
 )
@@ -362,13 +362,13 @@ func ImportMusicXML(r io.Reader) ([]model.ScoreUpdate, error) {
 	if scorePartwise == nil && scoreTimewise != nil {
 		return nil, help.UserFacingErrorf(
 			`Issue importing MusicXML file: please convert to %s instead of %s using XSLT before importing`,
-			color.Aurora.BrightYellow("score-partwise"),
-			color.Aurora.BrightYellow("score-timewise"),
+			GookitColor.HiYellow.Render("score-partwise"),
+			GookitColor.HiYellow.Render("score-timewise"),
 		)
 	} else if scorePartwise == nil {
 		return nil, help.UserFacingErrorf(
 			`Issue importing MusicXML file: could not last %s root tag`,
-			color.Aurora.BrightYellow("score-partwise"),
+			GookitColor.HiYellow.Render("score-partwise"),
 		)
 	}
 

@@ -5,7 +5,6 @@ import (
 	"os"
 	"time"
 
-	"alda.io/client/color"
 	"alda.io/client/help"
 	log "alda.io/client/logging"
 	"alda.io/client/model"
@@ -13,6 +12,7 @@ import (
 	"alda.io/client/system"
 	"alda.io/client/transmitter"
 	"alda.io/client/util"
+	GookitColor "github.com/gookit/color"
 	"github.com/spf13/cobra"
 )
 
@@ -75,7 +75,7 @@ func parseStdin() (parser.ASTNode, error) {
 func sourceCodeInputOptions(command string, useColor bool) string {
 	maybeColor := func(s string) string {
 		if useColor {
-			return fmt.Sprintf("%s", color.Aurora.BrightYellow(s))
+			return fmt.Sprintf("%s", GookitColor.HiYellow.Render(s))
 		}
 
 		return s
