@@ -1073,9 +1073,6 @@ func RunClient(serverHost string, serverPort int) error {
 		return err
 	}
 
-	// temp File to store history for reverseSearch, up down previous commands, etc.
-	var history_fn = filepath.Join(os.TempDir(), ".alda_history")
-
 	console := liner.NewLiner()
 
 	switch serverHost {
@@ -1093,7 +1090,7 @@ func RunClient(serverHost string, serverPort int) error {
 
 	for client.running {
 
-		if f, err := os.Open(history_fn); err == nil {
+		if f, err := os.Open(replHistoryFilepath); err == nil {
 			console.ReadHistory(f)
 			f.Close()
 		}
@@ -1117,7 +1114,7 @@ func RunClient(serverHost string, serverPort int) error {
 
 		input := strings.TrimSpace(line)
 
-		if f, err := os.OpenFile(history_fn, os.O_APPEND|os.O_CREATE, 0660); err == nil {
+		if f, err := os.OpenFile(replHistoryFilepath, os.O_APPEND|os.O_CREATE, 0660); err == nil {
 			f.WriteString(line + "\n")
 			f.Close()
 		}
