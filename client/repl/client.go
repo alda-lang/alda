@@ -1114,7 +1114,7 @@ func RunClient(serverHost string, serverPort int) error {
 
 		input := strings.TrimSpace(line)
 
-		if f, err := os.OpenFile(replHistoryFilepath, os.O_APPEND|os.O_CREATE, 0660); err == nil {
+		if f, err := os.OpenFile(replHistoryFilepath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
 			f.WriteString(line + "\n")
 			f.Close()
 		}
