@@ -18,3 +18,4 @@ mkdir -p ~/.gervill
 cp fluid-r3.sf2 ~/.gervill/soundbank-emg.sf2
 echo "Installed ${FLUID_NAME}"
 cd .. && rm -rf ${FLUID_WORK_FOLDER}
+exit 0
