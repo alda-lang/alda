@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	_ "alda.io/client/testing"
@@ -597,6 +598,25 @@ func TestNotes(t *testing.T) {
 			expectations: []scoreUpdateExpectation{
 				expectNoteOffsets(12345),
 				expectNoteDurations(1500),
+			},
+		},
+		scoreUpdateTestCase{
+			// alda play -c 'piano: o10 c' - Midi note out of range
+			label: "C note with MIDI value out of range",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				AttributeUpdate{PartUpdate: OctaveSet{OctaveNumber: 10}},
+				Note{
+					Pitch: LetterAndAccidentals{NoteLetter: C},
+				},
+			},
+			errorExpectations: []scoreUpdateErrorExpectation{
+				func(err error) error {
+					if !strings.Contains(err.Error(), "Midi note out of the 0-127 range") {
+						return err
+					}
+					return nil
+				},
 			},
 		},
 	)
