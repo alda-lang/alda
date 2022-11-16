@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## Unreleased
+
+* Added validation for when a MIDI note is outside of the 0-127 range.
+
+  Thanks to [kylewilk567] for the contribution!
+
 ## 2.2.3 (2022-04-24)
 
 * Added a new `:parts` command that can be used during an Alda REPL session. It
@@ -281,3 +287,4 @@ the [Alda 2 migration guide][migration-guide]!
 [elyisgreat]: https://github.com/elyisgreat
 [ksiyuan]: https://github.com/ksiyuan
 [n-makim]: https://github.com/n-makim
+[kylewilk567]: https://github.com/kylewilk567
