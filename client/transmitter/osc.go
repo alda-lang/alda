@@ -311,7 +311,7 @@ func (oe OSCTransmitter) ScoreToOSCBundle(
 	// of the score.
 	scoreLength := 0.0
 
-	for _, event := range events {
+	for index, event := range events {
 		eventOffset := event.EventOffset()
 
 		// Filter out events before the `--from` time marking / marker, when
@@ -327,6 +327,21 @@ func (oe OSCTransmitter) ScoreToOSCBundle(
 
 		switch event := event.(type) {
 		case model.NoteEvent:
+
+			// Add offset for any rests done after the last Note
+			// Additional rests at the end of a code sequence create a timing mismatch
+			// between Part.CurrentOffset and this note event's Offset + duration
+			// Part.CurrentOffset should equal Note Offset + Note Duration, so this statement
+			// Increments Note Duration so that they become equal
+			restOffset := int32(0)
+			if index == len(events)-1 {
+				lastEvent := event
+				// Last event offset + duration must equal score.duration
+				currNoteEnd := int32(math.Round(lastEvent.Duration)) + int32(lastEvent.EventOffset())
+				partOffset := int32(score.CurrentParts[len(score.CurrentParts)-1].CurrentOffset)
+				restOffset = partOffset - currNoteEnd
+			}
+
 			track := tracks[event.Part]
 
 			// We subtract `startOffset` from the offset so that when the `--from`
@@ -383,7 +398,7 @@ func (oe OSCTransmitter) ScoreToOSCBundle(
 				track,
 				offsetRounded,
 				event.MidiNote,
-				int32(math.Round(event.Duration)),
+				int32(math.Round(event.Duration)+float64(restOffset)),
 				int32(math.Round(event.AudibleDuration)),
 				int32(math.Round(event.Volume*127)),
 			))
