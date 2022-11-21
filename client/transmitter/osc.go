@@ -338,7 +338,7 @@ func (oe OSCTransmitter) ScoreToOSCBundle(
 				lastEvent := event
 				// Last event offset + duration must equal score.duration
 				currNoteEnd := int32(math.Round(lastEvent.Duration)) + int32(lastEvent.EventOffset())
-				partOffset := int32(score.CurrentParts[len(score.CurrentParts)-1].CurrentOffset)
+				partOffset := int32(lastEvent.Part.CurrentOffset)
 				restOffset = partOffset - currNoteEnd
 			}
 
