@@ -289,9 +289,7 @@ class MidiEngine {
       when (val msgType = msg.getType()) {
         CustomMetaMessage.CONTINUE.type -> {
           log.debug { "Received CONTINUE meta event" }
-          synchronized(isPlaying) {
-            if (isPlaying) sequencer.start()
-          }
+          if (isPlaying) sequencer.start()
         }
 
         CustomMetaMessage.PERCUSSION.type -> {
@@ -344,13 +342,11 @@ class MidiEngine {
     thread {
       while (!Thread.currentThread().isInterrupted()) {
         try {
-          synchronized(isPlaying) {
-            if (isPlaying) {
-              val now = currentOffset()
-              val future = now + (CONTINUATION_INTERVAL_MS * 2)
-              scheduleContinueMsg(Math.round(future).toInt())
-              sequencer.start()
-            }
+          if (isPlaying) {
+            val now = currentOffset()
+            val future = now + (CONTINUATION_INTERVAL_MS * 2)
+            scheduleContinueMsg(Math.round(future).toInt())
+            sequencer.start()
           }
 
           Thread.sleep(CONTINUATION_INTERVAL_MS.toLong())
@@ -386,17 +382,13 @@ class MidiEngine {
   }
 
   fun startSequencer() {
-    synchronized(isPlaying) {
-      sequencer.start()
-      isPlaying = true
-    }
+    sequencer.start()
+    isPlaying = true
   }
 
   fun stopSequencer() {
-    synchronized(isPlaying) {
-      sequencer.stop()
-      isPlaying = false
-    }
+    sequencer.stop()
+    isPlaying = false
   }
 
   fun setSequencerOffset(offsetMs : Int) {
