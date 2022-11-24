@@ -3,6 +3,10 @@ plugins {
   application
 }
 
+java {
+  targetCompatibility = JavaVersion.VERSION_1_8
+}
+
 repositories {
   mavenLocal()
   mavenCentral()
