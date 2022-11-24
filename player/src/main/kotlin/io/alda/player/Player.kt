@@ -66,7 +66,7 @@ class Track(val trackNumber : Int) {
   // multiple threads, so incrementing `era` is a way to signal to the various
   // threads that the track has been cleared, i.e. don't proceed to schedule
   // events.
-  var era = 0
+  val era = AtomicInteger(0)
 
   // The base offset that is added to upcoming notes to be scheduled. As notes
   // are scheduled, this base offset is updated to reflect the offset at which
@@ -76,7 +76,7 @@ class Track(val trackNumber : Int) {
 
   fun clear() {
     synchronized(era) {
-      era++
+      era.updateAndGet { n -> n + 1 }
       startOffset = 0
       eventBufferQueue.clear()
       activeTasks.set(0)
@@ -176,9 +176,7 @@ class Track(val trackNumber : Int) {
         // Now that we've scheduled at least one iteration, we can start
         // playing. (Unless we've already started playing, in which case this is
         // a no-op.)
-        synchronized(midi().isPlaying) {
-          if (midi().isPlaying) midi().startSequencer()
-        }
+        if (midi().isPlaying) midi().startSequencer()
 
         // It's safe to filter a List<Event> down to just the ones that are
         // PatternEvents and then cast it to a List<PatternEvent>.
@@ -287,9 +285,7 @@ class Track(val trackNumber : Int) {
 
     // Now that all the notes have been scheduled, we can start the sequencer
     // (assuming it hasn't been started already, in which case this is a no-op).
-    synchronized(midi().isPlaying) {
-      if (midi().isPlaying) midi().startSequencer()
-    }
+    if (midi().isPlaying) midi().startSequencer()
 
     // At this point, `noteEvents` should contain all of the notes we've
     // scheduled, including the values of patterns at the moment right before
