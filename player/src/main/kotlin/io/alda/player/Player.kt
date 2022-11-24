@@ -191,7 +191,7 @@ class Track(val trackNumber : Int) {
           .forEach { events.addAll(schedulePattern(it, startOffset)) }
 
         if (!events.isEmpty())
-          startOffset = events.map { (it as Event).endOffset() }.max()!!
+          startOffset = events.map { (it as Event).endOffset() }.max()
 
         patternEvents.addAll(events)
 
@@ -297,7 +297,7 @@ class Track(val trackNumber : Int) {
     if (scheduledEvents.isEmpty())
       return _startOffset
 
-    return scheduledEvents.map { (it as Event).endOffset() }.max()!!
+    return scheduledEvents.map { (it as Event).endOffset() }.max()
   }
 
   init {
