@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## 2.2.4 (2022-11-24)
 
 * Added validation for when a MIDI note is outside of the 0-127 range.
 
