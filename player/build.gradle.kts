@@ -15,7 +15,7 @@ repositories {
 dependencies {
   implementation(kotlin("stdlib-jdk8"))
   implementation(kotlin("reflect"))
-  implementation("com.beust:klaxon:5.6")
+  implementation("com.beust:klaxon:5.5")
   implementation("com.github.ajalt:clikt:2.4.0")
 
   implementation("com.illposed.osc:javaosc-core:0.8") {
