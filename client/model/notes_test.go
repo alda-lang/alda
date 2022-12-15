@@ -601,7 +601,7 @@ func TestNotes(t *testing.T) {
 			},
 		},
 		scoreUpdateTestCase{
-			// alda play -c 'piano: o10 c' - Midi note out of range
+			// alda play -c 'piano: o10 c' - MIDI note out of range
 			label: "C note with MIDI value out of range",
 			updates: []ScoreUpdate{
 				PartDeclaration{Names: []string{"piano"}},
@@ -612,7 +612,7 @@ func TestNotes(t *testing.T) {
 			},
 			errorExpectations: []scoreUpdateErrorExpectation{
 				func(err error) error {
-					if !strings.Contains(err.Error(), "Midi note out of the 0-127 range") {
+					if !strings.Contains(err.Error(), "MIDI note out of the 0-127 range") {
 						return err
 					}
 					return nil

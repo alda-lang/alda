@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## Unreleased
+
+* Corrected the casing of the word "MIDI" (it was "Midi" before) in the error
+  message when a MIDI Note is outside of the 0-127 range.
+
 ## 2.2.4 (2022-11-24)
 
 * Added validation for when a MIDI note is outside of the 0-127 range.

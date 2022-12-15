@@ -123,9 +123,9 @@ func addNoteOrRest(score *Score, noteOrRest ScoreUpdate) error {
 				midiNote := noteOrRest.Pitch.CalculateMidiNote(
 					part.Octave, part.KeySignature, part.Transposition,
 				)
-				
+
 				if midiNote < 0 || midiNote > 127 {
-					return help.UserFacingErrorf("Midi note out of the 0-127 range. Input note: %d", midiNote)
+					return help.UserFacingErrorf("MIDI note out of the 0-127 range. Input note: %d", midiNote)
 				}
 
 				noteEvent := NoteEvent{
