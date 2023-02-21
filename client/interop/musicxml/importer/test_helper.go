@@ -29,10 +29,6 @@ func (testCase importerTestCase) evaluate() ([]model.ScoreUpdate, error) {
 		return nil, err
 	}
 
-	if err != nil {
-		return nil, err
-	}
-
 	// Evaluate all LispList elements and unpacked ScoreUpdates
 	expectedUpdates = evaluateLisp(expectedUpdates)
 

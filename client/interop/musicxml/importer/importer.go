@@ -1,6 +1,8 @@
 package importer
 
 import (
+	log "alda.io/client/logging"
+	"fmt"
 	"io"
 	"sort"
 
@@ -319,9 +321,7 @@ func findLastWithStateRecursive(
 	updates []model.ScoreUpdate,
 	filter func(updates model.ScoreUpdate, state interface{}) bool,
 	initialState interface{},
-	updateState func(
-		update model.ScoreUpdate, state interface{},
-	) interface{},
+	updateState func(update model.ScoreUpdate, state interface{}) interface{},
 ) (model.ScoreUpdate, nestedIndex, interface{}) {
 	curr := initialState
 	for i := len(updates) - 1; i >= 0; i-- {
@@ -353,23 +353,35 @@ func ImportMusicXML(r io.Reader) ([]model.ScoreUpdate, error) {
 
 	_, err := doc.ReadFrom(r)
 	if err != nil {
-		return nil, err
+		return nil, help.UserFacingErrorf("Failed to read from input.")
 	}
 
 	scorePartwise := doc.SelectElement("score-partwise")
 	scoreTimewise := doc.SelectElement("score-timewise")
 
 	if scorePartwise == nil && scoreTimewise != nil {
+		// The vast majority of applications export directly to score-partwise.
+		// Applying the XSLT here in Go would require many additional deps, and
+		// the user should be able to do so themselves somewhat easily.
 		return nil, help.UserFacingErrorf(
-			`Issue importing MusicXML file: please convert to %s instead of %s using XSLT before importing`,
-			color.Aurora.BrightYellow("score-partwise"),
+			"Issue importing MusicXML: please convert input from %s to %s format (MusicXML provides an XSLT stylesheet to perform this conversion)",
 			color.Aurora.BrightYellow("score-timewise"),
+			color.Aurora.BrightYellow("score-partwise"),
 		)
 	} else if scorePartwise == nil {
 		return nil, help.UserFacingErrorf(
-			`Issue importing MusicXML file: could not last %s root tag`,
+			"Issue importing MusicXML: could not find %s root tag",
 			color.Aurora.BrightYellow("score-partwise"),
 		)
+	}
+
+	version := scorePartwise.SelectAttrValue("version", "")
+	if version != "3.1" {
+		log.Warn().Msg(fmt.Sprintf(
+			`MusicXML import supports version %s. Behaviour may be undefined with provided version %s.`,
+			color.Aurora.BrightYellow("3.1"),
+			color.Aurora.BrightYellow(version),
+		))
 	}
 
 	importer := newMusicXMLImporter()
@@ -381,5 +393,6 @@ func ImportMusicXML(r io.Reader) ([]model.ScoreUpdate, error) {
 			voice.updates = optimize(voice.updates)
 		}
 	}
+
 	return importer.generateScoreUpdates(), nil
 }
