@@ -76,7 +76,7 @@ development and live coding.
 * One use case is for each collaborator to work on a separate part.
 ** It might be useful for the REPL client session (or text editor plugin, etc.)
 to keep track of which instrument the collaborator used last, and explicitly
-prepend that part declaration (e.g. `bass:`) to the beginning of every message
+prepend that part declaration (e.g. `piano:`) to the beginning of every message
 to the server.
 *** In an interactive Alda REPL client session, we could actually make the part
 declaration an editable part of the message, so that the user could see that the
