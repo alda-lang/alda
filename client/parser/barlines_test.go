@@ -13,7 +13,7 @@ func TestBarlines(t *testing.T) {
 		parseTestCase{
 			label: "simple use of barlines",
 			given: "violin: c d | e f | g a",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				model.PartDeclaration{Names: []string{"violin"}},
 				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
 				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.D}},
@@ -28,7 +28,7 @@ func TestBarlines(t *testing.T) {
 		parseTestCase{
 			label: "a note tied over many barlines",
 			given: "marimba: c1|~1|~1~|1|~1~|2.",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				model.PartDeclaration{Names: []string{"marimba"}},
 				model.Note{
 					Pitch: model.LetterAndAccidentals{NoteLetter: model.C},

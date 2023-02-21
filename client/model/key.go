@@ -2,6 +2,7 @@ package model
 
 import (
 	"math"
+	"strings"
 
 	"alda.io/client/json"
 )
@@ -44,6 +45,30 @@ const (
 //
 //   {B: [flat, flat], G: [sharp], E: [flat]}
 type KeySignature map[NoteLetter][]Accidental
+
+func (ks KeySignature) String() string {
+	laas := []string{}
+
+	for note, accidentals := range ks {
+		laa := strings.Builder{}
+		laa.WriteRune(rune(note + 'a'))
+
+		for _, acc := range accidentals {
+			switch acc {
+			case Flat:
+				laa.WriteString("-")
+			case Natural:
+				laa.WriteString("_")
+			case Sharp:
+				laa.WriteString("+")
+			}
+		}
+
+		laas = append(laas, laa.String())
+	}
+
+	return strings.Join(laas, " ")
+}
 
 // JSON implements RepresentableAsJSON.JSON.
 func (ks KeySignature) JSON() *json.Container {

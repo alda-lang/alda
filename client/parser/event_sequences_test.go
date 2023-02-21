@@ -20,21 +20,21 @@ func TestEventSequences(t *testing.T) {
 		parseTestCase{
 			label: "empty event sequence",
 			given: "[]",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				eventSequence(),
 			},
 		},
 		parseTestCase{
 			label: "empty event sequence with internal whitespace",
 			given: "[    ]",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				eventSequence(),
 			},
 		},
 		parseTestCase{
 			label: "event sequence with some notes and rests",
 			given: "[c d c r]",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				eventSequence(
 					model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
 					model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.D}},
@@ -46,7 +46,7 @@ func TestEventSequences(t *testing.T) {
 		parseTestCase{
 			label: "event sequence with some notes, rests and a little right padding",
 			given: "[c d c r ]",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				eventSequence(
 					model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
 					model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.D}},
@@ -58,7 +58,7 @@ func TestEventSequences(t *testing.T) {
 		parseTestCase{
 			label: "event sequence with some notes and a chord",
 			given: "[ c d e f c/e/g ]",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				eventSequence(
 					model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
 					model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.D}},
@@ -77,7 +77,7 @@ func TestEventSequences(t *testing.T) {
 		parseTestCase{
 			label: "nested event sequence with some notes",
 			given: "[c d [e f] g]",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				eventSequence(
 					model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
 					model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.D}},
@@ -92,7 +92,7 @@ func TestEventSequences(t *testing.T) {
 		parseTestCase{
 			label: "event sequence containing voices",
 			given: "[V1: e b d V2: a c f]",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				eventSequence(
 					model.VoiceMarker{VoiceNumber: 1},
 					model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.E}},
@@ -108,7 +108,7 @@ func TestEventSequences(t *testing.T) {
 		parseTestCase{
 			label: "event sequence containing a note",
 			given: "[c1]",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				eventSequence(
 					model.Note{
 						Pitch: model.LetterAndAccidentals{NoteLetter: model.C},
@@ -124,7 +124,7 @@ func TestEventSequences(t *testing.T) {
 		parseTestCase{
 			label: "event sequence containing a note w/ duration in seconds",
 			given: "[c1s]",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				eventSequence(
 					model.Note{
 						Pitch: model.LetterAndAccidentals{NoteLetter: model.C},
