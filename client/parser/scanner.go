@@ -63,6 +63,7 @@ const (
 	AtMarker
 	Barline
 	Colon
+	Comment
 	CramClose
 	CramOpen
 	EOF
@@ -285,10 +286,15 @@ func (s *scanner) addToken(tokenType TokenType, literal interface{}) {
 	s.tokens = append(s.tokens, token)
 }
 
-func (s *scanner) skipComment() {
+func (s *scanner) parseComment() {
+	// NB: This assumes the initial '#' was already consumed.
+
 	for s.peek() != '\n' && !s.reachedEOF() {
 		s.advance()
 	}
+
+	contents := s.input[s.start+1:s.current]
+	s.addToken(Comment, string(contents))
 }
 
 func (s *scanner) parseString() error {
@@ -659,7 +665,7 @@ func (s *scanner) scanToken() error {
 		// skip whitespace
 		return nil
 	case '#':
-		s.skipComment()
+		s.parseComment()
 		return nil
 	case '(':
 		s.sexpLevel++

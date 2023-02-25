@@ -17,6 +17,7 @@ const (
 	AtMarkerNode ASTNodeType = iota
 	BarlineNode
 	ChordNode
+	CommentNode
 	CramNode
 	DenominatorNode
 	DotsNode
@@ -69,6 +70,8 @@ type ASTNode struct {
 	Type          ASTNodeType
 	Literal       interface{}
 	Children      []ASTNode
+	Doc           string
+	Comment       string
 	SourceContext model.AldaSourceContext
 }
 
@@ -407,6 +410,8 @@ func (node ASTNode) Updates() ([]model.ScoreUpdate, error) {
 				Events:        updates,
 			},
 		}, nil
+
+	case CommentNode:
 
 	case CramNode:
 		if err := node.expectNChildren(1, 2); err != nil {
