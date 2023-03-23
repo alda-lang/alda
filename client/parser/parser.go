@@ -17,6 +17,7 @@ type parser struct {
 	filename string
 	input    []Token
 	current  int
+	comments string
 	// When true, source context is _not_ included in parsed tokens. This is
 	// useful for testing, e.g. for checking the equality of a list of expected
 	// tokens, agnostic of source context like line and column numbers.
@@ -97,6 +98,33 @@ func (p *parser) match(types ...TokenType) (Token, bool) {
 	return Token{}, false
 }
 
+func (p *parser) consume(tokenType TokenType, context string) (Token, error) {
+	if p.check(tokenType) {
+		return p.advance(), nil
+	}
+
+	return Token{}, p.unexpectedTokenError(p.peek(), context)
+}
+
+func (p *parser) node(node ASTNode) ASTNode {
+	// source context
+
+	// Doc comments
+	// See if the parser currently has Doc comments state
+	// Then this is the next node that we will attach it to
+
+	// Comment comments
+	// See if the next token is an inline comment
+
+	// Subsequent comments
+	// Parse all subsequent comments
+
+
+	return node
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 func (p *parser) errorAtToken(token Token, msg string) *model.AldaSourceError {
 	return &model.AldaSourceError{
 		Context: token.sourceContext,
@@ -123,13 +151,7 @@ func (p *parser) unexpectedTokenError(
 	return p.errorAtToken(token, msg)
 }
 
-func (p *parser) consume(tokenType TokenType, context string) (Token, error) {
-	if p.check(tokenType) {
-		return p.advance(), nil
-	}
-
-	return Token{}, p.unexpectedTokenError(p.peek(), context)
-}
+////////////////////////////////////////////////////////////////////////////////
 
 func (p *parser) lispForm(context string) (ASTNode, error) {
 	if token, matched := p.match(Symbol); matched {

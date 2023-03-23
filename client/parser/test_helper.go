@@ -21,6 +21,15 @@ type parseTestCase struct {
 	scoreApplyOptOut bool                // optional
 }
 
+// trimASTComments recursively trims all comments from an ASTNode
+func trimASTComments(node *ASTNode) {
+	node.Doc = ""
+	node.Comment = ""
+	for i := 0; i < len(node.Children); i++ {
+		trimASTComments(&node.Children[i])
+	}
+}
+
 // executeParseTestCases parses each test case's given string of Alda code and
 // tests the parser, scanner, ASTNode.Updates, GenerateASTFromScoreUpdates, and
 // Score Updating (with the ability to opt out)
