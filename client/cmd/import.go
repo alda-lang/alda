@@ -1,19 +1,17 @@
 package cmd
 
 import (
+	"alda.io/client/parser"
 	"fmt"
 	"os"
 	"strings"
 
-	code_generator "alda.io/client/code-generator"
 	"alda.io/client/color"
 	"alda.io/client/help"
 	"alda.io/client/interop/musicxml/importer"
 	log "alda.io/client/logging"
 	"alda.io/client/model"
 	"alda.io/client/system"
-	"alda.io/client/transmitter"
-	"alda.io/client/util"
 	"github.com/spf13/cobra"
 )
 
@@ -71,7 +69,7 @@ redirecting into other files or processes.
 
 ---
 
-Currently, the only import format is MusicXML.  
+Currently, the only import format is MusicXML. All MusicXML files must be provided in score-partwise (not score-timewise) form.
 
 ---`,
 	RunE: func(_ *cobra.Command, args []string) error {
@@ -127,128 +125,27 @@ Currently, the only supported output format is %s.`,
 			}
 		}
 
+		root, err := parser.GenerateASTFromScoreUpdates(scoreUpdates)
+		if err != nil {
+			return err
+		}
+
 		if outputAldaFilename == "" {
 			// When no output filename is specified, we write directly to stdout
-			code_generator.Generate(scoreUpdates, os.Stdout)
+			parser.FormatASTToCode(root, os.Stdout)
 		} else {
 			file, err := os.Create(outputAldaFilename)
 			if err != nil {
 				return err
 			}
 
-			code_generator.Generate(scoreUpdates, file)
+			parser.FormatASTToCode(root, file)
 
 			fmt.Fprintf(os.Stderr, "Imported score to %s\n", outputAldaFilename)
 			if err := file.Close(); err != nil {
 				return err
 			}
 		}
-
-		// Bootstrapping the play command to apply the scoreUpdates
-		// TODO (experimental): Remove this temporary play-back
-		score := model.NewScore()
-		err = score.Update(scoreUpdates...)
-		action := "play"
-
-		// Errors with source context are presented to the user as-is.
-		//
-		// TODO: See TODO comment in cmd/parse.go about writing better user-facing
-		// error messages.
-		switch err.(type) {
-		case *model.AldaSourceError:
-			err = &help.UserFacingError{Err: err}
-		}
-
-		if err != nil {
-			return err
-		}
-
-		var players []system.PlayerState
-
-		// Determine the port to use based on the provided CLI options.
-		switch {
-
-		// Port is explicitly specified, so use that port.
-		case playerPort != -1:
-			player := system.PlayerState{
-				ID:    "unknown",
-				State: "unknown",
-				Port:  playerPort,
-			}
-			players = []system.PlayerState{player}
-
-		// Player ID is specified; look up the player by ID and use its port.
-		case playerID != "":
-			player, err := system.FindPlayerByID(playerID)
-			if err != nil {
-				return err
-			}
-			players = []system.PlayerState{player}
-
-		// We're actually unpausing, not playing, so send the message to all active
-		// player processes so that if any of them are paused, they'll resume
-		// playing.
-		case action == "unpause":
-			allPlayers, err := system.ReadPlayerStates()
-			if err != nil {
-				return err
-			}
-			players = []system.PlayerState{}
-			for _, player := range allPlayers {
-				if player.State == "active" {
-					players = append(players, player)
-				}
-			}
-
-		// Find an available player process to use.
-		default:
-			system.StartingPlayerProcesses()
-
-			if err := util.Await(
-				func() error {
-					player, err := system.FindAvailablePlayer()
-					if err != nil {
-						return err
-					}
-
-					players = []system.PlayerState{player}
-					return nil
-				},
-				reasonableTimeout,
-			); err != nil {
-				return err
-			}
-		}
-
-		transmitOpts := []transmitter.TransmissionOption{
-			transmitter.TransmitFrom(optionFrom),
-			transmitter.TransmitTo(optionTo),
-		}
-
-		if action == "play" {
-			transmitOpts = append(transmitOpts, transmitter.OneOff())
-		}
-
-		for _, player := range players {
-			transmitter := transmitter.OSCTransmitter{Port: player.Port}
-
-			var transmissionError error
-			if action == "unpause" {
-				transmissionError = transmitter.TransmitPlayMessage()
-			} else {
-				transmissionError = transmitter.TransmitScore(score, transmitOpts...)
-			}
-			if transmissionError != nil {
-				return transmissionError
-			}
-		}
-
-		// We don't have to print something here, but it's a good idea because it
-		// indicates to the user that we did what they asked. Otherwise, it might
-		// not be obvious that we did anything, especially in cases where there is
-		// no audible output, e.g. `alda play -c "c d e"` (valid syntax, but no
-		// audible output because no part was indicated).
-		fmt.Fprintln(os.Stderr, "Playing...")
 
 		return nil
 	},
