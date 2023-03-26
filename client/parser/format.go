@@ -8,22 +8,25 @@ import (
 )
 
 type formatter struct {
-	softWrap int	// soft wrap lines
-	shouldWrap bool
-	indentLevel int	// indent level
-	current []string
-	out io.Writer
+	softWrap    int      	// configured column number to soft wrap formatting
+	indentText 	string	 	// configured indent text (i.e. spaces vs tabs)
+
+	pauseWrap   bool     	// stateful flag to pause wrapping used for var defs
+	indentLevel int      	// stateful indentation level
+	texts       []string 	// buffer of "tokens" for the ongoing formatted line
+	out         io.Writer
 }
 
 type formatterOption func(*formatter)
 
 func newFormatter(out io.Writer, opts ...formatterOption) *formatter {
 	formatter := &formatter{
-		softWrap: 120,
-		shouldWrap: true,
+		softWrap:    80,
+		indentText:  "    ",
+		pauseWrap:   false,
 		indentLevel: 0,
-		current: []string{},
-		out: out,
+		texts:       []string{},
+		out:         out,
 	}
 
 	for _, opt := range opts {
@@ -33,16 +36,18 @@ func newFormatter(out io.Writer, opts ...formatterOption) *formatter {
 	return formatter
 }
 
-func (f *formatter) currentLine() string {
-	indent := strings.Repeat("    ", f.indentLevel)
-	text := strings.Join(f.current, " ")
+// line constructs and returns the current line being formatted.
+func (f *formatter) line() string {
+	indent := strings.Repeat(f.indentText, f.indentLevel)
+	text := strings.Join(f.texts, " ")
 	return strings.TrimSpace(indent + text)
 }
 
+// flush flushes out the current line to the output.
 func (f *formatter) flush() {
-	if len(f.current) > 0 {
-		f.out.Write([]byte(f.currentLine() + "\n"))
-		f.current = []string{}
+	if len(f.texts) > 0 {
+		f.out.Write([]byte(f.line() + "\n"))
+		f.texts = []string{}
 	}
 }
 
@@ -61,22 +66,24 @@ func (f *formatter) unindent() {
 	f.indentLevel--
 }
 
-// We write an "atomic" / "unwrappable" text
+// write formats text to the output with indentation, wrapping, and spacing.
+// Each "text" is an unwrappable token, i.e. wrapping only happens between text.
 func (f *formatter) write(text string) {
-	f.current = append(f.current, text)
-	if f.shouldWrap && len(f.currentLine()) > f.softWrap {
-		f.current = f.current[0:len(f.current) - 1]
+	f.texts = append(f.texts, text)
+	if len(f.line()) > f.softWrap && !f.pauseWrap {
+		f.texts = f.texts[0:len(f.texts) - 1]
 		f.flush()
-		f.current = append(f.current, text)
+		f.texts = append(f.texts, text)
 	}
 }
 
-// formatWithDuration handles durations, which we format directly after text for readability
-// We treat all duration as a single text (unwrappable) for readability
-// 	EXCEPTION: barlines! then we split
-// Ah make this a separate function that takes in the initial string
-// That way we can split write separate texts by barlines
-func (f *formatter) formatWithDuration(pre string, duration ASTNode, post string) error {
+// formatWithDuration handles duration formatting.
+// Durations are formatted with possible text directly pre/post (no spaces).
+// All durations are treated as a single unwrappable text with the exception of
+// barlines which cause a duration to be split into separate texts.
+func (f *formatter) formatWithDuration(
+	pre string, duration ASTNode, post string,
+) error {
 	text := strings.Builder{}
 	text.WriteString(pre)
 	shouldTie := false
@@ -85,26 +92,31 @@ func (f *formatter) formatWithDuration(pre string, duration ASTNode, post string
 		switch child.Type {
 
 		default:
-			return fmt.Errorf("unknown duration type") // TODO
+			return fmt.Errorf(
+				"unexpected DurationNode %#v during formatting", child,
+			)
 
 		case BarlineNode:
 			if i == len(duration.Children) - 1 {
 				// The final duration is a barline
-				// We will write out any post before the barline for clarity
+				// We write out any post text before the barline for clarity
 				text.WriteString(post)
 			}
-			// We split separate wrappable if there's a barline
+
+			// Barlines in a duration split formatting into separate texts
 			if text.Len() > 0 {
 				f.write(text.String())
 			}
 			f.write("|")
+
 			text.Reset()
 			shouldTie = false
 
 		case NoteLengthMsNode:
 			if shouldTie {
-				text.WriteString("~")	// TODO: do this after any barlines - this is right
+				text.WriteString("~")
 			}
+
 			text.WriteString(child.Literal.(string))
 			shouldTie = true
 
@@ -113,7 +125,7 @@ func (f *formatter) formatWithDuration(pre string, duration ASTNode, post string
 				text.WriteString("~")
 			}
 
-			if err := child.expectChildren(); err != nil {
+			if err := child.expectNChildren(1, 2); err != nil {
 				return err
 			}
 
@@ -132,10 +144,11 @@ func (f *formatter) formatWithDuration(pre string, duration ASTNode, post string
 				numDots = dotsNode.Literal.(int)
 			}
 
-			text.WriteString(fmt.Sprintf("%f%s",
+			text.WriteString(fmt.Sprintf(
+				"%f%s",
 				denom.Literal.(float64),
 				strings.Repeat(".", numDots),
-				))
+			))
 
 			shouldTie = true
 
@@ -150,131 +163,39 @@ func (f *formatter) formatWithDuration(pre string, duration ASTNode, post string
 	return nil
 }
 
-// format formats individual notes
-func (f *formatter) format(nodes ...ASTNode) error {
+// format handles formatting for non-part ASTNode's.
+func (f *formatter) format(nodes ...ASTNode) error  {
 	for _, node := range nodes {
 		switch node.Type {
 
 		default:
-			return fmt.Errorf("unexpected ASTNode type")
-
-		case BarlineNode:
-			f.write("|")
-
-		case OctaveSetNode:
-			f.write(fmt.Sprintf("o%d", node.Literal.(int32)))
-
-		case OctaveUpNode:
-			f.write(">")
-
-		case OctaveDownNode:
-			f.write("<")
+			return fmt.Errorf("unexpected ASTNode %#v during formatting", node)
 
 		case AtMarkerNode:
 			f.write(fmt.Sprintf("@%s", node.Literal.(string)))
 
-		case MarkerNode:
-			f.write(fmt.Sprintf("%%%s", node.Literal.(string)))
+		case BarlineNode:
+			f.write("|")
 
-		case VariableReferenceNode:
-			f.write(node.Literal.(string))
-
-		// We consider entire notes and rests (+ their durations) as atomic
-		// This is for purpose of readability
-		// TODO: Barlines, however, can separate a note into two+ atomic texts
-		case NoteNode:
-			if err := node.expectNChildren(1, 2, 3); err != nil {
-				return err
-			}
-
-			laa, err := node.Children[0].expectNodeType(NoteLetterAndAccidentalsNode)
-			if err != nil {
-				return err
-			}
-
-			if err := laa.expectChildren(); err != nil {
-				return err
-			}
-
-			letter, err := laa.Children[0].expectNodeType(NoteLetterNode)
-
-			pitchText := strings.Builder{}
-			pitchText.WriteRune(letter.Literal.(rune))
-
-			if len(letter.Children) > 1 {
-				accidentals, err := laa.Children[1].expectNodeType(NoteAccidentalsNode)
-				if err != nil {
-					return err
-				}
-
-				for _, child := range accidentals.Children {
-					switch child.Type {
-					default:
-						return fmt.Errorf("unknown accidentals type")
-					case FlatNode:
-						pitchText.WriteString("-")
-					case NaturalNode:
-						pitchText.WriteString("_")
-					case SharpNode:
-						pitchText.WriteString("+")
-					}
-				}
-			}
-
-			slurText := ""
-			if len(node.Children) > 2 {
-				_, err := node.Children[2].expectNodeType(TieNode)
-				if err != nil {
-					return err
-				}
-				slurText = "~"
-			}
-
-			if len(node.Children) > 1 {
-				duration, err := node.Children[1].expectNodeType(DurationNode)
-				if err != nil {
-					return err
-				}
-
-				err = f.formatWithDuration(pitchText.String(), duration, slurText)
-				if err != nil {
-					return err
-				}
-			} else {
-				f.write(fmt.Sprintf("%s%s", pitchText.String(), slurText))
-			}
-
-		case RestNode:
-			if len(node.Children) > 0 {
-				durationNode, err := node.Children[0].expectNodeType(DurationNode)
-				if err != nil {
-					return err
-				}
-
-				err = f.formatWithDuration("r", durationNode, "")
-				if err != nil {
-					return err
-				}
-
-			}
-
-		// For chords, we make separators pad by spaces
-		// TODO: We could change this to not
-		// 	Code would have to have separate helper function for inner-chord nodes
-		// 	This function would not format directly, instead return []string
-		// 	Problem here is notes in chords can have barlines...
-		// 	This gets too complicated, better to leave it
 		case ChordNode:
+			// We make each note + each separator individual texts to format
+			// Meaning extra spaces padding separators + chords can be wrapped
+			// This is to avoid additional complexity in the formatter
+			// We can change this by creating a new helper function for
+			// inner-chord nodes that returns a []string of texts
+			// Would have to handle the fact that barlines make multiple writes
+
 			if err := node.expectChildren(); err != nil {
 				return err
 			}
 
-			// We format ensuring all note modifiers happen after separator
-			// i.e. prefer c / >d over c> / d for clarity
-			lastIndexWithDuration := 0
+			// Within a chord, there can be additional nodes between notes
+			// We format all of these after the separator for readability as
+			// they apply to the subsequent note
+			lastNoteOrRest := 0
 			for i, child := range node.Children {
 				if child.Type == NoteNode || child.Type == RestNode {
-					lastIndexWithDuration = i
+					lastNoteOrRest = i
 				}
 			}
 
@@ -284,119 +205,12 @@ func (f *formatter) format(nodes ...ASTNode) error {
 					return err
 				}
 
-				if i < lastIndexWithDuration && (child.Type == NoteNode || child.Type == RestNode) {
-					// We inject separators "/" after non-last notes/rests
-					f.write("/")
-				}
-			}
-
-		// For Lisp, with the current state of Alda
-		// Realistically it's very hard to get very long texts
-		// So we keep it atomic for readability
-		case LispListNode:
-			var lispToString func(ASTNode) (string, error)
-			lispToString = func(lisp ASTNode) (string, error) {
-				switch lisp.Type {
-
-				default:
-					return "", fmt.Errorf("unexpected lisp type")
-
-				case LispListNode:
-					forms := []string{}
-					for _, child := range lisp.Children {
-						form, err := lispToString(child)
-						if err != nil {
-							return "", err
-						}
-						forms = append(forms, form)
+				if child.Type == NoteNode || child.Type == RestNode {
+					if i < lastNoteOrRest {
+						f.write("/")
 					}
-					return fmt.Sprintf("(%s)", strings.Join(forms, " ")), nil
-
-				case LispNumberNode:
-					return fmt.Sprintf("%d", lisp.Literal.(int32)), nil
-
-				case LispQuotedFormNode:
-					form, err := lispToString(lisp.Children[0])
-					if err != nil {
-						return "", err
-					}
-
-					return fmt.Sprintf("'%s", form), nil
-
-				case LispStringNode:
-					return fmt.Sprintf("\"%s\"", lisp.Literal.(string)), nil
-
-				case LispSymbolNode:
-					return lisp.Literal.(string), nil
-
 				}
 			}
-
-			text, err := lispToString(node)
-			if err != nil {
-				return err
-			}
-
-			f.write(text)
-
-		case VariableDefinitionNode:
-			f.flush()
-
-			if err := node.expectNChildren(2); err != nil {
-				return err
-			}
-
-			variableName, err := node.Children[0].expectNodeType(VariableNameNode)
-			if err != nil {
-				return err
-			}
-
-			// Variable definitions must be on the same line
-			// We introduce this special flag to handle this instead of auto-wrapping
-			f.shouldWrap = false
-			f.write(fmt.Sprintf("%s =", variableName.Literal.(string)))
-
-			events, err := node.Children[1].expectNodeType(EventSequenceNode)
-			if err != nil {
-				return err
-			}
-
-			if len(events.Children) == 1 && events.Children[0].Type == EventSequenceNode {
-				f.write("[")
-				f.indent()
-				f.shouldWrap = true
-
-				err = f.format(events.Children[0].Children...)
-				if err != nil {
-					return err
-				}
-
-				f.unindent()
-				f.write("]")
-			} else {
-				err = f.format(events.Children...)
-				if err != nil {
-					return err
-				}
-			}
-
-			f.shouldWrap = true
-			f.flush()
-
-		case EventSequenceNode:
-			// We always indent individual event sequences
-			f.flush()
-			f.write("[")
-			f.indent()
-
-			err := f.format(node.Children...)
-			if err != nil {
-				return err
-			}
-
-			f.unindent()
-			f.write("]")
-			f.flush()
 
 		case CramNode:
 			if err := node.expectNChildren(1, 2); err != nil {
@@ -416,18 +230,174 @@ func (f *formatter) format(nodes ...ASTNode) error {
 			}
 
 			if len(node.Children) > 1 {
-				durationNode, err := node.Children[1].expectNodeType(DurationNode)
+				duration, err := node.Children[1].expectNodeType(DurationNode)
 				if err != nil {
 					return err
 				}
 
-				err = f.formatWithDuration("}", durationNode, "")
+				err = f.formatWithDuration("}", duration, "")
 				if err != nil {
 					return err
 				}
 			} else {
 				f.write("}")
 			}
+
+		case EventSequenceNode:
+			// Always indent the children of standalone event sequences
+			// (i.e. those not used as part of a separate node such as cram)
+			f.flush()
+			f.write("[")
+			f.indent()
+
+			err := f.format(node.Children...)
+			if err != nil {
+				return err
+			}
+
+			f.unindent()
+			f.write("]")
+			f.flush()
+
+		case LispListNode:
+			var lispString func(ASTNode) (string, error)
+			lispString = func(lisp ASTNode) (string, error) {
+				switch lisp.Type {
+
+				default:
+					return "", fmt.Errorf(
+						"unexpected LispLispNode %#v during formatting", lisp,
+					)
+
+				case LispListNode:
+					texts := []string{}
+
+					for _, child := range lisp.Children {
+						text, err := lispString(child)
+						if err != nil {
+							return "", err
+						}
+
+						texts = append(texts, text)
+					}
+
+					return fmt.Sprintf("(%s)", strings.Join(texts, " ")), nil
+
+				case LispNumberNode:
+					return fmt.Sprintf("%d", lisp.Literal.(int32)), nil
+
+				case LispQuotedFormNode:
+					form, err := lispString(lisp.Children[0])
+					if err != nil {
+						return "", err
+					}
+
+					return fmt.Sprintf("'%s", form), nil
+
+				case LispStringNode:
+					return fmt.Sprintf("\"%s\"", lisp.Literal.(string)), nil
+
+				case LispSymbolNode:
+					return lisp.Literal.(string), nil
+
+				}
+			}
+
+			text, err := lispString(node)
+			if err != nil {
+				return err
+			}
+
+			// Lisp lists are generally short
+			// We write them as a single unwrappable text for readability
+			f.write(text)
+
+		case MarkerNode:
+			f.write(fmt.Sprintf("%%%s", node.Literal.(string)))
+
+		case NoteNode:
+			if err := node.expectNChildren(1, 2, 3); err != nil {
+				return err
+			}
+
+			laa, err := node.Children[0].expectNodeType(
+				NoteLetterAndAccidentalsNode,
+			)
+			if err != nil {
+				return err
+			}
+
+			if err := laa.expectChildren(); err != nil {
+				return err
+			}
+
+			letter, err := laa.Children[0].expectNodeType(NoteLetterNode)
+			if err != nil {
+				return err
+			}
+
+			pitchText := strings.Builder{}
+			pitchText.WriteRune(letter.Literal.(rune))
+
+			if len(letter.Children) > 1 {
+				accidentals, err := laa.Children[1].expectNodeType(
+					NoteAccidentalsNode,
+				)
+				if err != nil {
+					return err
+				}
+
+				for _, child := range accidentals.Children {
+					switch child.Type {
+					default:
+						return fmt.Errorf(
+							"unexpected NoteAccidentalsNode %#v during formatting",
+							child,
+						)
+					case FlatNode:
+						pitchText.WriteString("-")
+					case NaturalNode:
+						pitchText.WriteString("_")
+					case SharpNode:
+						pitchText.WriteString("+")
+					}
+				}
+			}
+
+			slurText := ""
+			if len(node.Children) > 2 {
+				_, err := node.Children[2].expectNodeType(TieNode)
+				if err != nil {
+					return err
+				}
+
+				slurText = "~"
+			}
+
+			if len(node.Children) > 1 {
+				duration, err := node.Children[1].expectNodeType(DurationNode)
+				if err != nil {
+					return err
+				}
+
+				err = f.formatWithDuration(
+					pitchText.String(), duration, slurText,
+				)
+				if err != nil {
+					return err
+				}
+			} else {
+				f.write(fmt.Sprintf("%s%s", pitchText.String(), slurText))
+			}
+
+		case OctaveDownNode:
+			f.write("<")
+
+		case OctaveSetNode:
+			f.write(fmt.Sprintf("o%d", node.Literal.(int32)))
+
+		case OctaveUpNode:
+			f.write(">")
 
 		case RepeatNode:
 			if err := node.expectNChildren(2); err != nil {
@@ -461,36 +431,129 @@ func (f *formatter) format(nodes ...ASTNode) error {
 				return err
 			}
 
-			texts := []string{}
-			for _, rrNode := range repetitions.Children {
-				if err := rrNode.expectNChildren(2); err != nil {
-					return err
-				}
-
-				frNode, err := rrNode.Children[0].expectNodeType(FirstRepetitionNode)
+			ranges := []string{}
+			for _, child := range repetitions.Children {
+				rr, err := child.expectNodeType(RepetitionRangeNode)
 				if err != nil {
 					return err
 				}
 
-				lrNode, err := rrNode.Children[1].expectNodeType(LastRepetitionNode)
+				if err := rr.expectNChildren(2); err != nil {
+					return err
+				}
+
+				fr, err := rr.Children[0].expectNodeType(FirstRepetitionNode)
 				if err != nil {
 					return err
 				}
 
-				fr := frNode.Literal.(int32)
-				lr := lrNode.Literal.(int32)
+				lr, err := rr.Children[1].expectNodeType(LastRepetitionNode)
+				if err != nil {
+					return err
+				}
 
-				if fr == lr {
-					texts = append(texts, string(fr))
+				frNum := fr.Literal.(int32)
+				lrNum := lr.Literal.(int32)
+
+				if frNum == lrNum {
+					ranges = append(ranges,
+						fmt.Sprintf("%d", frNum),
+					)
 				} else {
-					texts = append(texts, fmt.Sprintf("%d-%d", fr, lr))
+					ranges = append(ranges,
+						fmt.Sprintf("%d-%d", frNum, lrNum),
+					)
 				}
 			}
-			f.write(fmt.Sprintf("'%s", strings.Join(texts, ",")))
+			f.write(fmt.Sprintf("'%s", strings.Join(ranges, ",")))
 
+		case RestNode:
+			if len(node.Children) > 0 {
+				duration, err := node.Children[0].expectNodeType(DurationNode)
+				if err != nil {
+					return err
+				}
+
+				err = f.formatWithDuration("r", duration, "")
+				if err != nil {
+					return err
+				}
+			}
+
+		case VariableDefinitionNode:
+			// Variable definitions are particularly special to format
+			// The definition nodes must be on the same line as the var name
+			// We handle this by:
+			// - Flushing first so that any var def is on it's own new line
+			// - Using the pauseWrap flag so that the name, equals, and defs can
+			// 	 never be wrapped and are guaranteed to be on the same line
+			// In the case that the last definition node is an event seq, we
+			// then continue the definition to new lines and indent
+
+			f.flush()
+			f.pauseWrap = true
+
+			if err := node.expectNChildren(2); err != nil {
+				return err
+			}
+
+			name, err := node.Children[0].expectNodeType(VariableNameNode)
+			if err != nil {
+				return err
+			}
+
+			f.write(fmt.Sprintf("%s =", name.Literal.(string)))
+
+			events, err := node.Children[1].expectNodeType(EventSequenceNode)
+			if err != nil {
+				return err
+			}
+
+			if len(events.Children) > 1 {
+				lastIndex := len(events.Children) - 1
+
+				// Format all children except the last, with pauseWrap = true
+				err := f.format(events.Children[:lastIndex]...)
+				if err != nil {
+					return err
+				}
+
+				if events.Children[lastIndex].Type == EventSequenceNode {
+					// If the last def is event seq, we format it indented
+					f.write("[")
+					f.indent()
+					f.pauseWrap = false
+
+					err = f.format(events.Children[lastIndex].Children...)
+					if err != nil {
+						return err
+					}
+
+					f.unindent()
+					f.write("]")
+				} else {
+					err := f.format(events.Children[lastIndex])
+					if err != nil {
+						return err
+					}
+				}
+			}
+
+			f.pauseWrap = false
+			f.flush()
+
+		case VariableReferenceNode:
+			f.write(node.Literal.(string))
+
+		case VoiceGroupEndMarkerNode:
+			f.write("V0:")
+			f.indent()
 
 		case VoiceGroupNode:
-			return f.format(node.Children...)
+			err := f.format(node.Children...)
+			if err != nil {
+				return err
+			}
 
 		case VoiceNode:
 			if err := node.expectNChildren(2); err != nil {
@@ -504,25 +567,19 @@ func (f *formatter) format(nodes ...ASTNode) error {
 
 			f.write(fmt.Sprintf("V%d:", voiceNumber.Literal.(int32)))
 
-			voiceEvents, err := node.Children[1].expectNodeType(EventSequenceNode)
+			f.indent()
+
+			events, err := node.Children[1].expectNodeType(EventSequenceNode)
 			if err != nil {
 				return err
 			}
 
-			f.indent()
-
-			err = f.format(voiceEvents.Children...)
+			err = f.format(events.Children...)
 			if err != nil {
 				return err
 			}
 
 			f.unindent()
-
-		case VoiceGroupEndMarkerNode:
-			f.write("V0:")
-			// Let remaining events continue on the same line
-			// In subsequent lines, we remain unindented
-			// Indentation behaviour is up to us
 
 		}
 	}
@@ -531,7 +588,7 @@ func (f *formatter) format(nodes ...ASTNode) error {
 	return nil
 }
 
-// formatAST is the overall format for root node
+// formatAST handles formatting for the RootNode and parts.
 func (f *formatter) formatAST(root ASTNode) error {
 	for i, part := range root.Children {
 		switch part.Type {
@@ -557,16 +614,16 @@ func (f *formatter) formatAST(root ASTNode) error {
 			}
 
 			// Part declaration
-			partDecl, err := part.Children[0].expectNodeType(PartDeclarationNode)
+			decl, err := part.Children[0].expectNodeType(PartDeclarationNode)
 			if err != nil {
 				return err
 			}
 
-			if err := partDecl.expectNChildren(1, 2); err != nil {
+			if err := decl.expectNChildren(1, 2); err != nil {
 				return err
 			}
 
-			partNames, err := partDecl.Children[0].expectNodeType(PartNamesNode)
+			partNames, err := decl.Children[0].expectNodeType(PartNamesNode)
 			if err != nil {
 				return err
 			}
@@ -581,18 +638,29 @@ func (f *formatter) formatAST(root ASTNode) error {
 				if err != nil {
 					return err
 				}
+
 				names = append(names, partNameNode.Literal.(string))
 			}
 			namesText := strings.Join(names, "/")
 
 			if len(partNames.Children) > 1 {
-				partAlias, err := partNames.Children[1].expectNodeType(PartAliasNode)
+				partAlias, err := partNames.Children[1].expectNodeType(
+					PartAliasNode,
+				)
 				if err != nil {
 					return err
 				}
-				f.write(fmt.Sprintf("%s \"%s\":", namesText, partAlias.Literal.(string)))
+
+				f.write(fmt.Sprintf(
+					"%s \"%s\":",
+					namesText,
+					partAlias.Literal.(string),
+				))
 			} else {
-				f.write(fmt.Sprintf("%s:", namesText))
+				f.write(fmt.Sprintf(
+					"%s:",
+					namesText,
+				))
 			}
 
 			// Part events
@@ -612,7 +680,7 @@ func (f *formatter) formatAST(root ASTNode) error {
 
 		}
 
-		if i+1 < len(root.Children) {
+		if i + 1 < len(root.Children) {
 			f.emptyLine()
 		}
 	}
@@ -620,8 +688,11 @@ func (f *formatter) formatAST(root ASTNode) error {
 	return nil
 }
 
-// FormatASTToCode performs rudimentary output formatting of Alda code
-func FormatASTToCode(root ASTNode, out io.Writer, opts ...formatterOption) error {
+// FormatASTToCode performs rudimentary output formatting of Alda code including
+// handling basic spacing, indentation, and wrapping.
+func FormatASTToCode(
+	root ASTNode, out io.Writer, opts ...formatterOption,
+) error {
 	// Write to temp buffer instead of directly to file in case of error
 	temp := bytes.Buffer{}
 	f := newFormatter(&temp, opts...)
@@ -632,13 +703,3 @@ func FormatASTToCode(root ASTNode, out io.Writer, opts ...formatterOption) error
 	_, err = out.Write(temp.Bytes())
 	return err
 }
-
-/*
-General note for Dave
-
-I tried to balance simplicity, effectiveness, and cost of development
-Keeping in mind the primary focus of this is to get MusicXML import working
-Sacrificing a bit of the quality and idiomatic nature of the generated Alda
-
-
- */
