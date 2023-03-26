@@ -8,13 +8,20 @@ import (
 	"strings"
 )
 
-type formatter struct {
-	softWrap    int      	// configured column number to soft wrap formatting
-	indentText 	string	 	// configured indent text (i.e. spaces vs tabs)
+type varDefState int
 
-	pauseWrap   bool     	// stateful flag to pause wrapping used for var defs
-	indentLevel int      	// stateful indentation level
-	texts       []string 	// buffer of "tokens" for the ongoing formatted line
+const (
+	None     = iota // not currently in a var def
+	Defining        // currently formatting a var def (cannot go to new line)
+	LastNode        // last node of a var def, treated specially
+)
+
+type formatter struct {
+	softWrapLen int         // configured line length to soft wrap formatting
+	indentText  string      // configured indent string (i.e. spaces vs tabs)
+	varDef      varDefState // state to handle formatting variable definitions
+	indentLevel int         // state for indentation level
+	texts       []string    // buffer of "tokens" for the ongoing formatted line
 	out         io.Writer
 }
 
@@ -23,9 +30,9 @@ type formatterOption func(*formatter)
 func newFormatter(out io.Writer, opts ...formatterOption) *formatter {
 	formatter := &formatter{
 		// TODO: make these configurable from cli
-		softWrap:    80,
+		softWrapLen: 80,
 		indentText:  "    ",
-		pauseWrap:   false,
+		varDef:      None,
 		indentLevel: 0,
 		texts:       []string{},
 		out:         out,
@@ -49,30 +56,51 @@ func (f *formatter) line() string {
 	}
 }
 
+// emptyLine writes an empty line
+func (f *formatter) emptyLine() {
+	if f.varDef == None {
+		f.flush()
+		f.out.Write([]byte("\n"))
+	}
+}
+
 // flush flushes out the current line to the output.
 func (f *formatter) flush() {
-	if len(f.texts) > 0 {
+	if len(f.texts) > 0 && f.varDef == None {
 		f.out.Write([]byte(f.line() + "\n"))
 		f.texts = []string{}
 	}
 }
 
+// indent increments the indentation level of subsequent formatting.
 func (f *formatter) indent() {
-	f.flush()
-	f.indentLevel++
+	switch f.varDef {
+	case LastNode:
+		// During the last node of a var def, we are allowed to effectively exit
+		// the var def and continue formatting on the next line.
+		f.varDef = None
+		fallthrough
+	case None:
+		f.flush()
+		f.indentLevel++
+	}
 }
 
+// unindent decrements the indentation level of subsequent formatting.
+// A corresponding unindent should always be called after calling indent.
 func (f *formatter) unindent() {
-	f.flush()
-	f.indentLevel--
+	if f.varDef == None {
+		f.flush()
+		f.indentLevel--
+	}
 }
 
 // write formats text to the output with indentation, wrapping, and spacing.
 // Each "text" is an unwrappable token, i.e. wrapping only happens between text.
 func (f *formatter) write(text string) {
 	f.texts = append(f.texts, text)
-	if len(f.line()) > f.softWrap && !f.pauseWrap {
-		f.texts = f.texts[0:len(f.texts) - 1]
+	if len(f.line()) > f.softWrapLen && f.varDef == None {
+		f.texts = f.texts[0 : len(f.texts)-1]
 		f.flush()
 		f.texts = append(f.texts, text)
 	}
@@ -98,7 +126,7 @@ func (f *formatter) formatWithDuration(
 			)
 
 		case BarlineNode:
-			if i == len(duration.Children) - 1 {
+			if i == len(duration.Children)-1 {
 				// The final duration is a barline
 				// We write out any post text before the barline for clarity
 				text.WriteString(post)
@@ -121,7 +149,7 @@ func (f *formatter) formatWithDuration(
 			// We will try our best to use seconds first
 			totalMs := child.Literal.(float64)
 			s := int(totalMs) / 1000
-			ms := totalMs - float64(s * 1000)
+			ms := totalMs - float64(s*1000)
 
 			if s > 0 && ms > 0 {
 				text.WriteString(fmt.Sprintf(
@@ -184,12 +212,14 @@ func (f *formatter) formatWithDuration(
 }
 
 // format handles formatting for non-part ASTNode's.
-func (f *formatter) format(nodes ...ASTNode) error  {
+func (f *formatter) format(nodes ...ASTNode) error {
 	for _, node := range nodes {
 		switch node.Type {
 
 		default:
-			return fmt.Errorf("unexpected ASTNode %#v during formatting", node)
+			return fmt.Errorf(
+				"unexpected ASTNode Type %#v during formatting", node.Type,
+			)
 
 		case AtMarkerNode:
 			f.write(fmt.Sprintf("@%s", node.Literal.(string)))
@@ -264,7 +294,7 @@ func (f *formatter) format(nodes ...ASTNode) error  {
 			}
 
 		case EventSequenceNode:
-			// Always indent the children of standalone event sequences
+			// Always try to indent the children of standalone event sequences
 			// (i.e. those not used as part of a separate node such as cram)
 			f.flush()
 			f.write("[")
@@ -277,7 +307,6 @@ func (f *formatter) format(nodes ...ASTNode) error  {
 
 			f.unindent()
 			f.write("]")
-			f.flush()
 
 		case LispListNode:
 			var lispString func(ASTNode) (string, error)
@@ -387,23 +416,15 @@ func (f *formatter) format(nodes ...ASTNode) error  {
 			}
 
 			slurText := ""
-			if len(node.Children) > 2 {
-				_, err := node.Children[2].expectNodeType(TieNode)
-				if err != nil {
-					return err
+			for _, child := range node.Children[1:] {
+				if child.Type == TieNode {
+					slurText = "~"
 				}
-
-				slurText = "~"
 			}
 
-			if len(node.Children) > 1 {
-				duration, err := node.Children[1].expectNodeType(DurationNode)
-				if err != nil {
-					return err
-				}
-
+			if len(node.Children) > 1 && node.Children[1].Type == DurationNode {
 				err = f.formatWithDuration(
-					pitchText.String(), duration, slurText,
+					pitchText.String(), node.Children[1], slurText,
 				)
 				if err != nil {
 					return err
@@ -438,7 +459,7 @@ func (f *formatter) format(nodes ...ASTNode) error  {
 
 			f.write(fmt.Sprintf("*%d", times.Literal.(int32)))
 
-		case RepetitionsNode:
+		case OnRepetitionsNode:
 			if err := node.expectNChildren(2); err != nil {
 				return err
 			}
@@ -505,17 +526,17 @@ func (f *formatter) format(nodes ...ASTNode) error  {
 			}
 
 		case VariableDefinitionNode:
-			// Variable definitions are particularly special to format
-			// The definition nodes must be on the same line as the var name
-			// We handle this by:
-			// - Flushing first so that any var def is on it's own new line
-			// - Using the pauseWrap flag so that the name, equals, and defs can
-			// 	 never be wrapped and are guaranteed to be on the same line
-			// In the case that the last definition node is an event seq, we
-			// then continue the definition to new lines and indent
+			// Variable definitions are incredibly tricky to format because
+			// formatted text must be on the same line as the variable name.
+			// We handle this by maintaining varDefState:
+			// - While "None", behaviour is normal.
+			// - While "Defining", we never flush/wrap to a new line.
+			// - While "LastNode", we allow event sequences (including repeats)
+			// 	 and voice groups to indent and continue on new lines.
+			// 	 This is complicated, but any alternative I tried was worse.
 
 			f.flush()
-			f.pauseWrap = true
+			f.varDef = Defining
 
 			if err := node.expectNChildren(2); err != nil {
 				return err
@@ -536,34 +557,20 @@ func (f *formatter) format(nodes ...ASTNode) error  {
 			if len(events.Children) > 0 {
 				lastIndex := len(events.Children) - 1
 
-				// Format all children except the last, with pauseWrap = true
-				err := f.format(events.Children[:lastIndex]...)
+				err = f.format(events.Children[:lastIndex]...)
 				if err != nil {
 					return err
 				}
 
-				if events.Children[lastIndex].Type == EventSequenceNode {
-					// If the last def is event seq, we format it indented
-					f.write("[")
-					f.indent()
-					f.pauseWrap = false
+				f.varDef = LastNode
 
-					err = f.format(events.Children[lastIndex].Children...)
-					if err != nil {
-						return err
-					}
-
-					f.unindent()
-					f.write("]")
-				} else {
-					err := f.format(events.Children[lastIndex])
-					if err != nil {
-						return err
-					}
+				err = f.format(events.Children[lastIndex])
+				if err != nil {
+					return err
 				}
 			}
 
-			f.pauseWrap = false
+			f.varDef = None
 			f.flush()
 
 		case VariableReferenceNode:
@@ -704,8 +711,8 @@ func (f *formatter) formatAST(root ASTNode) error {
 		}
 
 		f.flush()
-		if i + 1 < len(root.Children) {
-			f.out.Write([]byte("\n"))	// empty line between parts
+		if i+1 < len(root.Children) {
+			f.emptyLine()
 		}
 	}
 
@@ -713,7 +720,7 @@ func (f *formatter) formatAST(root ASTNode) error {
 }
 
 // FormatASTToCode performs rudimentary output formatting of Alda code including
-// handling basic spacing, indentation, and wrapping.
+// handling basic spacing, indentation, and line wrapping.
 func FormatASTToCode(
 	root ASTNode, out io.Writer, opts ...formatterOption,
 ) error {

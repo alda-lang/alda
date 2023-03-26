@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"bytes"
 	"math"
 	"testing"
 
@@ -68,6 +69,22 @@ func executeParseTestCases(t *testing.T, testCases ...parseTestCase) {
 			return
 		}
 		if diff := deep.Equal(actualAST, generatedAST); diff != nil {
+			t.Error(testCase.label)
+			for _, diffItem := range diff {
+				t.Errorf("%v", diffItem)
+			}
+		}
+
+		buffer := bytes.Buffer{}
+		err = FormatASTToCode(actualAST, &buffer)
+		if err != nil {
+			t.Errorf("%v\n", err)
+			return
+		}
+
+		formattedAST, err := Parse(
+			testCase.label, buffer.String(), SuppressSourceContext)
+		if diff := deep.Equal(actualAST, formattedAST); diff != nil {
 			t.Error(testCase.label)
 			for _, diffItem := range diff {
 				t.Errorf("%v", diffItem)
