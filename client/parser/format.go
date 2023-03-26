@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
 )
 
@@ -21,6 +22,7 @@ type formatterOption func(*formatter)
 
 func newFormatter(out io.Writer, opts ...formatterOption) *formatter {
 	formatter := &formatter{
+		// TODO: make these configurable from cli
 		softWrap:    80,
 		indentText:  "    ",
 		pauseWrap:   false,
@@ -38,9 +40,13 @@ func newFormatter(out io.Writer, opts ...formatterOption) *formatter {
 
 // line constructs and returns the current line being formatted.
 func (f *formatter) line() string {
-	indent := strings.Repeat(f.indentText, f.indentLevel)
 	text := strings.Join(f.texts, " ")
-	return strings.TrimSpace(indent + text)
+	if len(text) == 0 {
+		return text
+	} else {
+		indent := strings.Repeat(f.indentText, f.indentLevel)
+		return indent + text
+	}
 }
 
 // flush flushes out the current line to the output.
@@ -49,11 +55,6 @@ func (f *formatter) flush() {
 		f.out.Write([]byte(f.line() + "\n"))
 		f.texts = []string{}
 	}
-}
-
-func (f *formatter) emptyLine() {
-	f.flush()
-	f.out.Write([]byte("\n"))
 }
 
 func (f *formatter) indent() {
@@ -110,14 +111,33 @@ func (f *formatter) formatWithDuration(
 			f.write("|")
 
 			text.Reset()
-			shouldTie = false
 
 		case NoteLengthMsNode:
 			if shouldTie {
 				text.WriteString("~")
 			}
 
-			text.WriteString(child.Literal.(string))
+			// NoteLengthMs is parsed to us as ms, but can be coded using s/ms
+			// We will try our best to use seconds first
+			totalMs := child.Literal.(float64)
+			s := int(totalMs) / 1000
+			ms := totalMs - float64(s * 1000)
+
+			if s > 0 && ms > 0 {
+				text.WriteString(fmt.Sprintf(
+					"%ds~%sms",
+					s,
+					strconv.FormatFloat(ms, 'f', -1, 64),
+				))
+			} else if s > 0 {
+				text.WriteString(fmt.Sprintf("%ds", s))
+			} else {
+				text.WriteString(fmt.Sprintf(
+					"%sms",
+					strconv.FormatFloat(ms, 'f', -1, 64),
+				))
+			}
+
 			shouldTie = true
 
 		case NoteLengthNode:
@@ -141,12 +161,12 @@ func (f *formatter) formatWithDuration(
 					return err
 				}
 
-				numDots = dotsNode.Literal.(int)
+				numDots = int(dotsNode.Literal.(int32))
 			}
 
 			text.WriteString(fmt.Sprintf(
-				"%f%s",
-				denom.Literal.(float64),
+				"%s%s",
+				strconv.FormatFloat(denom.Literal.(float64), 'f', -1, 64),
 				strings.Repeat(".", numDots),
 			))
 
@@ -284,7 +304,9 @@ func (f *formatter) format(nodes ...ASTNode) error  {
 					return fmt.Sprintf("(%s)", strings.Join(texts, " ")), nil
 
 				case LispNumberNode:
-					return fmt.Sprintf("%d", lisp.Literal.(int32)), nil
+					return strconv.FormatFloat(
+						lisp.Literal.(float64), 'f', -1, 64,
+					), nil
 
 				case LispQuotedFormNode:
 					form, err := lispString(lisp.Children[0])
@@ -339,7 +361,7 @@ func (f *formatter) format(nodes ...ASTNode) error  {
 			pitchText := strings.Builder{}
 			pitchText.WriteRune(letter.Literal.(rune))
 
-			if len(letter.Children) > 1 {
+			if len(laa.Children) > 1 {
 				accidentals, err := laa.Children[1].expectNodeType(
 					NoteAccidentalsNode,
 				)
@@ -478,6 +500,8 @@ func (f *formatter) format(nodes ...ASTNode) error  {
 				if err != nil {
 					return err
 				}
+			} else {
+				f.write("r")
 			}
 
 		case VariableDefinitionNode:
@@ -509,7 +533,7 @@ func (f *formatter) format(nodes ...ASTNode) error  {
 				return err
 			}
 
-			if len(events.Children) > 1 {
+			if len(events.Children) > 0 {
 				lastIndex := len(events.Children) - 1
 
 				// Format all children except the last, with pauseWrap = true
@@ -547,9 +571,9 @@ func (f *formatter) format(nodes ...ASTNode) error  {
 
 		case VoiceGroupEndMarkerNode:
 			f.write("V0:")
-			f.indent()
 
 		case VoiceGroupNode:
+			f.flush()
 			err := f.format(node.Children...)
 			if err != nil {
 				return err
@@ -584,7 +608,6 @@ func (f *formatter) format(nodes ...ASTNode) error  {
 		}
 	}
 
-	f.flush()
 	return nil
 }
 
@@ -643,8 +666,8 @@ func (f *formatter) formatAST(root ASTNode) error {
 			}
 			namesText := strings.Join(names, "/")
 
-			if len(partNames.Children) > 1 {
-				partAlias, err := partNames.Children[1].expectNodeType(
+			if len(decl.Children) > 1 {
+				partAlias, err := decl.Children[1].expectNodeType(
 					PartAliasNode,
 				)
 				if err != nil {
@@ -680,8 +703,9 @@ func (f *formatter) formatAST(root ASTNode) error {
 
 		}
 
+		f.flush()
 		if i + 1 < len(root.Children) {
-			f.emptyLine()
+			f.out.Write([]byte("\n"))	// empty line between parts
 		}
 	}
 
