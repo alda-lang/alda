@@ -15,7 +15,7 @@ import (
 type parseTestCase struct {
 	label            string
 	given            string
-	expect           []model.ScoreUpdate // optional
+	expectUpdates    []model.ScoreUpdate // optional
 	expectAST        *ASTNode            // optional
 	scoreApplyOptOut bool                // optional
 }
@@ -51,8 +51,8 @@ func executeParseTestCases(t *testing.T, testCases ...parseTestCase) {
 			t.Errorf("%v\n", err)
 			return
 		}
-		if testCase.expect != nil {
-			diff := deep.Equal(testCase.expect, actualUpdates)
+		if testCase.expectUpdates != nil {
+			diff := deep.Equal(testCase.expectUpdates, actualUpdates)
 			if diff != nil {
 				t.Error(testCase.label)
 				for _, diffItem := range diff {

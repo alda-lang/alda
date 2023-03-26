@@ -25,24 +25,24 @@ func TestOctaves(t *testing.T) {
 	executeParseTestCases(
 		t,
 		parseTestCase{
-			label:  "octave up",
-			given:  ">",
-			expect: []model.ScoreUpdate{octaveUp()},
+			label:         "octave up",
+			given:         ">",
+			expectUpdates: []model.ScoreUpdate{octaveUp()},
 		},
 		parseTestCase{
-			label:  "octave down",
-			given:  "<",
-			expect: []model.ScoreUpdate{octaveDown()},
+			label:         "octave down",
+			given:         "<",
+			expectUpdates: []model.ScoreUpdate{octaveDown()},
 		},
 		parseTestCase{
-			label:  "octave set",
-			given:  "o5",
-			expect: []model.ScoreUpdate{octaveSet(5)},
+			label:         "octave set",
+			given:         "o5",
+			expectUpdates: []model.ScoreUpdate{octaveSet(5)},
 		},
 		parseTestCase{
 			label: "multi-octave up",
 			given: ">>>",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				octaveUp(),
 				octaveUp(),
 				octaveUp(),
@@ -51,7 +51,7 @@ func TestOctaves(t *testing.T) {
 		parseTestCase{
 			label: "multi-octave down",
 			given: "<<<",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				octaveDown(),
 				octaveDown(),
 				octaveDown(),
@@ -60,7 +60,7 @@ func TestOctaves(t *testing.T) {
 		parseTestCase{
 			label: "octave fish ><>",
 			given: "><>",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				octaveUp(),
 				octaveDown(),
 				octaveUp(),
@@ -69,7 +69,7 @@ func TestOctaves(t *testing.T) {
 		parseTestCase{
 			label: "octave up immediately followed by note",
 			given: ">c",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				octaveUp(),
 				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
 			},
@@ -77,7 +77,7 @@ func TestOctaves(t *testing.T) {
 		parseTestCase{
 			label: "octave down immediately followed by note",
 			given: "<c",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				octaveDown(),
 				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
 			},
@@ -85,7 +85,7 @@ func TestOctaves(t *testing.T) {
 		parseTestCase{
 			label: "note immediately followed by octave up",
 			given: "c>",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
 				octaveUp(),
 			},
@@ -93,7 +93,7 @@ func TestOctaves(t *testing.T) {
 		parseTestCase{
 			label: "note immediately followed by octave down",
 			given: "c<",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
 				octaveDown(),
 			},
@@ -101,7 +101,7 @@ func TestOctaves(t *testing.T) {
 		parseTestCase{
 			label: "note sandwiched between octave up/down",
 			given: ">c<",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				octaveUp(),
 				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
 				octaveDown(),

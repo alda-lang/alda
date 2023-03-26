@@ -21,7 +21,7 @@ func variableNameCheck(name string) parseTestCase {
 	return parseTestCase{
 		label: fmt.Sprintf("variable definition and reference: %s", name),
 		given: fmt.Sprintf("%[1]s = r \n%[1]s", name),
-		expect: []model.ScoreUpdate{
+		expectUpdates: []model.ScoreUpdate{
 			variableDefinition(name, model.Rest{}),
 			variableReference(name),
 		},
@@ -42,7 +42,7 @@ func TestVariables(t *testing.T) {
 		parseTestCase{
 			label: "variable reference in a part",
 			given: "flan = e\nflute: c flan f",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				variableDefinition("flan",
 					model.Note{
 						Pitch: model.LetterAndAccidentals{NoteLetter: model.E},
@@ -57,7 +57,7 @@ func TestVariables(t *testing.T) {
 		parseTestCase{
 			label: "only a variable reference in a part",
 			given: "pudding123 = r\nclarinet: pudding123",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				variableDefinition("pudding123", model.Rest{}),
 				model.PartDeclaration{Names: []string{"clarinet"}},
 				variableReference("pudding123"),
@@ -66,7 +66,7 @@ func TestVariables(t *testing.T) {
 		parseTestCase{
 			label: "variable definition containing a cram expression",
 			given: "cheesecake = { c/e }2",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				variableDefinition(
 					"cheesecake",
 					model.Cram{
@@ -95,7 +95,7 @@ func TestVariables(t *testing.T) {
 			label: "variable definition within an instrument part",
 			given: `harpsichord:
 			custard_ = c d e/g`,
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				model.PartDeclaration{Names: []string{"harpsichord"}},
 				variableDefinition(
 					"custard_",
@@ -120,7 +120,7 @@ func TestVariables(t *testing.T) {
 		
 			sorbet=c d e/g
 			c`,
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				model.PartDeclaration{Names: []string{"glockenspiel"}},
 				variableDefinition(
 					"sorbet",
@@ -145,7 +145,7 @@ func TestVariables(t *testing.T) {
 			given: `GELATO=d e
 		
 			clavinet: c/f`,
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				variableDefinition(
 					"GELATO",
 					model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.D}},
@@ -166,7 +166,7 @@ func TestVariables(t *testing.T) {
 		parseTestCase{
 			label: "var defined and used s/t var ends with a rest",
 			given: "foo = c8 d c r\npiano: foo*2",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				variableDefinition(
 					"foo",
 					model.Note{
@@ -196,7 +196,7 @@ func TestVariables(t *testing.T) {
 			bass = r
 			satb = V1: soprano V2: alto V3: tenor V4: bass
 			`,
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				variableDefinition("soprano", model.Rest{}),
 				variableDefinition("alto", model.Rest{}),
 				variableDefinition("tenor", model.Rest{}),
@@ -221,7 +221,7 @@ func TestVariables(t *testing.T) {
 			given: `bar = r
 			foo = bar
 			`,
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				variableDefinition("bar", model.Rest{}),
 				variableDefinition("foo", variableReference("bar")),
 			},

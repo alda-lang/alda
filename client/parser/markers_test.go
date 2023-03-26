@@ -12,7 +12,7 @@ func TestMarkers(t *testing.T) {
 		parseTestCase{
 			label: "marker",
 			given: "piano: %chorus",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				model.PartDeclaration{Names: []string{"piano"}},
 				model.Marker{Name: "chorus"},
 			},
@@ -20,7 +20,7 @@ func TestMarkers(t *testing.T) {
 		parseTestCase{
 			label: "at marker",
 			given: "piano: %verse-1 @verse-1",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				model.PartDeclaration{Names: []string{"piano"}},
 				model.Marker{Name: "verse-1"},
 				model.AtMarker{Name: "verse-1"},
