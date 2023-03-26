@@ -107,7 +107,8 @@ func (f *formatter) write(text string) {
 }
 
 // formatWithDuration handles duration formatting.
-// Durations are formatted with possible text directly pre/post (no spaces).
+// Durations are formatted with possible text directly pre/post (no spaces),
+// i.e. note pitches preceding durations.
 // All durations are treated as a single unwrappable text with the exception of
 // barlines which cause a duration to be split into separate texts.
 func (f *formatter) formatWithDuration(
@@ -211,8 +212,8 @@ func (f *formatter) formatWithDuration(
 	return nil
 }
 
-// format handles formatting for non-part ASTNode's.
-func (f *formatter) format(nodes ...ASTNode) error {
+// formatInnerEvents handles formatting of inner events within parts.
+func (f *formatter) formatInnerEvents(nodes ...ASTNode) error {
 	for _, node := range nodes {
 		switch node.Type {
 
@@ -228,7 +229,7 @@ func (f *formatter) format(nodes ...ASTNode) error {
 			f.write("|")
 
 		case ChordNode:
-			// We make each note + each separator individual texts to format
+			// We make each note + each separator individual texts to formatInnerEvents
 			// Meaning extra spaces padding separators + chords can be wrapped
 			// This is to avoid additional complexity in the formatter
 			// We can change this by creating a new helper function for
@@ -240,7 +241,7 @@ func (f *formatter) format(nodes ...ASTNode) error {
 			}
 
 			// Within a chord, there can be additional nodes between notes
-			// We format all of these after the separator for readability as
+			// We formatInnerEvents all of these after the separator for readability as
 			// they apply to the subsequent note
 			lastNoteOrRest := 0
 			for i, child := range node.Children {
@@ -250,7 +251,7 @@ func (f *formatter) format(nodes ...ASTNode) error {
 			}
 
 			for i, child := range node.Children {
-				err := f.format(child)
+				err := f.formatInnerEvents(child)
 				if err != nil {
 					return err
 				}
@@ -274,7 +275,7 @@ func (f *formatter) format(nodes ...ASTNode) error {
 
 			f.write("{")
 
-			err = f.format(events.Children...)
+			err = f.formatInnerEvents(events.Children...)
 			if err != nil {
 				return err
 			}
@@ -300,7 +301,7 @@ func (f *formatter) format(nodes ...ASTNode) error {
 			f.write("[")
 			f.indent()
 
-			err := f.format(node.Children...)
+			err := f.formatInnerEvents(node.Children...)
 			if err != nil {
 				return err
 			}
@@ -447,7 +448,7 @@ func (f *formatter) format(nodes ...ASTNode) error {
 				return err
 			}
 
-			err := f.format(node.Children[0])
+			err := f.formatInnerEvents(node.Children[0])
 			if err != nil {
 				return err
 			}
@@ -464,7 +465,7 @@ func (f *formatter) format(nodes ...ASTNode) error {
 				return err
 			}
 
-			err := f.format(node.Children[0])
+			err := f.formatInnerEvents(node.Children[0])
 			if err != nil {
 				return err
 			}
@@ -526,7 +527,7 @@ func (f *formatter) format(nodes ...ASTNode) error {
 			}
 
 		case VariableDefinitionNode:
-			// Variable definitions are incredibly tricky to format because
+			// Variable definitions are incredibly tricky to formatInnerEvents because
 			// formatted text must be on the same line as the variable name.
 			// We handle this by maintaining varDefState:
 			// - While "None", behaviour is normal.
@@ -557,14 +558,14 @@ func (f *formatter) format(nodes ...ASTNode) error {
 			if len(events.Children) > 0 {
 				lastIndex := len(events.Children) - 1
 
-				err = f.format(events.Children[:lastIndex]...)
+				err = f.formatInnerEvents(events.Children[:lastIndex]...)
 				if err != nil {
 					return err
 				}
 
 				f.varDef = LastNode
 
-				err = f.format(events.Children[lastIndex])
+				err = f.formatInnerEvents(events.Children[lastIndex])
 				if err != nil {
 					return err
 				}
@@ -581,7 +582,7 @@ func (f *formatter) format(nodes ...ASTNode) error {
 
 		case VoiceGroupNode:
 			f.flush()
-			err := f.format(node.Children...)
+			err := f.formatInnerEvents(node.Children...)
 			if err != nil {
 				return err
 			}
@@ -605,7 +606,7 @@ func (f *formatter) format(nodes ...ASTNode) error {
 				return err
 			}
 
-			err = f.format(events.Children...)
+			err = f.formatInnerEvents(events.Children...)
 			if err != nil {
 				return err
 			}
@@ -618,8 +619,8 @@ func (f *formatter) format(nodes ...ASTNode) error {
 	return nil
 }
 
-// formatAST handles formatting for the RootNode and parts.
-func (f *formatter) formatAST(root ASTNode) error {
+// formatTopLevel handles formatting for the RootNode and parts.
+func (f *formatter) formatTopLevel(root ASTNode) error {
 	for i, part := range root.Children {
 		switch part.Type {
 
@@ -633,7 +634,7 @@ func (f *formatter) formatAST(root ASTNode) error {
 				return err
 			}
 
-			err = f.format(events.Children...)
+			err = f.formatInnerEvents(events.Children...)
 			if err != nil {
 				return err
 			}
@@ -701,7 +702,7 @@ func (f *formatter) formatAST(root ASTNode) error {
 				return err
 			}
 
-			err = f.format(events.Children...)
+			err = f.formatInnerEvents(events.Children...)
 			if err != nil {
 				return err
 			}
@@ -727,7 +728,7 @@ func FormatASTToCode(
 	// Write to temp buffer instead of directly to file in case of error
 	temp := bytes.Buffer{}
 	f := newFormatter(&temp, opts...)
-	err := f.formatAST(root)
+	err := f.formatTopLevel(root)
 	if err != nil {
 		return err
 	}

@@ -75,14 +75,15 @@ func executeParseTestCases(t *testing.T, testCases ...parseTestCase) {
 			}
 		}
 
+		// Test formatter by ensuring round-trip formatted + parsed AST is same
 		buffer := bytes.Buffer{}
 		err = FormatASTToCode(actualAST, &buffer)
 		if err != nil {
 			t.Errorf("%v\n", err)
 			return
 		}
-
 		formattedAST, err := Parse(
+			// The newly formatted file will have different source context's
 			testCase.label, buffer.String(), SuppressSourceContext)
 		if diff := deep.Equal(actualAST, formattedAST); diff != nil {
 			t.Error(testCase.label)
