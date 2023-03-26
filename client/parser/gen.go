@@ -5,8 +5,9 @@ import (
 	"fmt"
 )
 
-// appendDuration appends a DurationNode child for a non-empty model.Duration.
-func appendDuration(node ASTNode, duration model.Duration) (ASTNode, error) {
+// withDuration returns the same ASTNode with an added DurationNode child if the
+// provided model.Duration is non-empty.
+func withDuration(node ASTNode, duration model.Duration) (ASTNode, error) {
 	if len(duration.Components) == 0 {
 		return node, nil
 	}
@@ -55,10 +56,10 @@ func appendDuration(node ASTNode, duration model.Duration) (ASTNode, error) {
 
 // mapIsolatedUpdate maps a single isolated model.ScoreUpdate to ASTNode.
 // Holistic updates that require "re-construction" are handled upstream:
-// 	1. model.PartDeclaration in GenerateASTFromScoreUpdates.
-// 	2. model.VoiceMarker, model.VoiceGroupEndMarker in mapUpdatesWithoutParts.
-func mapIsolatedUpdate(updates model.ScoreUpdate) (ASTNode, error) {
-	switch update := updates.(type) {
+// 	1. Parts in mapTopLevel.
+// 	2. model.VoiceMarker, model.VoiceGroupEndMarker in mapInnerEvents.
+func mapIsolatedUpdate(scoreUpdate model.ScoreUpdate) (ASTNode, error) {
+	switch update := scoreUpdate.(type) {
 
 	case model.AtMarker:
 		return ASTNode{Type: AtMarkerNode, Literal: update.Name}, nil
@@ -81,14 +82,14 @@ func mapIsolatedUpdate(updates model.ScoreUpdate) (ASTNode, error) {
 		return ASTNode{Type: BarlineNode}, nil
 
 	case model.Chord:
-		children, err := mapUpdatesWithoutParts(update.Events)
+		children, err := mapInnerEvents(update.Events)
 		if err != nil {
 			return ASTNode{}, err
 		}
 		return ASTNode{Type: ChordNode, Children: children}, nil
 
 	case model.Cram:
-		children, err := mapUpdatesWithoutParts(update.Events)
+		children, err := mapInnerEvents(update.Events)
 		if err != nil {
 			return ASTNode{}, err
 		}
@@ -96,10 +97,10 @@ func mapIsolatedUpdate(updates model.ScoreUpdate) (ASTNode, error) {
 			Type:     EventSequenceNode,
 			Children: children,
 		}}}
-		return appendDuration(cram, update.Duration)
+		return withDuration(cram, update.Duration)
 
 	case model.EventSequence:
-		children, err := mapUpdatesWithoutParts(update.Events)
+		children, err := mapInnerEvents(update.Events)
 		if err != nil {
 			return ASTNode{}, err
 		}
@@ -199,7 +200,7 @@ func mapIsolatedUpdate(updates model.ScoreUpdate) (ASTNode, error) {
 
 		}
 
-		note, err := appendDuration(note, update.Duration)
+		note, err := withDuration(note, update.Duration)
 		if err != nil {
 			return ASTNode{}, err
 		}
@@ -243,10 +244,10 @@ func mapIsolatedUpdate(updates model.ScoreUpdate) (ASTNode, error) {
 		}}, nil
 
 	case model.Rest:
-		return appendDuration(ASTNode{Type: RestNode}, update.Duration)
+		return withDuration(ASTNode{Type: RestNode}, update.Duration)
 
 	case model.VariableDefinition:
-		children, err := mapUpdatesWithoutParts(update.Events)
+		children, err := mapInnerEvents(update.Events)
 		if err != nil {
 			return ASTNode{}, err
 		}
@@ -272,11 +273,11 @@ func mapIsolatedUpdate(updates model.ScoreUpdate) (ASTNode, error) {
 	}
 }
 
-// mapUpdatesWithoutParts maps a group of updates to a group of ASTNode's.
-// Parts are ignored and handled upstream in GenerateASTFromScoreUpdates.
+// mapInnerEvents maps a group of inner updates to a group of ASTNode's.
+// Parts are ignored and handled upstream in mapTopLevel.
 // Voices are handled by identifying model.VoiceMarker then generating
 // subsequent nodes within an overarching VoiceGroupNode.
-func mapUpdatesWithoutParts(updates []model.ScoreUpdate) ([]ASTNode, error) {
+func mapInnerEvents(updates []model.ScoreUpdate) ([]ASTNode, error) {
 	dummyNode := ASTNode{Children: []ASTNode{}}
 
 	var currentVoiceGroup *ASTNode
@@ -322,17 +323,9 @@ func mapUpdatesWithoutParts(updates []model.ScoreUpdate) ([]ASTNode, error) {
 	return dummyNode.Children, nil
 }
 
-// GenerateASTFromScoreUpdates generates an ASTNode from []model.ScoreUpdate.
-// This is a direct inverse of ASTNode.Updates with the exception of
-// model.AldaSourceContext which is currently ignored because:
-// 	1. ASTNode.Updates is lossy and drops model.AldaSourceContext converting
-//	   DurationNode -> model.Duration. This is the only lost info and can be
-//	   remedied by adding model.AldaSourceContext to model.DurationComponent.
-// 	2. ASTNode generation currently doesn't require model.AldaSourceContext.
-//	   It can always be obtained from the original Alda file.
-//     The current use case is MusicXML import, which generates
-//     model.ScoreUpdate's without model.AldaSourceContext.
-func GenerateASTFromScoreUpdates(updates []model.ScoreUpdate) (ASTNode, error) {
+// mapTopLevel maps a top level group of updates to a RootNode.
+// mapTopLevel handles PartNode and ImplicitPartNode, then calls mapInnerEvents.
+func mapTopLevel(updates []model.ScoreUpdate) (ASTNode, error) {
 	root := ASTNode{Type: RootNode}
 
 	// Construct PartNodes by iterating backwards
@@ -357,7 +350,7 @@ func GenerateASTFromScoreUpdates(updates []model.ScoreUpdate) (ASTNode, error) {
 				})
 			}
 
-			events, err := mapUpdatesWithoutParts(
+			events, err := mapInnerEvents(
 				updates[i+1 : currentPartEndIndex],
 			)
 			if err != nil {
@@ -375,7 +368,7 @@ func GenerateASTFromScoreUpdates(updates []model.ScoreUpdate) (ASTNode, error) {
 
 	// Any remaining prefix is put into an ImplicitPartNode
 	if currentPartEndIndex > 0 {
-		nodes, err := mapUpdatesWithoutParts(updates[0:currentPartEndIndex])
+		nodes, err := mapInnerEvents(updates[0:currentPartEndIndex])
 		if err != nil {
 			return ASTNode{}, err
 		}
@@ -388,4 +381,18 @@ func GenerateASTFromScoreUpdates(updates []model.ScoreUpdate) (ASTNode, error) {
 	}
 
 	return root, nil
+}
+
+// GenerateASTFromScoreUpdates generates an ASTNode from []model.ScoreUpdate.
+// This is a direct inverse of ASTNode.Updates with the exception of
+// model.AldaSourceContext which is currently ignored because:
+// 	1. ASTNode.Updates is lossy and drops model.AldaSourceContext converting
+//	   DurationNode -> model.Duration. This is the only lost info and can be
+//	   remedied by adding model.AldaSourceContext to model.DurationComponent.
+// 	2. ASTNode generation currently doesn't require model.AldaSourceContext.
+//	   It can always be obtained from the original Alda file.
+//     The current use case is MusicXML import, which generates
+//     model.ScoreUpdate's without model.AldaSourceContext.
+func GenerateASTFromScoreUpdates(updates []model.ScoreUpdate) (ASTNode, error) {
+	return mapTopLevel(updates)
 }

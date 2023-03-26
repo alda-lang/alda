@@ -27,15 +27,16 @@ func executeParseTestCases(t *testing.T, testCases ...parseTestCase) {
 	for _, testCase := range testCases {
 		deep.MaxDepth = math.MaxInt32
 
-		// We suppress source context to facilitate deep diff comparison
+		// Test parser
 		actualAST, err := Parse(
+			// We suppress source context to facilitate deep diff comparison
 			testCase.label, testCase.given, SuppressSourceContext)
 		if err != nil {
 			t.Errorf("%v\n", err)
 			return
 		}
 		if testCase.expectAST != nil {
-			diff := deep.Equal(testCase.expectAST, actualAST);
+			diff := deep.Equal(testCase.expectAST, actualAST)
 			if diff != nil {
 				t.Error(testCase.label)
 				for _, diffItem := range diff {
@@ -44,6 +45,7 @@ func executeParseTestCases(t *testing.T, testCases ...parseTestCase) {
 			}
 		}
 
+		// Test ASTNode -> ScoreUpdate
 		actualUpdates, err := actualAST.Updates()
 		if err != nil {
 			t.Errorf("%v\n", err)
@@ -59,6 +61,7 @@ func executeParseTestCases(t *testing.T, testCases ...parseTestCase) {
 			}
 		}
 
+		// Test code generation by ensuring round-trip generated AST is the same
 		generatedAST, err := GenerateASTFromScoreUpdates(actualUpdates)
 		if err != nil {
 			t.Errorf("%v\n", err)
