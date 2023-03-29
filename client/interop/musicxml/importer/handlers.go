@@ -7,11 +7,11 @@ import (
 	"strconv"
 	"strings"
 
-	"alda.io/client/color"
 	log "alda.io/client/logging"
 	"alda.io/client/model"
 	"github.com/beevik/etree"
 	"github.com/go-test/deep"
+	GookitColor "github.com/gookit/color"
 )
 
 // elementHandler is a function that can handle the import of a MusicXML element
@@ -77,15 +77,15 @@ func unsupportedHandler(elementName string, isPlanned bool) elementHandler {
 			log.Warn().Msg(fmt.Sprintf(
 				`%s with the <%s> tag are currently not supported for MusicXML import.
 We plan to add support for importing %s in the future.`,
-				color.Aurora.BrightYellow(elementName),
-				color.Aurora.BrightYellow(element.Tag),
-				color.Aurora.BrightYellow(elementName),
+				GookitColor.HiYellow.Render(elementName),
+				GookitColor.HiYellow.Render(element.Tag),
+				GookitColor.HiYellow.Render(elementName),
 			))
 		} else {
 			log.Warn().Msg(fmt.Sprintf(
 				`%s with the <%s> tag are not supported for MusicXML import.`,
-				color.Aurora.BrightYellow(elementName),
-				color.Aurora.BrightYellow(element.Tag),
+				GookitColor.HiYellow.Render(elementName),
+				GookitColor.HiYellow.Render(element.Tag),
 			))
 		}
 	}

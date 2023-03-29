@@ -13,7 +13,6 @@ import (
 	"syscall"
 	"time"
 
-	"alda.io/client/color"
 	"alda.io/client/help"
 	log "alda.io/client/logging"
 	"alda.io/client/model"
@@ -24,6 +23,7 @@ import (
 	"alda.io/client/transmitter"
 	"alda.io/client/util"
 	"github.com/daveyarwood/go-osc/osc"
+	GookitColor "github.com/gookit/color"
 	"github.com/spf13/cobra"
 	"gitlab.com/gomidi/midi/midimessage/channel"
 	"gitlab.com/gomidi/midi/midireader"
@@ -33,11 +33,11 @@ const reasonableTimeout = 20 * time.Second
 
 func step(action string, test func() error) error {
 	if err := test(); err != nil {
-		fmt.Printf("%s %s\n\n---\n\n", color.Aurora.Red("ERR"), action)
+		fmt.Printf("%s %s\n\n---\n\n", GookitColor.Red.Render("ERR"), action)
 		return err
 	}
 
-	fmt.Printf("%s %s\n", color.Aurora.Green("OK "), action)
+	fmt.Printf("%s %s\n", GookitColor.Green.Render("OK "), action)
 	return nil
 }
 
@@ -230,8 +230,8 @@ var doctorCmd = &cobra.Command{
 					if !text.PromptForConfirmation(
 						fmt.Sprintf(
 							"\n%s does not appear to be installed.\nInstall %s now?",
-							color.Aurora.Bold("alda-player"),
-							color.Aurora.Bold("alda-player"),
+							GookitColor.Bold.Render("alda-player"),
+							GookitColor.Bold.Render("alda-player"),
 						),
 						true,
 					) {
@@ -273,9 +273,9 @@ var doctorCmd = &cobra.Command{
 					fmt.Sprintf(
 						"\nThe versions of %s and %s that you have installed are "+
 							"different.\nInstall the correct version of %s?",
-						color.Aurora.Bold("alda"),
-						color.Aurora.Bold("alda-player"),
-						color.Aurora.Bold("alda-player"),
+						GookitColor.Bold.Render("alda"),
+						GookitColor.Bold.Render("alda-player"),
+						GookitColor.Bold.Render("alda-player"),
 					),
 					true,
 				) {
@@ -285,10 +285,10 @@ This might cause unexpected problems.
 
 For best results, run %s and follow the prompt to install the correct
 version of %s.`,
-						color.Aurora.Bold("alda"),
-						color.Aurora.Bold("alda-player"),
-						color.Aurora.BrightYellow("alda doctor"),
-						color.Aurora.Bold("alda-player"),
+						GookitColor.Bold.Render("alda"),
+						GookitColor.Bold.Render("alda-player"),
+						GookitColor.HiYellow.Render("alda doctor"),
+						GookitColor.Bold.Render("alda-player"),
 					)
 				}
 

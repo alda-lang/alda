@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	code_generator "alda.io/client/code-generator"
-	"alda.io/client/color"
 	"alda.io/client/help"
 	"alda.io/client/interop/musicxml/importer"
 	log "alda.io/client/logging"
@@ -14,6 +13,7 @@ import (
 	"alda.io/client/system"
 	"alda.io/client/transmitter"
 	"alda.io/client/util"
+	GookitColor "github.com/gookit/color"
 	"github.com/spf13/cobra"
 )
 
@@ -80,15 +80,15 @@ Currently, the only import format is MusicXML.
 				`%s is not a supported input format.
 
 Currently, the only supported output format is %s.`,
-				color.Aurora.BrightYellow(importFormat),
-				color.Aurora.BrightYellow("musicxml"),
+				GookitColor.HiYellow.Render(importFormat),
+				GookitColor.HiYellow.Render("musicxml"),
 			)
 		}
 
 		// TODO (experimental): remove warning log
 		log.Warn().Msg(fmt.Sprintf(
 			`The %s command is currently experimental. Imported scores may be incorrect and lack information.`,
-			color.Aurora.BrightYellow("import"),
+			GookitColor.HiYellow.Render("import"),
 		))
 
 		var scoreUpdates []model.ScoreUpdate

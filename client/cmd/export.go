@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"alda.io/client/color"
 	"alda.io/client/help"
 	log "alda.io/client/logging"
 	"alda.io/client/model"
@@ -17,6 +16,7 @@ import (
 	"alda.io/client/system"
 	"alda.io/client/transmitter"
 	"alda.io/client/util"
+	GookitColor "github.com/gookit/color"
 	"github.com/spf13/cobra"
 )
 
@@ -94,8 +94,8 @@ output formats like MusicXML.
 				`%s is not a supported output format.
 
 Currently, the only supported output format is %s.`,
-				color.Aurora.BrightYellow(outputFormat),
-				color.Aurora.BrightYellow("midi"),
+				GookitColor.HiYellow.Render(outputFormat),
+				GookitColor.HiYellow.Render("midi"),
 			)
 		}
 
