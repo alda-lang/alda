@@ -22,7 +22,7 @@ func init() {
 	)
 
 	formatCmd.Flags().BoolVarP(
-		&formatOverwrite, "output", "o", false, "Overwrite input file with formatted output",
+		&formatOverwrite, "overwrite", "o", false, "Overwrite input file with formatted output",
 	)
 
 	formatCmd.Flags().IntVarP(
@@ -47,7 +47,7 @@ Source code must be provided by specifying the path to a file (-f, --file):
 
 In this case, the formatted output will be printed to standard output.
 
-When -o / --output is specified, the input file is instead overwritten.
+When -o / --overwrite is specified, the input file is instead overwritten.
   alda format -f path/to/my-score.alda -o
 
 Formatted output can be configured with the -w / --wrap and -i / --indent flags.

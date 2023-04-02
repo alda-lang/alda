@@ -41,6 +41,12 @@ func withDuration(node ASTNode, duration model.Duration) (ASTNode, error) {
 				Literal: c.Quantity,
 			})
 
+		case model.NoteLengthSeconds:
+			durationNode.Children = append(durationNode.Children, ASTNode{
+				Type:    NoteLengthSecondsNode,
+				Literal: c.Quantity,
+			})
+
 		default:
 			// model.NoteLengthBeats - only generated within lisp
 			return ASTNode{}, fmt.Errorf(

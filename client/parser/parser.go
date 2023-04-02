@@ -444,7 +444,7 @@ func (p *parser) octaveSet() (ASTNode, error) {
 }
 
 func (p *parser) matchDurationComponent() (Token, bool) {
-	return p.match(NoteLength, NoteLengthMs)
+	return p.match(NoteLength, NoteLengthMs, NoteLengthSeconds)
 }
 
 func (p *parser) durationComponent() ASTNode {
@@ -477,6 +477,12 @@ func (p *parser) durationComponent() ASTNode {
 	case NoteLengthMs:
 		return ASTNode{
 			Type:          NoteLengthMsNode,
+			SourceContext: p.sourceContext(token),
+			Literal:       token.literal,
+		}
+	case NoteLengthSeconds:
+		return ASTNode{
+			Type:          NoteLengthSecondsNode,
 			SourceContext: p.sourceContext(token),
 			Literal:       token.literal,
 		}

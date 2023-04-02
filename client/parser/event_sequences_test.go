@@ -130,7 +130,7 @@ func TestEventSequences(t *testing.T) {
 						Pitch: model.LetterAndAccidentals{NoteLetter: model.C},
 						Duration: model.Duration{
 							Components: []model.DurationComponent{
-								model.NoteLengthMs{Quantity: 1000},
+								model.NoteLengthSeconds{Quantity: 1},
 							},
 						},
 					},

@@ -36,6 +36,7 @@ const (
 	NoteAccidentalsNode
 	NoteLengthMsNode
 	NoteLengthNode
+	NoteLengthSecondsNode
 	NoteLetterAndAccidentalsNode
 	NoteLetterNode
 	NoteNode
@@ -118,6 +119,8 @@ func (nt ASTNodeType) String() string {
 		return "NoteLengthMsNode"
 	case NoteLengthNode:
 		return "NoteLengthNode"
+	case NoteLengthSecondsNode:
+		return "NoteLengthSecondsNode"
 	case NoteLetterAndAccidentalsNode:
 		return "NoteLetterAndAccidentalsNode"
 	case NoteLetterNode:
@@ -354,6 +357,10 @@ func duration(node ASTNode) (model.Duration, error) {
 			literal := componentNode.Literal.(float64)
 			noteLengthMs := model.NoteLengthMs{Quantity: literal}
 			duration.Components = append(duration.Components, noteLengthMs)
+		case NoteLengthSecondsNode:
+			literal := componentNode.Literal.(float64)
+			noteLengthSeconds := model.NoteLengthSeconds{Quantity: literal}
+			duration.Components = append(duration.Components, noteLengthSeconds)
 		}
 	}
 

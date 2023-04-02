@@ -152,34 +152,6 @@ func (f *formatter) formatWithDuration(
 
 			text.Reset()
 
-		case NoteLengthMsNode:
-			if shouldTie {
-				text.WriteString("~")
-			}
-
-			// NoteLengthMs is parsed to us as ms, but can be coded using s/ms
-			// We will try our best to use seconds first
-			totalMs := child.Literal.(float64)
-			s := int(totalMs) / 1000
-			ms := totalMs - float64(s*1000)
-
-			if s > 0 && ms > 0 {
-				text.WriteString(fmt.Sprintf(
-					"%ds~%sms",
-					s,
-					strconv.FormatFloat(ms, 'f', -1, 64),
-				))
-			} else if s > 0 {
-				text.WriteString(fmt.Sprintf("%ds", s))
-			} else {
-				text.WriteString(fmt.Sprintf(
-					"%sms",
-					strconv.FormatFloat(ms, 'f', -1, 64),
-				))
-			}
-
-			shouldTie = true
-
 		case NoteLengthNode:
 			if shouldTie {
 				text.WriteString("~")
@@ -208,6 +180,30 @@ func (f *formatter) formatWithDuration(
 				"%s%s",
 				strconv.FormatFloat(denom.Literal.(float64), 'f', -1, 64),
 				strings.Repeat(".", numDots),
+			))
+
+			shouldTie = true
+
+		case NoteLengthMsNode:
+			if shouldTie {
+				text.WriteString("~")
+			}
+
+			text.WriteString(fmt.Sprintf(
+				"%sms",
+				strconv.FormatFloat(child.Literal.(float64), 'f', -1, 64),
+			))
+
+			shouldTie = true
+
+		case NoteLengthSecondsNode:
+			if shouldTie {
+				text.WriteString("~")
+			}
+
+			text.WriteString(fmt.Sprintf(
+				"%ss",
+				strconv.FormatFloat(child.Literal.(float64), 'f', -1, 64),
 			))
 
 			shouldTie = true
