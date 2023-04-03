@@ -16,15 +16,23 @@ import (
 // musicXMLPart contains part-specific information necessary for import
 type musicXMLPart struct {
 	instruments  []string
-	voices       map[int32]*musicXMLVoice
-	currentVoice *musicXMLVoice
+
+	// State
 	divisions    int
 	beats        float64
+
+	// Imported updates
+	updates      []model.ScoreUpdate
+	voices       map[int32]*musicXMLVoice
+	currentVoice *musicXMLVoice
 
 	// We maintain the following information for unpitched percussion parts
 	// unpitched maps a part's instrument ID to the corresponding MIDI pitch
 	unpitched map[string]int32
 	alias     string
+
+	// We maintain an optimizer per part to optimize as we collapse voices
+	opt       optimizer
 }
 
 func newMusicXMLPart() *musicXMLPart {
@@ -34,40 +42,64 @@ func newMusicXMLPart() *musicXMLPart {
 		beats:     0,
 		unpitched: make(map[string]int32),
 		alias:     "",
+		opt:       newOptimizer(),
 	}
 }
 
-func (part *musicXMLPart) generateScoreUpdates() []model.ScoreUpdate {
-	partDeclaration := model.PartDeclaration{
-		Names: part.instruments,
-		Alias: part.alias,
-	}
-
-	updates := []model.ScoreUpdate{partDeclaration}
-
+func (part *musicXMLPart) collapseVoices(end bool) {
 	if len(part.voices) == 1 {
 		// For a single voice, we don't include a voice marker
-		updates = append(
-			updates, part.currentVoice.generateScoreUpdates()...,
-		)
+		if !part.currentVoice.isEffectivelyEmpty() {
+			part.updates = append(part.updates,
+				part.opt.optimize(part.currentVoice.getScoreUpdates())...,
+			)
+			part.voices[1] = newMusicXMLVoice()
+			part.voices[1].octave = -1	// force re-setting of octave
+			part.beats = 0
+		}
 	} else {
 		// Process voices in order of voice number
 		var voiceNumber int32 = 1
+		anyVoiceUpdates := false
 		for voicesLeft := len(part.voices); voicesLeft > 0; voiceNumber++ {
 			if voice, ok := part.voices[voiceNumber]; ok {
 				voiceMarker := model.VoiceMarker{
 					VoiceNumber: voiceNumber,
 				}
-				updates = append(updates, voiceMarker)
-				updates = append(
-					updates,
-					voice.generateScoreUpdates()...,
-				)
+				if !voice.isEffectivelyEmpty() {
+					anyVoiceUpdates = true
+					part.updates = append(part.updates,
+						voiceMarker,
+					)
+					part.updates = append(part.updates,
+						part.opt.optimize(voice.getScoreUpdates())...,
+					)
+					part.voices[voiceNumber] = newMusicXMLVoice()
+					part.voices[voiceNumber].octave = -1
+				}
 				voicesLeft--
 			}
 		}
+
+		if anyVoiceUpdates {
+			part.currentVoice = part.voices[1]
+			part.beats = 0
+			if end {
+				part.updates = append(part.updates, model.VoiceGroupEndMarker{})
+			}
+		}
 	}
-	return updates
+}
+
+func (part *musicXMLPart) generateScoreUpdates() []model.ScoreUpdate {
+	part.collapseVoices(false)
+
+	partDeclaration := model.PartDeclaration{
+		Names: part.instruments,
+		Alias: part.alias,
+	}
+
+	return append([]model.ScoreUpdate{partDeclaration}, part.updates...)
 }
 
 // musicXMLVoice contains voice-specific information necessary for import
@@ -102,8 +134,24 @@ func newMusicXMLVoice() *musicXMLVoice {
 	}
 }
 
-func (voice *musicXMLVoice) generateScoreUpdates() []model.ScoreUpdate {
+func (voice *musicXMLVoice) getScoreUpdates() []model.ScoreUpdate {
 	return voice.updates[0].(model.EventSequence).Events
+}
+
+// isEffectivelyEmpty returns if a voice has no updates, or just an empty repeat
+func (voice *musicXMLVoice) isEffectivelyEmpty() bool {
+	if len(voice.getScoreUpdates()) == 1 {
+		repeat, ok := voice.getScoreUpdates()[0].(model.Repeat)
+		if ok {
+			eventSeq, ok := repeat.Event.(model.EventSequence)
+			if ok {
+				if len(eventSeq.Events) == 0 {
+					return true
+				}
+			}
+		}
+	}
+	return len(voice.getScoreUpdates()) == 0
 }
 
 // musicXMLImporter contains global state for importing a MusicXML file
@@ -182,6 +230,16 @@ func (importer *musicXMLImporter) append(newUpdates ...model.ScoreUpdate) {
 			)
 			return modified
 		},
+	)
+}
+
+// appendPartAttrs appends attribute updates to the current part
+// We make these apply to the entire part by closing out any ongoing voices
+func (importer *musicXMLImporter) appendPartAttrs(update model.ScoreUpdate) {
+	importer.currentPart.collapseVoices(true)
+	importer.currentPart.updates = append(importer.currentPart.updates,
+		// We optimize the single attr update to catch key signature changes
+		importer.currentPart.opt.optimize([]model.ScoreUpdate{update})...,
 	)
 }
 
@@ -386,13 +444,6 @@ func ImportMusicXML(r io.Reader) ([]model.ScoreUpdate, error) {
 
 	importer := newMusicXMLImporter()
 	handle(scorePartwise, importer)
-
-	// We optimize the updates for each voice to generate more idiomatic Alda
-	for _, part := range importer.parts {
-		for _, voice := range part.voices {
-			voice.updates = optimize(voice.updates)
-		}
-	}
 
 	return importer.generateScoreUpdates(), nil
 }

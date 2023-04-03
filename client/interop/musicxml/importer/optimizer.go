@@ -7,19 +7,12 @@ import (
 	"github.com/go-test/deep"
 )
 
-// optimize applies various modifications to generate more idiomatic Alda
-func optimize(updates []model.ScoreUpdate) []model.ScoreUpdate {
-	opt := newOptimizer()
-	return opt.optimizeAll(updates)
-}
-
 type optimizer struct {
 	// currentNoteState is true if the last occurrence of a note had accidentals
 	// different from the key signature
 	// This signifies that the next redundant accidental (same as key signature)
 	// will be kept to re-iterate this return to the key signature
 	currentNoteState    map[model.NoteLetter]bool
-	currentKeySignature model.KeySignature
 
 	// currentDuration and currentOctave maintain the last encountered duration
 	// and octave values
@@ -27,6 +20,11 @@ type optimizer struct {
 	// and barlines to ensure integrity across complex Alda structures
 	currentDuration model.Duration
 	currentOctave   int32
+
+	// currentKeySignature maintains the current active key signature
+	// This is the only state variable that is not soft reset because MusicXML
+	// import will never change key signatures within single voices
+	currentKeySignature model.KeySignature
 }
 
 func newOptimizer() optimizer {
@@ -35,7 +33,7 @@ func newOptimizer() optimizer {
 		currentNoteState:    make(map[model.NoteLetter]bool),
 	}
 
-	opt.resetNoteState()
+	opt.softReset()
 	return opt
 }
 
@@ -53,24 +51,10 @@ func (opt *optimizer) resetOctave() {
 	opt.currentOctave = -1
 }
 
-func (opt *optimizer) hasDuration() bool {
-	return len(opt.currentDuration.Components) != 0
-}
-
-func (opt *optimizer) optimizeAll(
-	updates []model.ScoreUpdate,
-) []model.ScoreUpdate {
-	// Required: standardizeBarlines < removeRedundantDurations
-	// So we can remove durations for the last note in a bar that originally has
-	// the barline imported as the last duration component
-	updates = standardizeBarlines(updates)
-	updates = opt.removeRedundantAccidentals(updates)
-
-	// Required: translateMidiNotePitches < removeRedundantDurations
-	// So unpitched percussion notes can have redundant durations removed too
-	updates = opt.translateMidiNotePitches(updates)
-	updates = opt.removeRedundantDurations(updates)
-	return updates
+func (opt *optimizer) softReset() {
+	opt.resetNoteState()
+	opt.resetDuration()
+	opt.resetOctave()
 }
 
 // removeRedundantAccidentals will remove all unnecessary accidentals covered by
@@ -167,7 +151,7 @@ func (opt *optimizer) removeRedundantDurations(
 			return update
 		}
 
-		if opt.hasDuration() {
+		if len(opt.currentDuration.Components) != 0 {
 			difference := deep.Equal(opt.currentDuration, duration)
 			if len(difference) == 0 {
 				// This is a repeated duration, we set it to nil
@@ -258,5 +242,26 @@ func (opt *optimizer) translateMidiNotePitches(
 		updates = insert(octaveSet, updates, octaveSetIndices[i])
 	}
 
+	return updates
+}
+
+// optimize applies various modifications to generate more idiomatic Alda
+// optimize is called on updates without knowledge of parts or voices
+func (opt *optimizer) optimize(
+	updates []model.ScoreUpdate,
+) []model.ScoreUpdate {
+	// Required: standardizeBarlines < removeRedundantDurations
+	// So we can remove durations for the last note in a bar that originally has
+	// the barline imported as the last duration component
+	updates = standardizeBarlines(updates)
+	updates = opt.removeRedundantAccidentals(updates)
+
+	// Required: translateMidiNotePitches < removeRedundantDurations
+	// So unpitched percussion notes can have redundant durations removed too
+	updates = opt.translateMidiNotePitches(updates)
+	updates = opt.removeRedundantDurations(updates)
+
+	// Reset after single optimize calls so subsequent voices have fresh starts
+	opt.softReset()
 	return updates
 }

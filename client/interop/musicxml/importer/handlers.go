@@ -484,7 +484,7 @@ func keyHandler(element *etree.Element, importer *musicXMLImporter) {
 		keySignatureSet := model.AttributeUpdate{
 			PartUpdate: model.KeySignatureSet{KeySignature: keySignature},
 		}
-		importer.append(keySignatureSet)
+		importer.appendPartAttrs(keySignatureSet)
 	}
 	// key-octave tags are purely for appearance, and are thus category (3)
 }
@@ -517,7 +517,7 @@ func transposeHandler(element *etree.Element, importer *musicXMLImporter) {
 		PartUpdate: model.TranspositionSet{Semitones: int32(semitones)},
 	}
 
-	importer.append(transposeSet)
+	importer.appendPartAttrs(transposeSet)
 }
 
 // translateDuration translates a MusicXML element with a duration to an Alda
@@ -631,22 +631,34 @@ func translateNote(
 		// Octaves
 		octave := pitch.FindElement("octave")
 		octaveVal, _ := strconv.ParseInt(octave.Text(), 10, 8)
-		octaveDifference := octaveVal - importer.voice().octave
-
-		var octaveUpdate model.PartUpdate
-		if octaveDifference > 0 {
-			octaveUpdate = model.OctaveUp{}
-		} else if octaveDifference < 0 {
-			octaveUpdate = model.OctaveDown{}
-		}
-
 		var octaveUpdates []model.ScoreUpdate
-		for i := 0; i < int(math.Abs(float64(octaveDifference))); i++ {
-			octaveUpdates = append(
-				octaveUpdates, model.AttributeUpdate{
-					PartUpdate: octaveUpdate,
-				},
-			)
+		octaveDifference := octaveVal - importer.voice().octave
+		if octaveDifference != 0 {
+			if len(importer.voice().getScoreUpdates()) == 0 {
+				// If this is the first note, we will use an octave set
+				octaveUpdates = []model.ScoreUpdate{model.AttributeUpdate{
+					PartUpdate: model.OctaveSet{OctaveNumber: int32(octaveVal)},
+				}}
+			} else {
+				// Otherwise, we will use octave differences
+
+
+				var octaveUpdate model.PartUpdate
+				if octaveDifference > 0 {
+					octaveUpdate = model.OctaveUp{}
+				} else if octaveDifference < 0 {
+					octaveUpdate = model.OctaveDown{}
+				}
+
+
+				for i := 0; i < int(math.Abs(float64(octaveDifference))); i++ {
+					octaveUpdates = append(
+						octaveUpdates, model.AttributeUpdate{
+							PartUpdate: octaveUpdate,
+						},
+					)
+				}
+			}
 		}
 
 		note := model.Note{
