@@ -696,7 +696,7 @@ func (node ASTNode) Updates() ([]model.ScoreUpdate, error) {
 		}, nil
 
 	case PartNode:
-		if err := node.expectChildren(); err != nil {
+		if err := node.expectNChildren(2); err != nil {
 			return nil, err
 		}
 
@@ -734,23 +734,17 @@ func (node ASTNode) Updates() ([]model.ScoreUpdate, error) {
 			partDecl.Alias = partAlias.Literal.(string)
 		}
 
-		updates := []model.ScoreUpdate{partDecl}
-
-		if len(node.Children) > 1 {
-			events, err := node.Children[1].expectNodeType(EventSequenceNode)
-			if err != nil {
-				return nil, err
-			}
-
-			eventUpdates, err := concatChildUpdates(events)
-			if err != nil {
-				return nil, err
-			}
-
-			updates = append(updates, eventUpdates...)
+		events, err := node.Children[1].expectNodeType(EventSequenceNode)
+		if err != nil {
+			return nil, err
 		}
 
-		return updates, nil
+		eventUpdates, err := concatChildUpdates(events)
+		if err != nil {
+			return nil, err
+		}
+
+		return append([]model.ScoreUpdate{partDecl}, eventUpdates...), nil
 
 	case RepeatNode:
 		if err := node.expectNChildren(2); err != nil {
@@ -892,14 +886,6 @@ func (node ASTNode) Updates() ([]model.ScoreUpdate, error) {
 			},
 			voiceEventUpdates...,
 		), nil
-
-	case VoiceNumberNode:
-		return []model.ScoreUpdate{
-			model.VoiceMarker{
-				SourceContext: node.SourceContext,
-				VoiceNumber:   node.Literal.(int32),
-			},
-		}, nil
 	}
 
 	return nil, fmt.Errorf(

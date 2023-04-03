@@ -10,13 +10,12 @@ import (
 	"alda.io/client/color"
 	"alda.io/client/help"
 	log "alda.io/client/logging"
-	model "alda.io/client/model"
+	"alda.io/client/model"
 )
 
 type parser struct {
 	filename string
 	input    []Token
-	updates  []model.ScoreUpdate
 	current  int
 	// When true, source context is _not_ included in parsed tokens. This is
 	// useful for testing, e.g. for checking the equality of a list of expected
@@ -44,7 +43,6 @@ func newParser(filename string, tokens []Token, opts ...parseOption) *parser {
 	parser := &parser{
 		filename: filename,
 		input:    tokens,
-		updates:  []model.ScoreUpdate{},
 		current:  0,
 	}
 
@@ -966,7 +964,7 @@ func (p *parser) voiceGroup() (ASTNode, error) {
 
 	voiceGroupNode := ASTNode{
 		Type:          VoiceGroupNode,
-		SourceContext: firstVoiceMarkerToken.sourceContext,
+		SourceContext: p.sourceContext(firstVoiceMarkerToken),
 		Children:      []ASTNode{},
 	}
 
