@@ -807,31 +807,40 @@ func noteHandler(element *etree.Element, importer *musicXMLImporter) {
 		// A note with a tie stop tag is tied to the previous note with the
 		// same pitch. So we start by finding this previous note
 		note := noteUpdates[len(noteUpdates)-1].(model.Note)
-		notePitch := note.Pitch.(model.LetterAndAccidentals)
 
 		getOctaveChange := func(update model.ScoreUpdate) int64 {
 			if reflect.TypeOf(update) == attributeUpdateType {
-				partUpdate := update.(model.AttributeUpdate).PartUpdate
-				if reflect.TypeOf(partUpdate) == octaveUpType {
+				switch update.(model.AttributeUpdate).PartUpdate.(type) {
+				case model.OctaveUp:
+					// We need to reverse the octave change
+					// Note we ignore OctaveSet's because we should really never
+					// be searching for ties between when they are generated
 					return -1
-				} else if reflect.TypeOf(partUpdate) == octaveDownType {
+				case model.OctaveDown:
 					return 1
-				} else {
-					return 0
 				}
-			} else {
-				return 0
 			}
+			return 0
 		}
 
 		tieStart, tieStartNI, _ := importer.findLastWithState(
 			func(update model.ScoreUpdate, state interface{}) bool {
 				switch value := update.(type) {
 				case model.Note:
-					pitch := value.Pitch.(model.LetterAndAccidentals)
-					octave := state.(int64)
-					return octave == newOctave &&
-						deep.Equal(pitch, notePitch) == nil
+					switch pitch := value.Pitch.(type) {
+					case model.LetterAndAccidentals:
+						laa, ok := note.Pitch.(model.LetterAndAccidentals)
+						if !ok {
+							return false
+						}
+						octave := state.(int64)
+						return octave == newOctave &&
+							deep.Equal(pitch, laa) == nil
+					case model.MidiNoteNumber:
+						return deep.Equal(pitch, note.Pitch) == nil
+					default:
+						return false
+					}
 				default:
 					return false
 				}
