@@ -150,6 +150,24 @@ func scorePartHandler(element *etree.Element, importer *musicXMLImporter) {
 
 		part.instruments = instruments
 	}
+
+	// If there is an existing importer part with the same instruments + alias
+	// Then we must make this newer part unique by incorporating id into alias
+	for k, v := range importer.parts {
+		if k != id.Value &&
+			reflect.DeepEqual(v.instruments, part.instruments) && 
+			v.alias == part.alias {
+			addIdToAlias := func(alias string, id string) string {
+				if alias == "" {
+					return id
+				} else {
+					return alias + fmt.Sprintf("_%s", id)
+				}
+			}
+			v.alias = addIdToAlias(v.alias, k)
+			part.alias = addIdToAlias(part.alias, id.Value)
+		}
+	}
 }
 
 // addBarline adds a barline to represent a measure passing
