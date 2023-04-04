@@ -257,6 +257,19 @@ func TestRepeats(t *testing.T) {
 					]*3
 					| [g1]*2 | [a1]*2
 			`},
+		importerTestCase{
+			label: "backwards + forwards repeat - unfinished repeat",
+			file:  "../examples/repeat6.musicxml",
+			expected: `
+				midi-flute:
+					(key-signature "")
+					[g4 a b a]*2 |
+					[g1]*1
+				midi-oboe:
+					(key-signature "")
+					[r1]*2 |
+					[r1]*1
+			`},
 	)
 }
 

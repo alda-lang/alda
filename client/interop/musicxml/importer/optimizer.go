@@ -245,6 +245,37 @@ func (opt *optimizer) translateMidiNotePitches(
 	return updates
 }
 
+// handleUnfinishedRepeats deals with repeats that are not closed
+// These repeats have Times == 0 (i.e. no repeat end set the proper value)
+// Currently, we set Times to 1 to showcase that there is repeat information
+func (opt *optimizer) handleUnfinishedRepeats(
+	updates []model.ScoreUpdate,
+) []model.ScoreUpdate {
+	modify := func(update model.ScoreUpdate) model.ScoreUpdate {
+		switch r := update.(type) {
+		case model.Repeat:
+			if r.Times == 0 {
+				r.Times = 1
+				return r
+			}
+		}
+		return update
+	}
+
+	for i, update := range updates {
+		update = modify(update)
+		if _, ok := getNestedUpdates(update, false); ok {
+			modified, _ := modifyNestedUpdates(
+				update, opt.handleUnfinishedRepeats,
+			)
+			update = modified
+		}
+		updates[i] = update
+	}
+
+	return updates
+}
+
 // optimize applies various modifications to generate more idiomatic Alda
 // optimize is called on updates without knowledge of parts or voices
 func (opt *optimizer) optimize(
@@ -260,6 +291,7 @@ func (opt *optimizer) optimize(
 	// So unpitched percussion notes can have redundant durations removed too
 	updates = opt.translateMidiNotePitches(updates)
 	updates = opt.removeRedundantDurations(updates)
+	updates = opt.handleUnfinishedRepeats(updates)
 
 	// Reset after single optimize calls so subsequent voices have fresh starts
 	opt.softReset()
