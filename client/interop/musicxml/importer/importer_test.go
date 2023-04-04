@@ -314,6 +314,17 @@ func TestDurations(t *testing.T) {
 					]*2 |
 					e2 r
 			`},
+		importerTestCase{
+			label: "idiomatic durations",
+			file:  "../examples/duration2.musicxml",
+			expected: `
+				midi-flute:
+					(key-signature "")
+					r2. |
+					r2. |
+					r2~4~8 |
+					r1~1~2~4~8~16
+			`},
 	)
 }
 
