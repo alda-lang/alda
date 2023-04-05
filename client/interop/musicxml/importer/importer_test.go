@@ -371,3 +371,38 @@ func TestAttrs(t *testing.T) {
 			`},
 	)
 }
+
+//// TestExamples is a dev tool that tests all ".musicxml" files in a directory
+//// to ensure that there are at least no errors / segfaults while importing.
+//func TestExamples(t *testing.T) {
+//	path := ""
+//	filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
+//		if err != nil {
+//			t.Errorf("filepath walk error %s", err)
+//			return err
+//		}
+//
+//		if info.IsDir() {
+//			return nil
+//		}
+//
+//		if strings.HasSuffix(path, ".musicxml") {
+//			fmt.Printf("Importing %s", path)
+//
+//			contents, err := os.ReadFile(path)
+//			if err != nil {
+//				t.Error("issue reading file contents")
+//				return err
+//			}
+//
+//			_, err = ImportMusicXML(contents)
+//			if err != nil {
+//				t.Error("MusicXML import error")
+//				t.Error(err)
+//				return err
+//			}
+//		}
+//
+//		return nil
+//	})
+//}

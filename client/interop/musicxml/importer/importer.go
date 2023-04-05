@@ -3,7 +3,6 @@ package importer
 import (
 	log "alda.io/client/logging"
 	"fmt"
-	"io"
 	"sort"
 
 	"alda.io/client/color"
@@ -406,12 +405,14 @@ func findLastWithStateRecursive(
 
 // ImportMusicXML translates a MusicXML file into Alda score updates
 // ImportMusicXML requires valid MusicXML with a "score-partwise" root tag
-func ImportMusicXML(r io.Reader) ([]model.ScoreUpdate, error) {
+func ImportMusicXML(b []byte) ([]model.ScoreUpdate, error) {
 	doc := etree.NewDocument()
 
-	_, err := doc.ReadFrom(r)
+	err := doc.ReadFromBytes(b)
 	if err != nil {
-		return nil, help.UserFacingErrorf("Failed to read from input.")
+		return nil, help.UserFacingErrorf(
+			"Failed to read from input: %s.", err.Error(),
+		)
 	}
 
 	scorePartwise := doc.SelectElement("score-partwise")

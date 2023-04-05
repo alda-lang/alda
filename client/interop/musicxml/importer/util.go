@@ -1,6 +1,7 @@
 package importer
 
 import (
+	"math"
 	"reflect"
 	"strings"
 
@@ -334,4 +335,69 @@ func isOrContainsBarline(update model.ScoreUpdate) bool {
 	}
 
 	return false
+}
+
+// idiomaticDuration applies simple heuristics to make durations more idiomatic
+func idiomaticDuration(aldaDuration float64, dots int32) model.Duration {
+	// We preserve actual dotted notes to not cause any confusion
+	if dots == 0 {
+		// Otherwise, we try to decompose the duration into "normal" durations
+		normal := []float64{1, 2, 4, 8, 16}
+
+		remaining := aldaDuration
+		decomp := make(map[float64]int)
+		for i := 0; i < len(normal); {
+			if math.Abs(remaining-normal[i]) < 0.01 {
+				decomp[normal[i]] = decomp[normal[i]] + 1
+				remaining = 0
+				break
+			} else if remaining < normal[i] {
+				decomp[normal[i]] = decomp[normal[i]] + 1
+				// e.g. remaining = 1.3333
+				// 1/1.3333 = 3/4, so idiomatically this should be 2~4 or 2.
+				// 1/((1/1.3333)-(1/2)) = 1/4, we remove the half note duration
+				// We decompose into a half note, then leave a quarter remaining
+				remaining = 1 / ((1 / remaining) - (1 / normal[i]))
+			} else {
+				i++
+			}
+		}
+
+		if remaining == 0 {
+			// We try to represent a decomposition as a single dotted duration
+			if len(decomp) == 2 {
+				for i := 0; i+1 < len(normal); i++ {
+					if decomp[normal[i]] == 1 && decomp[normal[i+1]] == 1 {
+						return model.Duration{
+							Components: []model.DurationComponent{
+								model.NoteLength{
+									Denominator: normal[i],
+									Dots:        1,
+								},
+							},
+						}
+					}
+				}
+			}
+
+			// Otherwise, we just tie together each decomposed normal duration
+			components := []model.DurationComponent{}
+			for _, d := range normal {
+				for decomp[d] > 0 {
+					components = append(components, model.NoteLength{
+						Denominator: d,
+					})
+					decomp[d] = decomp[d] - 1
+				}
+			}
+			return model.Duration{Components: components}
+		}
+	}
+
+	return model.Duration{
+		Components: []model.DurationComponent{model.NoteLength{
+			Denominator: aldaDuration,
+			Dots:        dots,
+		}},
+	}
 }

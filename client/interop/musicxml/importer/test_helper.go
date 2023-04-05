@@ -43,8 +43,14 @@ func executeImporterTestCases(
 	t *testing.T, testCases ...importerTestCase,
 ) {
 	for _, testCase := range testCases {
-		file, _ := os.Open(testCase.file)
-		actual, err := ImportMusicXML(file)
+		b, err := os.ReadFile(testCase.file)
+		if err != nil {
+			t.Error(testCase.label)
+			t.Error(err)
+			return
+		}
+
+		actual, err := ImportMusicXML(b)
 		if err != nil {
 			t.Error(testCase.label)
 			t.Error(err)

@@ -276,19 +276,13 @@ func padVoiceToPresent(element *etree.Element, importer *musicXMLImporter) {
 		// If we must handle this case, importing would have to support changes
 		// by beats / duration. This would be non-trivial
 		warnWhileParsing(
-			element, `Voice is behind in beats, output will be incorrect.`,
+			element, `Voice is found to be behind in beats so output will not be entirely accurate.`,
 		)
 	} else if beatDifference > 0 {
 		// We update without using append and moving the part-level beats here
 		// This is because we pad the voice to "catch up", not move forwards
 		importer.append(model.Rest{
-			Duration: model.Duration{
-				Components: []model.DurationComponent{
-					model.NoteLength{
-						Denominator: 4 / beatDifference,
-					},
-				},
-			},
+			Duration: idiomaticDuration(4 / beatDifference, 0),
 		})
 		importer.voice().beats += beatDifference
 	}
@@ -559,69 +553,7 @@ func translateDuration(
 	}
 
 	aldaDuration := 4 * float64(importer.currentPart.divisions) / duration
-
-	// We apply some simple heuristics to make imported durations more idiomatic
-	if dots == 0 {
-		// We preserve actual dotted notes to not cause any confusion
-		// Otherwise, we try to decompose the duration into "normal" durations
-		normal := []float64{1, 2, 4, 8, 16}
-
-		remaining := aldaDuration
-		decomp := make(map[float64]int)
-		for i := 0; i < len(normal); {
-			if math.Abs(remaining-normal[i]) < 0.01 {
-				decomp[normal[i]] = decomp[normal[i]] + 1
-				remaining = 0
-				break
-			} else if remaining < normal[i] {
-				decomp[normal[i]] = decomp[normal[i]] + 1
-				// e.g. remaining = 1.3333
-				// 1/1.3333 = 3/4, so idiomatically this should be 2~4 or 2.
-				// 1/((1/1.3333)-(1/2)) = 1/4, we remove the half note duration
-				// We decompose into a half note, then leave a quarter remaining
-				remaining = 1 / ((1 / remaining) - (1 / normal[i]))
-			} else {
-				i++
-			}
-		}
-
-		if remaining == 0 {
-			// We try to represent a decomposition as a single dotted duration
-			if len(decomp) == 2 {
-				for i := 0; i+1 < len(normal); i++ {
-					if decomp[normal[i]] == 1 && decomp[normal[i+1]] == 1 {
-						return model.Duration{
-							Components: []model.DurationComponent{
-								model.NoteLength{
-									Denominator: normal[i],
-									Dots:        1,
-								},
-							},
-						}, aldaDuration
-					}
-				}
-			}
-
-			// Otherwise, we just tie together each decomposed normal duration
-			components := []model.DurationComponent{}
-			for _, d := range normal {
-				for decomp[d] > 0 {
-					components = append(components, model.NoteLength{
-						Denominator: d,
-					})
-					decomp[d] = decomp[d] - 1
-				}
-			}
-			return model.Duration{Components: components}, aldaDuration
-		}
-	}
-
-	return model.Duration{
-		Components: []model.DurationComponent{model.NoteLength{
-			Denominator: aldaDuration,
-			Dots:        dots,
-		}},
-	}, aldaDuration
+	return idiomaticDuration(aldaDuration, dots), aldaDuration
 }
 
 // translateNote translates a MusicXML note into Alda represented by:

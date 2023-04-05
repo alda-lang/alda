@@ -1,17 +1,15 @@
 package cmd
 
 import (
-	"alda.io/client/parser"
-	"fmt"
-	"os"
-	"strings"
-
 	"alda.io/client/color"
 	"alda.io/client/help"
 	"alda.io/client/interop/musicxml/importer"
 	"alda.io/client/model"
+	"alda.io/client/parser"
 	"alda.io/client/system"
+	"fmt"
 	"github.com/spf13/cobra"
+	"os"
 )
 
 var outputAldaFilename string
@@ -42,7 +40,7 @@ var importCmd = &cobra.Command{
 
 ---
 
-Currently, the only supported import format is MusicXML. Most popular software applications support exporting scores to MusicXML.
+Currently, the only supported import format is MusicXML (.musicxml). Most popular software applications support exporting scores to MusicXML.
 
 ---
 
@@ -86,7 +84,7 @@ Currently, the only supported input format is %s.`,
 
 		switch {
 		case file != "":
-			inputFile, err := os.Open(file)
+			b, err := os.ReadFile(file)
 			if err != nil {
 				return help.UserFacingErrorf(
 					`Failed to open file %s: %s.`,
@@ -95,19 +93,18 @@ Currently, the only supported input format is %s.`,
 				)
 			}
 
-			scoreUpdates, err = importer.ImportMusicXML(inputFile)
+			scoreUpdates, err = importer.ImportMusicXML(b)
 			if err != nil {
 				return err
 			}
 		case code != "":
-			reader := strings.NewReader(code)
-			scoreUpdates, err = importer.ImportMusicXML(reader)
+			scoreUpdates, err = importer.ImportMusicXML([]byte(code))
 			if err != nil {
 				return err
 			}
 
 		default:
-			bytes, err := system.ReadStdin()
+			b, err := system.ReadStdin()
 			if err != nil {
 				return help.UserFacingErrorf(
 					`Failed to read from stdin: %s.`,
@@ -115,8 +112,7 @@ Currently, the only supported input format is %s.`,
 				)
 			}
 
-			reader := strings.NewReader(string(bytes))
-			scoreUpdates, err = importer.ImportMusicXML(reader)
+			scoreUpdates, err = importer.ImportMusicXML(b)
 			if err != nil {
 				return err
 			}
