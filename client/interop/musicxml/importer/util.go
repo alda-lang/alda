@@ -100,6 +100,7 @@ func setNestedUpdates(
 }
 
 // getBeats counts beats for a slice of model.ScoreUpdate
+// Updates must be un-optimized so redundant durations are not yet removed
 func getBeats(updates ...model.ScoreUpdate) float64 {
 	beats := 0.0
 	for _, update := range updates {
@@ -109,14 +110,18 @@ func getBeats(updates ...model.ScoreUpdate) float64 {
 		case model.Rest:
 			beats += value.Duration.Beats()
 		case model.Chord:
-			min := 0.0
+			min := math.MaxFloat64
 			for _, event := range value.Events {
 				eventBeats := getBeats(event)
-				if eventBeats < min {
+				if eventBeats > 0 && eventBeats < min {
+					// We take the minimum non-zero duration
+					// i.e. a real note/rest, not an attribute update
 					min = eventBeats
 				}
 			}
-			beats += min
+			if min < math.MaxFloat64 {
+				beats += min
+			}
 		case model.Repeat:
 			beats += getBeats(value.Event)
 		case model.OnRepetitions:
