@@ -7,20 +7,20 @@
   </a>
 
   <p align="center">
-  <b><a href="#installation">Installation</a></b>
-  |
-  <b><a href="doc/index.md">Docs</a></b>
-  |
-  <b><a href="CHANGELOG.md">Changelog</a></b>
-  |
-  <b><a href="#contributing">Contributing</a></b>
+    <b><a href="#installation">Installation</a></b>
+    |
+    <b><a href="doc/index.md">Docs</a></b>
+    |
+    <b><a href="CHANGELOG.md">Changelog</a></b>
+    |
+    <b><a href="#contributing">Contributing</a></b>
 
-  <br>
-  <br>
+    <br>
+    <br>
 
-  <a href="https://join.slack.com/t/alda-lang/shared_invite/zt-1rq24yd5v-~gjDFzo~zuw5sei9Qj88nw">
-    Join us on Slack!
-  </a>
+    <a href="https://join.slack.com/t/alda-lang/shared_invite/zt-1rq24yd5v-~gjDFzo~zuw5sei9Qj88nw">
+      Join us on Slack!
+    </a>
   </p>
 </p>
 
