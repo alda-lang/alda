@@ -18,10 +18,9 @@
   <br>
   <br>
 
-  <a href="http://slack.alda.io">
-  <img src="http://slack.alda.io/badge.svg" alt="Join us on Slack!">
+  <a href="https://join.slack.com/t/alda-lang/shared_invite/zt-1rq24yd5v-~gjDFzo~zuw5sei9Qj88nw">
+    Join us on Slack!
   </a>
-  <i>composers chatting</i>
   </p>
 </p>
 
