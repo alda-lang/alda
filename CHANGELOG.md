@@ -5,6 +5,13 @@
 * Corrected the casing of the word "MIDI" (it was "Midi" before) in the error
   message when a MIDI Note is outside of the 0-127 range.
 
+* New `alda import` feature! This is so cool, it deserves its own blog post, and
+  I plan to write one soon. I'll also add more information here in the changelog
+  soon when I have time.
+
+  Big thanks to [Scowluga] and [alan-ma] for their hard work on this exciting
+  new feature!
+
 ## 2.2.4 (2022-11-24)
 
 * Added validation for when a MIDI note is outside of the 0-127 range.
@@ -293,3 +300,5 @@ the [Alda 2 migration guide][migration-guide]!
 [ksiyuan]: https://github.com/ksiyuan
 [n-makim]: https://github.com/n-makim
 [kylewilk567]: https://github.com/kylewilk567
+[Scowluga]: https://github.com/Scowluga
+[alan-ma]: https://github.com/alan-ma
