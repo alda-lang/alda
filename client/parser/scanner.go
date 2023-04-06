@@ -77,6 +77,7 @@ const (
 	Natural
 	NoteLength
 	NoteLengthMs
+	NoteLengthSeconds
 	NoteLetter
 	Number
 	OctaveDown
@@ -141,6 +142,8 @@ func (tt TokenType) String() string {
 		return "note length"
 	case NoteLengthMs:
 		return "note length (ms)"
+	case NoteLengthSeconds:
+		return "note length (s)"
 	case NoteLetter:
 		return "note letter"
 	case Number:
@@ -377,7 +380,7 @@ func (s *scanner) parseNoteLength() {
 	if c == 's' && (terminatesNoteLength(n) || s.eofIsNext()) {
 		// consume 's'
 		s.advance()
-		s.addToken(NoteLengthMs, number*1000)
+		s.addToken(NoteLengthSeconds, number)
 		return
 	}
 

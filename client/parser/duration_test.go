@@ -56,7 +56,7 @@ func TestDurations(t *testing.T) {
 			label: "Note with duration in seconds",
 			given: "c2s",
 			expectUpdates: []model.ScoreUpdate{
-				cNoteWithDuration(model.NoteLengthMs{Quantity: 2000}),
+				cNoteWithDuration(model.NoteLengthSeconds{Quantity: 2}),
 			},
 		},
 		parseTestCase{
@@ -96,7 +96,7 @@ func TestDurations(t *testing.T) {
 			given: "c5s~4~350ms~0.5",
 			expectUpdates: []model.ScoreUpdate{
 				cNoteWithDuration(
-					model.NoteLengthMs{Quantity: 5000},
+					model.NoteLengthSeconds{Quantity: 5},
 					model.NoteLength{Denominator: 4},
 					model.NoteLengthMs{Quantity: 350},
 					model.NoteLength{Denominator: 0.5},
