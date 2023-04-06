@@ -150,6 +150,24 @@ func scorePartHandler(element *etree.Element, importer *musicXMLImporter) {
 
 		part.instruments = instruments
 	}
+
+	// If there is an existing importer part with the same instruments + alias
+	// Then we must make this newer part unique by incorporating id into alias
+	for k, v := range importer.parts {
+		if k != id.Value &&
+			reflect.DeepEqual(v.instruments, part.instruments) && 
+			v.alias == part.alias {
+			addIdToAlias := func(alias string, id string) string {
+				if alias == "" {
+					return id
+				} else {
+					return alias + fmt.Sprintf("_%s", id)
+				}
+			}
+			v.alias = addIdToAlias(v.alias, k)
+			part.alias = addIdToAlias(part.alias, id.Value)
+		}
+	}
 }
 
 // addBarline adds a barline to represent a measure passing
@@ -258,19 +276,13 @@ func padVoiceToPresent(element *etree.Element, importer *musicXMLImporter) {
 		// If we must handle this case, importing would have to support changes
 		// by beats / duration. This would be non-trivial
 		warnWhileParsing(
-			element, `Voice is behind in beats, output will be incorrect.`,
+			element, `Voice is found to be behind in beats so output will not be entirely accurate.`,
 		)
 	} else if beatDifference > 0 {
 		// We update without using append and moving the part-level beats here
 		// This is because we pad the voice to "catch up", not move forwards
 		importer.append(model.Rest{
-			Duration: model.Duration{
-				Components: []model.DurationComponent{
-					model.NoteLength{
-						Denominator: 4 / beatDifference,
-					},
-				},
-			},
+			Duration: idiomaticDuration(4 / beatDifference, 0),
 		})
 		importer.voice().beats += beatDifference
 	}
@@ -484,7 +496,7 @@ func keyHandler(element *etree.Element, importer *musicXMLImporter) {
 		keySignatureSet := model.AttributeUpdate{
 			PartUpdate: model.KeySignatureSet{KeySignature: keySignature},
 		}
-		importer.append(keySignatureSet)
+		importer.appendPartAttrs(keySignatureSet)
 	}
 	// key-octave tags are purely for appearance, and are thus category (3)
 }
@@ -517,7 +529,7 @@ func transposeHandler(element *etree.Element, importer *musicXMLImporter) {
 		PartUpdate: model.TranspositionSet{Semitones: int32(semitones)},
 	}
 
-	importer.append(transposeSet)
+	importer.appendPartAttrs(transposeSet)
 }
 
 // translateDuration translates a MusicXML element with a duration to an Alda
@@ -541,13 +553,7 @@ func translateDuration(
 	}
 
 	aldaDuration := 4 * float64(importer.currentPart.divisions) / duration
-
-	return model.Duration{
-		Components: []model.DurationComponent{model.NoteLength{
-			Denominator: aldaDuration,
-			Dots:        dots,
-		}},
-	}, aldaDuration
+	return idiomaticDuration(aldaDuration, dots), aldaDuration
 }
 
 // translateNote translates a MusicXML note into Alda represented by:
@@ -631,22 +637,34 @@ func translateNote(
 		// Octaves
 		octave := pitch.FindElement("octave")
 		octaveVal, _ := strconv.ParseInt(octave.Text(), 10, 8)
-		octaveDifference := octaveVal - importer.voice().octave
-
-		var octaveUpdate model.PartUpdate
-		if octaveDifference > 0 {
-			octaveUpdate = model.OctaveUp{}
-		} else if octaveDifference < 0 {
-			octaveUpdate = model.OctaveDown{}
-		}
-
 		var octaveUpdates []model.ScoreUpdate
-		for i := 0; i < int(math.Abs(float64(octaveDifference))); i++ {
-			octaveUpdates = append(
-				octaveUpdates, model.AttributeUpdate{
-					PartUpdate: octaveUpdate,
-				},
-			)
+		octaveDifference := octaveVal - importer.voice().octave
+		if octaveDifference != 0 {
+			if len(importer.voice().getScoreUpdates()) == 0 {
+				// If this is the first note, we will use an octave set
+				octaveUpdates = []model.ScoreUpdate{model.AttributeUpdate{
+					PartUpdate: model.OctaveSet{OctaveNumber: int32(octaveVal)},
+				}}
+			} else {
+				// Otherwise, we will use octave differences
+
+
+				var octaveUpdate model.PartUpdate
+				if octaveDifference > 0 {
+					octaveUpdate = model.OctaveUp{}
+				} else if octaveDifference < 0 {
+					octaveUpdate = model.OctaveDown{}
+				}
+
+
+				for i := 0; i < int(math.Abs(float64(octaveDifference))); i++ {
+					octaveUpdates = append(
+						octaveUpdates, model.AttributeUpdate{
+							PartUpdate: octaveUpdate,
+						},
+					)
+				}
+			}
 		}
 
 		note := model.Note{
@@ -739,31 +757,40 @@ func noteHandler(element *etree.Element, importer *musicXMLImporter) {
 		// A note with a tie stop tag is tied to the previous note with the
 		// same pitch. So we start by finding this previous note
 		note := noteUpdates[len(noteUpdates)-1].(model.Note)
-		notePitch := note.Pitch.(model.LetterAndAccidentals)
 
 		getOctaveChange := func(update model.ScoreUpdate) int64 {
 			if reflect.TypeOf(update) == attributeUpdateType {
-				partUpdate := update.(model.AttributeUpdate).PartUpdate
-				if reflect.TypeOf(partUpdate) == octaveUpType {
+				switch update.(model.AttributeUpdate).PartUpdate.(type) {
+				case model.OctaveUp:
+					// We need to reverse the octave change
+					// Note we ignore OctaveSet's because we should really never
+					// be searching for ties between when they are generated
 					return -1
-				} else if reflect.TypeOf(partUpdate) == octaveDownType {
+				case model.OctaveDown:
 					return 1
-				} else {
-					return 0
 				}
-			} else {
-				return 0
 			}
+			return 0
 		}
 
 		tieStart, tieStartNI, _ := importer.findLastWithState(
 			func(update model.ScoreUpdate, state interface{}) bool {
 				switch value := update.(type) {
 				case model.Note:
-					pitch := value.Pitch.(model.LetterAndAccidentals)
-					octave := state.(int64)
-					return octave == newOctave &&
-						deep.Equal(pitch, notePitch) == nil
+					switch pitch := value.Pitch.(type) {
+					case model.LetterAndAccidentals:
+						laa, ok := note.Pitch.(model.LetterAndAccidentals)
+						if !ok {
+							return false
+						}
+						octave := state.(int64)
+						return octave == newOctave &&
+							deep.Equal(pitch, laa) == nil
+					case model.MidiNoteNumber:
+						return deep.Equal(pitch, note.Pitch) == nil
+					default:
+						return false
+					}
 				default:
 					return false
 				}
