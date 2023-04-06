@@ -256,6 +256,8 @@ func (importer *musicXMLImporter) setAll(newUpdates []model.ScoreUpdate) {
 
 func (importer *musicXMLImporter) recountBeats() {
 	beats := getBeats(importer.voice().updates...)
+	beats = roundIfCloseEnough(beats)
+
 	importer.part().beats = beats
 	importer.voice().beats = beats
 }

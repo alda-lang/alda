@@ -339,6 +339,8 @@ func isOrContainsBarline(update model.ScoreUpdate) bool {
 
 // idiomaticDuration applies simple heuristics to make durations more idiomatic
 func idiomaticDuration(aldaDuration float64, dots int32) model.Duration {
+	aldaDuration = roundIfCloseEnough(aldaDuration)
+
 	// We preserve actual dotted notes to not cause any confusion
 	if dots == 0 {
 		// Otherwise, we try to decompose the duration into "normal" durations
@@ -399,5 +401,15 @@ func idiomaticDuration(aldaDuration float64, dots int32) model.Duration {
 			Denominator: aldaDuration,
 			Dots:        dots,
 		}},
+	}
+}
+
+// roundIfCloseEnough rounds to deal with floating point arithmetic issues
+// For long scores, arithmetic can otherwise lead to values like r1407374883...
+func roundIfCloseEnough(val float64) float64 {
+	if math.Abs(val - math.Round(val)) < 0.0001 {
+		return math.Round(val)
+	} else {
+		return val
 	}
 }
