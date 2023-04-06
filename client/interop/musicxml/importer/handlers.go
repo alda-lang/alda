@@ -785,7 +785,7 @@ func noteHandler(element *etree.Element, importer *musicXMLImporter) {
 						}
 						octave := state.(int64)
 						return octave == newOctave &&
-							deep.Equal(pitch, laa) == nil
+							pitch.NoteLetter == laa.NoteLetter
 					case model.MidiNoteNumber:
 						return deep.Equal(pitch, note.Pitch) == nil
 					default:
