@@ -1,5 +1,53 @@
 # CHANGELOG
 
+## 2.2.5 (2023-05-07)
+
+* Corrected the casing of the word "MIDI" (it was "Midi" before) in the error
+  message when a MIDI Note is outside of the 0-127 range.
+
+* New `alda import` feature! This is so cool, it deserves its own blog post, and
+  I plan to write one soon. I'll also add more information here in the changelog
+  soon when I have time.
+
+  Big thanks to [Scowluga] and [alan-ma] for their hard work on this exciting
+  new feature!
+
+## 2.2.4 (2022-11-24)
+
+* Added validation for when a MIDI note is outside of the 0-127 range.
+
+  Thanks to [kylewilk567] for the contribution!
+
+## 2.2.3 (2022-04-24)
+
+* Added a new `:parts` command that can be used during an Alda REPL session. It
+  prints information about the parts in the current score.
+
+  (To display more information about the current score, you can also use the
+  existing `:score info` command.)
+
+  Thanks, [n-makim], for the contribution!
+
+## 2.2.2 (2022-04-17)
+
+This patch release is all about improvements to the way that player processes
+are managed in an Alda REPL session.
+
+Thanks to [elyisgreat] for [reporting the issue][issue-404] and to [ksiyuan] for
+investigating and [contributing a fix][pr-418]!
+
+* Fixed a bug causing `:stop` to sometimes not work in an Alda REPL session.
+
+* Fixed spurious "Failed to read player state" warnings that were often
+  happening briefly while a player process is starting.
+
+* Fixed a potential edge case where, when using the Alda REPL, if a player
+  process unexpectedly shuts down (not common), the Alda REPL session might
+  continue to try to use the same player process.
+
+[issue-404]: https://github.com/alda-lang/alda/issues/404
+[pr-418]: https://github.com/alda-lang/alda/pull/418
+
 ## 2.2.1 (2022-04-10)
 
 * Re-added the `pause` (i.e. rest) Lisp function that was available prior to
@@ -248,3 +296,9 @@ the [Alda 2 migration guide][migration-guide]!
 
 [JustinLocke]: https://github.com/JustinLocke
 [UlyssesZh]: https://github.com/UlyssesZh
+[elyisgreat]: https://github.com/elyisgreat
+[ksiyuan]: https://github.com/ksiyuan
+[n-makim]: https://github.com/n-makim
+[kylewilk567]: https://github.com/kylewilk567
+[Scowluga]: https://github.com/Scowluga
+[alan-ma]: https://github.com/alan-ma

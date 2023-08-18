@@ -13,14 +13,14 @@ func TestNotes(t *testing.T) {
 		parseTestCase{
 			label: "note with implicit duration",
 			given: "c",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
 			},
 		},
 		parseTestCase{
 			label: "note with explicit duration",
 			given: "c4",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				model.Note{
 					Pitch: model.LetterAndAccidentals{NoteLetter: model.C},
 					Duration: model.Duration{
@@ -34,7 +34,7 @@ func TestNotes(t *testing.T) {
 		parseTestCase{
 			label: "sharp note",
 			given: "c+",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				model.Note{
 					Pitch: model.LetterAndAccidentals{
 						NoteLetter:  model.C,
@@ -46,7 +46,7 @@ func TestNotes(t *testing.T) {
 		parseTestCase{
 			label: "flat note",
 			given: "b-",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				model.Note{
 					Pitch: model.LetterAndAccidentals{
 						NoteLetter:  model.B,
@@ -58,7 +58,7 @@ func TestNotes(t *testing.T) {
 		parseTestCase{
 			label: "double sharp note",
 			given: "c++",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				model.Note{
 					Pitch: model.LetterAndAccidentals{
 						NoteLetter:  model.C,
@@ -70,7 +70,7 @@ func TestNotes(t *testing.T) {
 		parseTestCase{
 			label: "double flat note",
 			given: "b--",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				model.Note{
 					Pitch: model.LetterAndAccidentals{
 						NoteLetter:  model.B,
@@ -82,14 +82,14 @@ func TestNotes(t *testing.T) {
 		parseTestCase{
 			label: "rest with implicit duration",
 			given: "r",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				model.Rest{},
 			},
 		},
 		parseTestCase{
 			label: "rest with explicit duration",
 			given: "r1",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				model.Rest{
 					Duration: model.Duration{
 						Components: []model.DurationComponent{

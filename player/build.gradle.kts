@@ -1,8 +1,16 @@
 import java.nio.file.Paths
 
 plugins {
+  // TODO: See if there is a more recent version of Kotlin multiplatform?
+  //
+  // On the master branch, we're doing this:
+  // id("org.jetbrains.kotlin.jvm") version("1.7.21")
   kotlin("multiplatform") version "1.6.10"
   application
+}
+
+java {
+  targetCompatibility = JavaVersion.VERSION_1_8
 }
 
 repositories {

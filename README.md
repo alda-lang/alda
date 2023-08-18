@@ -18,10 +18,9 @@
   <br>
   <br>
 
-  <a href="http://slack.alda.io">
-  <img src="http://slack.alda.io/badge.svg" alt="Join us on Slack!">
+  <a href="https://slack.alda.io">
+    Join us on Slack!
   </a>
-  <i>composers chatting</i>
   </p>
 </p>
 
@@ -126,6 +125,6 @@ subreddit, where you can discuss all things Alda and share your Alda scores!
 
 ## License
 
-Copyright © 2012-2022 Dave Yarwood et al
+Copyright © 2012-2023 Dave Yarwood et al
 
 Distributed under the Eclipse Public License version 2.0.

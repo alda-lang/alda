@@ -15,7 +15,7 @@ func TestComments(t *testing.T) {
 			given: `piano: c
 			# d
 			e`,
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				model.PartDeclaration{Names: []string{"piano"}},
 				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
 				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.E}},
@@ -25,7 +25,7 @@ func TestComments(t *testing.T) {
 			label: "comment at the end of a line",
 			given: `piano: c # d
 			e`,
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				model.PartDeclaration{Names: []string{"piano"}},
 				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
 				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.E}},
@@ -35,7 +35,7 @@ func TestComments(t *testing.T) {
 			label: "comment without a leading space",
 			given: `piano: c #d
 			e`,
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				model.PartDeclaration{Names: []string{"piano"}},
 				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
 				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.E}},

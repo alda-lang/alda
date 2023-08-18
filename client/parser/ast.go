@@ -36,6 +36,7 @@ const (
 	NoteAccidentalsNode
 	NoteLengthMsNode
 	NoteLengthNode
+	NoteLengthSecondsNode
 	NoteLetterAndAccidentalsNode
 	NoteLetterNode
 	NoteNode
@@ -118,6 +119,8 @@ func (nt ASTNodeType) String() string {
 		return "NoteLengthMsNode"
 	case NoteLengthNode:
 		return "NoteLengthNode"
+	case NoteLengthSecondsNode:
+		return "NoteLengthSecondsNode"
 	case NoteLetterAndAccidentalsNode:
 		return "NoteLetterAndAccidentalsNode"
 	case NoteLetterNode:
@@ -278,19 +281,21 @@ func (node ASTNode) expectChildren() error {
 	return nil
 }
 
-func (node ASTNode) expectNChildren(expectedChildren int) error {
+func (node ASTNode) expectNChildren(expectedChildren ...int) error {
 	actualChildren := len(node.Children)
 
-	if actualChildren != expectedChildren {
-		return fmt.Errorf(
-			"expected %s to have %d children, but it has %d",
-			node.Type.String(),
-			expectedChildren,
-			actualChildren,
-		)
+	for _, expected := range expectedChildren {
+		if actualChildren == expected {
+			return nil
+		}
 	}
 
-	return nil
+	return fmt.Errorf(
+		"expected %s to have %v children, but it has %d",
+		node.Type.String(),
+		expectedChildren,
+		actualChildren,
+	)
 }
 
 func (node ASTNode) expectNodeType(expectedType ASTNodeType) (ASTNode, error) {
@@ -352,6 +357,10 @@ func duration(node ASTNode) (model.Duration, error) {
 			literal := componentNode.Literal.(float64)
 			noteLengthMs := model.NoteLengthMs{Quantity: literal}
 			duration.Components = append(duration.Components, noteLengthMs)
+		case NoteLengthSecondsNode:
+			literal := componentNode.Literal.(float64)
+			noteLengthSeconds := model.NoteLengthSeconds{Quantity: literal}
+			duration.Components = append(duration.Components, noteLengthSeconds)
 		}
 	}
 
@@ -407,7 +416,7 @@ func (node ASTNode) Updates() ([]model.ScoreUpdate, error) {
 		}, nil
 
 	case CramNode:
-		if err := node.expectChildren(); err != nil {
+		if err := node.expectNChildren(1, 2); err != nil {
 			return nil, err
 		}
 
@@ -696,7 +705,7 @@ func (node ASTNode) Updates() ([]model.ScoreUpdate, error) {
 		}, nil
 
 	case PartNode:
-		if err := node.expectChildren(); err != nil {
+		if err := node.expectNChildren(2); err != nil {
 			return nil, err
 		}
 
@@ -734,23 +743,17 @@ func (node ASTNode) Updates() ([]model.ScoreUpdate, error) {
 			partDecl.Alias = partAlias.Literal.(string)
 		}
 
-		updates := []model.ScoreUpdate{partDecl}
-
-		if len(node.Children) > 1 {
-			events, err := node.Children[1].expectNodeType(EventSequenceNode)
-			if err != nil {
-				return nil, err
-			}
-
-			eventUpdates, err := concatChildUpdates(events)
-			if err != nil {
-				return nil, err
-			}
-
-			updates = append(updates, eventUpdates...)
+		events, err := node.Children[1].expectNodeType(EventSequenceNode)
+		if err != nil {
+			return nil, err
 		}
 
-		return updates, nil
+		eventUpdates, err := concatChildUpdates(events)
+		if err != nil {
+			return nil, err
+		}
+
+		return append([]model.ScoreUpdate{partDecl}, eventUpdates...), nil
 
 	case RepeatNode:
 		if err := node.expectNChildren(2); err != nil {
@@ -892,14 +895,6 @@ func (node ASTNode) Updates() ([]model.ScoreUpdate, error) {
 			},
 			voiceEventUpdates...,
 		), nil
-
-	case VoiceNumberNode:
-		return []model.ScoreUpdate{
-			model.VoiceMarker{
-				SourceContext: node.SourceContext,
-				VoiceNumber:   node.Literal.(int32),
-			},
-		}, nil
 	}
 
 	return nil, fmt.Errorf(

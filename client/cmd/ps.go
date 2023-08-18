@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	log "alda.io/client/logging"
 	"alda.io/client/system"
 	"github.com/dustin/go-humanize"
 	"github.com/spf13/cobra"
@@ -27,11 +26,6 @@ var psCmd = &cobra.Command{
 		fmt.Println("id\tport\tstate\texpiry\ttype")
 
 		for _, state := range playerStates {
-			if state.ReadError != nil {
-				log.Warn().Err(state.ReadError).Msg("Failed to read player state")
-				continue
-			}
-
 			expiry := humanize.Time(time.Unix(state.Expiry/1000, 0))
 
 			fmt.Printf(
@@ -41,11 +35,6 @@ var psCmd = &cobra.Command{
 		}
 
 		for _, state := range replServerStates {
-			if state.ReadError != nil {
-				log.Warn().Err(state.ReadError).Msg("Failed to read REPL server state")
-				continue
-			}
-
 			fmt.Printf(
 				"%s\t%d\t%s\t%s\t%s\n",
 				state.ID, state.Port, "-", "-", "repl-server",

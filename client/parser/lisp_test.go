@@ -37,35 +37,35 @@ func TestLisp(t *testing.T) {
 		parseTestCase{
 			label: "attribute change with no value",
 			given: "(fff)",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				lispList(lispSymbol("fff")),
 			},
 		},
 		parseTestCase{
 			label: "attribute change with number value",
 			given: "(volume 50)",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				lispList(lispSymbol("volume"), lispNumber(50)),
 			},
 		},
 		parseTestCase{
 			label: "attribute change with string value",
 			given: `(key-signature "f+ c+ g+")`,
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				lispList(lispSymbol("key-signature"), lispString("f+ c+ g+")),
 			},
 		},
 		parseTestCase{
 			label: "global attribute change",
 			given: "(tempo! 200)",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				lispList(lispSymbol("tempo!"), lispNumber(200)),
 			},
 		},
 		parseTestCase{
 			label: "attribute change with quoted list argument",
 			given: "(key-sig '(a major))",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				lispList(
 					lispSymbol("key-sig"),
 					lispQuotedList(lispSymbol("a"), lispSymbol("major")),
@@ -75,7 +75,7 @@ func TestLisp(t *testing.T) {
 		parseTestCase{
 			label: "attribute change with quoted nested list argument",
 			given: "(key-signature '(e (flat) b (flat)))",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				lispList(
 					lispSymbol("key-signature"),
 					lispQuotedList(

@@ -240,6 +240,7 @@ Use "{{.CommandPath}} [command] --help" for more information about a command.{{e
 	for _, cmd := range []*cobra.Command{
 		doctorCmd,
 		exportCmd,
+		formatCmd,
 		importCmd,
 		instrumentsCmd,
 		parseCmd,

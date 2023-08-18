@@ -257,6 +257,26 @@ file into the REPL server.`,
 			},
 		},
 
+		"parts": {
+			helpSummary: "Displays information about the parts in the current score.",
+			run: func(client *Client, argsString string) error {
+				scoreData, err := client.scoreData()
+				if err != nil {
+					return err
+				}
+
+				parts := scoreData.Search("parts")
+				if parts.Data() == nil {
+					return fmt.Errorf("server response missing information about parts")
+				}
+
+				printPartsInfo(parts)
+				fmt.Println()
+
+				return nil
+			},
+		},
+
 		"play": {
 			helpSummary: "Plays the current score.",
 			helpDetails: `Can take optional ` + "`from`" + `and ` + "`to`" +
@@ -851,12 +871,7 @@ func (client *Client) scoreAST() (*json.Container, error) {
 	return json.ParseJSON([]byte(res["ast"].(string)))
 }
 
-func printScoreInfo(scoreData *json.Container) error {
-	parts := scoreData.Search("parts")
-	if parts.Data() == nil {
-		return fmt.Errorf("server response missing information about parts")
-	}
-
+func printPartsInfo(parts *json.Container) {
 	fmt.Println("Parts:")
 
 	if len(parts.ChildrenMap()) == 0 {
@@ -870,8 +885,13 @@ func printScoreInfo(scoreData *json.Container) error {
 			)
 		}
 	}
+}
 
-	fmt.Println()
+func printScoreInfo(scoreData *json.Container) error {
+	parts := scoreData.Search("parts")
+	if parts.Data() == nil {
+		return fmt.Errorf("server response missing information about parts")
+	}
 
 	currentParts := scoreData.Search("current-parts")
 	if currentParts.Data() == nil {
@@ -879,6 +899,10 @@ func printScoreInfo(scoreData *json.Container) error {
 			"server response missing information about current parts",
 		)
 	}
+
+	printPartsInfo(parts)
+
+	fmt.Println()
 
 	fmt.Println("Current parts:")
 

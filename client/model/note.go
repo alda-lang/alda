@@ -1,6 +1,7 @@
 package model
 
 import (
+	"alda.io/client/help"
 	"alda.io/client/json"
 	log "alda.io/client/logging"
 )
@@ -122,6 +123,10 @@ func addNoteOrRest(score *Score, noteOrRest ScoreUpdate) error {
 				midiNote := noteOrRest.Pitch.CalculateMidiNote(
 					part.Octave, part.KeySignature, part.Transposition,
 				)
+
+				if midiNote < 0 || midiNote > 127 {
+					return help.UserFacingErrorf("MIDI note out of the 0-127 range. Input note: %d", midiNote)
+				}
 
 				noteEvent := NoteEvent{
 					Part:            part.origin,

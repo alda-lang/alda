@@ -12,9 +12,9 @@ func TestParts(t *testing.T) {
 		t,
 		parseTestCase{
 			label: "part with single name",
-			given: "theremin: c d e",
-			expect: []model.ScoreUpdate{
-				model.PartDeclaration{Names: []string{"theremin"}},
+			given: "piano: c d e",
+			expectUpdates: []model.ScoreUpdate{
+				model.PartDeclaration{Names: []string{"piano"}},
 				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
 				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.D}},
 				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.E}},
@@ -23,7 +23,7 @@ func TestParts(t *testing.T) {
 		parseTestCase{
 			label: "part with single name and an alias",
 			given: `harmonica "bob": c d e`,
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				model.PartDeclaration{Names: []string{"harmonica"}, Alias: "bob"},
 				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
 				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.D}},
@@ -33,7 +33,7 @@ func TestParts(t *testing.T) {
 		parseTestCase{
 			label: "part with multiple names",
 			given: "violin/viola: c d e",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				model.PartDeclaration{Names: []string{"violin", "viola"}},
 				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
 				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.D}},
@@ -43,7 +43,7 @@ func TestParts(t *testing.T) {
 		parseTestCase{
 			label: "part with multiple names and an alias",
 			given: `trumpet/trombone/tuba "brass": c d e`,
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				model.PartDeclaration{
 					Names: []string{"trumpet", "trombone", "tuba"},
 					Alias: "brass",
@@ -56,11 +56,11 @@ func TestParts(t *testing.T) {
 		parseTestCase{
 			label: "multiple parts",
 			given: `guitar: e
-			bass: e`,
-			expect: []model.ScoreUpdate{
+			electric-bass: e`,
+			expectUpdates: []model.ScoreUpdate{
 				model.PartDeclaration{Names: []string{"guitar"}},
 				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.E}},
-				model.PartDeclaration{Names: []string{"bass"}},
+				model.PartDeclaration{Names: []string{"electric-bass"}},
 				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.E}},
 			},
 		},

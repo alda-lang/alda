@@ -66,7 +66,7 @@ class Track(val trackNumber : Int) {
   // multiple threads, so incrementing `era` is a way to signal to the various
   // threads that the track has been cleared, i.e. don't proceed to schedule
   // events.
-  var era = 0
+  val era = AtomicInteger(0)
 
   // The base offset that is added to upcoming notes to be scheduled. As notes
   // are scheduled, this base offset is updated to reflect the offset at which
@@ -76,7 +76,7 @@ class Track(val trackNumber : Int) {
 
   fun clear() {
     synchronized(era) {
-      era++
+      era.updateAndGet { n -> n + 1 }
       startOffset = 0
       eventBufferQueue.clear()
       activeTasks.set(0)
