@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Unreleased
+
+Upgraded Go library dependencies to patch security vulnerabilities.
+
 ## 2.2.5 (2023-05-07)
 
 * Corrected the casing of the word "MIDI" (it was "Midi" before) in the error
