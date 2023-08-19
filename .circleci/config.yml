@@ -203,7 +203,7 @@ jobs:
           working_directory: /tmp/workspace/build
           command: |
             mkdir -p /usr/local/bin
-            cp client/darwin-amd64/alda /usr/local/bin/
+            cp client/darwin-arm64/alda /usr/local/bin/
             cp player/non-windows/alda-player /usr/local/bin/
             chmod +x /usr/local/bin/alda
             chmod +x /usr/local/bin/alda-player
