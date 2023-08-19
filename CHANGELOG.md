@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## 2.2.6 (2023-08-18)
 
 Upgraded Go library dependencies to patch security vulnerabilities.
 
