@@ -9,12 +9,12 @@ Upgraded Go library dependencies to patch security vulnerabilities.
 * Corrected the casing of the word "MIDI" (it was "Midi" before) in the error
   message when a MIDI Note is outside of the 0-127 range.
 
-* New `alda import` feature! This is so cool, it deserves its own blog post, and
-  I plan to write one soon. I'll also add more information here in the changelog
-  soon when I have time.
+* The new `alda import` command can import a MusicXML file and produce a working
+  Alda score. I'm excited about this - big thanks to [Scowluga] and [alan-ma]
+  for their hard work on this exciting new feature!
 
-  Big thanks to [Scowluga] and [alan-ma] for their hard work on this exciting
-  new feature!
+  See [this blog post][alda-import-blog-post] for an overview of what `alda
+  import` can do and how to use it.
 
 ## 2.2.4 (2022-11-24)
 
@@ -306,3 +306,5 @@ the [Alda 2 migration guide][migration-guide]!
 [kylewilk567]: https://github.com/kylewilk567
 [Scowluga]: https://github.com/Scowluga
 [alan-ma]: https://github.com/alan-ma
+
+[alda-import-blog-post]: https://blog.djy.io/musicxml-import-and-another-new-alda-features/
