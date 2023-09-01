@@ -98,9 +98,17 @@ function build() {
 }
 
 for os in windows darwin linux js; do
-  for arch in 386 amd64 wasm; do
+  for arch in 386 amd64 arm64 wasm; do
     # Support for darwin/386 was removed in Go 1.15.
     if [[ "$os" == darwin ]] && [[ "$arch" == 386 ]]; then
+      continue
+    fi
+
+    # darwin/arm64 is the only arm64 we're building for now.
+    #
+    # TODO: Expand this to include Linux ARM 6-8 (see arm-build branch)
+    # Ref: https://github.com/alda-lang/alda/discussions/456
+    if [[ "$arch" == arm64 ]] && [[ "$os" != darwin ]]; then
       continue
     fi
 

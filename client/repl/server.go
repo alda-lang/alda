@@ -157,7 +157,11 @@ func (server *Server) writePortFile() {
 }
 
 func (server *Server) writeStateFile() {
-	state := system.REPLServerState{ID: server.id, Port: server.Port}
+	state := system.REPLServerState{
+		ID:   server.id,
+		Port: server.Port,
+		PID:  os.Getpid(),
+	}
 
 	stateJSON, err := encjson.Marshal(state)
 	if err != nil {

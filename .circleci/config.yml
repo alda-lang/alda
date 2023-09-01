@@ -2,7 +2,6 @@ version: 2.1
 
 orbs:
   win: circleci/windows@2.2.0
-  macos: circleci/macos@2.0.1
 
 # All of the jobs below have filters that appear superfluous, but the filters
 # are actually required because if one job has tag filters, then every job
@@ -185,13 +184,15 @@ jobs:
           command: |
             export ALDA_DISABLE_SPAWNING=yes
             export ALDA_DISABLE_TELEMETRY=yes
-            alda -v3 update --yes --version 2.0.0
-            alda version | grep 2.0.0
-            alda-player info | grep 2.0.0
+            alda -v3 update --yes --version 2.2.6
+            alda version | grep 2.2.6
+            alda-player info | grep 2.2.6
 
   test_macos:
     macos:
-      xcode: 13.2.1
+      xcode: 15.0.0
+
+    resource_class: macos.m1.medium.gen1
 
     steps:
       - attach_workspace:
@@ -202,7 +203,7 @@ jobs:
           working_directory: /tmp/workspace/build
           command: |
             mkdir -p /usr/local/bin
-            cp client/darwin-amd64/alda /usr/local/bin/
+            cp client/darwin-arm64/alda /usr/local/bin/
             cp player/non-windows/alda-player /usr/local/bin/
             chmod +x /usr/local/bin/alda
             chmod +x /usr/local/bin/alda-player
@@ -228,9 +229,9 @@ jobs:
           command: |
             export ALDA_DISABLE_SPAWNING=yes
             export ALDA_DISABLE_TELEMETRY=yes
-            alda -v3 update --yes --version 2.0.0
-            alda version | grep 2.0.0
-            alda-player info | grep 2.0.0
+            alda -v3 update --yes --version 2.2.6
+            alda version | grep 2.2.6
+            alda-player info | grep 2.2.6
 
   test_windows:
     executor: win/default
@@ -266,9 +267,9 @@ jobs:
             $env:PATH = "$env:PATH;C:\Program Files\Alda\bin"
             $env:ALDA_DISABLE_SPAWNING = "yes"
             $env:ALDA_DISABLE_TELEMETRY = "yes"
-            alda -v3 update --yes --version 2.0.0
-            if (alda version | Select-String -Pattern 2.0.0 -quiet) { true } else { false }
-            if (alda-player info | Select-String -Pattern 2.0.0 -quiet) { true } else { false }
+            alda -v3 update --yes --version 2.2.6
+            if (alda version | Select-String -Pattern 2.2.6 -quiet) { true } else { false }
+            if (alda-player info | Select-String -Pattern 2.2.6 -quiet) { true } else { false }
 
       - run:
           name: "Troubleshooting: player logs"
