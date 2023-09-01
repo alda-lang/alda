@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 2.2.7 (2023-09-01)
+
+Added a `pid` column to the output of `alda ps`, the value of which is the
+process ID of each player and REPL server process in the list.
+
 ## 2.2.6 (2023-08-18)
 
 Upgraded Go library dependencies to patch security vulnerabilities.
