@@ -13,7 +13,9 @@ import mu.KotlinLogging
 private val json = Klaxon()
 private val log = KotlinLogging.logger {}
 
-class PlayerState(val port : Int, var expiry : Long, var state : String)
+class PlayerState(
+  val port : Int, var expiry : Long, var state : String, val pid: Long
+)
 
 class StateManager(val port : Int) {
   val thread = thread(start = false) {
@@ -48,7 +50,9 @@ class StateManager(val port : Int) {
   val state = PlayerState(
     port,
     System.currentTimeMillis() + inactivityTimeoutMs,
-    "starting")
+    "starting",
+    ProcessHandle.current().pid()
+  )
 
   val stateFilesDir =
     Paths.get(projDirs.cacheDir, "state", "players").toString()

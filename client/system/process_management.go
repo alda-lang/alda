@@ -123,9 +123,10 @@ func CleanUpStaleStateFiles() error {
 // PlayerState describes the current state of a player process. These states are
 // continously written to files by each player process. (See: StateManager.kt.)
 type PlayerState struct {
-	State  string
-	Port   int
-	Expiry int64
+	State  string `json:"state"`
+	Port   int    `json:"port"`
+	Expiry int64  `json:"expiry"`
+	PID    int    `json:"pid"`
 	ID     string
 }
 
@@ -135,6 +136,7 @@ type PlayerState struct {
 type REPLServerState struct {
 	Port int    `json:"port"`
 	ID   string `json:"id"`
+	PID  int    `json:"pid"`
 }
 
 func processFiles(
