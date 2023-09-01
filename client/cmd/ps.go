@@ -12,7 +12,7 @@ import (
 var psCmd = &cobra.Command{
 	Use:   "ps",
 	Short: "List background processes",
-	RunE: func(_ *cobra.Command, args []string) error {
+	RunE: func(_ *cobra.Command, _ []string) error {
 		playerStates, err := system.ReadPlayerStates()
 		if err != nil {
 			return err
