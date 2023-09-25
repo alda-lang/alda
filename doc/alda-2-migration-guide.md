@@ -288,4 +288,4 @@ We'll be happy to help you get it sorted out!
 [entropy]: https://github.com/daveyarwood/alda-clj/blob/master/examples/entropy
 [alda-nrepl]: https://blog.djy.io/alda-and-the-nrepl-protocol/
 [open-an-issue]: https://github.com/alda-lang/alda/issues/new/choose
-[alda-slack]: https://slack.alda.io
+[alda-slack]: http://slack.alda.io

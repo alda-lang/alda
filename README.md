@@ -18,7 +18,7 @@
   <br>
   <br>
 
-  <a href="https://slack.alda.io">
+  <a href="http://slack.alda.io">
     Join us on Slack!
   </a>
   </p>
@@ -117,7 +117,7 @@ For more details on how you can contribute to Alda, see [CONTRIBUTING.md](CONTRI
 
 ## Support, Discussion, Camaraderie
 
-**Slack**: Joining the [Alda Slack group](https://slack.alda.io) is quick and
+**Slack**: Joining the [Alda Slack group](http://slack.alda.io) is quick and
 painless. Come say hi!
 
 **Reddit**: Subscribe to the [/r/alda](https://www.reddit.com/r/alda/)
