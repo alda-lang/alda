@@ -4,7 +4,6 @@ import (
 	encjson "encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math"
 	"math/rand"
 	"net"
@@ -732,7 +731,7 @@ func (server *Server) export() ([]byte, error) {
 		return nil, err
 	}
 
-	tmpdir, err := ioutil.TempDir("", "alda-repl-server")
+	tmpdir, err := os.MkdirTemp("", "alda-repl-server")
 	if err != nil {
 		return nil, err
 	}
@@ -770,5 +769,5 @@ func (server *Server) export() ([]byte, error) {
 		return nil, err
 	}
 
-	return ioutil.ReadAll(midiFile)
+	return io.ReadAll(midiFile)
 }

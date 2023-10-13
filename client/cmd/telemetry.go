@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -78,7 +78,7 @@ func readTelemetryStatus() (TelemetryStatus, error) {
 		return TelemetryNotInformed, nil
 	}
 
-	content, err := ioutil.ReadFile(telemetryStatusFile)
+	content, err := os.ReadFile(telemetryStatusFile)
 	if err != nil {
 		return -1, err
 	}
@@ -106,7 +106,7 @@ func writeTelemetryStatus(status string) error {
 		Str("filepath", telemetryStatusFilepath).
 		Msg("Writing telemetry status file.")
 
-	return ioutil.WriteFile(telemetryStatusFilepath, []byte(status), 0644)
+	return os.WriteFile(telemetryStatusFilepath, []byte(status), 0644)
 }
 
 func informUserOfTelemetry() {
@@ -258,7 +258,7 @@ func sendTelemetryRequest(command string) error {
 	}
 	defer response.Body.Close()
 
-	responseBody, err := ioutil.ReadAll(response.Body)
+	responseBody, err := io.ReadAll(response.Body)
 	if err != nil {
 		return err
 	}

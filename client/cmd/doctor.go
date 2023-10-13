@@ -3,7 +3,6 @@ package cmd
 import (
 	"bufio"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -372,7 +371,7 @@ version of %s.`,
 			if err := step(
 				"Export score as MIDI",
 				func() error {
-					tmpdir, err := ioutil.TempDir("", "alda-doctor")
+					tmpdir, err := os.MkdirTemp("", "alda-doctor")
 					if err != nil {
 						return err
 					}
@@ -496,7 +495,7 @@ version of %s.`,
 				indication := "received ping"
 				return util.Await(
 					func() error {
-						contents, err := ioutil.ReadFile(logFile)
+						contents, err := os.ReadFile(logFile)
 						if err != nil {
 							return err
 						}
