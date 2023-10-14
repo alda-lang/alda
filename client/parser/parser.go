@@ -3,7 +3,6 @@ package parser
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"time"
 
@@ -321,10 +320,10 @@ func (p *parser) part() (ASTNode, error) {
 
 // An "implicit part" is an AST node that can contain:
 //
-// * Initial variable definitions at the top of the file
-// * Initial S-expressions at the top of the file, like global attributes
-// * Events (see `innerEvent`) without a part definition, in the context of
-//   continuing a previous score, e.g. in REPL input.
+//   - Initial variable definitions at the top of the file
+//   - Initial S-expressions at the top of the file, like global attributes
+//   - Events (see `innerEvent`) without a part definition, in the context of
+//     continuing a previous score, e.g. in REPL input.
 func (p *parser) implicitPart() (ASTNode, error) {
 	partEvents, err := p.partEvents()
 	if err != nil {
@@ -1126,7 +1125,7 @@ func ParseString(input string) (ASTNode, error) {
 
 // ParseFile reads a file and parses the input.
 func ParseFile(filepath string) (ASTNode, error) {
-	contents, err := ioutil.ReadFile(filepath)
+	contents, err := os.ReadFile(filepath)
 
 	if errors.Is(err, os.ErrNotExist) {
 		return ASTNode{}, help.UserFacingErrorf(

@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -22,7 +21,7 @@ func main() {
 
 	// Read the current version from the top-level VERSION file in the Alda repo.
 	versionFile := filepath.Join(filepath.Dir(dir), "VERSION")
-	contents, err := ioutil.ReadFile(versionFile)
+	contents, err := os.ReadFile(versionFile)
 	check(err)
 	version := strings.TrimSpace(string(contents))
 

@@ -2,7 +2,7 @@ package parser
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strconv"
 	"unicode"
 
@@ -806,7 +806,7 @@ func Scan(filename string, input string) ([]Token, error) {
 
 // ScanFile reads a file, scans it, and returns a list of tokens.
 func ScanFile(filepath string) ([]Token, error) {
-	contents, err := ioutil.ReadFile(filepath)
+	contents, err := os.ReadFile(filepath)
 	if err != nil {
 		return nil, err
 	}

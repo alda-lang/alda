@@ -2,7 +2,7 @@ package system
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 )
 
@@ -34,7 +34,7 @@ func ReadStdin() ([]byte, error) {
 		return nil, ErrNoInputSupplied
 	}
 
-	bytes, err := ioutil.ReadAll(os.Stdin)
+	bytes, err := io.ReadAll(os.Stdin)
 	if err != nil {
 		return nil, err
 	}
