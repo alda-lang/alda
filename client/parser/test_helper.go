@@ -81,9 +81,16 @@ func executeParseTestCases(t *testing.T, testCases ...parseTestCase) {
 			t.Errorf("%v\n", err)
 			return
 		}
+
 		formattedAST, err := Parse(
-			// The newly formatted file will have different source context's
-			testCase.label, buffer.String(), SuppressSourceContext)
+			// The newly formatted file will have different source contexts
+			testCase.label, buffer.String(), SuppressSourceContext,
+		)
+		if err != nil {
+			t.Errorf("%v\n", err)
+			return
+		}
+
 		if diff := deep.Equal(actualAST, formattedAST); diff != nil {
 			t.Error(testCase.label)
 			for _, diffItem := range diff {
