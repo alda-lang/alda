@@ -5,7 +5,7 @@ example has a short identifier so that you can select it from the command-line.
 
 ## Setup
 
-* Go 1.17 or higher is needed in order to run the demo.
+* Go 1.19 or higher is needed in order to run the demo.
 
 * Start the [player](../../player) on port 27278 (or another port of your
   choosing) and leave it running.

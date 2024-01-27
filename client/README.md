@@ -14,7 +14,7 @@ process to perform the score.
 
 You'll need to have Go installed in order to build and run the client locally.
 
-Go 1.17 or newer is required.
+Go 1.19 or newer is required.
 
 ### tl;dr
 
