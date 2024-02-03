@@ -6,3 +6,6 @@
 
 # bin/build output directory
 /target/
+
+# Created by Kotlin language server
+kls_database.db
