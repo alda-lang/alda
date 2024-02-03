@@ -47,9 +47,6 @@ type ScoreEvent interface {
 //
 // Scores are built up via events (structs which implement ScoreUpdate) that
 // update aspects of the score data.
-//
-// chordMode: When true, notes/rests added to the score are placed at the same
-// offset. Otherwise, they are appended sequentially.
 type Score struct {
 	Parts            []*Part
 	CurrentParts     []*Part
@@ -58,7 +55,9 @@ type Score struct {
 	GlobalAttributes *GlobalAttributes
 	Markers          map[string]float64
 	Variables        map[string][]ScoreUpdate
-	chordMode        bool
+	// When true, notes/rests added to the score are placed at the same offset.
+	// Otherwise, they are appended sequentially.
+	chordMode bool
 }
 
 // JSON implements RepresentableAsJSON.JSON.
