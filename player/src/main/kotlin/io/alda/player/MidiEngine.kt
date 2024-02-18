@@ -498,14 +498,6 @@ class MidiEngine {
     }
   }
 
-  fun muteChannel(channelNumber : Int) {
-    withChannel(channelNumber) { it.setMute(true) }
-  }
-
-  fun unmuteChannel(channelNumber : Int) {
-    withChannel(channelNumber) { it.setMute(false) }
-  }
-
   fun export(filepath : String) {
     // We make a copy of the sequence so that we can shift the tick position of
     // each event in the sequence back such that the first event starts at tick

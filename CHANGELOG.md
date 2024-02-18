@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Unreleased
+
+* Removed unused mute/unmute functionality from the Alda player process.
+
 ## 2.2.7 (2023-09-01)
 
 Added a `pid` column to the output of `alda ps`, the value of which is the

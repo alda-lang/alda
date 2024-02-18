@@ -217,16 +217,6 @@ with other music software (e.g. sheet music notation programs).
       <td>Writes the current state of the sequence to a MIDI file.</td>
     </tr>
     <tr>
-      <td><code>/track/{number}/mute</code></td>
-      <td></td>
-      <td>Mute this track.</td>
-    </tr>
-    <tr>
-      <td><code>/track/{number}/unmute</code></td>
-      <td></td>
-      <td>Unmute this track.</td>
-    </tr>
-    <tr>
       <td><code>/track/{number}/clear</code></td>
       <td></td>
       <td>Clear this track of upcoming events.</td>
@@ -577,16 +567,4 @@ with other music software (e.g. sheet music notation programs).
   ```
   /track/1/finish-loop 0
   /track/1/pattern     0 foo 4
-  ```
-
-* Mute track 1 immediately:
-
-  ```
-  /track/1/mute
-  ```
-
-* Unmute track 1 immediately:
-
-  ```
-  /track/1/unmute
   ```

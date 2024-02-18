@@ -38,14 +38,6 @@ func clearMsg(track int) *osc.Message {
 	return osc.NewMessage(fmt.Sprintf("/track/%d/clear", track))
 }
 
-func muteMsg(track int) *osc.Message {
-	return osc.NewMessage(fmt.Sprintf("/track/%d/mute", track))
-}
-
-func unmuteMsg(track int) *osc.Message {
-	return osc.NewMessage(fmt.Sprintf("/track/%d/unmute", track))
-}
-
 func exportMsg(filepath string) *osc.Message {
 	msg := osc.NewMessage("/system/midi/export")
 	msg.Append(filepath)
@@ -311,10 +303,6 @@ func main() {
 		client.Send(systemClearMsg())
 	case "clear1":
 		client.Send(clearMsg(1))
-	case "mute":
-		client.Send(muteMsg(1))
-	case "unmute":
-		client.Send(unmuteMsg(1))
 	case "export":
 		client.Send(exportMsg("/tmp/alda-test.mid"))
 	case "perc":

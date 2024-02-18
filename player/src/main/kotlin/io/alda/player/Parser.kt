@@ -10,7 +10,7 @@ enum class SystemAction {
 }
 
 enum class TrackAction {
-  MUTE, UNMUTE, CLEAR
+  CLEAR
 }
 
 enum class PatternAction {
@@ -284,14 +284,6 @@ class Updates() {
         Regex("/system/midi/export").matches(address) -> {
           val filepath = args.get(0) as String
           systemEvents.add(MidiExportEvent(filepath))
-        }
-
-        Regex("/track/\\d+/unmute").matches(address) -> {
-          addTrackAction(trackNumber(address), TrackAction.UNMUTE)
-        }
-
-        Regex("/track/\\d+/mute").matches(address) -> {
-          addTrackAction(trackNumber(address), TrackAction.MUTE)
         }
 
         Regex("/track/\\d+/clear").matches(address) -> {

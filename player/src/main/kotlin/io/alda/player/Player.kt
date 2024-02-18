@@ -85,14 +85,6 @@ class Track(val trackNumber : Int) {
     }
   }
 
-  fun mute() {
-    withMidiChannel { midi().muteChannel(it) }
-  }
-
-  fun unmute() {
-    withMidiChannel { midi().unmuteChannel(it) }
-  }
-
   fun schedule(event : Schedulable) {
     withMidiChannel { channel -> event.schedule(channel) }
   }
@@ -404,7 +396,7 @@ private fun applyUpdates(updates : Updates) {
   log.trace { updates.patternEvents }
   log.trace { "----" }
 
-  // PHASE 1: shutdown/stop/offset/mute/clear
+  // PHASE 1: shutdown/stop/offset/clear
 
   if (updates.systemActions.contains(SystemAction.SHUTDOWN))
     isRunning = false
@@ -423,10 +415,6 @@ private fun applyUpdates(updates : Updates) {
   }
 
   updates.trackActions.forEach { (trackNumber, actions) ->
-    if (actions.contains(TrackAction.MUTE)) {
-      track(trackNumber).mute()
-    }
-
     if (actions.contains(TrackAction.CLEAR)) {
       track(trackNumber).clear()
     }
@@ -464,15 +452,7 @@ private fun applyUpdates(updates : Updates) {
     midi().export((it as MidiExportEvent).filepath)
   }
 
-  // PHASE 5: unmute/play
-
-  updates.trackActions.forEach { (trackNumber, actions) ->
-    if (actions.contains(TrackAction.UNMUTE)) {
-      track(trackNumber).unmute()
-    }
-  }
-
-  // PHASE 6: Scheduled shutdown
+  // PHASE 5: Scheduled shutdown
   // (It's important that we do this sometime _after_ handling tempo events.
   // Otherwise, the timing of the shutdown can be off. The scheduling of the
   // shutdown needs to be done with an awareness of all of the tempo changes

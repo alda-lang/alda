@@ -34,7 +34,6 @@ If the example name is omitted, example `1` is used.
 | clear | Sends the system "clear" message |
 | clear1 | Sends the track "clear" message |
 | export | Sends the system "export" message to export the contents of the player's MIDI sequencer to `/tmp/alda-test.mid` |
-| mute | Sends the track "mute" message |
 | pat1 | A five-note pattern called `simple` is defined and played once |
 | pat2 | A five-note pattern called `simple` is defined and played twice |
 | pat3 | A five-note pattern called `simple` is defined and played thrice |
@@ -47,7 +46,6 @@ If the example name is omitted, example `1` is used.
 | shutdown | Sends the system "shutdown" message |
 | stop | Sends the system "stop" message |
 | tempos | Sends a bunch of arbitrary tempo change messages |
-| unmute | Sends the track "unmute" message |
 
 ---
 
