@@ -2,7 +2,18 @@
 
 ## Unreleased
 
-* Removed unused mute/unmute functionality from the Alda player process.
+This release includes some breaking changes to the Alda OSC API, which is the
+communication layer between the Alda client and player processes:
+
+* Added a required channel number argument to a handful of endpoints.
+
+* Removed `/track/{number}/midi/percussion` endpoint, which is no longer needed.
+
+* Removed unused mute/unmute functionality.
+
+These changes will not affect the vast majority of Alda users. The only way that
+you might run into issues is if you have written software that interfaces with
+the Alda player process directly, instead of using the Alda client.
 
 ## 2.2.7 (2023-09-01)
 

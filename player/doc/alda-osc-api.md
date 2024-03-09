@@ -195,7 +195,7 @@ with other music software (e.g. sheet music notation programs).
     <tr>
       <td><code>/system/clear</code></td>
       <td></td>
-      <td>Clear all tracks of upcoming events.</td>
+      <td>Clear all tracks of upcoming events from looping patterns. All notes already scheduled will proceed to play.</td>
     </tr>
     <tr>
       <td><code>/system/tempo</code></td>
@@ -219,38 +219,24 @@ with other music software (e.g. sheet music notation programs).
     <tr>
       <td><code>/track/{number}/clear</code></td>
       <td></td>
-      <td>Clear this track of upcoming events.</td>
+      <td>Clear this track of upcoming events from looping patterns. All notes already scheduled will proceed to play.</td>
     </tr>
     <tr>
       <td><code>/track/{number}/midi/patch</code></td>
       <td>
         <ul>
+          <li>Channel number (integer)</li>
           <li>Offset (integer)</li>
           <li>Patch number (integer)</li>
         </ul>
       </td>
-      <td>Set the MIDI patch number for this track.</td>
-    </tr>
-    <tr>
-      <td><code>/track/{number}/midi/percussion</code></td>
-      <td>
-        <ul>
-          <li>Offset (integer)</li>
-        </ul>
-      </td>
-      <td>
-        <p>Designate this track to use the MIDI percussion channel.</p>
-        <p>If you want this to happen immediately, provide an offset of 0.</p>
-        <p>
-          If you want all notes at a particular offset and beyond to be played
-          on the percussion channel, provide that offset.
-        </p>
-      </td>
+      <td>Set the MIDI patch number on the specified channel.</td>
     </tr>
     <tr>
       <td><code>/track/{number}/midi/note</code></td>
       <td>
         <ul>
+          <li>Channel number (integer)</li>
           <li>Offset (integer)</li>
           <li>MIDI note number (integer)</li>
           <li>Duration (integer)</li>
@@ -259,7 +245,7 @@ with other music software (e.g. sheet music notation programs).
         </ul>
       </td>
       <td>
-        <p>Schedule a MIDI note on ... note off on this track.</p>
+        <p>Schedule a MIDI note on ... note off on the specified channel.</p>
         <p>Velocity is expected to be an integer in the range 0-127.</p>
       </td>
     </tr>
@@ -267,6 +253,7 @@ with other music software (e.g. sheet music notation programs).
       <td><code>/track/{number}/midi/volume</code></td>
       <td>
         <ul>
+          <li>Channel number (integer)</li>
           <li>Offset (integer)</li>
           <li>Volume (integer)</li>
         </ul>
@@ -291,6 +278,7 @@ with other music software (e.g. sheet music notation programs).
       <td><code>/track/{number}/midi/panning</code></td>
       <td>
         <ul>
+          <li>Channel number (integer)</li>
           <li>Offset (integer)</li>
           <li>Panning (integer)</li>
         </ul>
@@ -304,16 +292,17 @@ with other music software (e.g. sheet music notation programs).
       <td><code>/track/{number}/pattern</code></td>
       <td>
         <ul>
+          <li>Channel number (integer)</li>
           <li>Offset (integer)</li>
           <li>Pattern name (string)</li>
           <li>Times (integer)</li>
         </ul>
       </td>
       <td>
-        <p>Schedule an instance of a pattern on this track.</p>
+        <p>Schedule an instance of a pattern on the specified channel.</p>
         <p>
           The "times" argument allows for convenient finite loops without having
-          to send numerous <code>/track/{number}/pattern</code> messages.  You
+          to send numerous <code>/track/{number}/pattern</code> messages. You
           can, for example, send a single message that says to play a pattern 16
           times.
         </p>
@@ -327,14 +316,15 @@ with other music software (e.g. sheet music notation programs).
       <td><code>/track/{number}/pattern-loop</code></td>
       <td>
         <ul>
+          <li>Channel number (integer)</li>
           <li>Offset (integer)</li>
           <li>Pattern name (string)</li>
         </ul>
       </td>
       <td>
         <p>
-          Loop a pattern indefinitely until <code>stop</code> or
-          <code>clear</code> occurs.
+          Loop a pattern indefinitely on the specified channel until
+          <code>stop</code> or <code>clear</code> occurs.
         </p>
         <p>
           This is scheduled with an offset, exactly like
@@ -457,19 +447,19 @@ with other music software (e.g. sheet music notation programs).
 
 ## Examples
 
-* Make track 1 a MIDI channel with instrument 37 (Slap Bass 1) loaded:
+* Load instrument 37 (Slap Bass 1) on MIDI channel 0:
 
   ```
-  /track/1/midi/patch 0 37
+  /track/1/midi/patch 0 0 37
   ```
 
-  The 0 parameter is offset, just like for note messages. This allows one to
-  schedule patch changes in relation to notes.
+  The second 0 parameter is the offset, just like for note messages. This allows
+  one to schedule patch changes in relation to notes.
 
-* On track 1, play MIDI note 64 for 5000 ms at velocity 127:
+* Play MIDI note 64 for 5000 ms at velocity 127:
 
   ```
-  /track/1/midi/note 0 64 5000 5000 127
+  /track/1/midi/note 0 0 64 5000 5000 127
   ```
 
 * Start playback (all tracks):
@@ -482,10 +472,10 @@ with other music software (e.g. sheet music notation programs).
   almost that long (450 ms) for a little bit of space between notes:
 
   ```
-  /track/1/midi/patch   0    37
-  /track/1/midi/note    0    64 500 450 127
-  /track/1/midi/note    500  64 500 450 127
-  /track/1/midi/note    1000 64 500 450 127
+  /track/1/midi/patch   0 0    37
+  /track/1/midi/note    0 0    64 500 450 127
+  /track/1/midi/note    0 500  64 500 450 127
+  /track/1/midi/note    0 1000 64 500 450 127
   ```
 
 * Define a pattern `foo`:
@@ -499,6 +489,13 @@ with other music software (e.g. sheet music notation programs).
   Additional notes can be appended to the pattern by sending subsequent messages
   to that same address. If this is done in a separate bundle, the offset starts
   over at 0, i.e. the next note's offset would be 0, not 1500.
+
+  Note that the `/pattern/*` endpoints do NOT have an initial channel number
+  parameter. This is because patterns can be shared between tracks, and thus,
+  the notes and other events (e.g. volume and panning changes) in a pattern, do
+  not have a channel number. Instead, a channel number is provided when a
+  pattern is invoked, and that channel is used for all of the events in the
+  pattern.
 
 * Redefine `foo`, changing the notes:
 
@@ -532,28 +529,28 @@ with other music software (e.g. sheet music notation programs).
 
   (...but replace `=` mentally with a theoretical `+=` operator)
 
-* Fetch the value of `foo` and play it (one time) on track 1:
+* Fetch the value of `foo` and play it (one time) on channel 0:
 
   ```
-  /track/1/pattern 0 foo 1
+  /track/1/pattern 0 0 foo 1
   ```
 
-* Play `foo` on track 1 twice:
+* Play `foo` twice:
 
   ```
-  /track/1/pattern 0 foo 2
+  /track/1/pattern 0 0 foo 2
   ```
 
-* Play `foo` on track 1 32 times:
+* Play `foo` 32 times:
 
   ```
-  /track/1/pattern 0 foo 32
+  /track/1/pattern 0 0 foo 32
   ```
 
 * Loop `foo` indefinitely:
 
   ```
-  /track/1/pattern-loop 0 foo
+  /track/1/pattern-loop 0 0 foo
   ```
 
 * Stop looping `foo` after the current iteration:
@@ -566,5 +563,5 @@ with other music software (e.g. sheet music notation programs).
 
   ```
   /track/1/finish-loop 0
-  /track/1/pattern     0 foo 4
+  /track/1/pattern     0 0 foo 4
   ```

@@ -74,7 +74,12 @@ const val CONTINUATION_INTERVAL_MS = 1000
 
 enum class CustomMetaMessage(val type : Int) {
   CONTINUE(0x30),
-  PERCUSSION(0x31),
+  // Removed 2024-03-09, as it was no longer needed. We used to use this as a
+  // signal that the current track should use the percussion channel. Now,
+  // instead, each note event includes a channel, so if it's percussion, then it
+  // the channel number will be 9.
+  //
+  // PERCUSSION(0x31),
   EVENT(0x32),
   SHUTDOWN(0x33)
 }
@@ -292,14 +297,6 @@ class MidiEngine {
           if (isPlaying) sequencer.start()
         }
 
-        CustomMetaMessage.PERCUSSION.type -> {
-          val trackNumber = msg.getData().first().toInt()
-          log.debug {
-            "Received PERCUSSION meta event for track ${trackNumber}"
-          }
-          track(trackNumber).useMidiPercussionChannel()
-        }
-
         CustomMetaMessage.EVENT.type -> {
           val pendingEvent = String(msg.getData())
 
@@ -308,7 +305,7 @@ class MidiEngine {
           }
 
           synchronized(pendingEvents) {
-            pendingEvents.get(pendingEvent)?.also { latch ->
+            pendingEvents[pendingEvent]?.also { latch ->
               latch.countDown()
               pendingEvents.remove(pendingEvent)
             } ?: run {
@@ -400,23 +397,6 @@ class MidiEngine {
     scheduleShortMsg(offset, ShortMessage.PROGRAM_CHANGE, channel, patch, 0)
   }
 
-  // Immediately configure the track to use a percussion channel. That way, any
-  // note messages in the same bundle will be scheduled on a percussion channel.
-  fun percussionImmediate(trackNumber : Int) {
-    track(trackNumber).useMidiPercussionChannel()
-  }
-
-  // Configure a track to be a percussion track in the future by scheduling a
-  // metamessage that will do the above once the offset is reached.
-  fun percussionScheduled(trackNumber : Int, offset : Int) {
-    scheduleMetaMsg(
-      offset,
-      CustomMetaMessage.PERCUSSION,
-      listOf(trackNumber.toByte()).toByteArray(),
-      1
-    )
-  }
-
   fun note(
     startOffset : Int, endOffset : Int, channel : Int, noteNumber : Int,
     velocity : Int
@@ -463,39 +443,6 @@ class MidiEngine {
     val msgData = pendingEvent.toByteArray()
     scheduleMetaMsg(offset, CustomMetaMessage.EVENT, msgData, msgData.size)
     return latch
-  }
-
-  private fun withChannel(channelNumber : Int, f : (MidiChannel) -> Unit) {
-    synthesizer.getChannels()[channelNumber]?.also { channel ->
-      f(channel)
-    } ?: run {
-      log.warn { "MIDI channel $channelNumber is null." }
-    }
-  }
-
-  fun clearChannel(channelNumber : Int) {
-    withChannel(channelNumber) { channel ->
-      channel.allNotesOff()
-      channel.allSoundOff()
-    }
-
-    val channelEvents = mutableListOf<MidiEvent>()
-    for (i in 0..(track.size() - 1)) {
-      val event = track.get(i)
-      if (eventChannel(event) == channelNumber) {
-        channelEvents.add(event)
-      }
-    }
-
-    // To preserve the current tick position, we replace each message with a
-    // no-op CONTINUE message instead of simply removing it.
-    channelEvents.forEach {
-      track.add(MidiEvent(
-        MetaMessage(CustomMetaMessage.CONTINUE.type, null, 0),
-        it.getTick())
-      )
-      track.remove(it)
-    }
   }
 
   fun export(filepath : String) {
