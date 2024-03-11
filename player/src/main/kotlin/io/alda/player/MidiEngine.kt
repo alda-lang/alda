@@ -57,7 +57,7 @@ const val RESOLUTION = 128
 // allow the scheduler time to schedule the note.
 //
 // TODO: make this configurable?
-const val SCHEDULE_BUFFER_TIME_MS = 400
+const val SCHEDULE_BUFFER_TIME_MS = 500
 
 // The sequencer's clock will stop as soon as it reaches the end of the
 // sequence, however this is not the behavior we want.
