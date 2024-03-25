@@ -79,7 +79,7 @@ workflows:
 jobs:
   build_client:
     docker:
-      - image: cimg/go:1.17.6
+      - image: cimg/go:1.19.13
 
     resource_class: xlarge
 
@@ -87,14 +87,14 @@ jobs:
       - checkout
 
       - restore_cache:
-          key: go-mod-v1.17.6-{{ checksum "client/go.sum" }}
+          key: go-mod-v1.19.13-{{ checksum "client/go.sum" }}
 
       - run:
           name: Build Alda client executable
           command: client/bin/build
 
       - save_cache:
-          key: go-mod-v1.17.6-{{ checksum "client/go.sum" }}
+          key: go-mod-v1.19.13-{{ checksum "client/go.sum" }}
           paths:
             - "/go/pkg/mod"
 
