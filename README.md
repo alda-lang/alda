@@ -77,6 +77,8 @@ release of Alda.
 
 [alda-install]: https://alda.io/install
 
+MacOS (UnIdentified Developer): Settings -> Privacy & Security -> 'Open Anyway'
+
 ## Demo
 
 For an overview of available commands and options:
