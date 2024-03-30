@@ -197,10 +197,6 @@ class Track(val trackNumber : Int) {
   fun scheduleEvents(events : List<Event>, _startOffset : Int) : Int {
     val startOffset = adjustStartOffset(_startOffset)
 
-    events.filter { it["type"] == "midi-patch" }.forEach {
-      schedule(addOffset(it, startOffset))
-    }
-
     val scheduledEvents = mutableListOf<Event>()
 
     val eventsGrouped = events.groupBy {
