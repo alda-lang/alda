@@ -137,7 +137,7 @@ class Track(val trackNumber : Int) {
             // so we add in the channel here, now that we know what channel
             // we're scheduling the pattern on.
             update(event, "channel", { it ?: channel }),
-            startOffset
+            patternSchedule
           )
         }
 
@@ -152,10 +152,10 @@ class Track(val trackNumber : Int) {
         // played.
         val deferredEvents = patternEvents.flatMap {
           log.debug {
-            "Scheduling internal pattern events at offset ${startOffset}"
+            "Scheduling internal pattern events at offset $patternSchedule"
           }
 
-          schedulePattern(channel, it, startOffset)
+          schedulePattern(channel, it, patternSchedule)
         }
 
         val iterationEvents = immediateEvents + deferredEvents
