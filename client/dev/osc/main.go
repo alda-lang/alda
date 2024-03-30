@@ -137,6 +137,40 @@ func sixteenFastNotes() *osc.Bundle {
 	return bundle(msgs...)
 }
 
+func drumsDemo() *osc.Bundle {
+	ff := 127
+	mf := 100
+
+	return bundle(
+		// hi hat
+		midiNoteMsg(1, 9, 0, 42, 250, 250, ff),
+		midiNoteMsg(1, 9, 250, 42, 125, 125, mf),
+		midiNoteMsg(1, 9, 375, 42, 250, 250, ff),
+		midiNoteMsg(1, 9, 625, 42, 125, 125, mf),
+
+		// kick
+		midiNoteMsg(1, 9, 0, 36, 500, 500, ff),
+		midiNoteMsg(1, 9, 625, 36, 125, 125, mf),
+		// ... fill ...
+		midiNoteMsg(1, 9, 1500, 36, 1500, 1500, ff),
+
+		// snare
+		midiNoteMsg(1, 9, 750, 38, 125, 125, ff),
+		midiNoteMsg(1, 9, 875, 38, 125, 125, mf),
+
+		// toms
+		midiNoteMsg(1, 9, 1000, 41, 125, 125, mf),
+		midiNoteMsg(1, 9, 1125, 41, 125, 125, ff),
+		midiNoteMsg(1, 9, 1250, 43, 125, 125, mf),
+		midiNoteMsg(1, 9, 1375, 43, 125, 125, mf),
+
+		// crash
+		midiNoteMsg(1, 9, 1500, 49, 1500, 1500, ff),
+
+		systemPlayMsg(),
+	)
+}
+
 func playPattern(pattern string, times int) *osc.Bundle {
 	return bundle(
 		patternClearMsg(pattern),
@@ -303,8 +337,8 @@ func main() {
 		client.Send(clearMsg(1))
 	case "export":
 		client.Send(exportMsg("/tmp/alda-test.mid"))
-	case "perc":
-		client.Send(midiPercussionMsg(1))
+	case "drums":
+		client.Send(drumsDemo())
 	case "1":
 		client.Send(oneNote())
 	case "16fast":
