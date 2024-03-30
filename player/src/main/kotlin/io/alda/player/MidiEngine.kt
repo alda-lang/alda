@@ -14,6 +14,7 @@ import javax.sound.midi.MidiSystem
 import javax.sound.midi.Sequence
 import javax.sound.midi.ShortMessage
 import kotlin.concurrent.thread
+import kotlin.math.roundToLong
 import mu.KotlinLogging
 
 private val log = KotlinLogging.logger {}
@@ -225,8 +226,32 @@ class MidiEngine {
     return ticksToMs(sequencer.getTickPosition())
   }
 
+  fun prefixWithOffset(str: String): String {
+    return "[${currentOffset().roundToLong()}] $str"
+  }
+
+  fun trace(msg: String) {
+    log.trace { prefixWithOffset(msg) }
+  }
+
+  fun debug(msg: String) {
+    log.debug { prefixWithOffset(msg) }
+  }
+
+  fun info(msg: String) {
+    log.info { prefixWithOffset(msg) }
+  }
+
+  fun warn(msg: String) {
+    log.warn { prefixWithOffset(msg) }
+  }
+
+  fun error(msg: String) {
+    log.error { prefixWithOffset(msg) }
+  }
+
   fun setTempo(offsetMs : Int, bpm : Float) {
-    log.trace { "Setting tempo to ${bpm} BPM at offset: ${offsetMs}" }
+    trace("Setting tempo to $bpm BPM at offset: $offsetMs")
     val ticks = msToTicks(offsetMs * 1.0)
     addTempoEntry(TempoEntry(offsetMs, bpm, ticks))
     track.add(MidiEvent(setTempoMessage(bpm), ticks))
@@ -273,17 +298,17 @@ class MidiEngine {
   fun scheduleShutdown(offsetMs : Int) {
     val now = Math.round(currentOffset()).toInt()
     val shutdownOffsetMs = now + offsetMs
-    log.debug { "Scheduling shutdown for ${shutdownOffsetMs}" }
+    debug("Scheduling shutdown for $shutdownOffsetMs")
     scheduleMetaMsg(shutdownOffsetMs, CustomMetaMessage.SHUTDOWN)
   }
 
   init {
-    log.info { "Initializing MIDI sequencer..." }
+    info("Initializing MIDI sequencer...")
     sequencer.open()
     sequencer.setSequence(sequence)
     sequencer.setTickPosition(0)
 
-    log.info { "Initializing MIDI synthesizer..." }
+    info("Initializing MIDI synthesizer...")
     // NB: This blocks for about a second.
     synthesizer.open()
 
@@ -293,45 +318,43 @@ class MidiEngine {
     sequencer.addMetaEventListener(MetaEventListener { msg ->
       when (val msgType = msg.getType()) {
         CustomMetaMessage.CONTINUE.type -> {
-          log.debug { "Received CONTINUE meta event" }
+          debug("Received CONTINUE meta event")
           if (isPlaying) sequencer.start()
         }
 
         CustomMetaMessage.EVENT.type -> {
           val pendingEvent = String(msg.getData())
 
-          log.debug {
-            "Received EVENT meta event for pending event: ${pendingEvent}"
-          }
+          debug("Received EVENT meta event for pending event: $pendingEvent")
 
           synchronized(pendingEvents) {
             pendingEvents[pendingEvent]?.also { latch ->
               latch.countDown()
               pendingEvents.remove(pendingEvent)
             } ?: run {
-              log.error { "$pendingEvent latch not found!" }
+              error("$pendingEvent latch not found!")
             }
           }
         }
 
         CustomMetaMessage.SHUTDOWN.type -> {
-          log.debug { "Received SHUTDOWN meta event" }
+          debug("Received SHUTDOWN meta event")
           isRunning = false
         }
 
         MIDI_END_OF_TRACK -> {
-          log.debug { "Received End of Track meta event" }
+          debug("Received End of Track meta event")
           // This metamessage is sent automatically when the end of the sequence
           // is reached.
         }
 
         MIDI_SET_TEMPO -> {
-          log.debug { "Received Set Tempo meta event" }
+          debug("Received Set Tempo meta event")
           // This metamessage is handled by the Sequencer out of the box.
         }
 
         else -> {
-          log.warn { "MetaMessage type $msgType not implemented." }
+          warn("MetaMessage type $msgType not implemented.")
         }
       }
     })
@@ -353,22 +376,6 @@ class MidiEngine {
       }
     }
 
-    // for debugging
-    thread {
-      while (!Thread.currentThread().isInterrupted()) {
-        try {
-          log.trace {
-            "${if (isPlaying)
-                 "PLAYING; "
-               else ""}current offset: ${currentOffset()}"
-          }
-          Thread.sleep(500)
-        } catch (iex : InterruptedException) {
-          Thread.currentThread().interrupt()
-        }
-      }
-    }
-
     // HACK: It seems like the JVM MIDI synth needs a second or two to "warm up"
     // before it's ready to start playing without a noticeable jitter during the
     // first handful of notes. Adding this sleep makes the problem go away, at
@@ -376,6 +383,8 @@ class MidiEngine {
     Thread.sleep(2500)
 
     stateManager!!.markReady()
+
+    info("Player ready")
   }
 
   fun startSequencer() {
@@ -389,7 +398,7 @@ class MidiEngine {
   }
 
   fun setSequencerOffset(offsetMs : Int) {
-    log.trace { "setting offset to ${offsetMs}" }
+    trace("setting offset to $offsetMs")
     sequencer.setTickPosition(msToTicks(offsetMs * 1.0))
   }
 
@@ -401,9 +410,9 @@ class MidiEngine {
     startOffset : Int, endOffset : Int, channel : Int, noteNumber : Int,
     velocity : Int
   ) {
-    log.trace {
-      "channel ${channel}: scheduling note from ${startOffset} to ${endOffset}"
-    }
+    trace(
+      "channel $channel: scheduling note from $startOffset to $endOffset"
+    )
 
     scheduleShortMsg(
       startOffset, ShortMessage.NOTE_ON, channel, noteNumber, velocity
