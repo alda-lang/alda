@@ -40,6 +40,7 @@ func (note Note) JSON() *json.Container {
 // the note e.g. on a MIDI sequencer/synthesizer.
 type NoteEvent struct {
 	Part            *Part
+	MidiChannel     int32
 	MidiNote        int32
 	Offset          float64
 	Duration        float64
@@ -53,6 +54,7 @@ type NoteEvent struct {
 func (note NoteEvent) JSON() *json.Container {
 	return json.Object(
 		"part", note.Part.ID(),
+		"midi-channel", note.MidiChannel,
 		"midi-note", note.MidiNote,
 		"offset", note.Offset,
 		"duration", note.Duration,
@@ -128,8 +130,17 @@ func addNoteOrRest(score *Score, noteOrRest ScoreUpdate) error {
 					return help.UserFacingErrorf("MIDI note out of the 0-127 range. Input note: %d", midiNote)
 				}
 
+				midiChannel, err := score.assignMidiChannel(part, audibleDurationMs)
+				if err != nil {
+					return err
+				}
+
+				part.MidiChannel = midiChannel
+				part.origin.MidiChannel = midiChannel
+
 				noteEvent := NoteEvent{
 					Part:            part.origin,
+					MidiChannel:     midiChannel,
 					MidiNote:        midiNote,
 					Offset:          part.CurrentOffset,
 					Duration:        durationMs,

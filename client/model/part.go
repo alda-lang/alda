@@ -49,9 +49,19 @@ type Part struct {
 	Volume          float64
 	TrackVolume     float64
 	Panning         float64
-	Quantization    float64
-	Duration        Duration
-	TimeScale       float64
+	// The MIDI channel number (0-15) that this part is currently assigned to.
+	// Each time a note occurs for this part, the specified channel will be
+	// preferred if there are no other parts using that channel at that point in
+	// time. If another part is using the channel at that point in time, then a
+	// different channel will be chosen and `midiChannel` will be updated.
+	//
+	// The sentinel value -1 means that no channel has yet been assigned. When a
+	// note occurs in this scenario, an available channel will be chosen and
+	// `midiChannel` will be updated.
+	MidiChannel  int32
+	Quantization float64
+	Duration     Duration
+	TimeScale    float64
 	// A map of offset to the tempo value that should be applied at that offset.
 	// See *Part.RecordTempoValue.
 	TempoValues map[float64]float64
@@ -110,6 +120,7 @@ func (part *Part) JSON() *json.Container {
 		"volume", part.Volume,
 		"track-volume", part.TrackVolume,
 		"panning", part.Panning,
+		"midi-channel", part.MidiChannel,
 		"quantization", part.Quantization,
 		"duration", part.Duration.JSON(),
 		"time-scale", part.TimeScale,
@@ -155,6 +166,7 @@ func (score *Score) NewPart(name string) (*Part, error) {
 		Volume:          DynamicVolumes["mf"],
 		TrackVolume:     100.0 / 127,
 		Panning:         0.5,
+		MidiChannel:     -1, // Initially unassigned
 		Quantization:    0.9,
 		Duration: Duration{
 			Components: []DurationComponent{NoteLength{Denominator: 4}},
