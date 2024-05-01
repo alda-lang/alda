@@ -387,8 +387,8 @@ func determineParts(decl PartDeclaration, score *Score) ([]*Part, error) {
 		)
 	}
 
-	// We use a "set" here instead of a slice because it's possible to refer to
-	// two existing named groups where the parts covered by each group overlap.
+	// It's possible to refer to two existing named groups where the parts covered
+	// by each group overlap.
 	//
 	// For example:
 	//
@@ -402,9 +402,10 @@ func determineParts(decl PartDeclaration, score *Score) ([]*Part, error) {
 	// In this contrived example, `groups1and2` refers to 3 parts, by way of
 	// referring to 2 groups of 2 parts that have 1 part in common.
 	//
-	// By using a set here, we ensure that we don't end up with duplicate parts in
-	// this scenario.
-	parts := map[*Part]bool{}
+	// In order to ensure that there are no duplicate parts, we use a "set" here
+	// to keep track of which parts we've already added.
+	parts := []*Part{}
+	partsSet := map[*Part]bool{}
 
 	// Always create new parts when creating a named group consisting of stock
 	// instruments.
@@ -414,31 +415,31 @@ func determineParts(decl PartDeclaration, score *Score) ([]*Part, error) {
 			if err != nil {
 				return nil, err
 			}
-			parts[part] = true
+
+			if _, exists := partsSet[part]; !exists {
+				parts = append(parts, part)
+			}
+			partsSet[part] = true
 		}
 
-		// Convert set to slice.
-		result := []*Part{}
-		for part := range parts {
-			result = append(result, part)
-		}
-		return result, nil
+		return parts, nil
 	}
 
 	for _, part := range namedParts {
-		parts[part] = true
+		if _, exists := partsSet[part]; !exists {
+			parts = append(parts, part)
+		}
+		partsSet[part] = true
 	}
 
 	for _, part := range stockParts {
-		parts[part] = true
+		if _, exists := partsSet[part]; !exists {
+			parts = append(parts, part)
+		}
+		partsSet[part] = true
 	}
 
-	// Convert set to slice.
-	result := []*Part{}
-	for part := range parts {
-		result = append(result, part)
-	}
-	return result, nil
+	return parts, nil
 }
 
 // UpdateScore implements ScoreUpdate.UpdateScore by setting the current
