@@ -35,7 +35,7 @@ func (s *Score) availableMidiChannel(
 
 This means that your score has more than 16 instruments, and we tried to map
 the instruments' notes to the 16 MIDI channels by having multiple instruments
-share a channel as needed, but it still wasn't possible.`,
+share a channel as needed, but it wasn't logistically possible.`,
 		part.CurrentOffset,
 	)
 }
