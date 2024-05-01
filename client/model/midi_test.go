@@ -29,6 +29,33 @@ func expectPartMidiChannel(
 	}
 }
 
+func expectNoteMidiChannels(expectedMidiChannels ...int32) func(*Score) error {
+	return func(s *Score) error {
+		if len(s.Events) != len(expectedMidiChannels) {
+			return fmt.Errorf(
+				"expected %d events, got %d",
+				len(expectedMidiChannels),
+				len(s.Events),
+			)
+		}
+
+		for i := 0; i < len(expectedMidiChannels); i++ {
+			expectedMidiChannel := expectedMidiChannels[i]
+			actualMidiChannel := s.Events[i].(NoteEvent).MidiChannel
+			if expectedMidiChannel != actualMidiChannel {
+				return fmt.Errorf(
+					"expected note #%d to have MIDI channel %d, but it was %d",
+					i+1,
+					expectedMidiChannel,
+					actualMidiChannel,
+				)
+			}
+		}
+
+		return nil
+	}
+}
+
 func fifteenInstruments() []string {
 	return []string{
 		"piano",
@@ -135,6 +162,7 @@ func TestMidiChannelAssignment(t *testing.T) {
 			expectations: []scoreUpdateExpectation{
 				expectParts("piano"),
 				expectPartMidiChannel("piano", 0),
+				expectNoteMidiChannels(0),
 			},
 		},
 		scoreUpdateTestCase{
@@ -153,6 +181,7 @@ func TestMidiChannelAssignment(t *testing.T) {
 				expectParts("piano", "bassoon"),
 				expectPartMidiChannel("piano", 0),
 				expectPartMidiChannel("bassoon", 1),
+				expectNoteMidiChannels(0, 1),
 			},
 		},
 		scoreUpdateTestCase{
@@ -167,6 +196,7 @@ func TestMidiChannelAssignment(t *testing.T) {
 				expectParts("piano", "bassoon"),
 				expectPartMidiChannel("piano", 0),
 				expectPartMidiChannel("bassoon", 1),
+				expectNoteMidiChannels(0, 1),
 			},
 		},
 		scoreUpdateTestCase{
@@ -187,6 +217,7 @@ func TestMidiChannelAssignment(t *testing.T) {
 			expectations: []scoreUpdateExpectation{
 				expectParts("piano"),
 				expectPartMidiChannel("piano", 0),
+				expectNoteMidiChannels(0, 0, 0, 0, 0, 0),
 			},
 		},
 		scoreUpdateTestCase{
