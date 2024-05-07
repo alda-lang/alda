@@ -24,7 +24,7 @@ func (s *Score) availableMidiChannel(
 			continue
 		}
 
-		if len(parts) == 0 || (len(parts) == 1 && parts[0] == part.origin) {
+		if len(parts) == 0 || s.partHasExclusiveAccess(part, int32(channel)) {
 			return int32(channel), nil
 		}
 	}
