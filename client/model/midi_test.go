@@ -80,16 +80,35 @@ func sixteenInstruments() []string {
 	return append(fifteenInstruments(), "percussion")
 }
 
-func manyInstrumentsScoreUpdates(instruments []string) []ScoreUpdate {
+func fifteenMoreInstruments() []string {
+	return []string{
+		"upright-bass",
+		"violin",
+		"viola",
+		"cello",
+		"double-bass",
+		"harp",
+		"timpani",
+		"trumpet",
+		"trombone",
+		"tuba",
+		"french-horn",
+		"soprano-sax",
+		"alto-sax",
+		"tenor-sax",
+		"bari-sax",
+	}
+}
+
+func manyInstrumentsScoreUpdates(
+	instruments []string, eventsBeforeNote ...ScoreUpdate,
+) []ScoreUpdate {
 	updates := []ScoreUpdate{}
 
 	for _, instrument := range instruments {
-		updates = append(updates, []ScoreUpdate{
-			PartDeclaration{
-				Names: []string{instrument},
-			},
-			Note{Pitch: LetterAndAccidentals{NoteLetter: C}},
-		}...)
+		updates = append(updates, PartDeclaration{Names: []string{instrument}})
+		updates = append(updates, eventsBeforeNote...)
+		updates = append(updates, Note{Pitch: LetterAndAccidentals{NoteLetter: C}})
 	}
 
 	return updates
@@ -103,13 +122,15 @@ func manyInstrumentsExpectations(
 	}
 
 	for i, instrument := range instruments {
+		j := i % 16
+
 		var channel int32
 		if instrument == "percussion" {
 			channel = 9
-		} else if i >= 9 {
-			channel = int32(i + 1)
+		} else if j >= 9 {
+			channel = int32(j + 1)
 		} else {
-			channel = int32(i)
+			channel = int32(j)
 		}
 
 		expectations = append(
@@ -134,6 +155,32 @@ func fifteenInstrumentsExpectations() []scoreUpdateExpectation {
 
 func sixteenInstrumentsExpectations() []scoreUpdateExpectation {
 	return manyInstrumentsExpectations(sixteenInstruments())
+}
+
+func thirtyOneInstrumentsScoreUpdates() []ScoreUpdate {
+	return append(
+		// 16 instruments (15 non-percussion, 1 percussion), each playing 1 note at
+		// offset 0
+		manyInstrumentsScoreUpdates(sixteenInstruments()),
+		// 15 more instruments (all non-percussion), each playing 1 note at offset 0
+		// + 1 whole note
+		//
+		// All 16 MIDI channels should be available for this, since the first 16
+		// instruments only played 1 note at offset 0 and were done playing before
+		// these next instruments come in with their notes.
+		manyInstrumentsScoreUpdates(fifteenMoreInstruments(),
+			Rest{Duration: Duration{
+				Components: []DurationComponent{
+					NoteLength{Denominator: 1},
+				},
+			}})...,
+	)
+}
+
+func thirtyOneInstrumentsExpectations() []scoreUpdateExpectation {
+	return manyInstrumentsExpectations(
+		append(sixteenInstruments(), fifteenMoreInstruments()...),
+	)
 }
 
 func TestMidiChannelAssignment(t *testing.T) {
@@ -229,6 +276,11 @@ func TestMidiChannelAssignment(t *testing.T) {
 			label:        "automatic channel assignment - 16 instruments",
 			updates:      sixteenInstrumentsScoreUpdates(),
 			expectations: sixteenInstrumentsExpectations(),
+		},
+		scoreUpdateTestCase{
+			label:        "automatic channel assignment - 31 instruments",
+			updates:      thirtyOneInstrumentsScoreUpdates(),
+			expectations: thirtyOneInstrumentsExpectations(),
 		},
 	)
 }

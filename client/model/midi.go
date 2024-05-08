@@ -14,9 +14,7 @@ func (s *Score) partHasExclusiveAccess(part *Part, midiChannel int32) bool {
 	return len(channelUsage) == 1 && channelUsage[0] == part.origin
 }
 
-func (s *Score) availableMidiChannel(
-	part *Part, duration float64,
-) (int32, error) {
+func (s *Score) simpleCheck(part *Part) (bool, int32) {
 	for channel, parts := range s.midiChannelUsage {
 		// Channel 9 is reserved for percussion, but this function is for finding
 		// an available MIDI channel for a non-percussion instrument.
@@ -25,11 +23,84 @@ func (s *Score) availableMidiChannel(
 		}
 
 		if len(parts) == 0 || s.partHasExclusiveAccess(part, int32(channel)) {
-			return int32(channel), nil
+			return true, int32(channel)
 		}
 	}
 
-	// TODO: Implement complex check
+	return false, -1
+}
+
+func overlaps(
+	note1start float64, note1duration float64, note2start float64,
+	note2duration float64,
+) bool {
+	note1end := note1start + note1duration
+	note2end := note2start + note2duration
+
+	return note2start < note1end && note2end > note1start
+}
+
+func (s *Score) complexCheck(part *Part, noteDurationMs float64) (bool, int32) {
+	unavailableChannels := map[int32]bool{}
+
+	// Go through every note in the score and make a note of which channels have
+	// notes belonging to other parts that overlap with the proposed note,
+	// recording them in `unavailableChannels`.
+	for _, event := range s.Events {
+		note, isNote := event.(NoteEvent)
+
+		if !isNote {
+			continue
+		}
+
+		if note.Part.origin == part.origin {
+			continue
+		}
+
+		if _, unavailable := unavailableChannels[note.MidiChannel]; unavailable {
+			continue
+		}
+
+		if overlaps(
+			note.Offset, note.AudibleDuration, part.CurrentOffset, noteDurationMs,
+		) {
+			unavailableChannels[note.MidiChannel] = true
+		}
+	}
+
+	// Prefer the channel already assigned, if it's still available.
+	if part.MidiChannel != -1 {
+		if _, unavailable := unavailableChannels[part.MidiChannel]; !unavailable {
+			return true, part.MidiChannel
+		}
+	}
+
+	for channel := range s.midiChannelUsage {
+		// Channel 9 is reserved for percussion, but this function is for finding
+		// an available MIDI channel for a non-percussion instrument.
+		if channel == 9 {
+			continue
+		}
+
+		if _, unavailable := unavailableChannels[int32(channel)]; !unavailable {
+			return true, int32(channel)
+		}
+	}
+
+	return false, -1
+}
+
+func (s *Score) availableMidiChannel(
+	part *Part, noteDurationMs float64,
+) (int32, error) {
+	if available, channel := s.simpleCheck(part); available {
+		return channel, nil
+	}
+
+	if available, channel := s.complexCheck(part, noteDurationMs); available {
+		return channel, nil
+	}
+
 	return -1, help.UserFacingErrorf(
 		`No MIDI channel available at offset %f.
 
