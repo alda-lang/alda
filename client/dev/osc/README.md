@@ -33,6 +33,7 @@ If the example name is omitted, example `1` is used.
 | 2loops | Plays two random patterns concurrently on the same track, 4 times each |
 | clear | Sends the system "clear" message |
 | clear1 | Sends the track "clear" message |
+| drums | Plays a short percussion demo |
 | export | Sends the system "export" message to export the contents of the player's MIDI sequencer to `/tmp/alda-test.mid` |
 | pat1 | A five-note pattern called `simple` is defined and played once |
 | pat2 | A five-note pattern called `simple` is defined and played twice |
@@ -41,7 +42,6 @@ If the example name is omitted, example `1` is used.
 | patfin | Stops looping the `simple` pattern |
 | patloop | Loops the `simple` pattern indefinitely |
 | patx | Clears the contents of the `simple` pattern
-| perc | Turns track 1 into a percussion track |
 | play | Sends the system "play" message |
 | shutdown | Sends the system "shutdown" message |
 | stop | Sends the system "stop" message |
