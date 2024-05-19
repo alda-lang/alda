@@ -157,6 +157,13 @@ func addNoteOrRest(score *Score, noteOrRest ScoreUpdate) error {
 					Float64("Duration", noteEvent.Duration).
 					Msg("Adding note.")
 
+				// TODO: Consider proactively sorting `score.Events` by offset. This
+				// might help to speed up MIDI channel availability checks, if we need
+				// to.
+				//
+				// It might also be helpful to proactively sort by MIDI channel.
+				//
+				// See `complexCheck` in `model/midi.go`.
 				score.Events = append(score.Events, noteEvent)
 			}
 		}
