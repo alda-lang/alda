@@ -423,7 +423,7 @@ private fun applyUpdates(updates : Updates) {
 
   // NB: We don't actually start the sequencer here; that action needs to be
   // deferred until after a track thread finishes scheduling a buffer of events.
-  if (updates.systemActions.contains(SystemAction.PLAY)) {
+  if (updates.systemActions.contains(SystemAction.PLAY) && !midi().isPlaying) {
     awaitActiveTasks()
     midi().isPlaying = true
   }
