@@ -344,22 +344,36 @@ func main() {
 	case "16fast":
 		client.Send(sixteenFastNotes())
 	case "pat1":
+		// NOTE: A quirk of the way that pattern scheduling works is that the MIDI
+		// engine needs to be playing, first, so that the "schedule pattern"
+		// meta-message will be encountered and processed.
+		//
+		// If the engine is stopped, then `awaitActiveTasks()` will block until the
+		// events are scheduled, so the engine never starts playing. It's sort of a
+		// chicken-and-egg problem. To work around that, we'll just send a "play"
+		// message here to ensure that the engine is playing.
+		client.Send(bundle(systemPlayMsg()))
 		client.Send(playPatternOnce("simple"))
 	case "pat2":
+		client.Send(bundle(systemPlayMsg()))
 		client.Send(playPatternTwice("simple"))
 	case "pat3":
+		client.Send(bundle(systemPlayMsg()))
 		client.Send(playPatternThrice("simple"))
 	case "patchange":
 		client.Send(changePattern("simple"))
 	case "patx":
 		client.Send(patternClearMsg("simple"))
 	case "patloop":
+		client.Send(bundle(systemPlayMsg()))
 		client.Send(loopPattern("simple"))
 	case "patfin":
 		client.Send(finishLoopMsg(1))
 	case "2loops":
+		client.Send(bundle(systemPlayMsg()))
 		client.Send(twoFiniteLoops())
 	case "2infinity":
+		client.Send(bundle(systemPlayMsg()))
 		client.Send(twoInfiniteLoops())
 	case "tempos":
 		client.Send(variousTempos())
