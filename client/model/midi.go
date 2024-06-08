@@ -102,11 +102,12 @@ func (s *Score) availableMidiChannel(
 	}
 
 	return -1, help.UserFacingErrorf(
-		`No MIDI channel available at offset %f.
+		`No MIDI channel available for part "%s" at offset %f.
 
 This means that your score has more than 16 instruments, and we tried to map
 the instruments' notes to the 16 MIDI channels by having multiple instruments
 share a channel as needed, but it wasn't logistically possible.`,
+		part.Name,
 		part.CurrentOffset,
 	)
 }
