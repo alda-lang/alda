@@ -142,8 +142,8 @@ func (s *Score) determineMidiChannel(
 This means that another part in the score is already using that channel at that
 point in the score.
 
-To address this, use the %s attribute to assign a different MIDI channel to the
-other parts in the score.`,
+To address this, use the %s attribute to assign a different MIDI channel to each
+part in the score.`,
 				part.MidiChannel,
 				part.Name,
 				part.CurrentOffset,
