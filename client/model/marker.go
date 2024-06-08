@@ -90,7 +90,9 @@ func (atMarker AtMarker) JSON() *json.Container {
 //
 // If no such marker was previously defined, an error is returned.
 func (atMarker AtMarker) UpdateScore(score *Score) error {
-	score.ApplyGlobalAttributes()
+	if err := score.ApplyGlobalAttributes(); err != nil {
+		return err
+	}
 
 	offset, hit := score.Markers[atMarker.Name]
 	if !hit {

@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"sort"
 
+	"alda.io/client/help"
 	"alda.io/client/json"
 	log "alda.io/client/logging"
 )
@@ -31,7 +32,9 @@ func (au AttributeUpdate) JSON() *json.Container {
 // for all current parts.
 func (au AttributeUpdate) UpdateScore(score *Score) error {
 	for _, part := range score.CurrentParts {
-		au.PartUpdate.updatePart(part, false)
+		if err := au.PartUpdate.updatePart(part, false); err != nil {
+			return err
+		}
 		// Here, we record that this local (part-specific) attribute was updated.
 		// This is so that we can track the case where a local attribute change is
 		// applied at the exact same time as a global attribute change, and we want
@@ -134,7 +137,7 @@ func (ga GlobalAttributes) InWindow(
 //
 // Any global attribute updates registered at an offset that is between a part's
 // LastOffset and CurrentOffset are applied.
-func (score *Score) ApplyGlobalAttributes() {
+func (score *Score) ApplyGlobalAttributes() error {
 	for _, part := range score.CurrentParts {
 		for _, update := range score.GlobalAttributes.InWindow(
 			part.LastOffset, part.CurrentOffset,
@@ -152,12 +155,16 @@ func (score *Score) ApplyGlobalAttributes() {
 					Interface("update", update).
 					Msg("Applying global attribute update.")
 
-				update.updatePart(part, true)
+				if err := update.updatePart(part, true); err != nil {
+					return err
+				}
 			}
 		}
 
 		part.localAttributeOverride = nil
 	}
+
+	return nil
 }
 
 // GlobalAttributeUpdate updates the value of an attribute for all parts.
@@ -230,7 +237,7 @@ func (ts TempoSet) JSON() *json.Container {
 	return json.Object("attribute", "tempo", "value", ts.Tempo)
 }
 
-func (ts TempoSet) updatePart(part *Part, globalUpdate bool) {
+func (ts TempoSet) updatePart(part *Part, globalUpdate bool) error {
 	part.Tempo = ts.Tempo
 
 	// Global updates are recorded separately, and we would end up getting
@@ -240,6 +247,8 @@ func (ts TempoSet) updatePart(part *Part, globalUpdate bool) {
 	if !globalUpdate {
 		part.RecordTempoValue()
 	}
+
+	return nil
 }
 
 // MetricModulation sets the tempo of all active parts, defining the tempo as a
@@ -256,7 +265,7 @@ func (mm MetricModulation) JSON() *json.Container {
 	)
 }
 
-func (mm MetricModulation) updatePart(part *Part, globalUpdate bool) {
+func (mm MetricModulation) updatePart(part *Part, globalUpdate bool) error {
 	part.Tempo *= mm.Ratio
 
 	// Global updates are recorded separately, and we would end up getting
@@ -266,6 +275,8 @@ func (mm MetricModulation) updatePart(part *Part, globalUpdate bool) {
 	if !globalUpdate {
 		part.RecordTempoValue()
 	}
+
+	return nil
 }
 
 // OctaveSet sets the octave of all active parts.
@@ -278,8 +289,10 @@ func (os OctaveSet) JSON() *json.Container {
 	return json.Object("attribute", "octave", "value", os.OctaveNumber)
 }
 
-func (os OctaveSet) updatePart(part *Part, globalUpdate bool) {
+func (os OctaveSet) updatePart(part *Part, globalUpdate bool) error {
 	part.Octave = os.OctaveNumber
+
+	return nil
 }
 
 // OctaveUp increments the octave of all active parts.
@@ -290,8 +303,10 @@ func (os OctaveUp) JSON() *json.Container {
 	return json.Object("attribute", "octave", "value", "up")
 }
 
-func (OctaveUp) updatePart(part *Part, globalUpdate bool) {
+func (OctaveUp) updatePart(part *Part, globalUpdate bool) error {
 	part.Octave++
+
+	return nil
 }
 
 // OctaveDown decrements the octave of all active parts.
@@ -302,8 +317,10 @@ func (os OctaveDown) JSON() *json.Container {
 	return json.Object("attribute", "octave", "value", "down")
 }
 
-func (OctaveDown) updatePart(part *Part, globalUpdate bool) {
+func (OctaveDown) updatePart(part *Part, globalUpdate bool) error {
 	part.Octave--
+
+	return nil
 }
 
 // VolumeSet sets the volume of all active parts.
@@ -316,8 +333,10 @@ func (vs VolumeSet) JSON() *json.Container {
 	return json.Object("attribute", "volume", "value", vs.Volume)
 }
 
-func (vs VolumeSet) updatePart(part *Part, globalUpdate bool) {
+func (vs VolumeSet) updatePart(part *Part, globalUpdate bool) error {
 	part.Volume = vs.Volume
+
+	return nil
 }
 
 // TrackVolumeSet sets the track volume of all active parts.
@@ -330,8 +349,10 @@ func (tvs TrackVolumeSet) JSON() *json.Container {
 	return json.Object("attribute", "track-volume", "value", tvs.TrackVolume)
 }
 
-func (tvs TrackVolumeSet) updatePart(part *Part, globalUpdate bool) {
+func (tvs TrackVolumeSet) updatePart(part *Part, globalUpdate bool) error {
 	part.TrackVolume = tvs.TrackVolume
+
+	return nil
 }
 
 var DynamicVolumes map[string]float64
@@ -369,8 +390,10 @@ func (dm DynamicMarking) JSON() *json.Container {
 	return json.Object("attribute", "dynamic-marking", "value", dm.Marking)
 }
 
-func (dm DynamicMarking) updatePart(part *Part, globalUpdate bool) {
+func (dm DynamicMarking) updatePart(part *Part, globalUpdate bool) error {
 	part.Volume = DynamicVolumes[dm.Marking]
+
+	return nil
 }
 
 // PanningSet sets the panning of all active parts.
@@ -383,8 +406,10 @@ func (ps PanningSet) JSON() *json.Container {
 	return json.Object("attribute", "panning", "value", ps.Panning)
 }
 
-func (ps PanningSet) updatePart(part *Part, globalUpdate bool) {
+func (ps PanningSet) updatePart(part *Part, globalUpdate bool) error {
 	part.Panning = ps.Panning
+
+	return nil
 }
 
 // QuantizationSet sets the quantization of all active parts.
@@ -397,8 +422,10 @@ func (qs QuantizationSet) JSON() *json.Container {
 	return json.Object("attribute", "quantization", "value", qs.Quantization)
 }
 
-func (qs QuantizationSet) updatePart(part *Part, globalUpdate bool) {
+func (qs QuantizationSet) updatePart(part *Part, globalUpdate bool) error {
 	part.Quantization = qs.Quantization
+
+	return nil
 }
 
 // DurationSet sets the quantization of all active parts.
@@ -413,8 +440,10 @@ func (ds DurationSet) JSON() *json.Container {
 	return object
 }
 
-func (ds DurationSet) updatePart(part *Part, globalUpdate bool) {
+func (ds DurationSet) updatePart(part *Part, globalUpdate bool) error {
 	part.Duration = ds.Duration
+
+	return nil
 }
 
 // KeySignatureSet sets the key signature of all active parts.
@@ -430,8 +459,10 @@ func (kss KeySignatureSet) JSON() *json.Container {
 	)
 }
 
-func (kss KeySignatureSet) updatePart(part *Part, globalUpdate bool) {
+func (kss KeySignatureSet) updatePart(part *Part, globalUpdate bool) error {
 	part.KeySignature = kss.KeySignature
+
+	return nil
 }
 
 // TranspositionSet sets the transposition of all active parts.
@@ -447,8 +478,10 @@ func (ts TranspositionSet) JSON() *json.Container {
 	)
 }
 
-func (ts TranspositionSet) updatePart(part *Part, globalUpdate bool) {
+func (ts TranspositionSet) updatePart(part *Part, globalUpdate bool) error {
 	part.Transposition = ts.Semitones
+
+	return nil
 }
 
 // ReferencePitchSet sets the reference pitch of all active parts. The reference
@@ -465,6 +498,45 @@ func (rps ReferencePitchSet) JSON() *json.Container {
 	)
 }
 
-func (rps ReferencePitchSet) updatePart(part *Part, globalUpdate bool) {
+func (rps ReferencePitchSet) updatePart(part *Part, globalUpdate bool) error {
 	part.ReferencePitch = rps.Frequency
+
+	return nil
+}
+
+// MidiChannelSet sets the MIDI channel to use for all active parts. By default,
+// a MIDI channel is assigned automatically, reusing another channel and
+// switching patches if necessary (i.e. if there are > 15 non-percussion
+// instruments in the score).
+//
+// This attribute can be used in cases where you want to explicitly control
+// which MIDI channel is used.
+type MidiChannelSet struct {
+	ChannelNumber int32
+}
+
+// JSON implements RepresentableAsJSON.JSON.
+func (mcs MidiChannelSet) JSON() *json.Container {
+	return json.Object(
+		"attribute", "midi-channel",
+		"value", mcs.ChannelNumber,
+	)
+}
+
+func (mcs MidiChannelSet) updatePart(part *Part, globalUpdate bool) error {
+	// TODO: Update this type assertion if/when we add non-MIDI instruments.
+	if mcs.ChannelNumber == 9 &&
+		!part.StockInstrument.(MidiInstrument).IsPercussion {
+
+		return help.UserFacingErrorf(
+			`Can't use MIDI channel 9 for part "%s"; channel 9 can only be used for
+percussion.`,
+			part.Name,
+		)
+	}
+
+	part.MidiChannel = mcs.ChannelNumber
+	part.HasExplicitMidiChannel = true
+
+	return nil
 }

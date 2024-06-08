@@ -49,9 +49,22 @@ type Part struct {
 	Volume          float64
 	TrackVolume     float64
 	Panning         float64
-	Quantization    float64
-	Duration        Duration
-	TimeScale       float64
+	// The MIDI channel number (0-15) that this part is currently assigned to.
+	// Each time a note occurs for this part, the specified channel will be
+	// preferred if there are no other parts using that channel at that point in
+	// time. If another part is using the channel at that point in time, then a
+	// different channel will be chosen and `midiChannel` will be updated.
+	//
+	// The sentinel value -1 means that no channel has yet been assigned. When a
+	// note occurs in this scenario, an available channel will be chosen and
+	// `midiChannel` will be updated.
+	MidiChannel int32
+	// When true, the score declares a specific MIDI channel that this part should
+	// use. (This is done via the `midi-channel` attribute.)
+	HasExplicitMidiChannel bool
+	Quantization           float64
+	Duration               Duration
+	TimeScale              float64
 	// A map of offset to the tempo value that should be applied at that offset.
 	// See *Part.RecordTempoValue.
 	TempoValues map[float64]float64
@@ -110,6 +123,7 @@ func (part *Part) JSON() *json.Container {
 		"volume", part.Volume,
 		"track-volume", part.TrackVolume,
 		"panning", part.Panning,
+		"midi-channel", part.MidiChannel,
 		"quantization", part.Quantization,
 		"duration", part.Duration.JSON(),
 		"time-scale", part.TimeScale,
@@ -145,17 +159,19 @@ func (score *Score) NewPart(name string) (*Part, error) {
 	}
 
 	part := &Part{
-		Name:            name,
-		StockInstrument: stock,
-		CurrentOffset:   0,
-		LastOffset:      -1,
-		Octave:          4,
-		Tempo:           120,
-		TempoValues:     map[float64]float64{},
-		Volume:          DynamicVolumes["mf"],
-		TrackVolume:     100.0 / 127,
-		Panning:         0.5,
-		Quantization:    0.9,
+		Name:                   name,
+		StockInstrument:        stock,
+		CurrentOffset:          0,
+		LastOffset:             -1,
+		Octave:                 4,
+		Tempo:                  120,
+		TempoValues:            map[float64]float64{},
+		Volume:                 DynamicVolumes["mf"],
+		TrackVolume:            100.0 / 127,
+		Panning:                0.5,
+		MidiChannel:            -1, // Initially unassigned
+		HasExplicitMidiChannel: false,
+		Quantization:           0.9,
 		Duration: Duration{
 			Components: []DurationComponent{NoteLength{Denominator: 4}},
 		},
@@ -258,7 +274,7 @@ func (score *Score) AliasesFor(part *Part) []string {
 type PartUpdate interface {
 	json.RepresentableAsJSON
 
-	updatePart(part *Part, globalUpdate bool)
+	updatePart(part *Part, globalUpdate bool) error
 }
 
 // Once an alias is defined for a group, its individual parts can be accessed by
@@ -375,8 +391,8 @@ func determineParts(decl PartDeclaration, score *Score) ([]*Part, error) {
 		)
 	}
 
-	// We use a "set" here instead of a slice because it's possible to refer to
-	// two existing named groups where the parts covered by each group overlap.
+	// It's possible to refer to two existing named groups where the parts covered
+	// by each group overlap.
 	//
 	// For example:
 	//
@@ -390,9 +406,10 @@ func determineParts(decl PartDeclaration, score *Score) ([]*Part, error) {
 	// In this contrived example, `groups1and2` refers to 3 parts, by way of
 	// referring to 2 groups of 2 parts that have 1 part in common.
 	//
-	// By using a set here, we ensure that we don't end up with duplicate parts in
-	// this scenario.
-	parts := map[*Part]bool{}
+	// In order to ensure that there are no duplicate parts, we use a "set" here
+	// to keep track of which parts we've already added.
+	parts := []*Part{}
+	partsSet := map[*Part]bool{}
 
 	// Always create new parts when creating a named group consisting of stock
 	// instruments.
@@ -402,31 +419,31 @@ func determineParts(decl PartDeclaration, score *Score) ([]*Part, error) {
 			if err != nil {
 				return nil, err
 			}
-			parts[part] = true
+
+			if _, exists := partsSet[part]; !exists {
+				parts = append(parts, part)
+			}
+			partsSet[part] = true
 		}
 
-		// Convert set to slice.
-		result := []*Part{}
-		for part := range parts {
-			result = append(result, part)
-		}
-		return result, nil
+		return parts, nil
 	}
 
 	for _, part := range namedParts {
-		parts[part] = true
+		if _, exists := partsSet[part]; !exists {
+			parts = append(parts, part)
+		}
+		partsSet[part] = true
 	}
 
 	for _, part := range stockParts {
-		parts[part] = true
+		if _, exists := partsSet[part]; !exists {
+			parts = append(parts, part)
+		}
+		partsSet[part] = true
 	}
 
-	// Convert set to slice.
-	result := []*Part{}
-	for part := range parts {
-		result = append(result, part)
-	}
-	return result, nil
+	return parts, nil
 }
 
 // UpdateScore implements ScoreUpdate.UpdateScore by setting the current

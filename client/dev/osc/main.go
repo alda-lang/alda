@@ -10,16 +10,18 @@ import (
 	"github.com/daveyarwood/go-osc/osc"
 )
 
-func appendAll(bundle *osc.Bundle, msgs []*osc.Message) {
+func bundle(msgs ...*osc.Message) *osc.Bundle {
+	bundle := osc.NewBundle(time.Now())
+
 	for _, msg := range msgs {
 		bundle.Append(msg)
 	}
+
+	return bundle
 }
 
 func systemShutdownMsg(offset int32) *osc.Message {
-	msg := osc.NewMessage("/system/shutdown")
-	msg.Append(offset)
-	return msg
+	return osc.NewMessage("/system/shutdown", offset)
 }
 
 func systemPlayMsg() *osc.Message {
@@ -38,123 +40,149 @@ func clearMsg(track int) *osc.Message {
 	return osc.NewMessage(fmt.Sprintf("/track/%d/clear", track))
 }
 
-func muteMsg(track int) *osc.Message {
-	return osc.NewMessage(fmt.Sprintf("/track/%d/mute", track))
-}
-
-func unmuteMsg(track int) *osc.Message {
-	return osc.NewMessage(fmt.Sprintf("/track/%d/unmute", track))
-}
-
 func exportMsg(filepath string) *osc.Message {
-	msg := osc.NewMessage("/system/midi/export")
-	msg.Append(filepath)
-	return msg
+	return osc.NewMessage("/system/midi/export", filepath)
 }
 
-func midiPatchMsg(track int, offset int, patch int) *osc.Message {
-	msg := osc.NewMessage(fmt.Sprintf("/track/%d/midi/patch", track))
-	msg.Append(int32(offset))
-	msg.Append(int32(patch))
-	return msg
-}
-
-func midiPercussionMsg(track int) *osc.Message {
-	msg := osc.NewMessage(fmt.Sprintf("/track/%d/midi/percussion", track))
-	msg.Append(int32(0))
-	return msg
+func midiPatchMsg(track int, channel int, offset int, patch int) *osc.Message {
+	return osc.NewMessage(
+		fmt.Sprintf("/track/%d/midi/patch", track),
+		int32(channel),
+		int32(offset),
+		int32(patch),
+	)
 }
 
 func finishLoopMsg(track int) *osc.Message {
-	msg := osc.NewMessage(fmt.Sprintf("/track/%d/finish-loop", track))
-	msg.Append(int32(0))
-	return msg
+	return osc.NewMessage(
+		fmt.Sprintf("/track/%d/finish-loop", track),
+		int32(0),
+	)
 }
 
 func midiNoteMsg(
-	track int, offset int, note int, duration int, audibleDuration int,
-	velocity int) *osc.Message {
-	msg := osc.NewMessage(fmt.Sprintf("/track/%d/midi/note", track))
-	msg.Append(int32(offset))
-	msg.Append(int32(note))
-	msg.Append(int32(duration))
-	msg.Append(int32(audibleDuration))
-	msg.Append(int32(velocity))
-	return msg
+	track int, channel int, offset int, note int, duration int,
+	audibleDuration int, velocity int,
+) *osc.Message {
+	return osc.NewMessage(
+		fmt.Sprintf("/track/%d/midi/note", track),
+		int32(channel),
+		int32(offset),
+		int32(note),
+		int32(duration),
+		int32(audibleDuration),
+		int32(velocity),
+	)
 }
 
-func patternMsg(track int, offset int, pattern string, times int) *osc.Message {
-	msg := osc.NewMessage(fmt.Sprintf("/track/%d/pattern", track))
-	msg.Append(int32(offset))
-	msg.Append(pattern)
-	msg.Append(int32(times))
-	return msg
+func patternMsg(track int, channel int, offset int, pattern string, times int) *osc.Message {
+	return osc.NewMessage(
+		fmt.Sprintf("/track/%d/pattern", track),
+		int32(channel),
+		int32(offset),
+		pattern,
+		int32(times),
+	)
 }
 
 func patternMidiNoteMsg(
 	pattern string, offset int, note int, duration int, audibleDuration int,
 	velocity int) *osc.Message {
-	msg := osc.NewMessage(fmt.Sprintf("/pattern/%s/midi/note", pattern))
-	msg.Append(int32(offset))
-	msg.Append(int32(note))
-	msg.Append(int32(duration))
-	msg.Append(int32(audibleDuration))
-	msg.Append(int32(velocity))
-	return msg
+	return osc.NewMessage(
+		fmt.Sprintf("/pattern/%s/midi/note", pattern),
+		int32(offset),
+		int32(note),
+		int32(duration),
+		int32(audibleDuration),
+		int32(velocity),
+	)
 }
 
 func patternClearMsg(pattern string) *osc.Message {
 	return osc.NewMessage(fmt.Sprintf("/pattern/%s/clear", pattern))
 }
 
-func patternLoopMsg(pattern string, offset int) *osc.Message {
-	track := 1
+func patternLoopMsg(track int, channel int, offset int, pattern string) *osc.Message {
 	msg := osc.NewMessage(fmt.Sprintf("/track/%d/pattern-loop", track))
+	msg.Append(int32(channel))
 	msg.Append(int32(offset))
 	msg.Append(pattern)
 	return msg
 }
 
 func oneNote() *osc.Bundle {
-	bundle := osc.NewBundle(time.Now())
-	bundle.Append(midiPatchMsg(1, 0, 30))
-	bundle.Append(midiNoteMsg(1, 0, 45, 1000, 1000, 127))
-	bundle.Append(systemPlayMsg())
-	return bundle
+	return bundle(
+		midiPatchMsg(1, 0, 0, 30),
+		midiNoteMsg(1, 0, 0, 45, 1000, 1000, 127),
+		systemPlayMsg(),
+	)
 }
 
 func sixteenFastNotes() *osc.Bundle {
-	bundle := osc.NewBundle(time.Now())
-
-	bundle.Append(midiPatchMsg(1, 0, 70))
-
 	interval := 100
 	audibleDuration := 80
-
 	noteNumber := 30 + rand.Intn(60)
 
+	msgs := []*osc.Message{midiPatchMsg(1, 0, 0, 70)}
+
 	for offset := 0; offset <= interval*16; offset += interval {
-		bundle.Append(
-			midiNoteMsg(1, offset, noteNumber, interval, audibleDuration, 127))
+		msgs = append(
+			msgs,
+			midiNoteMsg(1, 0, offset, noteNumber, interval, audibleDuration, 127),
+		)
 	}
 
-	bundle.Append(systemPlayMsg())
+	msgs = append(msgs, systemPlayMsg())
 
-	return bundle
+	return bundle(msgs...)
+}
+
+func drumsDemo() *osc.Bundle {
+	ff := 127
+	mf := 100
+
+	return bundle(
+		// hi hat
+		midiNoteMsg(1, 9, 0, 42, 250, 250, ff),
+		midiNoteMsg(1, 9, 250, 42, 125, 125, mf),
+		midiNoteMsg(1, 9, 375, 42, 250, 250, ff),
+		midiNoteMsg(1, 9, 625, 42, 125, 125, mf),
+
+		// kick
+		midiNoteMsg(1, 9, 0, 36, 500, 500, ff),
+		midiNoteMsg(1, 9, 625, 36, 125, 125, mf),
+		// ... fill ...
+		midiNoteMsg(1, 9, 1500, 36, 1500, 1500, ff),
+
+		// snare
+		midiNoteMsg(1, 9, 750, 38, 125, 125, ff),
+		midiNoteMsg(1, 9, 875, 38, 125, 125, mf),
+
+		// toms
+		midiNoteMsg(1, 9, 1000, 41, 125, 125, mf),
+		midiNoteMsg(1, 9, 1125, 41, 125, 125, ff),
+		midiNoteMsg(1, 9, 1250, 43, 125, 125, mf),
+		midiNoteMsg(1, 9, 1375, 43, 125, 125, mf),
+
+		// crash
+		midiNoteMsg(1, 9, 1500, 49, 1500, 1500, ff),
+
+		systemPlayMsg(),
+	)
 }
 
 func playPattern(pattern string, times int) *osc.Bundle {
-	bundle := osc.NewBundle(time.Now())
-	bundle.Append(patternClearMsg(pattern))
-	bundle.Append(patternMidiNoteMsg(pattern, 0, 57, 500, 500, 127))
-	bundle.Append(patternMidiNoteMsg(pattern, 500, 60, 500, 500, 127))
-	bundle.Append(patternMidiNoteMsg(pattern, 1000, 62, 500, 500, 127))
-	bundle.Append(patternMidiNoteMsg(pattern, 1500, 64, 500, 500, 127))
-	bundle.Append(patternMidiNoteMsg(pattern, 2000, 67, 500, 500, 127))
-	bundle.Append(midiPatchMsg(1, 0, 60))
-	bundle.Append(patternMsg(1, 0, pattern, times))
-	bundle.Append(systemPlayMsg())
-	return bundle
+	return bundle(
+		patternClearMsg(pattern),
+		patternMidiNoteMsg(pattern, 0, 57, 500, 500, 127),
+		patternMidiNoteMsg(pattern, 500, 60, 500, 500, 127),
+		patternMidiNoteMsg(pattern, 1000, 62, 500, 500, 127),
+		patternMidiNoteMsg(pattern, 1500, 64, 500, 500, 127),
+		patternMidiNoteMsg(pattern, 2000, 67, 500, 500, 127),
+		midiPatchMsg(1, 0, 0, 60),
+		patternMsg(1, 0, 0, pattern, times),
+		systemPlayMsg(),
+	)
 }
 
 func playPatternOnce(pattern string) *osc.Bundle {
@@ -169,14 +197,16 @@ func playPatternThrice(pattern string) *osc.Bundle {
 	return playPattern(pattern, 3)
 }
 
-func randomPatternNotes(pattern string, quantity int) []*osc.Message {
+func randomPatternNotes(
+	pattern string, quantity int, baseNote int,
+) []*osc.Message {
 	msgs := []*osc.Message{}
 
 	interval := 500
 	audibleDuration := 250
 
 	for offset := 0; offset < interval*quantity; offset += interval {
-		noteNumber := 30 + rand.Intn(60)
+		noteNumber := baseNote + rand.Intn(24)
 
 		msgs = append(msgs, patternMidiNoteMsg(
 			pattern, offset, noteNumber, interval, audibleDuration, 127,
@@ -187,70 +217,64 @@ func randomPatternNotes(pattern string, quantity int) []*osc.Message {
 }
 
 func changePattern(pattern string) *osc.Bundle {
-	bundle := osc.NewBundle(time.Now())
-	bundle.Append(patternClearMsg(pattern))
-	appendAll(bundle, randomPatternNotes(pattern, 4))
-	return bundle
+	msgs := []*osc.Message{patternClearMsg(pattern)}
+	msgs = append(msgs, randomPatternNotes(pattern, 4, 30)...)
+	return bundle(msgs...)
 }
 
 // Plays two loops concurrently, four times each, on the same track.
 func twoFiniteLoops() *osc.Bundle {
-	bundle := osc.NewBundle(time.Now())
-
 	pattern1 := "pattern1"
-	bundle.Append(patternClearMsg(pattern1))
-	appendAll(bundle, randomPatternNotes(pattern1, 4))
-
 	pattern2 := "pattern2"
-	bundle.Append(patternClearMsg(pattern2))
-	appendAll(bundle, randomPatternNotes(pattern2, 4))
 
-	bundle.Append(midiPatchMsg(1, 0, 0))
-	bundle.Append(patternMsg(1, 0, pattern1, 4))
-	bundle.Append(patternMsg(1, 100, pattern2, 4))
+	msgs := []*osc.Message{patternClearMsg(pattern1)}
+	msgs = append(msgs, randomPatternNotes(pattern1, 4, 30)...)
+	msgs = append(msgs, patternClearMsg(pattern2))
+	msgs = append(msgs, randomPatternNotes(pattern2, 4, 60)...)
+	msgs = append(msgs, []*osc.Message{
+		midiPatchMsg(1, 0, 0, 0),
+		patternMsg(1, 0, 0, pattern1, 4),
+		patternMsg(1, 0, 250, pattern2, 4),
+		systemPlayMsg(),
+	}...)
 
-	bundle.Append(systemPlayMsg())
-	return bundle
+	return bundle(msgs...)
 }
 
 // Plays two indefinite loops concurrently on the same track.
 func twoInfiniteLoops() *osc.Bundle {
-	bundle := osc.NewBundle(time.Now())
-
 	pattern1 := "pattern1"
-	bundle.Append(patternClearMsg(pattern1))
-	appendAll(bundle, randomPatternNotes(pattern1, 4))
-
 	pattern2 := "pattern2"
-	bundle.Append(patternClearMsg(pattern2))
-	appendAll(bundle, randomPatternNotes(pattern2, 4))
 
-	bundle.Append(midiPatchMsg(1, 0, 5))
-	bundle.Append(patternLoopMsg(pattern1, 0))
-	bundle.Append(patternLoopMsg(pattern2, 100))
+	msgs := []*osc.Message{patternClearMsg(pattern1)}
+	msgs = append(msgs, randomPatternNotes(pattern1, 4, 30)...)
+	msgs = append(msgs, patternClearMsg(pattern2))
+	msgs = append(msgs, randomPatternNotes(pattern2, 4, 60)...)
+	msgs = append(msgs, []*osc.Message{
+		midiPatchMsg(1, 0, 0, 5),
+		patternLoopMsg(1, 0, 0, pattern1),
+		patternLoopMsg(1, 0, 250, pattern2),
+		systemPlayMsg(),
+	}...)
 
-	bundle.Append(systemPlayMsg())
-	return bundle
+	return bundle(msgs...)
 }
 
 func loopPattern(pattern string) *osc.Bundle {
-	bundle := osc.NewBundle(time.Now())
-	bundle.Append(patternClearMsg(pattern))
-	bundle.Append(patternMidiNoteMsg(pattern, 0, 40, 400, 400, 127))
-	bundle.Append(patternMidiNoteMsg(pattern, 400, 41, 400, 400, 127))
-	bundle.Append(patternMidiNoteMsg(pattern, 800, 42, 400, 400, 127))
-	bundle.Append(patternMidiNoteMsg(pattern, 1200, 43, 400, 400, 127))
-	bundle.Append(midiPatchMsg(1, 0, 10))
-	bundle.Append(patternLoopMsg(pattern, 0))
-	bundle.Append(systemPlayMsg())
-	return bundle
+	return bundle(
+		patternClearMsg(pattern),
+		patternMidiNoteMsg(pattern, 0, 40, 400, 400, 127),
+		patternMidiNoteMsg(pattern, 400, 41, 400, 400, 127),
+		patternMidiNoteMsg(pattern, 800, 42, 400, 400, 127),
+		patternMidiNoteMsg(pattern, 1200, 43, 400, 400, 127),
+		midiPatchMsg(1, 0, 0, 10),
+		patternLoopMsg(1, 0, 0, pattern),
+		systemPlayMsg(),
+	)
 }
 
 func tempoMsg(offset int, bpm float32) *osc.Message {
-	msg := osc.NewMessage("/system/tempo")
-	msg.Append(int32(offset))
-	msg.Append(bpm)
-	return msg
+	return osc.NewMessage("/system/tempo", int32(offset), bpm)
 }
 
 // Set a bunch of arbitrary tempos. The point of this is that the tempo event
@@ -262,12 +286,12 @@ func tempoMsg(offset int, bpm float32) *osc.Message {
 // Tempo isn't really important for playback, but it's important that we be able
 // to set it so that we can export MIDI files that work with other software.
 func variousTempos() *osc.Bundle {
-	bundle := osc.NewBundle(time.Now())
-	bundle.Append(tempoMsg(0, 130))
-	bundle.Append(tempoMsg(500, 62))
-	bundle.Append(tempoMsg(5000, 200))
-	bundle.Append(tempoMsg(10000, 400))
-	return bundle
+	return bundle(
+		tempoMsg(0, 130),
+		tempoMsg(500, 62),
+		tempoMsg(5000, 200),
+		tempoMsg(10000, 400),
+	)
 }
 
 func printUsage() {
@@ -311,35 +335,45 @@ func main() {
 		client.Send(systemClearMsg())
 	case "clear1":
 		client.Send(clearMsg(1))
-	case "mute":
-		client.Send(muteMsg(1))
-	case "unmute":
-		client.Send(unmuteMsg(1))
 	case "export":
 		client.Send(exportMsg("/tmp/alda-test.mid"))
-	case "perc":
-		client.Send(midiPercussionMsg(1))
+	case "drums":
+		client.Send(drumsDemo())
 	case "1":
 		client.Send(oneNote())
 	case "16fast":
 		client.Send(sixteenFastNotes())
 	case "pat1":
+		// NOTE: A quirk of the way that pattern scheduling works is that the MIDI
+		// engine needs to be playing, first, so that the "schedule pattern"
+		// meta-message will be encountered and processed.
+		//
+		// If the engine is stopped, then `awaitActiveTasks()` will block until the
+		// events are scheduled, so the engine never starts playing. It's sort of a
+		// chicken-and-egg problem. To work around that, we'll just send a "play"
+		// message here to ensure that the engine is playing.
+		client.Send(bundle(systemPlayMsg()))
 		client.Send(playPatternOnce("simple"))
 	case "pat2":
+		client.Send(bundle(systemPlayMsg()))
 		client.Send(playPatternTwice("simple"))
 	case "pat3":
+		client.Send(bundle(systemPlayMsg()))
 		client.Send(playPatternThrice("simple"))
 	case "patchange":
 		client.Send(changePattern("simple"))
 	case "patx":
 		client.Send(patternClearMsg("simple"))
 	case "patloop":
+		client.Send(bundle(systemPlayMsg()))
 		client.Send(loopPattern("simple"))
 	case "patfin":
 		client.Send(finishLoopMsg(1))
 	case "2loops":
+		client.Send(bundle(systemPlayMsg()))
 		client.Send(twoFiniteLoops())
 	case "2infinity":
+		client.Send(bundle(systemPlayMsg()))
 		client.Send(twoInfiniteLoops())
 	case "tempos":
 		client.Send(variousTempos())

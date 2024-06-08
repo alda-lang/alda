@@ -1,0 +1,115 @@
+# This demonstrates Alda's ability to automatically assign MIDI channels for
+# each part in a score, even if there are more parts than there are available
+# channels.
+#
+# In the MIDI spec, there are 15 non-percussion channels and 1 percussion
+# channel.
+#
+# As long as there aren't more than 15 non-percussion parts that have notes at
+# the same time, Alda will automatically find a channel for each note, switching
+# to a free channel if necessary.
+
+(tempo! 180)
+
+################################################################################
+# Planning notes:
+#
+# Bm7, Bbm7, Am7, D13b5b9 (Ab - Eb - C - F# - B)
+#
+# 1-3.   bass         (B, Bb, A, Ab)        2 quarter notes per note
+# 4-6.   harm 1       (A, Ab, G, Eb)        1 half note per note
+# 7-9.   harm 2       (D, Db, C, C)         ""
+# 10-12. harm 3       (F#, F, E, (F# / B))  ""
+# 13-15. counterpoint
+################################################################################
+
+bass = b2 b- a a-
+harmA = a2 a- g e-
+harmB = d2 d- c c
+harmCa = f+2 f_ e f+
+harmCb = f+2 f_ e b
+counterA = r4 f+6 r12 r6 f12   r4 e6 e12 r6 f+12~4 r4
+counterB = r4 b6  r12 r6 b-12  r4 a6 a12 r6 b12~4 r4
+counterC = r4 d6  r12 r6 d-12  r4 c6 c12 r6 c12~4 r4
+
+bassEnd = g1~1
+harmAEnd = d1~1
+harmBEnd = b1~1
+harmCaEnd = f+1~1
+harmCbEnd = b1~1
+counterAEnd = e1~1
+counterBEnd = b1~1
+counterCEnd = b1~1
+
+################################################################################
+# Percussion (always on channel 9, the only percussion channel)
+################################################################################
+percussion:
+  jazzyBeat = [
+    V1: o2 (p) c4 *8
+    V2: o2 (mf) [ r4 g+ r g+ ]*2
+    V3: o3 (mf) [ b4 b6 b12 ]*4
+    V4: o2 (p) [ r2 r6 d12 r4 ]*2
+  ]
+
+  jazzyBeat*4
+
+################################################################################
+# First group of 15 instruments
+################################################################################
+
+midi-electric-bass-finger: o1 bass*2
+midi-acoustic-guitar-steel: o2 bass*2
+midi-tuba: o1 bass*2
+midi-bassoon: o3 harmA*2
+midi-french-horn: o3 harmA*2
+midi-trombone: o3 harmA*2
+midi-rock-organ: o4 harmB*2
+midi-tango-accordion: o4 harmB*2
+midi-tenor-sax: o4 harmB*2
+midi-alto-sax: o4 harmCa*2
+midi-vibraphone: o4 harmCb*2
+midi-trumpet: o4 harmCb*2
+midi-bright-acoustic-piano: o6 counterA*2
+midi-glockenspiel: o6 counterB*2
+midi-celesta: o7 counterC*2
+
+################################################################################
+# Second group of 15 instruments
+################################################################################
+
+midi-synth-bass-1: r1*4 o1 bass*2
+midi-synth-bass-2: r1*4 o1 bass*2
+midi-bass-and-lead: r1*4 (p) o2 bass*2
+midi-cello: r1*4 o3 harmA*2
+midi-saw-wave: r1*4 o3 harmA*2
+midi-synth-pad-choir: r1*4 o3 harmA*2
+midi-viola: r1*4 o4 harmB*2
+midi-shamisen: r1*4 o4 harmB*2
+midi-sitar: r1*4 o4 harmB*2
+midi-banjo: r1*4 o4 harmCa*2
+midi-violin: r1*4 o4 harmCb*2
+midi-kalimba: r1*4 o4 harmCb*2
+midi-tinkle-bell: r1*4 o6 counterA*2
+midi-fx-crystal: r1*4 o6 counterB*2
+midi-whistle: r1*4 o7 counterC*2
+
+################################################################################
+# Back to first group
+################################################################################
+
+midi-electric-bass-finger: r1*4 o1 bassEnd
+midi-acoustic-guitar-steel: r1*4 o2 bassEnd
+midi-tuba: r1*4  o1 bassEnd
+midi-bassoon: r1*4  o3 harmAEnd
+midi-french-horn: r1*4 o3 harmAEnd
+midi-trombone: r1*4 o3 harmAEnd
+midi-rock-organ: r1*4 o4 harmBEnd
+midi-tango-accordion: r1*4 o4 harmBEnd
+midi-tenor-sax: r1*4 o4 harmBEnd
+midi-alto-sax: r1*4 o4 harmCaEnd
+midi-vibraphone: r1*4 o4 harmCbEnd
+midi-trumpet: r1*4 o4 harmCbEnd
+midi-bright-acoustic-piano: r1*4 o6 counterAEnd
+midi-glockenspiel: r1*4 o6 counterBEnd
+midi-celesta: r1*4 o7 counterCEnd
