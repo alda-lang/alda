@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	_ "alda.io/client/testing"
@@ -149,6 +150,18 @@ func sixteenInstrumentsScoreUpdates() []ScoreUpdate {
 	return manyInstrumentsScoreUpdates(sixteenInstruments())
 }
 
+// 17 instruments all playing at the same time. Problematic because there are
+// only 16 channels.
+func seventeenInstrumentsScoreUpdatesWithConflict() []ScoreUpdate {
+	firstSixteen := sixteenInstruments()
+	oneMore := fifteenMoreInstruments()[0]
+
+	return append(
+		manyInstrumentsScoreUpdates(firstSixteen),
+		manyInstrumentsScoreUpdates([]string{oneMore})...,
+	)
+}
+
 func fifteenInstrumentsExpectations() []scoreUpdateExpectation {
 	return manyInstrumentsExpectations(fifteenInstruments())
 }
@@ -276,6 +289,19 @@ func TestMidiChannelAssignment(t *testing.T) {
 			label:        "automatic channel assignment - 16 instruments",
 			updates:      sixteenInstrumentsScoreUpdates(),
 			expectations: sixteenInstrumentsExpectations(),
+		},
+		scoreUpdateTestCase{
+			label:   "automatic channel assignment - 17 instruments + channel conflict",
+			updates: seventeenInstrumentsScoreUpdatesWithConflict(),
+			errorExpectations: []scoreUpdateErrorExpectation{
+				func(err error) error {
+					if !strings.Contains(err.Error(), "No MIDI channel available") {
+						return err
+					}
+
+					return nil
+				},
+			},
 		},
 		scoreUpdateTestCase{
 			label:        "automatic channel assignment - 31 instruments",
