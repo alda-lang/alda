@@ -2,18 +2,76 @@
 
 ## Unreleased
 
-This release includes some breaking changes to the Alda OSC API, which is the
-communication layer between the Alda client and player processes:
+> Incidental note: This release includes some **breaking changes** to the Alda
+> OSC API, which is the communication layer between the Alda client and player
+> processes:
+>
+> * Added a required channel number argument to a handful of endpoints.
+>
+> * Removed `/track/{number}/midi/percussion` endpoint, which is no longer
+>   needed.
+>
+> * Removed unused mute/unmute functionality.
+>
+> These changes will not affect the vast majority of Alda users. The only way
+> that you might run into issues is if you have written software that interfaces
+> with the Alda player process directly, instead of using the Alda client.
+>
+> The general Alda experience still works exactly the same way as it did before,
+> so the aforementioned changes probably won't affect you.
 
-* Added a required channel number argument to a handful of endpoints.
+As of this release, we've re-worked the way that MIDI channels are assigned to
+parts. This addresses [some shortcomings][midi-channel-assignment-discussion]
+that have have come up in discussions a few times. To summarize, prior to this
+release:
 
-* Removed `/track/{number}/midi/percussion` endpoint, which is no longer needed.
+* It was not possible to include more than 16 instruments in a score.
 
-* Removed unused mute/unmute functionality.
+* There was no visible error message when a score exceeded the number of
+  available MIDI channels (16). The player process would log an error and do its
+  best to play the score (leaving out some parts), but the client would just say
+  "Playing..." and it was not obvious that there was a problem.
 
-These changes will not affect the vast majority of Alda users. The only way that
-you might run into issues is if you have written software that interfaces with
-the Alda player process directly, instead of using the Alda client.
+* MIDI channel assignment order was non-deterministic. This meant that when you
+  exported scores to MIDI files, the instruments used in each channel were not
+  necessarily in the same order that they appeared in the score.
+
+* There was no way to control which MIDI channel was used for each part.
+
+As of this release:
+
+* MIDI channel assignment is now handled on the client side, and is **fully
+  deterministic**. The order of parts presented in the score maps to the order
+  of channels in exported MIDI files in an intuitive way.
+
+* The Alda client provides **helpful error messages** in cases where it is not
+  possible to use the 16 available MIDI channels to play your score.
+
+* You can now have **more than 16 instruments in a score**, just as long as
+  there are never more than 15 non-percussion instruments playing _at the same
+  time_. I wrote a handful of fun, new example scores to show you what's
+  possible:
+
+  * [`all-instruments.alda`][all-instruments]: A demo of **all 128 General MIDI
+    instruments**, played back to back
+
+  * [`midi-channel-management.alda`][midi-channel-management]: A quick jazzy
+    number featuring **31 instruments**: 1 percussion part playing throughout,
+    and two groups of 15 instruments playing together at a time.
+
+  * [`midi-channel-management-2.alda`][midi-channel-management-2]: A tiny
+    example showing how the new `midi-channel` attribute works.
+
+* There is a new [`midi-channel` attribute][midi-channel-attribute] that allows
+  you to explicitly specify which MIDI channel should be used at that point in
+  time for the notes in that part. Most of you will never need to use this
+  attribute, because Alda does a good job of automatically assigning MIDI
+  channels to parts for you. But for those of you who want more control over
+  MIDI channel assignment, this attribute will give you that power.
+
+I hope you enjoy Alda's newfound ability to handle large numbers of instruments
+in a score. I'm pretty excited about it! As always, please let us know if you
+notice any bugs or unexplained behavior!
 
 ## 2.2.7 (2023-09-01)
 
@@ -328,3 +386,8 @@ the [Alda 2 migration guide][migration-guide]!
 [alan-ma]: https://github.com/alan-ma
 
 [alda-import-blog-post]: https://blog.djy.io/musicxml-import-and-another-new-alda-features/
+[midi-channel-assignment-discussion]: https://github.com/alda-lang/alda/discussions/447
+[all-instruments]: ./examples/all-instruments.alda
+[midi-channel-management]: ./examples/midi-channel-management.alda
+[midi-channel-management-2]: ./examples/midi-channel-management-2.alda
+[midi-channel-attribute]: ./doc/attributes.md#midi-channel
