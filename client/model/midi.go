@@ -1,12 +1,19 @@
 package model
 
 import (
+	"alda.io/client/color"
 	"alda.io/client/help"
 )
 
 // midiChannelUsage keeps track of which parts are using each of the 16
 // available MIDI channels.
 type midiChannelUsage = [16][]*Part
+
+func (s *Score) channelIsUnused(midiChannel int32) bool {
+	channelUsage := s.midiChannelUsage[midiChannel]
+
+	return len(channelUsage) == 0
+}
 
 func (s *Score) partHasExclusiveAccess(part *Part, midiChannel int32) bool {
 	channelUsage := s.midiChannelUsage[midiChannel]
@@ -118,6 +125,33 @@ func (s *Score) determineMidiChannel(
 	// Channel 9 is the only channel that can be used for percussion.
 	if part.StockInstrument.(MidiInstrument).IsPercussion {
 		return 9, nil
+	}
+
+	if part.HasExplicitMidiChannel {
+		if s.channelIsUnused(part.MidiChannel) ||
+			s.partHasExclusiveAccess(part, part.MidiChannel) {
+			return part.MidiChannel, nil
+		}
+
+		if _, channel := s.complexCheck(
+			part, noteDurationMs,
+		); channel != part.MidiChannel {
+			return -1, help.UserFacingErrorf(
+				`The specified MIDI channel (%d) for part "%s" is not available at offset %f.
+
+This means that another part in the score is already using that channel at that
+point in the score.
+
+To address this, use the %s attribute to assign a different MIDI channel to the
+other parts in the score.`,
+				part.MidiChannel,
+				part.Name,
+				part.CurrentOffset,
+				color.Aurora.BrightYellow("midi-channel"),
+			)
+		}
+
+		return part.MidiChannel, nil
 	}
 
 	if part.MidiChannel != -1 &&

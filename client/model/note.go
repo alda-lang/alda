@@ -95,7 +95,9 @@ func addNoteOrRest(score *Score, noteOrRest ScoreUpdate) error {
 	// (To apply the change one time in the case of a chord, we call
 	// score.ApplyGlobalAttributes() as part of the chord score update).
 	if !score.chordMode {
-		score.ApplyGlobalAttributes()
+		if err := score.ApplyGlobalAttributes(); err != nil {
+			return err
+		}
 	}
 
 	var specifiedDuration Duration

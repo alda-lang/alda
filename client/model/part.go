@@ -58,10 +58,13 @@ type Part struct {
 	// The sentinel value -1 means that no channel has yet been assigned. When a
 	// note occurs in this scenario, an available channel will be chosen and
 	// `midiChannel` will be updated.
-	MidiChannel  int32
-	Quantization float64
-	Duration     Duration
-	TimeScale    float64
+	MidiChannel int32
+	// When true, the score declares a specific MIDI channel that this part should
+	// use. (This is done via the `midi-channel` attribute.)
+	HasExplicitMidiChannel bool
+	Quantization           float64
+	Duration               Duration
+	TimeScale              float64
 	// A map of offset to the tempo value that should be applied at that offset.
 	// See *Part.RecordTempoValue.
 	TempoValues map[float64]float64
@@ -156,18 +159,19 @@ func (score *Score) NewPart(name string) (*Part, error) {
 	}
 
 	part := &Part{
-		Name:            name,
-		StockInstrument: stock,
-		CurrentOffset:   0,
-		LastOffset:      -1,
-		Octave:          4,
-		Tempo:           120,
-		TempoValues:     map[float64]float64{},
-		Volume:          DynamicVolumes["mf"],
-		TrackVolume:     100.0 / 127,
-		Panning:         0.5,
-		MidiChannel:     -1, // Initially unassigned
-		Quantization:    0.9,
+		Name:                   name,
+		StockInstrument:        stock,
+		CurrentOffset:          0,
+		LastOffset:             -1,
+		Octave:                 4,
+		Tempo:                  120,
+		TempoValues:            map[float64]float64{},
+		Volume:                 DynamicVolumes["mf"],
+		TrackVolume:            100.0 / 127,
+		Panning:                0.5,
+		MidiChannel:            -1, // Initially unassigned
+		HasExplicitMidiChannel: false,
+		Quantization:           0.9,
 		Duration: Duration{
 			Components: []DurationComponent{NoteLength{Denominator: 4}},
 		},
@@ -270,7 +274,7 @@ func (score *Score) AliasesFor(part *Part) []string {
 type PartUpdate interface {
 	json.RepresentableAsJSON
 
-	updatePart(part *Part, globalUpdate bool)
+	updatePart(part *Part, globalUpdate bool) error
 }
 
 // Once an alias is defined for a group, its individual parts can be accessed by

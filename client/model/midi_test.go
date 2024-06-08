@@ -310,3 +310,178 @@ func TestMidiChannelAssignment(t *testing.T) {
 		},
 	)
 }
+
+func TestMidiChannelAttribute(t *testing.T) {
+	executeScoreUpdateTestCases(
+		t,
+		scoreUpdateTestCase{
+			label: "midi-channel attribute - 1 part",
+			updates: []ScoreUpdate{
+				PartDeclaration{
+					Names: []string{"piano"},
+				},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "midi-channel"},
+					LispNumber{Value: 5},
+				}},
+				Note{Pitch: LetterAndAccidentals{NoteLetter: C}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectParts("piano"),
+				expectPartMidiChannel("piano", 5),
+				expectNoteMidiChannels(5),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "midi-channel attribute - 2 parts, different channels",
+			updates: []ScoreUpdate{
+				PartDeclaration{
+					Names: []string{"piano"},
+				},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "midi-channel"},
+					LispNumber{Value: 2},
+				}},
+				Note{Pitch: LetterAndAccidentals{NoteLetter: C}},
+				PartDeclaration{
+					Names: []string{"guitar"},
+				},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "midi-channel"},
+					LispNumber{Value: 5},
+				}},
+				Note{Pitch: LetterAndAccidentals{NoteLetter: C}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectParts("piano", "guitar"),
+				expectPartMidiChannel("piano", 2),
+				expectPartMidiChannel("guitar", 5),
+				expectNoteMidiChannels(2, 5),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "midi-channel attribute - 2 parts sharing same channel",
+			updates: []ScoreUpdate{
+				PartDeclaration{
+					Names: []string{"piano"},
+				},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "midi-channel"},
+					LispNumber{Value: 2},
+				}},
+				Note{Pitch: LetterAndAccidentals{NoteLetter: C}},
+				PartDeclaration{
+					Names: []string{"guitar"},
+				},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "midi-channel"},
+					LispNumber{Value: 2},
+				}},
+				Rest{Duration: Duration{
+					Components: []DurationComponent{
+						NoteLength{Denominator: 1},
+					},
+				}},
+				Note{Pitch: LetterAndAccidentals{NoteLetter: C}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectParts("piano", "guitar"),
+				expectPartMidiChannel("piano", 2),
+				expectPartMidiChannel("guitar", 2),
+				expectNoteMidiChannels(2, 2),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "midi-channel attribute - 2 parts with channel conflict",
+			updates: []ScoreUpdate{
+				PartDeclaration{
+					Names: []string{"piano"},
+				},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "midi-channel"},
+					LispNumber{Value: 2},
+				}},
+				Note{Pitch: LetterAndAccidentals{NoteLetter: C}},
+				PartDeclaration{
+					Names: []string{"guitar"},
+				},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "midi-channel"},
+					LispNumber{Value: 2},
+				}},
+				Note{Pitch: LetterAndAccidentals{NoteLetter: C}},
+			},
+			errorExpectations: []scoreUpdateErrorExpectation{
+				func(err error) error {
+					if !strings.Contains(err.Error(), "not available") {
+						return err
+					}
+
+					return nil
+				},
+			},
+		},
+		scoreUpdateTestCase{
+			label: "midi-channel attribute - assign to invalid channel",
+			updates: []ScoreUpdate{
+				PartDeclaration{
+					Names: []string{"piano"},
+				},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "midi-channel"},
+					LispNumber{Value: 42},
+				}},
+				Note{Pitch: LetterAndAccidentals{NoteLetter: C}},
+			},
+			errorExpectations: []scoreUpdateErrorExpectation{
+				func(err error) error {
+					if !strings.Contains(err.Error(), "expected integer in range 0-15") {
+						return err
+					}
+
+					return nil
+				},
+			},
+		},
+		scoreUpdateTestCase{
+			label: "midi-channel attribute - assign percussion to channel 9",
+			updates: []ScoreUpdate{
+				PartDeclaration{
+					Names: []string{"percussion"},
+				},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "midi-channel"},
+					LispNumber{Value: 9},
+				}},
+				Note{Pitch: LetterAndAccidentals{NoteLetter: C}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectParts("percussion"),
+				expectPartMidiChannel("percussion", 9),
+				expectNoteMidiChannels(9),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "midi-channel attribute - assign non-percussion to channel 9",
+			updates: []ScoreUpdate{
+				PartDeclaration{
+					Names: []string{"bassoon"},
+				},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "midi-channel"},
+					LispNumber{Value: 9},
+				}},
+				Note{Pitch: LetterAndAccidentals{NoteLetter: C}},
+			},
+			errorExpectations: []scoreUpdateErrorExpectation{
+				func(err error) error {
+					if !strings.Contains(err.Error(), "channel 9") {
+						return err
+					}
+
+					return nil
+				},
+			},
+		},
+	)
+}

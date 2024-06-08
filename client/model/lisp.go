@@ -454,6 +454,30 @@ func integer(form LispForm) (int32, error) {
 	return int32(number.Value), nil
 }
 
+func integerInRange(form LispForm, lower int32, upper int32) (int32, error) {
+	number := form.(LispNumber)
+
+	if number.Value != float64(int32(number.Value)) {
+		return 0, &AldaSourceError{
+			Context: number.SourceContext,
+			Err:     fmt.Errorf("expected integer, got %f", number.Value),
+		}
+	}
+
+	integer := int32(number.Value)
+
+	if integer < lower || integer > upper {
+		return 0, &AldaSourceError{
+			Context: number.SourceContext,
+			Err: fmt.Errorf(
+				"expected integer in range %d-%d, got %d", lower, upper, integer,
+			),
+		}
+	}
+
+	return integer, nil
+}
+
 func percentage(form LispForm) (float64, error) {
 	number := form.(LispNumber)
 
@@ -1137,6 +1161,20 @@ func init() {
 					return nil, err
 				}
 				return ReferencePitchSet{Frequency: frequency}, nil
+			},
+		},
+	)
+
+	// The MIDI channel to use. See `MidiChannelSet`.
+	defattribute([]string{"midi-channel"},
+		attributeFunctionSignature{
+			argumentTypes: []LispForm{LispNumber{}},
+			implementation: func(args ...LispForm) (PartUpdate, error) {
+				channelNumber, err := integerInRange(args[0], 0, 15)
+				if err != nil {
+					return nil, err
+				}
+				return MidiChannelSet{ChannelNumber: channelNumber}, nil
 			},
 		},
 	)
