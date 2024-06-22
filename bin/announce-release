@@ -33,18 +33,18 @@ for cmd in jo curl; do
   fi
 done
 
-################################################################################
-# Fetch release notes
-################################################################################
+anchor="$(grep "$release_version" "$(dirname "$0")/../CHANGELOG.md" \
+  | head -n1 \
+  | sed 's/^#\+ //' \
+  | tr -d '.()' \
+  | tr ' ' '-')" \
 
-releases_url="https://nyc3.digitaloceanspaces.com/alda-releases"
-changelog_url="$releases_url/$release_version/CHANGELOG.md"
+if [[ -z "$anchor" ]]; then
+  echo "Release version '$release_version' not found in CHANGELOG.md"
+  exit 1
+fi
 
-changelog="$(mktemp)"
-
-curl -s --fail "$changelog_url" \
-  >> "$changelog" \
-  || (echo "404: $changelog_url"; exit 1) \
+release_notes_url="https://github.com/alda-lang/alda/blob/master/CHANGELOG.md#$anchor"
 
 ################################################################################
 # Wait until release is available via the Alda API
@@ -67,11 +67,7 @@ done
 # Announce release on Slack
 ################################################################################
 
-release_now_available="*Alda version $release_version is now available!*"
-
-release_notes="$(cat \
-                   <(echo -e "_Release notes:_\n") \
-                   "$changelog")"
+release_now_available="*Alda version $release_version is now available!* Here are the <$release_notes_url|release notes>."
 
 instructions="$(cat <<EOF
 _To get the latest version of Alda, go to https://alda.io/install or run \`alda update\`._
@@ -88,7 +84,6 @@ curl \
               channel="$slack_channel" \
               icon_emoji="alda" \
               username="Release announcement" \
-              text="$(cat "$changelog")" \
               blocks="$(jo -a \
                           "$(jo \
                                type="section" \
@@ -100,11 +95,4 @@ curl \
                                type="section" \
                                text="$(jo \
                                          type="mrkdwn" \
-                                         text="$release_notes")")" \
-                          "$(jo type="divider")" \
-                          "$(jo \
-                               type="section" \
-                               text="$(jo \
-                                         type="mrkdwn" \
                                          text="$instructions")")")")"
-
