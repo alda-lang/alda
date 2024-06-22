@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## 2.3.0 (2024-06-22)
 
 ### Improved MIDI channel assignment
 
