@@ -92,7 +92,7 @@ func midiPanningMsg(track int32, channel int32, offset int32, panning int32) *os
 }
 
 func oscClient(port int) *osc.Client {
-	return osc.NewClient("localhost", int(port), osc.ClientProtocol(osc.TCP))
+	return osc.NewClient("127.0.0.1", int(port), osc.ClientProtocol(osc.TCP))
 }
 
 // TransmitMidiExportMessage sends a "MIDI export" message to a player process.

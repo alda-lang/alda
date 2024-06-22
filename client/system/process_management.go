@@ -353,7 +353,7 @@ func PingPlayer(port int) (*osc.Client, error) {
 		Int("port", port).
 		Msg("Waiting for player to respond to ping.")
 
-	client := osc.NewClient("localhost", port, osc.ClientProtocol(osc.TCP))
+	client := osc.NewClient("127.0.0.1", port, osc.ClientProtocol(osc.TCP))
 
 	err := util.Await(
 		func() error {

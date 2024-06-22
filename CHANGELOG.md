@@ -81,6 +81,11 @@ notice any bugs or unexplained behavior!
   the "Send and receive OSC messages" step. Now if there's an error during that
   step, it will print the error message.
 
+* Client/player communication is now done via `127.0.0.1` by default, instead of
+  `localhost`. These are effectively the same thing, but it's possible for
+  `localhost` not to work, depending on your host configuration. `127.0.0.1` is
+  more likely to work.
+
 ## 2.2.7 (2023-09-01)
 
 Added a `pid` column to the output of `alda ps`, the value of which is the

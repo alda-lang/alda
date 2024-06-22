@@ -322,7 +322,7 @@ func main() {
 		example = os.Args[2]
 	}
 
-	client := osc.NewClient("localhost", int(port), osc.ClientProtocol(osc.TCP))
+	client := osc.NewClient("127.0.0.1", int(port), osc.ClientProtocol(osc.TCP))
 
 	switch example {
 	case "shutdown":
