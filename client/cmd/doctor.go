@@ -195,15 +195,17 @@ var doctorCmd = &cobra.Command{
 					}
 				}()
 
-				if err := util.Await(
-					func() error {
-						transmitter := transmitter.OSCTransmitter{Port: playerPort}
-						return transmitter.TransmitScore(score)
-					},
-					reasonableTimeout,
-				); err != nil {
-					errors <- err
-				}
+				go func() {
+					if err := util.Await(
+						func() error {
+							transmitter := transmitter.OSCTransmitter{Port: playerPort}
+							return transmitter.TransmitScore(score)
+						},
+						reasonableTimeout,
+					); err != nil {
+						errors <- err
+					}
+				}()
 
 				select {
 				case <-packetsReceived:
