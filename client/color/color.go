@@ -2,9 +2,11 @@ package color
 
 import (
 	"os"
+	"runtime"
 
 	auroraLib "github.com/logrusorgru/aurora"
 	"github.com/mattn/go-isatty"
+	"golang.org/x/sys/windows/registry"
 )
 
 // We're using a couple of libraries that produce ANSI escape sequences to print
@@ -40,6 +42,20 @@ func init() {
 	// HACK: Ideally, aurora would support NO_COLOR, but at least they give us a
 	// config option so that we can disable color manually.
 	//
-	// See the longer comment above EnableColor.
+	if runtime.GOOS == "windows" {
+		var key, err = registry.OpenKey(registry.CURRENT_USER, "Console", registry.QUERY_VALUE)
+		if err != nil {
+			EnableColor = false
+		} else {
+			var val, _, err = key.GetIntegerValue("VirtualTerminalLevel")
+			if err != nil {
+				EnableColor = false
+			} else if val == 0 {
+				EnableColor = false
+			}
+		}
+	}
+	print("Enable color: ")
+	print(EnableColor)
 	Aurora = auroraLib.NewAurora(EnableColor)
 }
