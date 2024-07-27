@@ -41,7 +41,8 @@ var Aurora auroraLib.Aurora
 func init() {
 	// HACK: Ideally, aurora would support NO_COLOR, but at least they give us a
 	// config option so that we can disable color manually.
-	//
+
+	//Check registry for enabled color printing(only for windows)
 	if runtime.GOOS == "windows" {
 		var key, err = registry.OpenKey(registry.CURRENT_USER, "Console", registry.QUERY_VALUE)
 		if err != nil {
@@ -55,7 +56,6 @@ func init() {
 			}
 		}
 	}
-	print("Enable color: ")
-	print(EnableColor)
+
 	Aurora = auroraLib.NewAurora(EnableColor)
 }
