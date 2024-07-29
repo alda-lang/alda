@@ -16,7 +16,7 @@ require (
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/google/uuid v1.1.1
 	github.com/jackpal/bencode-go v1.0.0
-	github.com/logrusorgru/aurora v0.0.0-20200102142835-e9ef32dff381
+	github.com/logrusorgru/aurora v2.0.3+incompatible
 	github.com/mattn/go-isatty v0.0.8
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/rs/zerolog v1.21.0

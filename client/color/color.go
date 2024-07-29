@@ -41,5 +41,8 @@ var Aurora auroraLib.Aurora
 func init() {
 	// HACK: Ideally, aurora would support NO_COLOR, but at least they give us a
 	// config option so that we can disable color manually.
+	//
+	// See the longer comment above EnableColor.
+
 	Aurora = auroraLib.NewAurora(EnableColor)
 }

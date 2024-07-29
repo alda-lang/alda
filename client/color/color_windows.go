@@ -1,10 +1,7 @@
-//go:build windows
-
 package color
 
 import (
 	"os"
-	"runtime"
 
 	auroraLib "github.com/logrusorgru/aurora"
 	"github.com/mattn/go-isatty"
@@ -43,19 +40,20 @@ var Aurora auroraLib.Aurora
 func init() {
 	// HACK: Ideally, aurora would support NO_COLOR, but at least they give us a
 	// config option so that we can disable color manually.
+	//
+	// See the longer comment above EnableColor.
 
-	//Check registry for enabled color printing(only for windows)
-	if runtime.GOOS == "windows" {
-		var key, err = registry.OpenKey(registry.CURRENT_USER, "Console", registry.QUERY_VALUE)
+	// Check registry for enabled color printing(only for windows)
+
+	var key, err = registry.OpenKey(registry.CURRENT_USER, "Console", registry.QUERY_VALUE)
+	if err != nil {
+		EnableColor = false
+	} else {
+		var val, _, err = key.GetIntegerValue("VirtualTerminalLevel")
 		if err != nil {
 			EnableColor = false
-		} else {
-			var val, _, err = key.GetIntegerValue("VirtualTerminalLevel")
-			if err != nil {
-				EnableColor = false
-			} else if val == 0 {
-				EnableColor = false
-			}
+		} else if val == 0 {
+			EnableColor = false
 		}
 	}
 
