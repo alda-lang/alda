@@ -38,11 +38,6 @@ var EnableColor = isatty.IsTerminal(os.Stdout.Fd()) &&
 var Aurora auroraLib.Aurora
 
 func init() {
-	// HACK: Ideally, aurora would support NO_COLOR, but at least they give us a
-	// config option so that we can disable color manually.
-	//
-	// See the longer comment above EnableColor.
-
 	// Check registry for enabled color printing(only for windows)
 
 	var key, err = registry.OpenKey(registry.CURRENT_USER, "Console", registry.QUERY_VALUE)
@@ -56,6 +51,11 @@ func init() {
 			EnableColor = false
 		}
 	}
+
+	// HACK: Ideally, aurora would support NO_COLOR, but at least they give us a
+	// config option so that we can disable color manually.
+	//
+	// See the longer comment above EnableColor.
 
 	Aurora = auroraLib.NewAurora(EnableColor)
 }
