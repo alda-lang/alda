@@ -43,6 +43,5 @@ func init() {
 	// config option so that we can disable color manually.
 	//
 	// See the longer comment above EnableColor.
-
 	Aurora = auroraLib.NewAurora(EnableColor)
 }
