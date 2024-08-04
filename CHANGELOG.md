@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## 2.3.1 (2024-08-04)
+
+Fixed an issue where ANSI color codes (e.g. `←[36m`) were being displayed when
+running Alda in Powershell. Thanks, [Vanello1908], for the contribution!
+
+See [this issue][issue-405] for further discussion. There is still a remaining
+issue where the background color is changing unexpectedly, but as of this
+release, the ANSI codes should at least be gone.
+
 ## 2.3.0 (2024-06-22)
 
 ### Improved MIDI channel assignment
@@ -397,6 +406,7 @@ the [Alda 2 migration guide][migration-guide]!
 [kylewilk567]: https://github.com/kylewilk567
 [Scowluga]: https://github.com/Scowluga
 [alan-ma]: https://github.com/alan-ma
+[Vanello1908]: https://github.com/Vanello1908
 
 [alda-import-blog-post]: https://blog.djy.io/musicxml-import-and-another-new-alda-features/
 [midi-channel-assignment-discussion]: https://github.com/alda-lang/alda/discussions/447
@@ -404,3 +414,4 @@ the [Alda 2 migration guide][migration-guide]!
 [midi-channel-management]: ./examples/midi-channel-management.alda
 [midi-channel-management-2]: ./examples/midi-channel-management-2.alda
 [midi-channel-attribute]: ./doc/attributes.md#midi-channel
+[issue-405]: https://github.com/alda-lang/alda/issues/405
