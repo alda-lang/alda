@@ -32,7 +32,7 @@
 - [ ] chords.md
 - [ ] comments.md
 - [ ] cram-expressions.md
-- [ ] editor-plugins.md
+- [x] editor-plugins.md
 - [ ] implementing-an-alda-library.md
 - [x] index.md
 - [ ] installing-a-good-soundfont.md
