@@ -10,7 +10,7 @@
 |Ace|[内置支持](https://ace.c9.io)|
 |Atom|[MadcapJake/language-alda](https://github.com/MadcapJake/language-alda)|
 |Eclipse|[VishwaasHegde/Alda-Eclipse-Plugin](https://github.com/VishwaasHegde/Alda-Eclipse-Plugin)|
-|Emacs|[https://gitlab.com/jgkamat/alda-mode](jgkamat/alda-mode)|
+|Emacs|[jgkamat/alda-mode](https://gitlab.com/jgkamat/alda-mode)|
 |Sublime Text|[erinzm/sublime-alda](https://github.com/erinzm/sublime-alda)|
 |Vim|[daveyarwood/vim-alda](https://github.com/daveyarwood/vim-alda)|
 |VS Code|[abhi18av/Alda-VsCode](https://github.com/abhi18av/Alda-VsCode)|
