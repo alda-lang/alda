@@ -20,31 +20,33 @@
 
 ## 翻译进度
 
+### doc目录下的文档
 
-- [] alda-2-migration-guide.md
-- [] alda-client.md
-- [] alda-repl.md
-- [] alda-repl-server-api.adoc
-- [] attributes.md
-- [] chords.md
-- [] comments.md
-- [] cram-expressions.md
-- [] editor-plugins.md
-- [] implementing-an-alda-library.md
+- [ ] alda-2-migration-guide.md
+- [ ] alda-client.md
+- [ ] alda-repl.md
+- [ ] alda-repl-server-api.adoc
+- [ ] attributes.md
+- [ ] chords.md
+- [ ] comments.md
+- [ ] cram-expressions.md
+- [ ] editor-plugins.md
+- [ ] implementing-an-alda-library.md
 - [x] index.md
-- [] installing-a-good-soundfont.md
-- [] instance-and-group-assignment.md
-- [] list-of-instruments.md
-- [] markers.md
-- [] notes.md
-- [] offset.md
-- [] repeats.md
-- [] rests.md
-- [] scores-and-parts.md
-- [] sequences.md
-- [] tempo.md
-- [] troubleshooting.md
-- [] variables.md
-- [] voices.md
-- [] writing-music-programmatically.md
+- [ ] installing-a-good-soundfont.md
+- [ ] instance-and-group-assignment.md
+- [ ] list-of-instruments.md
+- [ ] markers.md
+- [x] notes.md
+- [ ] offset.md
+- [ ] repeats.md
+- [ ] rests.md
+- [ ] scores-and-parts.md
+- [ ] sequences.md
+- [ ] tempo.md
+- [ ] troubleshooting.md
+- [ ] variables.md
+- [ ] voices.md
+- [ ] writing-music-programmatically.md
 
+### 其他文档

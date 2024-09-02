@@ -42,74 +42,52 @@ Alda的**音符**深受[MML](https://en.wikipedia.org/wiki/Music_Macro_Language#
 
 音符时值也可以用连音线语法`~`相加 例如: `4~4` = 两个四分音符加在一起 总共2拍
 
-Alda keeps track of both the current octave and the current default note
-duration as notes are processed sequentially in a score. Each time a note
-duration is specified, that duration becomes the new default note duration. Each
-note that follows, when no note duration is specified, will have the default
-note duration. At the beginning of each instrument part, the default octave is 4
-and the default note duration is 4 (i.e. a quarter note, 1 beat).
+当音符在乐谱中按顺序解析时 Alda会跟踪当前八度组和当前默认的音符时值 每当您指定新的八度组和音符时值时 那些数据会被设为新的默认值
 
-#### Advanced Rhythms
+如果您没有指定音符的时值 则每个音符都将遵循默认的初始时值 在每个乐器部分的开头 默认的八度组为4 默认的音符时值为4(即四分音符 1拍)
 
-* A special feature of Alda is that you can use non-standard numbers as note
-  durations. For example, 6 is a note that lasts 1/6 of a measure in 4/4 time.
-  In standard notation, there is no such thing as a "sixth note," but this note
-  length would be commonly expressed as one note in a quarter note triplet; in
-  Alda, a "6th note" doesn't necessarily need to be part of a triplet, however,
-  which offers interesting rhythmic possibilities.
+#### 高级节奏
 
-* Extending this concept, Alda allows for non-integer decimal note lengths.
+* Alda的一个特殊功能是您可以使用非标准的数字(非2的幂)作为音符的时值标记 例如 6表示在4/4拍中持续1/6小节的音符 在标准的符号中 没有"六分音符" 但是这个音符的时值通常表示为四分音符三连音中的一个音符 但在Alda中 "六分音符"不一定是三连音的一部分 这为创造更多有趣的节奏创造了可能性
 
-  For example, `c0.5` (or a double whole note, in Western classical notation) is
-  twice the length of `c1` (a whole note).
+* 扩展这个概念--Alda允许非整数的十进制音符时值标记
 
-  The numbers do not need to be powers of 2. For example, `c2.4` is valid.
+  例如 `c0.5`(或是西方古典符号中的双全音符)是`c1`(全音符)时值的两倍
 
-* Alda also has an alternate way of specifying rhythms called a [cram
-  expression](cram-expressions.md).
+  这些数字不必是2的幂 例如 `c2.4`也是有效的
 
-* Note lengths can also be expressed in milliseconds and seconds, which can
-  optionally be mixed and matched with standard note lengths:
+* Alda还有一种指定节奏的替代方法 称为[cram表达式](cram-expressions_zh_cn.md)
+
+* 音符时值也可以用毫秒(ms)和秒(s)表示 可以随意混搭标准音符长度:
 
   ```alda
-  c350ms    # a C note lasting 350 milliseconds
-  d2s       # a D note lasting 2 seconds
-  e2s~200ms # an E note lasting 2 seconds + 200 milliseconds
-  f300ms~4. # an F note lasting 300 milliseconds + a dotted quarter note
+  c350ms    # 持续350毫秒的C音符
+  d2s       # 持续2秒的D音符
+  e2s~200ms # 持续2秒+200毫秒的E音符
+  f300ms~4. # 持续300毫秒+附点四分音符的F音符
   ```
 
-### Letter pitch
+### 音符格式
 
-A note in Alda is expressed as a letter from a-g, any number of accidentals
-(optional), and a note duration (also optional).
+在Alda中 一个音符的格式为:
+从a到g的一个字母 任意数量的临时变音记号(可选) 音符时值标记(可选)
 
-Flats and sharps will decrease/increase the pitch by one half step, e.g. C + 1/2
-step = C#. Flats and sharps are expressed in Alda as `-` and `+`, and you can
-have multiple sharps or multiple flats, or even combine them, if you'd like.
-e.g. `c++` = C double-sharp = D.
+降号和升号可以使音高降低/升高半音 在Alda中 降号和升号可以表示为`-`和`+` 您也可以使用多个升号或降号 甚至可以把它们组合起来 例如 `c++` = 双升号C = D
 
-As an alternative to placing flats and sharps on every note that needs them, you
-may prefer to set the [key signature](attributes.md#key-signature), which will
-add the necessary sharps/flats to any note that needs them in order to match the
-key. See below for an example of using a key signature.
+*对于非C大调的乐曲*(*译者举例*) 可能会出现这样的情况: 在每个不在C调上的音符上放置升/降号 我们更推荐您使用[预设调号](attributes_zh_cn.md#key-signature) 这可以为每个需要的音符预设必要的升/降号以匹配调性 您可以参考下文中的示例
 
-To overwrite the flat/sharp specified by a key signature, you can include an
-accidental, i.e. `-` or `+` to make the note flat or sharp. You can also
-override the key signature and force a note to be natural with `_`, i.e. `c_` is
-a C natural regardless of what key you are in.
+要覆盖预设调号指定的降号/升号 您可以添加一个临时变音记号 即`+` `-`可以使音符升调或降调 还有`_`代表还原号 它会强制音符为自然音 例如`c_`是C自然音 无论您之前选择了哪个调子
 
-## Example
+## 示例
 
-The following is a 1-octave B major scale, ascending and descending, starting in
-octave 4:
+以下是1个八度的B大调音阶 从第4组开始上升和下降
 
 ```alda
 o4 b4 > c+8 d+ e f+ g+ a+ b4
 a+8 g+ f+ e d+ c+ < b2.
 ```
 
-Here is the same example, using a key signature in order to avoid having to
-include all of the sharps:
+这是同一个示例 在开头处预设了B大调中被升高的那些那些音名 这样就可以避免在乐谱中重复写升降号 它们会自动以您定义的升降号演奏
 
 ```alda
 (key-signature "f+ c+ g+ d+ a+")
