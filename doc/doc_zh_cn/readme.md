@@ -29,7 +29,7 @@
 - [ ] alda-repl.md
 - [ ] alda-repl-server-api.adoc
 - [ ] attributes.md
-- [ ] chords.md
+- [x] chords.md
 - [ ] comments.md
 - [ ] cram-expressions.md
 - [x] editor-plugins.md
@@ -40,7 +40,7 @@
 - [ ] list-of-instruments.md
 - [ ] markers.md
 - [x] notes.md
-- [ ] offset.md
+- [x] offset.md
 - [ ] repeats.md
 - [x] rests.md
 - [ ] scores-and-parts.md
