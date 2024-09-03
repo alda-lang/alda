@@ -21,7 +21,7 @@
 
 * [安装Alda](https://alda.io/install)
 
-* [安装音源](installing-a-good-soundfont_zh_cn.md)
+* [安装优质的SoundFont(音色库)](installing-a-good-soundfont_zh_cn.md)
 
 * [编辑器插件](editor-plugins_zh_cn.md)
 

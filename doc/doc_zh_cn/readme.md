@@ -35,17 +35,17 @@
 - [x] editor-plugins.md
 - [ ] implementing-an-alda-library.md
 - [x] index.md
-- [ ] installing-a-good-soundfont.md
+- [x] installing-a-good-soundfont.md
 - [ ] instance-and-group-assignment.md
 - [ ] list-of-instruments.md
 - [ ] markers.md
 - [x] notes.md
 - [ ] offset.md
 - [ ] repeats.md
-- [ ] rests.md
+- [x] rests.md
 - [ ] scores-and-parts.md
 - [ ] sequences.md
-- [ ] tempo.md
+- [x] tempo.md
 - [ ] troubleshooting.md
 - [ ] variables.md
 - [ ] voices.md
