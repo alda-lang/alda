@@ -27,13 +27,13 @@
 
 * [Alda教程](https://alda.io/tutorial)
 
-* 这篇文章[scores and parts(乐谱及各部分)](scores-and-parts_zh_cn.md)提供了一些关于Alda乐谱的一般信息 如果你有兴趣了解Alda乐谱基本部分的更多信息 可以查看下列文档:
-  * [音符](notes_zh_cn.md)
-  * [休止符](rests_zh_cn.md)
-  * [和弦](chords_zh_cn.md)
-  * [声部](voices_zh_cn.md)
-  * [markers](markers_zh_cn.md)
-  * [offset](offset_zh_cn.md)
+* 这篇文章[scores and parts(乐谱及各部分)](scores-and-parts_zh_cn.md)提供了一些关于Alda乐谱的一般信息 如果您有兴趣了解Alda乐谱基本部分的更多信息 可以查看下列文档:
+  * [音符(notes)](notes_zh_cn.md)
+  * [休止符(rests)](rests_zh_cn.md)
+  * [和弦(chords)](chords_zh_cn.md)
+  * [声部(voices)](voices_zh_cn.md)
+  * [标记(markers)](markers_zh_cn.md)
+  * [偏移量(offset)](offset_zh_cn.md)
   * [attributes](attributes_zh_cn.md)
   * [repeats](repeats_zh_cn.md)
   * [variables](variables_zh_cn.md)

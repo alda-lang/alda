@@ -2,13 +2,7 @@
 
 *此页面翻译自[voice.md](../voice.md)*
 
-**Voices** provide a way to subdivide an instrument into its own separate parts,
-which play simultaneously. This can be useful for polyphonic instruments, that
-is, instruments that can play more than one [note](notes.md) at a time, e.g.
-guitar, piano.
-**声部**提供了一个...的方法 
-
-乐器可以同时奏响更多的音符 比如吉他 钢琴
+**声部**提供了一种将乐器细分为独立部分的方法 这些部分可以同时演奏 这对于复音乐器非常有用 即可以同时演奏多个[音符](notes_zh_cn.md) 例如吉他 钢琴
 
 ### 例子
 
@@ -21,11 +15,4 @@ piano:
   V0: c4 e g > c2.
 ```
 
-Each voice is its own sequence of note events. The first note/[rest](rests.md)
-in each voice starts at the same time, like the notes in a [chord](chords.md).
-Whereas a chord bumps forward the current [offset](offset.md) by the shortest
-note duration in the chord, after a group of voices, the current offset is that
-of the longest voice in the group. `V0:` signals the end of a voice grouping and
-a return to using a single voice -- the first note placed after `V0:` will
-happen after all voices in the group have finished.
-
+每个声部都有自己的音符事件序列 每个声部中的每一个音符/[休止符](rests_zh_cn.md)同时开始 就像[和弦](chords_zh_cn.md)中的音符一样 **和弦**会将当前[偏移量](offset_zh_cn.md) 向前移动和弦中**最短**的音符持续时间 但是在一组**声部**之后 当前偏移量是该组中**最长**声部的偏移量 `V0: `标记表示声部分组的结束点 并开始使用单声部 -- 声部组中所有声部的音符都演奏完成后 将演奏位于`V0: `后面的第一个音符

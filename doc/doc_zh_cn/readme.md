@@ -38,7 +38,7 @@
 - [x] installing-a-good-soundfont.md
 - [ ] instance-and-group-assignment.md
 - [ ] list-of-instruments.md
-- [ ] markers.md
+- [x] markers.md
 - [x] notes.md
 - [x] offset.md
 - [ ] repeats.md
@@ -48,7 +48,7 @@
 - [x] tempo.md
 - [ ] troubleshooting.md
 - [ ] variables.md
-- [ ] voices.md
+- [x] voices.md
 - [ ] writing-music-programmatically.md
 
 ### 其他文档

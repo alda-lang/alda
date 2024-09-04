@@ -8,8 +8,6 @@
 
 ## Mac / Linux
 
-For your convenience, there is a script in this repo that will install the
-FluidR3 soundfont for Mac and Linux users.
 为了便于操作 此仓库中有一个shell脚本 用于为MacOS和Linux用户安装FluidR3音色库
 
 获取脚本的副本
