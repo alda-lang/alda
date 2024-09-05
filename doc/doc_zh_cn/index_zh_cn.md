@@ -34,7 +34,7 @@
   * [声部(voices)](voices_zh_cn.md)
   * [标记(markers)](markers_zh_cn.md)
   * [偏移量(offset)](offset_zh_cn.md)
-  * [attributes](attributes_zh_cn.md)
+  * [属性(attributes)](attributes_zh_cn.md)
   * [repeats](repeats_zh_cn.md)
   * [variables](variables_zh_cn.md)
   * [cram expressions](cram-expressions_zh_cn.md)

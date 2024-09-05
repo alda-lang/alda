@@ -28,7 +28,7 @@
 - [ ] alda-client.md
 - [ ] alda-repl.md
 - [ ] alda-repl-server-api.adoc
-- [ ] attributes.md
+- [x] attributes.md
 - [x] chords.md
 - [ ] comments.md
 - [ ] cram-expressions.md

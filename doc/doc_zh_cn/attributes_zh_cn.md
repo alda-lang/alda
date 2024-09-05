@@ -1,5 +1,7 @@
 # 属性
 
+*此页面翻译自[attributes.md](../attributes.md)*
+
 **属性(attribute)**定义了[乐器](scores-and-parts_zh_cn.md)(或多个乐器)演奏[音符](notes_zh_cn.md)时的某些特质
 
 ## 设置属性值
@@ -30,13 +32,11 @@
 (key-signature "f+ c+ g+")
 ```
 
-See [below](#list-of-attributes) for more information about the different kinds
-of attributes that are available to you when writing a score.
+请参阅[下文](#属性列表) 了解编写乐谱时可用的属性类型和更多信息
 
-## Per-Instrument vs. Global
+## 单类乐器 vs. 全局
 
-By default, an attribute change event is only applied to the instrument(s) that
-you're currently working with. For instance, in a score with four instruments:
+默认情况下 属性的更改仅适用于您当前正在使用的乐器 例如 在包含四种乐器的乐谱中:
 
 ```alda
 violin "violin-1":
@@ -52,7 +52,7 @@ cello:
   o3 f2   c4 f < b-2 > f
 ```
 
-Changing an attribute will only affect the instrument(s) whose part you are currently editing:
+更改属性只会影响到您当前正在编辑的部分乐器
 
 ```alda
 violin "violin-1":
@@ -69,7 +69,7 @@ cello:
   o3 f2   c4 f < b-2 > f
 ```
 
-To change an attribute **globally** (i.e. for every instrument in the score), add an exclamation mark (`!`) after the name of the attribute:
+要**全局**地更改属性 (即为乐谱中每种乐器设置该属性) 请在属性名称后面添加感叹号`!`
 
 ```alda
 violin "violin-1":
@@ -86,7 +86,7 @@ cello:
   o3 f2   c4 f < b-2 > f
 ```
 
-Attributes can also be set globally at the beginning of a score, before you start writing out any instrument parts. The attributes will still be set for every instrument at the beginning of the score.
+在乐谱开头(编写乐器部分之前) 您也可以设置全局的属性 这些属性会在一开始就作用于所有的乐器
 
 ```alda
 (tempo! 80)
@@ -104,71 +104,57 @@ cello:
   o3 f2   c4 f < b-2 > f
 ```
 
-## List of Attributes
+## 属性列表
 
-### `duration`
+### `duration`(音长)
 
-* **Abbreviations:** (none)
+* **缩写:** (无)
 
-* **Description:** The length that a note will have, if not specified. For
-  example, `c4` is explicitly a quarter note; `c` will have a note-length equal
-  to the value of the instrument's `duration` attribute.
+* **说明:** 如果未指定 则表示音符的长度 例如 `c4`明确表示为四分音符 `c`的音符长度等于乐器的`duration`属性值
 
-  Note that this attribute is more of an implementation detail, as an
-  instrument's default note length is set implicitly whenever you specify a
-  note-length on a note. You will probably never need to use this attribute
-  directly.
+  请注意 这个属性更像是实现细节 因为每当您在音符上指定音符时值时 乐器的默认音符时值都会隐式地设置 您可能永远不会直接用到这个属性
 
-  Worth mentioning: if you do ever find yourself needing to set the duration
-  attribute directly, the function you use is `set-duration`, *not* `duration`.
+  值得一提的是: 如果您确实需要直接设置持续时间属性 则您使用的方法应该是`set-duration` *而不是* `duration`
 
-* **Value:** either:
-  - a number of beats (e.g. 2.5, which represents a dotted half note), or
-  - a number of milliseconds
+* **值:** 可以是:
+  - 节拍数 (例如2.5 代表附点二分音符) 或
+  - 毫秒数
 
-  If the value you provide is a number, it will be intepreted as a number of beats.
+  如果您给的值是数值 它将会被解释为节拍数
 
-  Note that this value is a different number than the note value. For example,
-  to set the duration to a quarter note, the value is `1`, not `4`, because a
-  quarter note is 1 beat long:
+  请注意 此值与音符时值不同 例如 要将音符的时值设为四分音符 则此值应为`1` 而不是`4` 因为四分音符为1拍
 
   ```alda
   (set-duration 1)
   ```
 
-  To specify the duration as a note length (e.g. `1` for a whole note), use
-  `set-note-length`:
+  要将音长指定为音符时值(分数表示) 可以使用`set-note-length` 例如 `1`代表全音符
 
   ```alda
   (set-note-length 1)
   ```
 
-  To specify the duration as a number of milliseconds, use `set-duration-ms`:
+  要将音符的时值指定为毫秒数 请使用`set-duration-ms`:
 
   ```alda
   (set-duration-ms 2000)
   ```
 
-* **Initial Value:** `(note-length 4)` (i.e. a quarter note, or 1 beat)
+* **初始值:** `(note-length 4)` 即四分音符 或1拍
 
-### `key-signature`
+### `key-signature`(调号)
 
-* **Abbreviations:** `key-sig`
+* **缩写:** `key-sig`
 
-* **Description:** [a set of sharp or flat
-  symbols](https://en.wikipedia.org/wiki/Key_signature) to be applied to certain
-  notes by default when the note doesn't include accidentals. For example, if
-  the key signature contains G-sharp, then a note `g` will become G-sharp by
-  default, unless an accidental is placed after the note, i.e. `g-` (G-flat) or
-  `g_` (G natural).
+* **描述:** [一组升号或降号](https://en.wikipedia.org/wiki/Key_signature)当音名被设置了调号 且在乐谱中那个(些)音名的音符不包含临时变音记号时 调号就会默认作用于那些音符 例如 如果在调号中包含了升G(`g+`) 则乐谱中`g`音符将默认变为`g+` 除非在音符后面放置临时变音记号 即`g-`(降G音) 或`g_`(自然G音)
 
-* **Value:** either:
-  * a association list of letters to lists of accidentals for that letter, e.g.
-    `'(f (sharp) c (sharp) g (sharp))`
-  * a string like `"f+ c+ g+"`, or
-  * a list like `'(a major)` or `'(e flat minor)`
-    * supported scales/modes:
-      * `ionian` (`major`)
+* **值:** 可以是:
+  * 音名与临时变音记号的关联列表 例如`'(f (sharp) c (sharp) g (sharp))`
+    *译者注: 这样的列表前面是有一个`'`号的 请不要漏写*
+  * 字符串 如`"f+ c+ g+"`, 或
+  * 列表 如 `'(a major)` 或 `'(e flat minor)`
+    * 支持的音阶/调式:
+      * `ionian` (`major`) 
       * `dorian`
       * `phrygian`
       * `lydian`
@@ -176,118 +162,92 @@ cello:
       * `aeolian` (`minor`)
       * `locrian`
 
-* **Initial Value:** `'()` (an empty list, signifying no flats/sharps will be
-  applied for any letter)
+* **初始值:** `'()` (空列表 不会对任何音名进行升调/降调)
 
-### `octave`
+### `octave`(八度组)
 
-* **Abbreviations:** (none)
+* **缩写:** (无)
 
-* **Description:** The octave of a note. (Note that Alda also has built-in
-  syntax for setting specific octaves, e.g. `o5`, and moving up `>` or down `<`
-  octaves.)
+* **描述:** 音符的八度 (请注意 Alda还有设置特定八度组的内置语法 例如`o5` 及将当前八度组向上移动一个的`>`和向下移动一个的`<`
 
-* **Value:** either a number representing an octave in [scientific pitch
-  notation](https://en.wikipedia.org/wiki/Scientific_pitch_notation), or the
-  symbol `'up` or `'down` to move up or down by one from the current octave.
+* **Value:** 要么是代表[科学音高记号](https://en.wikipedia.org/wiki/Scientific_pitch_notation)中八度组的数字 要么是表示将当前八度组上移或下移一个的符号 `'up` 或 `'down`
 
-* **Initial Value:** 4
+* **初始值:** 4
 
-### `panning`
+### `panning` (声像)
 
-* **Abbreviations:** `pan`
+* **缩写:** `pan`
 
-* **Description:** How far left/right the note is panned in your speakers.
+* **描述:** 音符在扬声器中的空间位置 (向左/右平移多少)
 
-* **Value:** a number from 0-100 representing the panning from hard left (0) to
-  hard right (100). 50 is center.
+* **Value:** 0-100之间的数值 最左为0 最右为100 50为中心
 
-* **Initial Value:** 50
+* **初始值:** 50
 
-### `quantization`
+### `quantization` (量化)
 
-* **Abbreviations:** `quant`, `quantize`
+* **缩写:** `quant`, `quantize`
 
-* **Description:** The percentage of a note's full duration that is heard.
-  Setting lower `quantization` values translates into putting more space between
-  notes, making them sound more *staccato*, whereas setting higher values
-  translates into putting *less* space between notes, making them sound more
-  *legato*.
+* **描述:** 音符完整时长的百分比
+  设置较低的`quantization`值意味着音符之间有更多空隙 它们听起来更像是*断奏* 而较高的量化值会使音符之间空隙更小 听起来更像是*连奏*
 
-* **Value:** a number between 0 and 100
+* **值:** 0-100之间的数值
 
-* **Initial Value:** 90
+* **初始值:** 90
 
-### `tempo`
+### `tempo` (节奏)
 
-* **Abbreviations:** (none)
+* **缩写:** (无)
 
-* **Description:** How fast or slow notes are played. This value is used in
-  combination with the length of a note to determine how long to play it in
-  milliseconds.
+* **描述:** 音符的演奏速度 这个值与音符时值结合使用 以确定以毫秒为单位的演奏时间
 
-* **Value:** a number representing a
-  [tempo](https://en.wikipedia.org/wiki/Tempo) in beats per minute (BPM)
+* **值:** 表示[曲速](https://zh.wikipedia.org/wiki/%E9%80%9F%E5%BA%A6_(%E9%9F%B3%E6%A8%82))的每分钟节拍数(BPM)
 
-* **Initial Value:** 120
+* **初始值:** 120
 
-> By default, `(tempo 100)` will set the tempo to 100 beats per minute, where
-> each beat takes up the length of a quarter note.
->
-> Alda also offers additional ways to express tempo. See: [tempo](tempo.md).
+> 默认情况下 `(tempo 100)`将把节奏设置为每分钟100拍 其中每个节拍占四分音符的长度
+> Alda还提供了表示节奏的其他方式 请参阅[节奏](tempo_zh_cn.md)
 
-### `track-volume`
+### `track-volume`(音轨音量)
 
-* **Abbreviations:** `track-vol`
+* **缩写:** `track-vol`
 
-* **Description:** The overall volume of an instrument. For MIDI instruments,
-  this corresponds to track volume, as opposed to velocity. Typically, you would
-  set `track-volume` once (if at all) at the beginning of the score, and then
-  use `volume` for finer-grained control over volume between notes. (When in
-  doubt, just use `volume`!)
+* **描述:** 乐器的总音量
+  对于MIDI乐器 这对应音轨的音量 通常 您会在乐谱开头设置一次`track-volume`(不设置也可以的) 然后在后面使用`volume`更精细地控制音符之间的音量(如有疑问 可以只使用`volume`!)
 
-* **Value:** a number between 0 and 100
+* **值:** 0到100之间的数值
 
-* **Initial Value:** 78.7 (this number comes from 100/127, which is the default
-  track volume for MIDI, at least in the Java VM)
+* **初始值:** 78.7 (这个值来源于100/127 这是MIDI的默认音轨音量 至少在JVM中是这样的)
 
-### `transposition`
+### `transposition` (移调)
 
-* **Abbreviations:** `transpose`
+* **缩写:** `transpose`
 
-* **Description:** Moves all notes up or down by a desired number of semitones.
-  This attribute can be used to make writing parts for [transposing
-  instruments](https://en.wikipedia.org/wiki/Transposing_instrument) more
-  convenient.
+* **描述:** 将所有音符向上/下移动指定的半音数
+  此属性能使[移调乐器](https://zh.wikipedia.org/wiki/%E7%A7%BB%E8%B0%83%E4%B9%90%E5%99%A8)的编写更方便
 
-* **Value:** a positive or negative integer representing a number of semitones
-  (half-steps) to move each note up or down.
+* **值:** 一个整数(可以是正的或负的) 表示将每个音符向上或向下移动的半音数
 
-* **Initial Value:** 0
+* **初始值:** 0
 
-### `volume`
+### `volume` (音量/力度)
 
-* **Abbreviations:** `vol`
+* **缩写:** `vol`
 
-* **Description:** How loud or soft a note is. For MIDI instruments, this
-  corresponds to the *velocity* of each note, which has to do with not only how
-  loud the note is, but also how *strongly* the note is played. The details of
-  this vary from instrument to instrument; often, it has an effect on the
-  sharpness of the attack at the beginning of the note.
+* **描述:** 音符的力度大小
+  对于MIDI乐器 这对应于每个音符的*力度* 这不仅与音符的音量大小相关 还与音符的演奏强度相关 具体细节因细节而异 通常 它会影响音符开头的音调锐度
 
-* **Value:** a number between 0 and 100
+* **值:** 0到100之间的数值
 
-* **Initial Value:** 54 (corresponding to a `(mf)` marking)
+* **初始值:** 54 (对应 `(mf)` 标记)
 
-### Dynamic Markings
+### 动态标记
 
-* **Description:** Aside from setting the volume of a note directly, you can
-  also specify dynamic markings which correspond to fixed volumes following MIDI
-  standards.
+* **描述:** 除了直接设置音符的音量外 您还可以指定动态标记 这些标记对应于符合MIDI标准的固定音量
 
-* **Available Dynamics:**
+* **可用的标记:**
 
-  | Dynamic Marking | Matching Volume   |
+  | 动态标记 | 匹配音量   |
   |-----------------|-------------------|
   | `(pppppp)`      | `(vol 1)`         |
   | `(ppppp)`       | `(vol 8)`         |
@@ -304,22 +264,16 @@ cello:
   | `(fffff)`       | `(vol 92)`        |
   | `(ffffff)`      | `(vol 100)`       |
 
-* **Initial Value:** `(mf)` (corresponding to a volume of 54)
+* **初始值:** `(mf)` (对应音量为54)
 
-### `midi-channel`
+### `midi-channel` (MIDI通道)
 
-* **Abbreviations:** (none)
+* **缩写:** (无)
 
-* **Description:** By default, Alda automatically assigns an available MIDI
-  channel for each part. In rare cases where you want to control which MIDI
-  channel is used for each part, you can use this attribute to assign a specific
-  MIDI channel. This can be done multiple times in the same part to switch to a
-  different channel, if needed.
+* **描述:** 默认情况下 Alda会自动为每个部分分配一个可用的MIDI通道 在极少数情况下 如果您想要控制每个部分使用哪个MIDI通道 则可以使用此属性分配特定的MIDI通道 如果需要 还可以在同一部分中多次执行此操作以切换到不同的通道
 
-* **Value:** a number between 0 and 15. Note that channel 9 is reserved for
-  percussion; an error will be thrown if you include `(midi-channel 9)` in a
-  non-percussion part.
+* **值:** 0到15之间的整数
+  请注意 通道9是打击乐器的保留通道 如果您在非打击乐部分中包含`(midi-channel 9)` 则会引发错误
 
-* **Initial Value:** _(Not set. By default, Alda assigns MIDI channels
-  automatically.)_
+* **初始值:** _(未设置 默认情况下 MIDI通道会自动由Alda分配)_
 
