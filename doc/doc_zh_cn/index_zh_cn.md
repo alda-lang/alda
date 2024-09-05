@@ -35,9 +35,9 @@
   * [标记(markers)](markers_zh_cn.md)
   * [偏移量(offset)](offset_zh_cn.md)
   * [属性(attributes)](attributes_zh_cn.md)
-  * [repeats](repeats_zh_cn.md)
+  * [反复(repeats)](repeats_zh_cn.md)
   * [variables](variables_zh_cn.md)
-  * [cram expressions](cram-expressions_zh_cn.md)
+  * [Cram表达式(cram expressions)](cram-expressions_zh_cn.md)
   <!-- 这里的一些术语在我翻译了那些页面后再进行翻译...-->
 
 * 请仔细阅读此[可用乐器列表](list-of-instruments_zh_cn.md).

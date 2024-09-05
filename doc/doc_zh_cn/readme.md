@@ -25,13 +25,12 @@
 ### doc目录下的文档
 
 - [ ] alda-2-migration-guide.md
-- [ ] alda-client.md
-- [ ] alda-repl.md
-- [ ] alda-repl-server-api.adoc
+- [ ] alda-client.md 此文档没有什么内容...忽略
+- [x] alda-repl.md
 - [x] attributes.md
 - [x] chords.md
-- [ ] comments.md
-- [ ] cram-expressions.md
+- [x] comments.md
+- [x] cram-expressions.md
 - [x] editor-plugins.md
 - [ ] implementing-an-alda-library.md
 - [x] index.md
@@ -41,10 +40,10 @@
 - [x] markers.md
 - [x] notes.md
 - [x] offset.md
-- [ ] repeats.md
+- [x] repeats.md
 - [x] rests.md
 - [ ] scores-and-parts.md
-- [ ] sequences.md
+- [x] sequences.md
 - [x] tempo.md
 - [ ] troubleshooting.md
 - [ ] variables.md
