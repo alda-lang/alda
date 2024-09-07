@@ -42,12 +42,12 @@
 - [x] offset.md
 - [x] repeats.md
 - [x] rests.md
-- [ ] scores-and-parts.md
+- [x] scores-and-parts.md
 - [x] sequences.md
 - [x] tempo.md
-- [ ] troubleshooting.md
+- [x] troubleshooting.md
 - [ ] variables.md
 - [x] voices.md
-- [ ] writing-music-programmatically.md
+- [x] writing-music-programmatically.md
 
 ### 其他文档

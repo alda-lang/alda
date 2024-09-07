@@ -1,6 +1,6 @@
 # Cram表达式 (Cram expressions)
 
-*本页面翻译自[cram-expressions.md](../cram-expressions.md]*
+*本页面翻译自[cram-expressions.md](../cram-expressions.md)*
 
 **Cram表达式**是Alda中表示节奏的另一种方式 它对n连音和复节奏很有用
 

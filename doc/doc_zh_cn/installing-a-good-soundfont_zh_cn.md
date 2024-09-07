@@ -1,6 +1,6 @@
 # 安装优质的soundfont(音色库)
 
-*此文档翻译自[installing-a-good-soundfont.md](../installing-a-good-soundfont.md)
+*此文档翻译自[installing-a-good-soundfont.md](../installing-a-good-soundfont.md)*
 
 默认的JVM音色库通常音质较差 我们建议安装免费的音色库 如FluidR3 使您的MIDI音色更悦耳
 

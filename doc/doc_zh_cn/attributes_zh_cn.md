@@ -2,7 +2,7 @@
 
 *此页面翻译自[attributes.md](../attributes.md)*
 
-**属性(attribute)**定义了[乐器](scores-and-parts_zh_cn.md)(或多个乐器)演奏[音符](notes_zh_cn.md)时的某些特质
+**属性(attribute)** 定义了[乐器](scores-and-parts_zh_cn.md)(或多个乐器)演奏[音符](notes_zh_cn.md)时的某些特质
 
 ## 设置属性值
 
@@ -180,7 +180,7 @@ cello:
 
 * **描述:** 音符在扬声器中的空间位置 (向左/右平移多少)
 
-* **Value:** 0-100之间的数值 最左为0 最右为100 50为中心
+* **Value:** 0-100之间的数值 最左为0 最右为100 中间为50
 
 * **初始值:** 50
 

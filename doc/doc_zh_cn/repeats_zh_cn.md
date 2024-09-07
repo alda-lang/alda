@@ -1,6 +1,6 @@
 # 反复(repeat)
 
-*此页面翻译自[repeat.md](../repeat.md)*
+*此页面翻译自[repeats.md](../repeats.md)*
 
 [音符](notes_zh_cn.md) [序列](sequences_zh_cn.md)和其他类型的事件可以**反复**任意次数 只需要附加`*`和一个数字即可 您可以在事件与`*`和`*`与重复次数之间添加空格 但是这个是可选的(不添加也可以)
 
