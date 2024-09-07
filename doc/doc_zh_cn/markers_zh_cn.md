@@ -28,5 +28,5 @@ piano:
 
 ## 合法的标记名
 
-标记的命名规则与[乐器名](scores-and-parts_zh_cn.md#合法的名称)相同的规则
+标记的命名规则与[乐器名](scores-and-parts_zh_cn.md#命名规则)相同的规则
 
