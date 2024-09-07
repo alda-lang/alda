@@ -50,5 +50,5 @@ acoustic-guitar:
 [alda-rb]: https://github.com/ulysseszh/alda-rb
 [alda.jl]: https://github.com/salchipapa/alda.jl
 [alda-python]: https://github.com/nvitucci/alda-python
-[write-your-own-alda-library]: implementing-an-alda-library.md
+[write-your-own-alda-library]: implementing-an-alda-library_zh_cn.md
 

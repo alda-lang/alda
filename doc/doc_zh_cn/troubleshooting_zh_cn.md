@@ -72,7 +72,7 @@ ykt INFO  2024-07-12 13:10:43 MidiEngine.info:242 - [0] Initializing MIDI synthe
 ykt INFO  2024-07-12 13:10:47 MidiEngine.info:242 - [0] Player ready
 ```
 
-然后再开一个终端 使用`alda play`命令指定端口号来使用您刚刚运行的播放器进程(在上文中 我们将播放器运行在27705端口上)
+然后再开一个终端 使用`alda play`命令指定端口号来使用您刚刚运行的播放器进程(在上文中 我们将播放器运行在 27705 端口上)
 
 ```
 $ alda play -p 27705 -c 'piano: c d e f g'

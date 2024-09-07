@@ -8,8 +8,8 @@
 
 * [Alda官网](https://alda.io)
 * [社区](https://alda.io/community)
-* [为Alda做贡献](../CONTRIBUTING.md)
-* [CHANGELOG (发行说明)](../CHANGELOG.md)
+* [为Alda做贡献](../../CONTRIBUTING.md)
+* [CHANGELOG (发行说明)](../../CHANGELOG.md)
 * [Dave于2015年发布的基于文本的音乐创作的的宣言](https://blog.djy.io/alda-a-manifesto-and-gentle-introduction)
 * Alda 博客系列
   1. [Your first notes(第一个音符)](https://blog.djy.io/writing-music-with-alda-1/)
