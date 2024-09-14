@@ -46,7 +46,7 @@
 - [x] sequences.md
 - [x] tempo.md
 - [x] troubleshooting.md
-- [ ] variables.md
+- [x] variables.md
 - [x] voices.md
 - [x] writing-music-programmatically.md
 
