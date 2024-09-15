@@ -192,4 +192,3 @@ Alda创建和分配乐器实例的细节很[复杂](instance-and-group-assignmen
   piano/trumpet: c8 d e g1
   ```
 
-
