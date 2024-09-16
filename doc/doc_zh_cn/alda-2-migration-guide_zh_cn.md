@@ -83,7 +83,7 @@ OK  Interact with the REPL server
 
 你可能没有意识到这一点，但在 Alda 1 中，像 `(volume 42)` 这样的属性实际上是在运行时转换的 Clojure 函数调用。事实上，整个 Clojure 语言都可以在 Alda scores 中使用。例如，您可以生成一个介于 0 和 100 之间的随机数，并使用 `(volume (rand-int 100))` 将音量设置为该值
 
-在 Alda 2 中，你不能再做这种事情了，因为 Alda 不再用 Clojure 编写的。（但是，如果您对做这种事情感兴趣，您不必担心，因为您仍然可以这么做！请参阅下面的"[Programmatic composition](#programmatic-composition)"
+在 Alda 2 中，你不能再做这种事情了，因为 Alda 不再用 Clojure 编写的。（但是，如果您对做这种事情感兴趣，您不必担心，因为您仍然可以这么做！请参阅下面的“[Programmatic composition](#programmatic-composition)”
 
 Clojure 是一种 [Lisp][lisp] 编程语言。如果您不知道这是什么，这里有一个简单的解释：Lisp 语言的语法主要由括号组成。“S-expression”是括号内的元素列表，`(像 这个 列表)`。列表中的第一项是_operator_，其余项是_arguments_。s表达式是可嵌套的;例如，像`(1 + 2)*(3 + 4)`这样的算术表达式在 Lisp 中写成:`(*(+ 1 2)(+ 3 4))`
 
