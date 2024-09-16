@@ -10,11 +10,11 @@ Alda 2 基本上与 Alda 1 向后兼容，在大部分情况下，你用 Alda 1 
 
 在 Alda 2 中，语言有一个重要的变化：**不再支持内联 Clojure 代码**。原因很明显：Alda 客户端现在是用 Go 编写的，所以我们不能像过去那样在 Alda score 中计算任意 Clojure 代码。(尽管如此，Alda 仍然是一个强大的算法合成工具！参见下面的“[Programmatic composition](#programmatic-composition)”)
 
-下面是从 Alda 1 升级到 Alda 2 时应该注意的一些事项。
+下面是从 Alda 1 升级到 Alda 2 时应该注意的一些事项
 
 ## 无需再运行 `alda up` ！使用 `alda-player`
 
-Alda 1 要求您在播放乐谱之前启动 Alda 服务器（通过运行“alda up”）。
+Alda 1 要求您在播放乐谱之前启动 Alda 服务器（通过运行“alda up”）
 
 在 Alda 2 中，没有 Alda 服务器。你可以简单地运行一个命令，比如 `alda play -c "flute: o5 c8 < b16 a g f e d c2"`，而不需要先运行 `alda up`
 
@@ -62,7 +62,7 @@ OK  Interact with the REPL server
 那么，Alda 2 REPL 有什么新功能呢？我们新赋予 REPL 的一个强大功能是它可以在客户端或服务器模式下运行。默认情况下，`alda repl` 将同时启动服务器和客户端会话。但是如果你已经有了一个正在运行的 REPL 服务器(或者如果你的朋友有，在世界的其他地方…:bulb:)，你可以通过运行 `alda repl --client --host example.com --port 12345` (或者更短的版本: `alda repl -c -H example.com -p 12345`)来连接它。这可能会带来很多乐趣，因为多个客户端可以连接到同一个 REPL 服务器并实时协作！
 
 > 如果您对 Alda 新 super-REPL 背后的技术细节感兴趣，
-> 查看 Dave 的博客文章，[Alda 和 nREPL 协议][alda-nrepl].
+> 查看 Dave 的博客文章，[Alda 和 nREPL 协议][alda-nrepl]
 
 自 Alda 1 以来更改一些与 REPL 相关的内容：
 
