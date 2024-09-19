@@ -1,33 +1,32 @@
-# Alda 2 migration guide
+# Alda 2 迁移指南
 
-<!--暂时还没有想要翻译这个迁移文档 先将语法部分弄完罢... -->
+此文档翻译自 [alda-2-migration-guide.md](../alda-2-migration-guide.md)
 
-Alda 2.0.0 was released in June 2021. Whereas Alda 1 had been written mostly in Clojure (with a thin Java client for faster command line interactions), Alda 2 is a from-scratch rewrite in Go and Kotlin.
+Alda 2.0.0 于 2021 年 6 月发布。Alda 1 主要用 Clojure 编写（带有优化 Java 客户端，以实现更快的命令行交互），而 Alda 2 是用 Go 和 Kotlin 从头开始重写的
 
-> If you're curious why Dave decided to rewrite Alda in Go and Kotlin, have a
-> read through [this blog post][why-the-rewrite] that he wrote about it!
+> 如果你好奇为什么 Dave 决定用 Go 和 Kotlin 重写 Alda，请阅读 [这篇说明][why-the-rewrite]！
 
-Alda 2 is mostly backwards compatible with Alda 1, to the extent that most of the scores that you may have written with Alda 1 should work with Alda 2 and sound exactly the same. The implementation of Alda has been rewritten from the ground up, but Alda the language remains almost identical.
+Alda 2 基本上与 Alda 1 向后兼容，在大部分情况下，你用 Alda 1 编写的乐谱都应该与 Alda 2 兼容，并且听起来完全一样。虽然 Alda 的实现已经从头开始重写，但 Alda 的语法几乎保持不变
 
-There is one important change to the language in Alda 2: **inline Clojure code is no longer supported**. This is for obvious reasons: The Alda client is now written in Go, so we can't evaluate arbitrary Clojure code inside an Alda score, the way that we used to. (Despite this, Alda remains as powerful as ever as a tool for algorithmic composition! See "Programmatic composition" below.)
+在 Alda 2 中，语言有一个重要的变化：**不再支持内联 Clojure 代码**。原因很明显：Alda 客户端现在是用 Go 编写的，所以我们不能像过去那样在 Alda score 中计算任意 Clojure 代码。(尽管如此，Alda 仍然是一个强大的算法合成工具！参见下面的“[Programmatic composition](#programmatic-composition)”)
 
-Read on for a run-down of some things that you should be aware of when you upgrade from Alda 1 to Alda 2.
+下面是从 Alda 1 升级到 Alda 2 时应该注意的一些事项
 
-## No more running `alda up`! Introducing `alda-player`
+## 无需再运行 `alda up` ！使用 `alda-player`
 
-Alda 1 required you to start an Alda server (by running `alda up`) before you could play a score.
+Alda 1 要求您在播放乐谱之前启动 Alda 服务器（通过运行“alda up”）
 
-In Alda 2, there is no Alda server. You can simply run a command like `alda play -c "flute: o5 c8 < b16 a g f e d c2"`, without needing to run `alda up` first.
+在 Alda 2 中，没有 Alda 服务器。你可以简单地运行一个命令，比如 `alda play -c "flute: o5 c8 < b16 a g f e d c2"`，而不需要先运行 `alda up`
 
-There is a new background process called `alda-player` that handles the audio playback. Alda will start one for you automatically each time you play a score.  You'll need to have both `alda` and `alda-player` installed and available on your PATH in order for this to work.
+有一个名为 `alda-player` 的新后台进程来处理音频播放。每次您播放乐谱时，Alda 都会自动为您启动一个。 您需要在 PATH 环境变量上包含可用的 `alda` 和 `alda-player` 才能正常工作
 
-The Alda CLI will help make sure that you have the same version of `alda` and `alda-player` installed, and it will even offer to install the correct version of `alda-player` for you if they happen to become out of sync.
+Alda CLI 将帮助确保您安装了相同版本的 `alda` 和 `alda-player`，如果它们来自不同的版本，它还会为您安装正确版本的`alda-player`
 
-When you run `alda update`, both `alda` and `alda-player` are updated to the latest version.
+当您运行 `alda update` 时，会将 `alda` 和 `alda-player` 更新到最新版本
 
-## Better troubleshooting with `alda doctor`
+## 使用 `alda doctor` 更好地排除故障
 
-`alda doctor` is a new command that runs some basic health checks and looks for signs that your system might not be set up for Alda to work properly. If all goes well, you should see output like this:
+`alda doctor` 是一个新命令，它运行一些基本的检查，并检查与 alda 有关的设置。如果一切顺利，您应该会看到如下输出：
 
 ```
 OK  Parse source code
@@ -52,49 +51,45 @@ nREPL server started on port 36099 on host localhost - nrepl://localhost:36099
 OK  Interact with the REPL server
 ```
 
-If you run into any unexpected problems, the output of `alda doctor` can help you pinpoint the issue and help Alda's maintainers find and fix bugs.
+如果您遇到意料之外的问题，`alda doctor` 的输出可以帮助您查明问题并帮助 Alda 的维护者查找和修复错误
 
-## New and improved `alda repl`
+## 全新改进的 `alda repl`
 
-The REPL (**R**ead-**E**val-**P**lay **L**oop, a variation on the "read-eval-print loop" from Lisp tradition) experience that you know and love from Alda 1 is preserved in Alda 2. Simply run `alda repl` to begin an interactive REPL session. Then you can play around and experiment with Alda code and hear how each line of input sounds. (Try typing in something like `midi-woodblock: c8. c c8 r c c` and see what happens.)
+你在 Alda 1 中所了解和喜爱的 REPL (**R** read- **E**val-**P**lay **L** loop，一种来自 Lisp 传统的“读-求值-打印循环”的变体)经验在 Alda 2 中得到了保留。只需运行 `alda repl` 即可开始交互式repl会话。然后你可以尝试使用Alda代码，听听每一行输入的声音。(试着输入` midi-woodblock: c8。C c8 r C C `，看看会发生什么
 
-Just like before, you can enter `:help` for an overview of what REPL commands are available, and find out more about a command by entering e.g. `:help play`.
+就像以前一样，你可以输入 `:help` 来了解可用的 REPL 命令，然后通过输入 `:help play` 来了解更多关于命令的信息
 
-So, what's new in the Alda 2 REPL? One superpower that we've given the new REPL is that it can be run in either client or server mode. By default, `alda repl` will start both a server and a client session. But if you already have a REPL server running (or if a friend does, somewhere else in the world... :bulb:), you can connect to it by running `alda repl --client --host example.com --port 12345` (or the shorter version: `alda repl -c -H example.com -p 12345`). This has the potential to be a whole lot of fun, because multiple score-writers can connect to the same REPL server and collaborate in real time!
+那么，Alda 2 REPL 有什么新功能呢？我们新赋予 REPL 的一个强大功能是它可以在客户端或服务器模式下运行。默认情况下，`alda repl` 将同时启动服务器和客户端会话。但是如果你已经有了一个正在运行的 REPL 服务器(或者如果你的朋友有，在世界的其他地方…:bulb:)，你可以通过运行 `alda repl --client --host example.com --port 12345` (或者更短的版本: `alda repl -c -H example.com -p 12345`)来连接它。这可能会带来很多乐趣，因为多个客户端可以连接到同一个 REPL 服务器并实时协作！
 
-> If you're interested in the technical details behind Alda's new super-REPL,
-> check out Dave's blog post about it, [Alda and the nREPL
-> protocol][alda-nrepl].
+> 如果您对 Alda 新 super-REPL 背后的技术细节感兴趣，
+> 查看 Dave 的博客文章，[Alda 和 nREPL 协议][alda-nrepl]
 
-Some other REPL-related things that have changed since Alda 1:
+自 Alda 1 以来更改一些与 REPL 相关的内容：
 
-* Server/worker management commands are no longer present because there are no longer server and worker processes to be managed! The following commands have been removed:
+* 服务器 / 工作进程管理命令不再存在，因为不再需要管理服务器和工作进程！已删除以下命令：
   * `:down`
   * `:downup`
   * `:list`
   * `:status`
   * `:up`
 
-* The commands related to printing information about the score have been renamed so that things are a little more organized:
-  * (v1) `:score` => (v2) `:score text` or just `:score`
+* 与打印乐谱信息相关的命令已重命名，以便使用：
+  * (v1) `:score` => (v2) `:score text` 或 `:score`
   * (v1) `:info` => (v2) `:score info`
   * (v1) `:map` => (v2) `:score data`
-  * (available in v2 only) `:score events`
+  * (仅在 v2 中可用) `:score events`
 
-## Attribute syntax has changed, in some cases
+## 在某些情况下，属性语法已更改
 
-You might not have realized this, but in Alda 1, attributes like `(volume 42)` were actually Clojure function calls that were evaluated at runtime. In fact, the entire Clojure language was available to use within an Alda score. You could, for example, generate a random number between 0 and 100 and set the volume to that value with `(volume (rand-int 100))`.
+你可能没有意识到这一点，但在 Alda 1 中，像 `(volume 42)` 这样的属性实际上是在运行时转换的 Clojure 函数调用。事实上，整个 Clojure 语言都可以在 Alda scores 中使用。例如，您可以生成一个介于 0 和 100 之间的随机数，并使用 `(volume (rand-int 100))` 将音量设置为该值
 
-You can't do this kind of thing anymore in Alda 2, because Alda is no longer
-written in Clojure. (However, if you're interested in doing this kind of thing,
-you'll be relieved to know that you still can! see "Programmatic composition"
-below.)
+在 Alda 2 中，你不能再做这种事情了，因为 Alda 不再用 Clojure 编写的。（但是，如果您对做这种事情感兴趣，您不必担心，因为您仍然可以这么做！请参阅下面的“[Programmatic composition](#programmatic-composition)”
 
-Clojure is a [Lisp][lisp] programming language. If you don't know what that is, here is a simple explanation: Lisp languages have a syntax that mostly consists of parentheses. An "S-expression" is a list of elements inside of parentheses, `(like this list)`. The first item in the list is an _operator_, and the remaining items are _arguments_. S-expressions are nestable; for example, an arithmetic expression like `(1 + 2) * (3 + 4)` is written in Lisp like this: `(* (+ 1 2) (+ 3 4))`.
+Clojure 是一种 [Lisp][lisp] 编程语言。如果您不知道这是什么，这里有一个简单的解释：Lisp 语言的语法主要由括号组成。“S-expression”是括号内的元素列表，`(像 这个 列表)`。列表中的第一项是_operator_，其余项是_arguments_。s表达式是可嵌套的;例如，像`(1 + 2)*(3 + 4)`这样的算术表达式在 Lisp 中写成:`(*(+ 1 2)(+ 3 4))`
 
-Alda 2 includes a simple, built-in Lisp language ("alda-lisp") that provides just enough to support Alda's attribute operations. However, it lacks a lot of the syntax of Clojure. Clojure has a variety of additional syntax that you may have seen in Alda scores, including `:keywords`, `[vectors]` and `{hash maps}`.  alda-lisp does not have these features, so some Alda scores will not be playable in Alda 2 if they make use of these features of Clojure.
+Alda 2 包含一个简单的内置 Lisp 语言 (“Alda - Lisp”) ，它提供了足够的支持 Alda 的属性操作。但是它缺少 Clojure 的许多语法。Clojure 有多种您可能在 Alda scores 中看到的附加语法，包括 `:keywords `， ` [vectors] ` 和 `{hash maps}`。Alda -lisp 没有这些功能，所以如果使用 Clojure 的这些功能，一些 Alda scores 将无法在 Alda 2 中播放
 
-The following attributes are affected by syntax changes in Alda 2:
+以下属性受 Alda 2 中语法更改的影响：
 
 <table>
   <thead>
@@ -136,28 +131,26 @@ The following attributes are affected by syntax changes in Alda 2:
   </tbody>
 </table>
 
-All other attributes should work just fine, but please [let us
-know][open-an-issue] if you run into any other backwards compatibility issues with your existing Alda 1 scores!
+所有其他属性都应该正常工作，但如果您遇到现有 Alda 1 scores 的任何其他向后兼容性问题，请 [让我们知道][open-an-issue]！
 
-## Score starting volumes 
+## Score starting volumes
 
-Alda 1 started all scores at an Alda volume of 100 corresponding to a MIDI velocity of 127. This is the maximum value. With Alda 2, you can now specify volumes with dynamic markings such as `(mp)` or `(ff)`. 
+Alda 1 以 Alda 音量 100 开始所有乐谱，对应于 MIDI 力度 127。这是最大值。使用 Alda 2，您现在可以使用动态标记（如 '（mp）' 或 '（ff）'）' 指定 volumes
 
-With this addition, all scores now default to a dynamic volume of `(mf)` equivalent to `(vol 54)`. This means that if you previously relied on scores starting from a volume of 100 in Alda 1, you now have to specify this attribute at the beginning of your Alda 2 score. 
-
+因为此添加，所有乐谱现在都默认为 `（mf）` 的动态音量，相当于 `（vol 54）`。这意味着，如果您之前在 Alda 1 中依赖于从 100 开始的 scores，则现在必须在 Alda 2 scores 的开头指定此属性
 ## Programmatic composition
 
-As noted above, inline Clojure code is no longer supported as a feature of Alda.
+综上所述，内联 Clojure 代码支持不再作为 Alda 的一项功能
 
-However, if you're interested in using Clojure to write algorithmic music, you're in luck! In 2018, Dave created [alda-clj], a Clojure library for live-coding music with Alda. The library provides a Clojure DSL for writing Alda scores, and the DSL is equivalent to the one that was available in Alda 1.
+但是，如果您有兴趣使用 Clojure 编写算法音乐，那么您很幸运！2018 年，Dave 创建了 [alda-clj]，这是一个 Clojure 库，用于使用 Alda 对音乐进行实时编码。该库提供了用于编写 Alda scores 的 Clojure DSL，该 DSL 等同于 Alda 1 中提供的 DSL
 
-Here is an [example score][entropy] that shows how a Clojure programmer can use alda-clj to compose algorithmic music.
+这是一个 [示例 scores][entropy]，它展示了 Clojure 程序员如何使用 alda-clj 来创作算法音乐
 
-## `alda parse` output
+## `alda parse` 输出
 
-The `alda parse` command parses an Alda score and produces JSON output that represents the score data. This can be useful for debugging purposes, or for building tooling on top of Alda.
+`alda parse` 命令解析 Alda scores 并生成表示 scores 数据的 JSON 输出。这对于调试目的或在 Alda 上构建工具非常有用
 
-The output of `alda parse` in Alda 2 is different from that of Alda 1 in a number of ways. For example, here is the output of `alda parse -c "guitar: e" -o events` in Alda 1:
+Alda 2 中 `alda parse` 的输出与 Alda 1 的输出在许多方面不同。例如，以下是 Alda 1 中运行 `alda parse -c "guitar: e" -o events` 的输出：
 
 ```json
 [
@@ -182,7 +175,7 @@ The output of `alda parse` in Alda 2 is different from that of Alda 1 in a numbe
 ]
 ```
 
-And in Alda 2:
+在 Alda 2 中：
 
 ```json
 [
@@ -206,11 +199,10 @@ And in Alda 2:
 ]
 ```
 
-As you can see, Alda 1 and Alda 2 present the same information in very different ways! If you happen to have built any tooling or workflows that rely on the Alda 1 `alda parse` output, you will likely need to make adjustments after upgrading to Alda 2.
+如您所见，Alda 1 和 Alda 2 以不同的方式呈现相同的信息！如果您碰巧构建了任何依赖于 Alda 1 `alda parse` 输出的工具或工作流，则可能需要在升级到 Alda 2 后进行调整
+## 就是这样！
 
-## That's it!
-
-We hope you enjoy Alda 2! Please feel free to join our [Slack group][alda-slack] and let us know what you think of it. You can also [open an issue][open-an-issue] if you run into a bug or any other sort of weird behavior.  We'll be happy to help you get it sorted out!
+我们希望您喜欢 Alda 2！请随时加入我们的 [Slack 群组][alda-slack] 并让我们知道您的想法。如果你遇到 bug 或任何其他类型的奇怪行为，你也可以 [打开一个 issue][open-an-issue]，我们很乐意帮助您解决问题！
 
 [why-the-rewrite]: https://blog.djy.io/why-im-rewriting-alda-in-go-and-kotlin/
 [lisp]: https://en.wikipedia.org/wiki/Lisp_(programming_language)
