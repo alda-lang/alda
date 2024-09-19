@@ -1,6 +1,6 @@
 <p align="center">
   <a href="http://alda.io">
-    <img src="alda-logo-horizontal.svg"
+    <img src="../../alda-logo-horizontal.svg"
          alt="alda logo"
          width=360
          height=128>
