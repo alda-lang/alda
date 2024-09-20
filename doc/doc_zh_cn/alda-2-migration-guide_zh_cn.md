@@ -16,7 +16,7 @@ Alda 2 基本上与 Alda 1 向后兼容，在大部分情况下，你用 Alda 1 
 
 ## 无需再运行 `alda up` ！使用 `alda-player`
 
-Alda 1 要求您在播放乐谱之前启动 Alda 服务器（通过运行“alda up”）
+在Alda 1中 您在播放乐谱之前必须通过`alda up`命令启动Alda服务器
 
 在 Alda 2 中，没有 Alda 服务器。你可以简单地运行一个命令，比如 `alda play -c "flute: o5 c8 < b16 a g f e d c2"`，而不需要先运行 `alda up`
 
@@ -55,7 +55,7 @@ OK  Interact with the REPL server
 
 如果您遇到意料之外的问题，`alda doctor` 的输出可以帮助您查明问题并帮助 Alda 的维护者查找和修复错误
 
-## 全新改进的 `alda repl`
+## 全新改进的 `alda repl` (交互模式)
 
 你在 Alda 1 中所了解和喜爱的 REPL (**R** read- **E**val-**P**lay **L** loop，一种来自 Lisp 传统的“读-求值-打印循环”的变体)经验在 Alda 2 中得到了保留。只需运行 `alda repl` 即可开始交互式repl会话。然后你可以尝试使用Alda代码，听听每一行输入的声音。(试着输入` midi-woodblock: c8. c c8 r c c `，看看会发生什么
 
@@ -133,16 +133,17 @@ Alda 2 包含一个简单的内置 Lisp 语言 (“Alda - Lisp”) ，它提供�
   </tbody>
 </table>
 
-所有其他属性都应该正常工作，但如果您遇到现有 Alda 1 scores 的任何其他向后兼容性问题，请 [让我们知道][open-an-issue]！
+所有其他属性都应该正常工作，但如果您遇到现有 Alda 1 的乐谱的任何其他向后兼容性问题，请 [让我们知道][open-an-issue]！
 
-## Score starting volumes
+## 乐谱默认音量
 
-Alda 1 以 Alda 音量 100 开始所有乐谱，对应于 MIDI 力度 127。这是最大值。使用 Alda 2，您现在可以使用动态标记（如 '（mp）' 或 '（ff）'）' 指定 volumes
+Alda 1的乐谱开头的默认音量是100 这对应MIDI力度127 也就是最大值 现在Alda 2中 可以用动态标记(如`mp`或`ff`这样的)来指定音量
 
-因为此添加，所有乐谱现在都默认为 `（mf）` 的动态音量，相当于 `（vol 54）`。这意味着，如果您之前在 Alda 1 中依赖于从 100 开始的 scores，则现在必须在 Alda 2 scores 的开头指定此属性
+在Alda 2中 所有乐谱开头默认的音量是`(mf)` 相当于`(vol 54)` 如果您之前用Alda 1时写的乐谱依赖于默认音量100 那么迁移到Alda2后需要在乐谱的开头显式地指定此属性
+
 ## Programmatic composition
 
-综上所述，内联 Clojure 代码支持不再作为 Alda 的一项功能
+Alda取消了内联Clojure代码的功能
 
 但是，如果您有兴趣使用 Clojure 编写算法音乐，那么您很幸运！2018 年，Dave 创建了 [alda-clj]，这是一个 Clojure 库，用于使用 Alda 对音乐进行实时编码。该库提供了用于编写 Alda scores 的 Clojure DSL，该 DSL 等同于 Alda 1 中提供的 DSL
 
@@ -202,6 +203,7 @@ Alda 2 中 `alda parse` 的输出与 Alda 1 的输出在许多方面不同。例
 ```
 
 如您所见，Alda 1 和 Alda 2 以不同的方式呈现相同的信息！如果您碰巧构建了任何依赖于 Alda 1 `alda parse` 输出的工具或工作流，则可能需要在升级到 Alda 2 后进行调整
+
 ## 就是这样！
 
 我们希望您喜欢 Alda 2！请随时加入我们的 [Slack 群组][alda-slack] 并让我们知道您的想法。如果你遇到 bug 或任何其他类型的奇怪行为，你也可以 [打开一个 issue][open-an-issue]，我们很乐意帮助您解决问题！
