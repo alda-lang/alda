@@ -2,6 +2,8 @@
 
 *此文档翻译自 [Alda 2 Migration Guide](../alda-2-migration-guide.md)*
 
+*此文档由[cewno](https://github.com/cewno)机翻并校对 非人工翻译 故有极大可能会有错误(尤其是命令相关的文本 标点和字母大小写会出问题) 我(欧阳闻奕/OWALabuy)或许没有完全验证此文档中命令文本的正确性 在此段文字移除前 请各位自行验证输入的命令的准确性(参考原文档)*
+
 Alda 2.0.0 于 2021 年 6 月发布。Alda 1 主要用 Clojure 编写（带有优化 Java 客户端，以实现更快的命令行交互），而 Alda 2 是用 Go 和 Kotlin 从头开始重写的
 
 > 如果你好奇为什么 Dave 决定用 Go 和 Kotlin 重写 Alda，请阅读 [这篇说明][why-the-rewrite]！
@@ -55,7 +57,7 @@ OK  Interact with the REPL server
 
 ## 全新改进的 `alda repl`
 
-你在 Alda 1 中所了解和喜爱的 REPL (**R** read- **E**val-**P**lay **L** loop，一种来自 Lisp 传统的“读-求值-打印循环”的变体)经验在 Alda 2 中得到了保留。只需运行 `alda repl` 即可开始交互式repl会话。然后你可以尝试使用Alda代码，听听每一行输入的声音。(试着输入` midi-woodblock: c8。C c8 r C C `，看看会发生什么
+你在 Alda 1 中所了解和喜爱的 REPL (**R** read- **E**val-**P**lay **L** loop，一种来自 Lisp 传统的“读-求值-打印循环”的变体)经验在 Alda 2 中得到了保留。只需运行 `alda repl` 即可开始交互式repl会话。然后你可以尝试使用Alda代码，听听每一行输入的声音。(试着输入` midi-woodblock: c8. c c8 r c c `，看看会发生什么
 
 就像以前一样，你可以输入 `:help` 来了解可用的 REPL 命令，然后通过输入 `:help play` 来了解更多关于命令的信息
 
