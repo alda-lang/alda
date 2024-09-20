@@ -1,6 +1,6 @@
 # 序列(Sequences)
 
-*本页面翻译自[sequences.md](../sequences.md)*
+*本页面翻译自[Sequences](../sequences.md)*
 
 在Alda乐谱中 可以将一系列[音符](notes_zh_cn.md)或其他事件放在方括号中 捕获为**序列**
 

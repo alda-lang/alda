@@ -1,6 +1,6 @@
 # Alda REPL(Alda交互模式)
 
-此文档翻译自[alda-repl.md](../alda-repl.md)
+*此文档翻译自[Alda REPL](../alda-repl.md)*
 
 Alda带有一个交互模式 -- REPL(**R**ead-**E**val-**P**lay **L**oop) 您可以用它尝试语法 在交互模式中输入每行代码后 您都能听到结果
 

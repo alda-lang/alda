@@ -1,6 +1,6 @@
 # 乐谱与部分(Scores and Parts)
 
-*此页面翻译自[scores-and-parts.md](../scores-and-parts.md)*
+*此页面翻译自[Scores and Parts](../scores-and-parts.md)*
 
 用Alda编写的乐曲的最高级别是**乐谱(score)** 乐谱由一个或多个乐器**部分(part)**组成 每个部分都有自己的[音符](notes_zh_cn.md)事件 这些事件会同时发生
 

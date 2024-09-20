@@ -1,6 +1,6 @@
 # 注释(Comments)
 
-*本页面翻译自[comments.md](../comments.md)*
+*本页面翻译自[Comments](../comments.md)*
 
 您可以通过在一行的左侧添加`#`符号来在Alda中添加一行**注释**(将该行*注释掉*)
 

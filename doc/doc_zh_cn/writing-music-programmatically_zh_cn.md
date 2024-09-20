@@ -1,6 +1,6 @@
 # 以编程的方式编写音乐
 
-*此页面翻译自[writing-music-programmatically.md](../writing-music-programmatically.md)*
+*此页面翻译自[Writing Music Programmatically](../writing-music-programmatically.md)*
 
 Alda的设计旨在更易于学习和使用 对于没有或很少编程经验的用户来说也是如此 所以该语言省略了大多数编程语言中的复杂功能 如函数 类和数据类型
 

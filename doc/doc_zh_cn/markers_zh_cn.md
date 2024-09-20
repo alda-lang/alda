@@ -1,4 +1,6 @@
-# Markers
+# 标记(Markers)
+
+*此页面翻译自[Markers](../markers.md)*
 
 **标记(Markers)**可以放置在乐谱中的任何位置 也可以放在任何乐器部分 例如 `%chorus`将在当前偏移量处放置一个名为"chorus"的标记 然后在任何位置使用`@chorus`会将当前[偏移量](offset_zh_cn.md)设置为"chorus"标记处的偏移量
 

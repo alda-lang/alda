@@ -1,6 +1,6 @@
 # 和弦
 
-*此页面翻译自[chords.md](../chords.md)*
+*此页面翻译自[Chords](../chords.md)*
 
 **和弦**是一组具有相同[偏移量](offset_zh_cn.md)的[音符](notes_zh_cn.md) 即它们开始奏响的时间是相同的 在Alda中表示和弦 可以在组成和弦的音符之间加上斜杠`/` 例如 `c/e/g`
 

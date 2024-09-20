@@ -1,6 +1,6 @@
 # 偏移量
 
-*此文档翻译自[offset.md](../offset.md)*
+*此文档翻译自[Offset](../offset.md)*
 
 Alda通过为每个[音符](notes_zh_cn.md)分配一个**偏移量**来按时间顺序放置音符 偏移有两种类型:绝对和相对
 

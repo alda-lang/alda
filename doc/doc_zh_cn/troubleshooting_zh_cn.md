@@ -1,6 +1,6 @@
 # 故障排除
 
-*此页面翻译自[troubleshooting.md](../troubleshooting.md)*
+*此页面翻译自[Troubleshooting](../troubleshooting.md)*
 
 ## 通用
 

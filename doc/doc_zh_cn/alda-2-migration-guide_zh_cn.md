@@ -1,6 +1,6 @@
 # Alda 2 迁移指南
 
-此文档翻译自 [alda-2-migration-guide.md](../alda-2-migration-guide.md)
+*此文档翻译自 [Alda 2 Migration Guide](../alda-2-migration-guide.md)*
 
 Alda 2.0.0 于 2021 年 6 月发布。Alda 1 主要用 Clojure 编写（带有优化 Java 客户端，以实现更快的命令行交互），而 Alda 2 是用 Go 和 Kotlin 从头开始重写的
 

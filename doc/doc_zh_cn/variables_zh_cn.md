@@ -1,6 +1,6 @@
 # 变量(Variables)
 
-*本页面翻译自[Variables.md](../variables.md)*
+*本页面翻译自[Variables](../variables.md)*
 
 反复是音乐的一个重要部分 除了对音符和乐句做反复 还需要对较大的乐句或乐章做反复 如果只使用Alda的[反复](./repeats_zh_cn.md)语法 可能会很麻烦 为了获得更大的灵活性 并使代码更清晰 您可以用**变量**为[序列](./sequences_zh_cn.md)命名
 
@@ -52,8 +52,8 @@ notes = c d e
 
 piano:
 quiet notes
-Loud notes
-Louder notes
+loud notes
+louder notes
 ```
 
 ## 变量嵌套

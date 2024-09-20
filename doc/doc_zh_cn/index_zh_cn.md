@@ -1,6 +1,6 @@
 # Alda: 文档™
 
-*翻译自[此页面](../index.md)*
+*此页面翻译自[Index](../index.md)*
 
 这是Alda的官方文档的索引页面 如果你想要了解Alda的更多信息及如何用它编写出色的乐谱 请继续阅读!
 
@@ -36,9 +36,8 @@
   * [偏移量(offset)](offset_zh_cn.md)
   * [属性(attributes)](attributes_zh_cn.md)
   * [反复(repeats)](repeats_zh_cn.md)
-  * [variables](variables_zh_cn.md)
+  * [变量(variables)](variables_zh_cn.md)
   * [Cram表达式(cram expressions)](cram-expressions_zh_cn.md)
-  <!-- 这里的一些术语在我翻译了那些页面后再进行翻译...-->
 
 * 请仔细阅读此[可用乐器列表](list-of-instruments_zh_cn.md).
 
