@@ -16,13 +16,13 @@ Alda 2 基本上与 Alda 1 向后兼容，在大部分情况下，你用 Alda 1 
 
 ## 无需再运行 `alda up` ！使用 `alda-player`
 
-在Alda 1中 您在播放乐谱之前必须通过`alda up`命令启动Alda服务器
+在Alda 1中 您在播放乐谱之前必须通过 `alda up` 命令启动Alda服务器
 
 在 Alda 2 中，没有 Alda 服务器。你可以简单地运行一个命令，比如 `alda play -c "flute: o5 c8 < b16 a g f e d c2"`，而不需要先运行 `alda up`
 
 有一个名为 `alda-player` 的新后台进程来处理音频播放。每次您播放乐谱时，Alda 都会自动为您启动一个。 您需要在 PATH 环境变量上包含可用的 `alda` 和 `alda-player` 才能正常工作
 
-Alda CLI 将帮助确保您安装了相同版本的 `alda` 和 `alda-player`，如果它们来自不同的版本，它还会为您安装正确版本的`alda-player`
+Alda CLI 将帮助确保您安装了相同版本的 `alda` 和 `alda-player`，如果它们来自不同的版本，它还会为您安装正确版本的 `alda-player`
 
 当您运行 `alda update` 时，会将 `alda` 和 `alda-player` 更新到最新版本
 
@@ -57,7 +57,7 @@ OK  Interact with the REPL server
 
 ## 全新改进的 `alda repl` (交互模式)
 
-你在 Alda 1 中所了解和喜爱的 REPL (**R** read- **E**val-**P**lay **L** loop，一种来自 Lisp 传统的“读-求值-打印循环”的变体)经验在 Alda 2 中得到了保留。只需运行 `alda repl` 即可开始交互式repl会话。然后你可以尝试使用Alda代码，听听每一行输入的声音。(试着输入`midi-woodblock: c8. c c8 r c c`，看看会发生什么
+你在 Alda 1 中所了解和喜爱的 REPL (**R** read- **E**val-**P**lay **L** loop，一种来自 Lisp 传统的“读-求值-打印循环”的变体)经验在 Alda 2 中得到了保留。只需运行 `alda repl` 即可开始交互式 repl 会话。然后你可以尝试使用 Alda 代码，听听每一行输入的声音。(试着输入`midi-woodblock: c8. c c8 r c c`，看看会发生什么
 
 就像以前一样，你可以输入 `:help` 来了解可用的 REPL 命令，然后通过输入 `:help play` 来了解更多关于命令的信息
 
@@ -87,7 +87,7 @@ OK  Interact with the REPL server
 
 在 Alda 2 中，你不能再做这种事情了，因为 Alda 不再用 Clojure 编写的。（但是，如果您对做这种事情感兴趣，您不必担心，因为您仍然可以这么做！请参阅下面的“[Programmatic composition](#programmatic-composition)”
 
-Clojure 是一种 [Lisp][lisp] 编程语言。如果您不知道这是什么，这里有一个简单的解释：Lisp 语言的语法主要由括号组成。“S-expression”是括号内的元素列表，`(像 这个 列表)`。列表中的第一项是_operator_，其余项是_arguments_。s表达式是可嵌套的;例如，像`(1 + 2) * (3 + 4)`这样的算术表达式在 Lisp 中写成:`(* (+ 1 2)(+ 3 4))`
+Clojure 是一种 [Lisp][lisp] 编程语言。如果您不知道这是什么，这里有一个简单的解释：Lisp 语言的语法主要由括号组成。“S-expression”是括号内的元素列表，`(像 这个 列表)`。列表中的第一项是 _operator_，其余项是 _arguments_。s表达式是可嵌套的;例如，像 `(1 + 2) * (3 + 4)` 这样的算术表达式在 Lisp 中写成:`(* (+ 1 2)(+ 3 4))`
 
 Alda 2 包含一个简单的内置 Lisp 语言(“Alda - Lisp”)，它提供了足够的支持 Alda 的属性操作。但是它缺少 Clojure 的许多语法。Clojure 有多种您可能在 Alda 乐谱中看到的附加语法，包括 `:keywords`， `[vectors]` 和 `{hash maps}`。Alda-lisp 没有这些功能，所以如果使用 Clojure 的这些功能，一些 Alda 乐谱将无法在 Alda 2 中播放
 
@@ -137,13 +137,13 @@ Alda 2 包含一个简单的内置 Lisp 语言(“Alda - Lisp”)，它提供了
 
 ## 乐谱默认音量
 
-Alda 1的乐谱开头的默认音量是100 这对应MIDI力度127 也就是最大值 现在Alda 2中 可以用动态标记(如`(mp)`或`(ff)`这样的)来指定音量
+Alda 1的乐谱开头的默认音量是100 这对应MIDI力度127 也就是最大值 现在 Alda 2 中 可以用动态标记(如 `(mp)`或`(ff)` 这样的)来指定音量
 
-在Alda 2中 所有乐谱开头默认的音量是`(mf)` 相当于`(vol 54)` 如果您之前用Alda 1时写的乐谱依赖于默认音量100 那么迁移到Alda2后需要在乐谱的开头显式地指定此属性
+在 Alda 2中 所有乐谱开头默认的音量是 `(mf)` 相当于`(vol 54)` 如果您之前用 Alda 1 时写的乐谱依赖于默认音量 100 那么迁移到 Alda 2 后需要在乐谱的开头显式地指定此属性
 
 ## Programmatic composition
 
-Alda取消了内联Clojure代码的功能
+Alda 取消了内联 Clojure 代码的功能
 
 但是，如果您有兴趣使用 Clojure 编写算法音乐，那么您很幸运！2018 年，Dave 创建了 [alda-clj]，这是一个 Clojure 库，用于使用 Alda 对音乐进行实时编码。该库提供了用于编写 Alda 乐谱的 Clojure DSL，该 DSL 等同于 Alda 1 中提供的 DSL
 
