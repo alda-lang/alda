@@ -68,7 +68,7 @@ OK  Interact with the REPL server
 ## 全新改进的 `alda repl` （交互模式）
 
 你在 Alda 1 中所了解和喜爱的 REPL （**R** read- **E**val-**P**lay **L** loop，
-一种来自 Lisp 传统的“读-求值-打印循环”的变体）经验在 Alda 2 中得到了保留。
+一种来自 Lisp 传统的“读-求值-打印循环”的变体）体验在 Alda 2 中得到了保留。
 只需运行 `alda repl` 即可开始交互式 repl 会话。然后你可以尝试使用 Alda 代码，听听每一行输入的声音。
 （试着输入`midi-woodblock: c8. c c8 r c c`，看看会发生什么
 
