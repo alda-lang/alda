@@ -57,7 +57,7 @@ OK  Interact with the REPL server
 
 ## 全新改进的 `alda repl` (交互模式)
 
-你在 Alda 1 中所了解和喜爱的 REPL (**R** read- **E**val-**P**lay **L** loop，一种来自 Lisp 传统的“读-求值-打印循环”的变体)经验在 Alda 2 中得到了保留。只需运行 `alda repl` 即可开始交互式repl会话。然后你可以尝试使用Alda代码，听听每一行输入的声音。(试着输入` midi-woodblock: c8. c c8 r c c `，看看会发生什么
+你在 Alda 1 中所了解和喜爱的 REPL (**R** read- **E**val-**P**lay **L** loop，一种来自 Lisp 传统的“读-求值-打印循环”的变体)经验在 Alda 2 中得到了保留。只需运行 `alda repl` 即可开始交互式repl会话。然后你可以尝试使用Alda代码，听听每一行输入的声音。(试着输入`midi-woodblock: c8. c c8 r c c`，看看会发生什么
 
 就像以前一样，你可以输入 `:help` 来了解可用的 REPL 命令，然后通过输入 `:help play` 来了解更多关于命令的信息
 
@@ -87,9 +87,9 @@ OK  Interact with the REPL server
 
 在 Alda 2 中，你不能再做这种事情了，因为 Alda 不再用 Clojure 编写的。（但是，如果您对做这种事情感兴趣，您不必担心，因为您仍然可以这么做！请参阅下面的“[Programmatic composition](#programmatic-composition)”
 
-Clojure 是一种 [Lisp][lisp] 编程语言。如果您不知道这是什么，这里有一个简单的解释：Lisp 语言的语法主要由括号组成。“S-expression”是括号内的元素列表，`(像 这个 列表)`。列表中的第一项是_operator_，其余项是_arguments_。s表达式是可嵌套的;例如，像`(1 + 2)*(3 + 4)`这样的算术表达式在 Lisp 中写成:`(*(+ 1 2)(+ 3 4))`
+Clojure 是一种 [Lisp][lisp] 编程语言。如果您不知道这是什么，这里有一个简单的解释：Lisp 语言的语法主要由括号组成。“S-expression”是括号内的元素列表，`(像 这个 列表)`。列表中的第一项是_operator_，其余项是_arguments_。s表达式是可嵌套的;例如，像`(1 + 2) * (3 + 4)`这样的算术表达式在 Lisp 中写成:`(* (+ 1 2)(+ 3 4))`
 
-Alda 2 包含一个简单的内置 Lisp 语言 (“Alda - Lisp”) ，它提供了足够的支持 Alda 的属性操作。但是它缺少 Clojure 的许多语法。Clojure 有多种您可能在 Alda scores 中看到的附加语法，包括 `:keywords `， ` [vectors] ` 和 `{hash maps}`。Alda -lisp 没有这些功能，所以如果使用 Clojure 的这些功能，一些 Alda scores 将无法在 Alda 2 中播放
+Alda 2 包含一个简单的内置 Lisp 语言 (“Alda - Lisp”) ，它提供了足够的支持 Alda 的属性操作。但是它缺少 Clojure 的许多语法。Clojure 有多种您可能在 Alda scores 中看到的附加语法，包括 `:keywords`， `[vectors]` 和 `{hash maps}`。Alda-lisp 没有这些功能，所以如果使用 Clojure 的这些功能，一些 Alda scores 将无法在 Alda 2 中播放
 
 以下属性受 Alda 2 中语法更改的影响：
 
