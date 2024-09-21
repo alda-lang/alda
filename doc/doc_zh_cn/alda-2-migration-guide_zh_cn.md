@@ -10,7 +10,7 @@ Alda 2.0.0 于 2021 年 6 月发布。Alda 1 主要用 Clojure 编写（带有�
 
 Alda 2 基本上与 Alda 1 向后兼容，在大部分情况下，你用 Alda 1 编写的乐谱都应该与 Alda 2 兼容，并且听起来完全一样。虽然 Alda 的实现已经从头开始重写，但 Alda 的语法几乎保持不变
 
-在 Alda 2 中，语言有一个重要的变化：**不再支持内联 Clojure 代码**。原因很明显：Alda 客户端现在是用 Go 编写的，所以我们不能像过去那样在 Alda score 中计算任意 Clojure 代码。(尽管如此，Alda 仍然是一个强大的算法合成工具！参见下面的“[Programmatic composition](#programmatic-composition)”)
+在 Alda 2 中，语言有一个重要的变化：**不再支持内联 Clojure 代码**。原因很明显：Alda 客户端现在是用 Go 编写的，所以我们不能像过去那样在 Alda 乐谱中计算任意 Clojure 代码。(尽管如此，Alda 仍然是一个强大的算法合成工具！参见下面的“[Programmatic composition](#programmatic-composition)”)
 
 下面是从 Alda 1 升级到 Alda 2 时应该注意的一些事项
 
@@ -83,13 +83,13 @@ OK  Interact with the REPL server
 
 ## 在某些情况下，属性语法已更改
 
-你可能没有意识到这一点，但在 Alda 1 中，像 `(volume 42)` 这样的属性实际上是在运行时转换的 Clojure 函数调用。事实上，整个 Clojure 语言都可以在 Alda scores 中使用。例如，您可以生成一个介于 0 和 100 之间的随机数，并使用 `(volume (rand-int 100))` 将音量设置为该值
+你可能没有意识到这一点，但在 Alda 1 中，像 `(volume 42)` 这样的属性实际上是在运行时转换的 Clojure 函数调用。事实上，整个 Clojure 语言都可以在 Alda 乐谱中使用。例如，您可以生成一个介于 0 和 100 之间的随机数，并使用 `(volume (rand-int 100))` 将音量设置为该值
 
 在 Alda 2 中，你不能再做这种事情了，因为 Alda 不再用 Clojure 编写的。（但是，如果您对做这种事情感兴趣，您不必担心，因为您仍然可以这么做！请参阅下面的“[Programmatic composition](#programmatic-composition)”
 
 Clojure 是一种 [Lisp][lisp] 编程语言。如果您不知道这是什么，这里有一个简单的解释：Lisp 语言的语法主要由括号组成。“S-expression”是括号内的元素列表，`(像 这个 列表)`。列表中的第一项是_operator_，其余项是_arguments_。s表达式是可嵌套的;例如，像`(1 + 2) * (3 + 4)`这样的算术表达式在 Lisp 中写成:`(* (+ 1 2)(+ 3 4))`
 
-Alda 2 包含一个简单的内置 Lisp 语言 (“Alda - Lisp”) ，它提供了足够的支持 Alda 的属性操作。但是它缺少 Clojure 的许多语法。Clojure 有多种您可能在 Alda scores 中看到的附加语法，包括 `:keywords`， `[vectors]` 和 `{hash maps}`。Alda-lisp 没有这些功能，所以如果使用 Clojure 的这些功能，一些 Alda scores 将无法在 Alda 2 中播放
+Alda 2 包含一个简单的内置 Lisp 语言(“Alda - Lisp”)，它提供了足够的支持 Alda 的属性操作。但是它缺少 Clojure 的许多语法。Clojure 有多种您可能在 Alda 乐谱中看到的附加语法，包括 `:keywords`， `[vectors]` 和 `{hash maps}`。Alda-lisp 没有这些功能，所以如果使用 Clojure 的这些功能，一些 Alda 乐谱将无法在 Alda 2 中播放
 
 以下属性受 Alda 2 中语法更改的影响：
 
@@ -145,13 +145,13 @@ Alda 1的乐谱开头的默认音量是100 这对应MIDI力度127 也就是最�
 
 Alda取消了内联Clojure代码的功能
 
-但是，如果您有兴趣使用 Clojure 编写算法音乐，那么您很幸运！2018 年，Dave 创建了 [alda-clj]，这是一个 Clojure 库，用于使用 Alda 对音乐进行实时编码。该库提供了用于编写 Alda scores 的 Clojure DSL，该 DSL 等同于 Alda 1 中提供的 DSL
+但是，如果您有兴趣使用 Clojure 编写算法音乐，那么您很幸运！2018 年，Dave 创建了 [alda-clj]，这是一个 Clojure 库，用于使用 Alda 对音乐进行实时编码。该库提供了用于编写 Alda 乐谱的 Clojure DSL，该 DSL 等同于 Alda 1 中提供的 DSL
 
-这是一个 [示例 scores][entropy]，它展示了 Clojure 程序员如何使用 alda-clj 来创作算法音乐
+这是一个 [示例乐谱][entropy]，它展示了 Clojure 程序员如何使用 alda-clj 来创作算法音乐
 
 ## `alda parse` 输出
 
-`alda parse` 命令解析 Alda scores 并生成表示 scores 数据的 JSON 输出。这对于调试目的或在 Alda 上构建工具非常有用
+`alda parse` 命令解析 Alda 乐谱并生成表示乐谱数据的 JSON 输出。这对于调试目的或在 Alda 上构建工具非常有用
 
 Alda 2 中 `alda parse` 的输出与 Alda 1 的输出在许多方面不同。例如，以下是 Alda 1 中运行 `alda parse -c "guitar: e" -o events` 的输出：
 
