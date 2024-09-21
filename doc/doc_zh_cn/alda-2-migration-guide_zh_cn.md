@@ -87,7 +87,7 @@ OK  Interact with the REPL server
 
 在 Alda 2 中，你不能再做这种事情了，因为 Alda 不再用 Clojure 编写的。（但是，如果您对做这种事情感兴趣，您不必担心，因为您仍然可以这么做！请参阅下面的“[Programmatic composition](#programmatic-composition)”
 
-Clojure 是一种 [Lisp][lisp] 编程语言。如果您不知道这是什么，这里有一个简单的解释：Lisp 语言的语法主要由括号组成。“S-expression”是括号内的元素列表，`（像 这个 列表）`。列表中的第一项是 _operator_，其余项是 _arguments_。s表达式是可嵌套的;例如，像 `(1 + 2) * (3 + 4)` 这样的算术表达式在 Lisp 中写成:`(* (+ 1 2)(+ 3 4))`
+Clojure 是一种 [Lisp][lisp] 编程语言。如果您不知道这是什么，这里有一个简单的解释：Lisp 语言的语法主要由括号组成。“S表达式”是括号内的元素列表，`（像 这个 列表）`。列表中的第一项是 _operator_，其余项是 _arguments_。s表达式是可嵌套的;例如，像 `(1 + 2) * (3 + 4)` 这样的算术表达式在 Lisp 中写成:`(* (+ 1 2)(+ 3 4))`
 
 Alda 2 包含一个简单的内置 Lisp 语言（“Alda - Lisp”），它提供了足够的支持 Alda 的属性操作。但是它缺少 Clojure 的许多语法。Clojure 有多种您可能在 Alda 乐谱中看到的附加语法，包括 `:keywords`， `[vectors]` 和 `{hash maps}`。Alda-lisp 没有这些功能，所以如果使用 Clojure 的这些功能，一些 Alda 乐谱将无法在 Alda 2 中播放
 
