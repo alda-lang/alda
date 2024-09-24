@@ -206,7 +206,7 @@ Alda 2 中 `alda parse` 的输出与 Alda 1 的输出在许多方面不同。例
 
 ## 就是这样！
 
-我们希望您喜欢 Alda 2！请随时加入我们的 [Slack 群组][alda-slack] 并让我们知道您的想法。如果你遇到 bug 或任何其他类型的奇怪行为，你也可以 [打开一个 issue][open-an-issue]，我们很乐意帮助您解决问题！
+我们希望您喜欢 Alda 2！请随时加入我们的 [Slack 群组][alda-slack] 并让我们知道您的想法。如果你遇到 bug 或任何其他类型的奇怪行为，你也可以 [开issue][open-an-issue]，我们很乐意帮助您解决问题！
 
 [why-the-rewrite]: https://blog.djy.io/why-im-rewriting-alda-in-go-and-kotlin/
 [lisp]: https://en.wikipedia.org/wiki/Lisp_(programming_language)
