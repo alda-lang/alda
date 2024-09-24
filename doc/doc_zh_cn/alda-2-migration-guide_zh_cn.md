@@ -30,7 +30,12 @@ Alda CLI 将帮助确保您安装了相同版本的 `alda` 和 `alda-player`，
 
 当您运行 `alda update` 时，会将 `alda` 和 `alda-player` 更新到最新版本
 
-@@ -35,33 +45,41 @@
+## 使用 `alda doctor` 更好地排除故障
+
+`alda doctor` 是一个新命令，它运行一些基本的检查，并检查与 alda 有关的设置。如果一切顺利，您应该会看到如下输出：
+
+```
+OK  Parse source code
 OK  Generate score model
 OK  Find an open port
 OK  Send and receive OSC messages
@@ -63,7 +68,6 @@ OK  Interact with the REPL server
 
 就像以前一样，你可以输入 `:help` 来了解可用的 REPL 命令，然后通过输入 `:help play` 来了解更多关于命令的信息
 
-那么，Alda 2 REPL 有什么新功能呢？我们新赋予 REPL 的一个强大功能是它可以在客户端或服务器模式下运行。默认情况下，`alda repl` 将同时启动服务器和客户端会话。但是如果你已经有了一个正在运行的 REPL 服务器(或者如果你的朋友有，在世界的其他地方…:bulb:)，你可以通过运行 `alda repl --client --host example.com --port 12345` (或者更短的版本: `alda repl -c -H example.com -p 12345`)来连接它。这可能会带来很多乐趣，因为多个客户端可以连接到同一个 REPL 服务器并实时协作！
 那么，Alda 2 REPL 有什么新功能呢？我们新赋予 REPL 的一个强大功能是它可以在客户端或服务器模式下运行。
 默认情况下，`alda repl` 将同时启动服务器和客户端会话。
 但是如果你已经有了一个正在运行的 REPL 服务器（或者如果你的朋友有，在世界的其他地方…:bulb:），
@@ -74,6 +78,7 @@ OK  Interact with the REPL server
 > 如果您对 Alda 新 super-REPL 背后的技术细节感兴趣，
 > 查看 Dave 的博客文章，[Alda 和 nREPL 协议][alda-nrepl]
 自 Alda 1 以来更改一些与 REPL 相关的内容：
+
 * 服务器 / 工作进程管理命令不再存在，因为不再需要管理服务器和工作进程！已删除以下命令：
   * `:down`
   * `:downup`
@@ -156,7 +161,7 @@ Alda 2 包含一个简单的内置 Lisp 语言（“Alda - Lisp”），它提�
 Alda 1 的乐谱开头的默认音量是 100 这对应 MIDI 力度 127 也就是最大值。
 现在 Alda 2 中可以用动态标记（如 `(mp)`或`(ff)` 这样的）来指定音量
 
-在 Alda 2中 所有乐谱开头默认的音量是 `(mf)` 相当于`(vol 54)` 如果您之前用 Alda 1 时写的乐谱依赖于默认音量 100 
+在 Alda 2中 所有乐谱开头默认的音量是 `(mf)` 相当于`(vol 54)` 如果您之前用 Alda 1 时写的乐谱依赖于默认音量 100
 那么迁移到 Alda 2 后需要在乐谱的开头显式地指定此属性
 
 ## Programmatic composition
@@ -197,7 +202,9 @@ Alda 2 中 `alda parse` 的输出与 Alda 1 的输出在许多方面不同。
   }
 ]
 ```
+
 在 Alda 2 中：
+
 ```json
 [
   {
