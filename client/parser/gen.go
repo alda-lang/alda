@@ -62,8 +62,8 @@ func withDuration(node ASTNode, duration model.Duration) (ASTNode, error) {
 
 // mapIsolatedUpdate maps a single isolated model.ScoreUpdate to ASTNode.
 // Holistic updates that require "re-construction" are handled upstream:
-// 	1. Parts in mapTopLevel.
-// 	2. model.VoiceMarker, model.VoiceGroupEndMarker in mapInnerEvents.
+//  1. Parts in mapTopLevel.
+//  2. model.VoiceMarker, model.VoiceGroupEndMarker in mapInnerEvents.
 func mapIsolatedUpdate(scoreUpdate model.ScoreUpdate) (ASTNode, error) {
 	switch update := scoreUpdate.(type) {
 
@@ -88,7 +88,7 @@ func mapIsolatedUpdate(scoreUpdate model.ScoreUpdate) (ASTNode, error) {
 		// TODO: handle generating all possible part updates into lisp.
 		case model.DynamicMarking:
 			return ASTNode{Type: LispListNode, Children: []ASTNode{{
-				Type: LispSymbolNode,
+				Type:    LispSymbolNode,
 				Literal: pu.Marking,
 			}}}, nil
 
@@ -99,11 +99,11 @@ func mapIsolatedUpdate(scoreUpdate model.ScoreUpdate) (ASTNode, error) {
 			// ever directly outputs evaluated lisp.
 			return ASTNode{Type: LispListNode, Children: []ASTNode{
 				{
-					Type: LispSymbolNode,
+					Type:    LispSymbolNode,
 					Literal: "key-signature",
 				},
 				{
-					Type: LispStringNode,
+					Type:    LispStringNode,
 					Literal: pu.KeySignature.String(),
 				},
 			}}, nil
@@ -111,11 +111,11 @@ func mapIsolatedUpdate(scoreUpdate model.ScoreUpdate) (ASTNode, error) {
 		case model.TranspositionSet:
 			return ASTNode{Type: LispListNode, Children: []ASTNode{
 				{
-					Type: LispSymbolNode,
+					Type:    LispSymbolNode,
 					Literal: "transpose",
 				},
 				{
-					Type: LispNumberNode,
+					Type:    LispNumberNode,
 					Literal: pu.Semitones,
 				},
 			}}, nil
@@ -435,11 +435,11 @@ func mapTopLevel(updates []model.ScoreUpdate) (ASTNode, error) {
 // GenerateASTFromScoreUpdates generates an ASTNode from []model.ScoreUpdate.
 // This is a direct inverse of ASTNode.Updates with the exception of
 // model.AldaSourceContext which is currently ignored because:
-// 	1. ASTNode.Updates is lossy and drops model.AldaSourceContext converting
-//	   DurationNode -> model.Duration. This is the only lost info and can be
-//	   remedied by adding model.AldaSourceContext to model.DurationComponent.
-// 	2. ASTNode generation currently doesn't require model.AldaSourceContext.
-//	   It can always be obtained from the original Alda file.
+//  1. ASTNode.Updates is lossy and drops model.AldaSourceContext converting
+//     DurationNode -> model.Duration. This is the only lost info and can be
+//     remedied by adding model.AldaSourceContext to model.DurationComponent.
+//  2. ASTNode generation currently doesn't require model.AldaSourceContext.
+//     It can always be obtained from the original Alda file.
 //     The current use case is MusicXML import, which generates
 //     model.ScoreUpdate's without model.AldaSourceContext.
 func GenerateASTFromScoreUpdates(updates []model.ScoreUpdate) (ASTNode, error) {

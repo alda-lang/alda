@@ -14,11 +14,11 @@ import (
 
 // musicXMLPart contains part-specific information necessary for import
 type musicXMLPart struct {
-	instruments  []string
+	instruments []string
 
 	// State
-	divisions    int
-	beats        float64
+	divisions int
+	beats     float64
 
 	// Imported updates
 	updates      []model.ScoreUpdate
@@ -31,7 +31,7 @@ type musicXMLPart struct {
 	alias     string
 
 	// We maintain an optimizer per part to optimize as we collapse voices
-	opt       optimizer
+	opt optimizer
 }
 
 func newMusicXMLPart() *musicXMLPart {
@@ -53,7 +53,7 @@ func (part *musicXMLPart) collapseVoices(end bool) {
 				part.opt.optimize(part.currentVoice.getScoreUpdates())...,
 			)
 			part.voices[1] = newMusicXMLVoice()
-			part.voices[1].octave = -1	// force re-setting of octave
+			part.voices[1].octave = -1 // force re-setting of octave
 			part.beats = 0
 		}
 	} else {

@@ -155,7 +155,7 @@ func scorePartHandler(element *etree.Element, importer *musicXMLImporter) {
 	// Then we must make this newer part unique by incorporating id into alias
 	for k, v := range importer.parts {
 		if k != id.Value &&
-			reflect.DeepEqual(v.instruments, part.instruments) && 
+			reflect.DeepEqual(v.instruments, part.instruments) &&
 			v.alias == part.alias {
 			addIdToAlias := func(alias string, id string) string {
 				if alias == "" {
@@ -282,7 +282,7 @@ func padVoiceToPresent(element *etree.Element, importer *musicXMLImporter) {
 		// We update without using append and moving the part-level beats here
 		// This is because we pad the voice to "catch up", not move forwards
 		importer.append(model.Rest{
-			Duration: idiomaticDuration(4 / beatDifference, 0),
+			Duration: idiomaticDuration(4/beatDifference, 0),
 		})
 		importer.voice().beats += beatDifference
 	}
@@ -648,14 +648,12 @@ func translateNote(
 			} else {
 				// Otherwise, we will use octave differences
 
-
 				var octaveUpdate model.PartUpdate
 				if octaveDifference > 0 {
 					octaveUpdate = model.OctaveUp{}
 				} else if octaveDifference < 0 {
 					octaveUpdate = model.OctaveDown{}
 				}
-
 
 				for i := 0; i < int(math.Abs(float64(octaveDifference))); i++ {
 					octaveUpdates = append(

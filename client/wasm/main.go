@@ -56,9 +56,9 @@ func safeFunction(f func([]js.Value) interface{}) js.Func {
 // does some work, and returns either a success value or an error...
 //
 // Returns a JS function that:
-// * Invokes the provided function in a goroutine
-// * Returns a promise that will either be resolved with the success value, or
-//   rejected with the error
+//   - Invokes the provided function in a goroutine
+//   - Returns a promise that will either be resolved with the success value, or
+//     rejected with the error
 //
 // Recovers from panics so that the Go program doesn't exit and the WebAssembly
 // module can continue to be available for use in the browser.
