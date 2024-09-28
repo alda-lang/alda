@@ -81,16 +81,16 @@ func timeScale(cram Cram, part *Part) (float64, error) {
 // UpdateScore implements ScoreUpdate.UpdateScore by doing the following for
 // each current part:
 //
-// * Calculate the time scaling factor for the notes within the Cram expression.
-//   This depends on the part's current default duration, the "outer duration"
-//   of the Cram expression (i.e. either the specified duration of the Cram
-//   expression, or part's default duration), and the total "inner duration" of
-//   the events within the Cram expression.
+//   - Calculate the time scaling factor for the notes within the Cram expression.
+//     This depends on the part's current default duration, the "outer duration"
+//     of the Cram expression (i.e. either the specified duration of the Cram
+//     expression, or part's default duration), and the total "inner duration" of
+//     the events within the Cram expression.
 //
 // * Set the part's TimeScale value.
 //
-// * Within the new time scaling context, use the events within the Cram
-//   expression to update the score.
+//   - Within the new time scaling context, use the events within the Cram
+//     expression to update the score.
 //
 // * Restore the part's previous TimeScale value.
 func (cram Cram) UpdateScore(score *Score) error {
