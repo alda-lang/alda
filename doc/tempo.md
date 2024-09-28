@@ -55,7 +55,7 @@ measure, where each beat is a dotted quarter note.
 
 At a certain point in the piece, you want to transition into a 3/2 section --
 still 3 beats per measure, but now each beat is a half note. You want the
-"pulse" to stay the same, but now each beat is subdivided into 4 half notes
+"pulse" to stay the same, but now each beat is subdivided into 4 eighth notes
 instead of 3. How do you do it?
 
 In traditional notation, it is common to see annotations like "♩. = 𝅗𝅥 " at the
