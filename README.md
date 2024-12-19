@@ -103,16 +103,11 @@ Alda's documentation can be found [here](doc/index.md).
 
 We'd love your help -- Pull Requests welcome!
 
-For a top-level overview of things we're talking about and working on, check out
-the [Alda GitHub Project board][gh-project].
-
 For more details on how you can contribute to Alda, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 > Another way you can contribute is by [sponsoring Dave][gh-sponsor] in the
 > future development of Alda.
 
-[gh-org]: https://github.com/alda-lang
-[gh-project]: https://github.com/orgs/alda-lang/projects/1
 [gh-sponsor]: https://github.com/sponsors/daveyarwood
 
 ## Support, Discussion, Camaraderie

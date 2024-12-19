@@ -14,10 +14,6 @@ Pull requests to contribute to any of these projects are warmly welcomed. Please
 feel free to take on any open issue that interests you, and let us know if you
 need any help!
 
-For a top-level overview of things we're talking about and working on, check out
-the [Alda GitHub Project board][gh-project].
-
-[gh-project]: https://github.com/orgs/alda-lang/projects/1
 [alda-site-repo]: https://github.com/alda-lang/alda.io
 
 ## General Instructions
