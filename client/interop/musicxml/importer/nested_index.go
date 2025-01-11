@@ -21,7 +21,7 @@ func (ni nestedIndex) valid(importer *musicXMLImporter) bool {
 }
 
 func (ni nestedIndex) last() int {
-	return ni.indices[len(ni.indices) - 1]
+	return ni.indices[len(ni.indices)-1]
 }
 
 // lastDiff returns the diff between indices at the deepest recursive level

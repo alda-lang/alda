@@ -1,0 +1,21 @@
+# By default, Alda will automatically assign an available MIDI channel for each
+# part. In rare cases where you want to control which MIDI channel is used, you
+# can use the `midi-channel` attribute.
+#
+# In this example, both the piano and the guitar are sharing MIDI channel 2
+# (whereas ordinarily, each channel would be automatically be assigned a
+# separate channel). Note that this only works because the piano and the guitar
+# do not have any overlapping notes.
+
+piano:
+  (midi-channel 2)
+  c8 d e f g a b > c
+
+guitar:
+  (midi-channel 2)
+  r1 # piano is using channel 2 here
+  o3 c1/e/g/>c
+
+  # Here, we swich to channel 3, just for fun!
+  (midi-channel 3)
+  o3 g1/>c/e/g

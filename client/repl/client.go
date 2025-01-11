@@ -3,7 +3,6 @@ package repl
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"os"
 	"path/filepath"
@@ -114,7 +113,7 @@ func init() {
 				}
 				binaryData := []byte(res["binary-data"].(string))
 
-				return ioutil.WriteFile(filename, binaryData, 0644)
+				return os.WriteFile(filename, binaryData, 0644)
 			},
 		},
 
@@ -225,7 +224,7 @@ file into the REPL server.`,
 					return invalidArgsError(args)
 				}
 
-				contents, err := ioutil.ReadFile(client.inputFilepath)
+				contents, err := os.ReadFile(client.inputFilepath)
 				if err != nil {
 					return err
 				}
@@ -378,7 +377,7 @@ arguments will save the updated score to the same file.`,
 					return err
 				}
 
-				return ioutil.WriteFile(client.inputFilepath, []byte(scoreText), 0644)
+				return os.WriteFile(client.inputFilepath, []byte(scoreText), 0644)
 			},
 		},
 

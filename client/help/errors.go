@@ -86,7 +86,7 @@ Or come chat with us on Slack:
   %s`+"\n",
 			color.Aurora.BgRed(err),
 			color.Aurora.Underline("https://github.com/alda-lang/alda/issues/new/choose"),
-			color.Aurora.Underline("https://slack.alda.io"),
+			color.Aurora.Underline("http://slack.alda.io"),
 		)
 	}
 }

@@ -305,3 +305,20 @@ cello:
   | `(ffffff)`      | `(vol 100)`       |
 
 * **Initial Value:** `(mf)` (corresponding to a volume of 54)
+
+### `midi-channel`
+
+* **Abbreviations:** (none)
+
+* **Description:** By default, Alda automatically assigns an available MIDI
+  channel for each part. In rare cases where you want to control which MIDI
+  channel is used for each part, you can use this attribute to assign a specific
+  MIDI channel. This can be done multiple times in the same part to switch to a
+  different channel, if needed.
+
+* **Value:** a number between 0 and 15. Note that channel 9 is reserved for
+  percussion; an error will be thrown if you include `(midi-channel 9)` in a
+  non-percussion part.
+
+* **Initial Value:** _(Not set. By default, Alda assigns MIDI channels
+  automatically.)_

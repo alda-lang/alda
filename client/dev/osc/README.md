@@ -5,7 +5,7 @@ example has a short identifier so that you can select it from the command-line.
 
 ## Setup
 
-* Go 1.17 or higher is needed in order to run the demo.
+* Go 1.19 or higher is needed in order to run the demo.
 
 * Start the [player](../../player) on port 27278 (or another port of your
   choosing) and leave it running.
@@ -33,8 +33,8 @@ If the example name is omitted, example `1` is used.
 | 2loops | Plays two random patterns concurrently on the same track, 4 times each |
 | clear | Sends the system "clear" message |
 | clear1 | Sends the track "clear" message |
+| drums | Plays a short percussion demo |
 | export | Sends the system "export" message to export the contents of the player's MIDI sequencer to `/tmp/alda-test.mid` |
-| mute | Sends the track "mute" message |
 | pat1 | A five-note pattern called `simple` is defined and played once |
 | pat2 | A five-note pattern called `simple` is defined and played twice |
 | pat3 | A five-note pattern called `simple` is defined and played thrice |
@@ -42,12 +42,10 @@ If the example name is omitted, example `1` is used.
 | patfin | Stops looping the `simple` pattern |
 | patloop | Loops the `simple` pattern indefinitely |
 | patx | Clears the contents of the `simple` pattern
-| perc | Turns track 1 into a percussion track |
 | play | Sends the system "play" message |
 | shutdown | Sends the system "shutdown" message |
 | stop | Sends the system "stop" message |
 | tempos | Sends a bunch of arbitrary tempo change messages |
-| unmute | Sends the track "unmute" message |
 
 ---
 
@@ -109,6 +107,6 @@ go run dev/osc/main.go 27278 patchange
 
 ## License
 
-Copyright © 2019-2023 Dave Yarwood, et al
+Copyright © 2019-2024 Dave Yarwood, et al
 
 Distributed under the Eclipse Public License version 2.0.

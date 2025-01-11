@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -85,7 +84,7 @@ type releaseAsset struct {
 }
 
 func downloadAssets(assets []releaseAsset) (assetsDir string, err error) {
-	outdir, err := ioutil.TempDir("", "alda-update")
+	outdir, err := os.MkdirTemp("", "alda-update")
 	if err != nil {
 		return "", err
 	}
@@ -118,7 +117,7 @@ func downloadAssets(assets []releaseAsset) (assetsDir string, err error) {
 		defer response.Body.Close()
 
 		if response.StatusCode != 200 {
-			responseBody, err := ioutil.ReadAll(response.Body)
+			responseBody, err := io.ReadAll(response.Body)
 			if err != nil {
 				log.Error().Err(err).Msg("Unable to read response body")
 			} else {
@@ -398,7 +397,7 @@ func installVersion(json *json.Container) error {
 }
 
 func errUnexpectedAldaApiResponse(response *http.Response) error {
-	responseBody, err := ioutil.ReadAll(response.Body)
+	responseBody, err := io.ReadAll(response.Body)
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to read Alda API response body")
 	} else {

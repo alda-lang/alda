@@ -4,5 +4,5 @@ contact_links:
     url: https://github.com/alda-lang/alda/blob/master/doc/index.md
     about: Have you checked the docs?
   - name: Alda Slack group
-    url: https://slack.alda.io
+    url: http://slack.alda.io
     about: Need help? Come chat with us on Slack!

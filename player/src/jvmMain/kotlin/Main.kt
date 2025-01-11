@@ -81,7 +81,6 @@ class Run : CliktCommand(
     }
 
     val player = player()
-    log.info { "Starting player..." }
     player.start()
 
     Runtime.getRuntime().addShutdownHook(thread(start = false) {

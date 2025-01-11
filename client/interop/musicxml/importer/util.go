@@ -14,8 +14,12 @@ var noteType = reflect.TypeOf(model.Note{})
 var chordType = reflect.TypeOf(model.Chord{})
 var restType = reflect.TypeOf(model.Rest{})
 var attributeUpdateType = reflect.TypeOf(model.AttributeUpdate{})
-var octaveUpType = reflect.TypeOf(model.OctaveUp{})
-var octaveDownType = reflect.TypeOf(model.OctaveDown{})
+
+// Commenting these out because staticcheck is complaining that they're unused:
+//
+// var octaveUpType = reflect.TypeOf(model.OctaveUp{})
+// var octaveDownType = reflect.TypeOf(model.OctaveDown{})
+
 var repeatType = reflect.TypeOf(model.Repeat{})
 var repetitionType = reflect.TypeOf(model.OnRepetitions{})
 var barlineType = reflect.TypeOf(model.Barline{})
@@ -407,7 +411,7 @@ func idiomaticDuration(aldaDuration float64, dots int32) model.Duration {
 // roundIfCloseEnough rounds to deal with floating point arithmetic issues
 // For long scores, arithmetic can otherwise lead to values like r1407374883...
 func roundIfCloseEnough(val float64) float64 {
-	if math.Abs(val - math.Round(val)) < 0.0001 {
+	if math.Abs(val-math.Round(val)) < 0.0001 {
 		return math.Round(val)
 	} else {
 		return val

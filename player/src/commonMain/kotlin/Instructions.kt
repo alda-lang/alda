@@ -9,161 +9,15 @@ enum class SystemAction {
 }
 
 enum class TrackAction {
-  MUTE, UNMUTE, CLEAR
+  CLEAR
 }
 
 enum class PatternAction {
   CLEAR
 }
 
-interface Event {
-  fun addOffset(o : Int) : Event
-  fun endOffset() : Int
-}
-
 interface Schedulable {
   fun schedule(soundEngine : SoundEngine, channel : Int)
-}
-
-class ShutdownEvent(val offset : Int) : Event {
-  override fun addOffset(o : Int) : ShutdownEvent {
-    return ShutdownEvent(offset + o)
-  }
-
-  override fun endOffset() = 0
-}
-
-class SetOffsetEvent(val offset : Int) : Event {
-  override fun addOffset(o : Int) : SetOffsetEvent {
-    return SetOffsetEvent(offset + o)
-  }
-
-  override fun endOffset() = 0
-}
-
-class TempoEvent(val offset : Int, val bpm : Float) : Event {
-  override fun addOffset(o : Int) : TempoEvent {
-    return TempoEvent(offset + o, bpm)
-  }
-
-  override fun endOffset() = 0
-}
-
-class MidiPatchEvent(val offset : Int, val patch : Int) : Event, Schedulable {
-  override fun addOffset(o : Int) : MidiPatchEvent {
-    return MidiPatchEvent(offset + o, patch)
-  }
-
-  override fun schedule(soundEngine : SoundEngine, channel : Int) {
-    soundEngine.midiPatch(offset, channel, patch)
-  }
-
-  override fun endOffset() = 0
-}
-
-class MidiPercussionEvent(val offset : Int) : Event {
-  override fun addOffset(o : Int) : MidiPercussionEvent {
-    return MidiPercussionEvent(offset + o)
-  }
-
-  override fun endOffset() = 0
-}
-
-class MidiNoteEvent(
-  val offset : Int, val noteNumber : Int, val duration : Int,
-  val audibleDuration : Int, val velocity : Int
-) : Event, Schedulable {
-  override fun addOffset(o : Int) : MidiNoteEvent {
-    return MidiNoteEvent(
-      offset + o, noteNumber, duration, audibleDuration, velocity
-    )
-  }
-
-  override fun schedule(soundEngine : SoundEngine, channel : Int) {
-    val noteStart = offset
-    val noteEnd = noteStart + audibleDuration
-    soundEngine.midiNote(
-      noteStart, noteEnd, channel, noteNumber, velocity
-    )
-  }
-
-  override fun endOffset() = offset + duration
-}
-
-class MidiVolumeEvent(
-  val offset : Int, val volume : Int
-) : Event, Schedulable {
-  override fun addOffset(o : Int) : MidiVolumeEvent {
-    return MidiVolumeEvent(offset + o, volume)
-  }
-
-  override fun schedule(soundEngine : SoundEngine, channel : Int) {
-    soundEngine.midiVolume(offset, channel, volume)
-  }
-
-  override fun endOffset() = 0
-}
-
-class MidiPanningEvent(
-  val offset : Int, val panning : Int
-) : Event, Schedulable {
-  override fun addOffset(o : Int) : MidiPanningEvent {
-    return MidiPanningEvent(offset + o, panning)
-  }
-
-  override fun schedule(soundEngine : SoundEngine, channel : Int) {
-    soundEngine.midiPanning(offset, channel, panning)
-  }
-
-  override fun endOffset() = 0
-}
-
-abstract class PatternEventBase(
-  open val offset : Int, open val patternName : String
-) {
-  abstract fun isDone(iteration : Int) : Boolean
-}
-
-class PatternEvent(
-  override val offset : Int, override val patternName : String, val times : Int
-) : Event, PatternEventBase(offset, patternName) {
-  override fun addOffset(o : Int) : PatternEvent {
-    return PatternEvent(offset + o, patternName, times)
-  }
-
-  override fun isDone(iteration : Int) : Boolean {
-    return iteration > times
-  }
-
-  override fun endOffset() = 0
-}
-
-class PatternLoopEvent(
-  override val offset : Int, override val patternName : String
-) : Event, PatternEventBase(offset, patternName) {
-  override fun addOffset(o : Int) : PatternLoopEvent {
-    return PatternLoopEvent(offset + o, patternName)
-  }
-
-  override fun isDone(iteration : Int) : Boolean = false
-
-  override fun endOffset() = 0
-}
-
-class FinishLoopEvent(val offset : Int) : Event {
-  override fun addOffset(o : Int) : FinishLoopEvent {
-    return FinishLoopEvent(offset + o)
-  }
-
-  override fun endOffset() = 0
-}
-
-class MidiExportEvent(val filepath : String) : Event {
-  override fun addOffset(o : Int) : MidiExportEvent {
-    return MidiExportEvent(filepath)
-  }
-
-  override fun endOffset() = 0
 }
 
 data class Message(val address : String, val args : List<Any>) {}
@@ -263,7 +117,7 @@ class Updates(val messages : List<Message>, val stateManager : StateManager) {
           if (offset == 0) {
             systemActions.add(SystemAction.SHUTDOWN)
           } else {
-            systemEvents.add(ShutdownEvent(offset))
+            systemEvents.add(mapOf("type" to "shutdown", "offset" to offset))
           }
         }
 
@@ -277,7 +131,8 @@ class Updates(val messages : List<Message>, val stateManager : StateManager) {
 
         Regex("/system/offset").matches(address) -> {
           val offset = args.get(0) as Int
-          systemEvents.add(SetOffsetEvent(offset))
+
+          systemEvents.add(mapOf("type" to "set-offset", "offset" to offset))
         }
 
         Regex("/system/clear").matches(address) -> {
@@ -287,20 +142,18 @@ class Updates(val messages : List<Message>, val stateManager : StateManager) {
         Regex("/system/tempo").matches(address) -> {
           val offset = args.get(0) as Int
           val bpm = args.get(1) as Float
-          systemEvents.add(TempoEvent(offset, bpm))
+
+          systemEvents.add(
+            mapOf("type" to "tempo", "offset" to offset, "bpm" to bpm)
+          )
         }
 
         Regex("/system/midi/export").matches(address) -> {
           val filepath = args.get(0) as String
-          systemEvents.add(MidiExportEvent(filepath))
-        }
 
-        Regex("/track/\\d+/unmute").matches(address) -> {
-          addTrackAction(trackNumber(address), TrackAction.UNMUTE)
-        }
-
-        Regex("/track/\\d+/mute").matches(address) -> {
-          addTrackAction(trackNumber(address), TrackAction.MUTE)
+          systemEvents.add(
+            mapOf("type" to "midi-export", "filepath" to filepath)
+          )
         }
 
         Regex("/track/\\d+/clear").matches(address) -> {
@@ -308,66 +161,116 @@ class Updates(val messages : List<Message>, val stateManager : StateManager) {
         }
 
         Regex("/track/\\d+/midi/patch").matches(address) -> {
-          val offset = args.get(0) as Int
-          val patch = args.get(1) as Int
-          addTrackEvent(trackNumber(address), MidiPatchEvent(offset, patch))
-        }
-
-        Regex("/track/\\d+/midi/percussion").matches(address) -> {
-          val offset = args.get(0) as Int
-          addTrackEvent(trackNumber(address), MidiPercussionEvent(offset))
-        }
-
-        Regex("/track/\\d+/midi/note").matches(address) -> {
-          val offset          = args.get(0) as Int
-          val noteNumber      = args.get(1) as Int
-          val duration        = args.get(2) as Int
-          val audibleDuration = args.get(3) as Int
-          val velocity        = args.get(4) as Int
+          val channel = args.get(0) as Int
+          val offset  = args.get(1) as Int
+          val patch   = args.get(2) as Int
 
           addTrackEvent(
             trackNumber(address),
-            MidiNoteEvent(
-              offset, noteNumber, duration, audibleDuration, velocity
+            mapOf(
+              "type" to "midi-patch",
+              "channel" to channel,
+              "offset" to offset,
+              "patch" to patch
+            )
+          )
+        }
+
+        Regex("/track/\\d+/midi/note").matches(address) -> {
+          val channel         = args.get(0) as Int
+          val offset          = args.get(1) as Int
+          val noteNumber      = args.get(2) as Int
+          val duration        = args.get(3) as Int
+          val audibleDuration = args.get(4) as Int
+          val velocity        = args.get(5) as Int
+
+          addTrackEvent(
+            trackNumber(address),
+            mapOf(
+              "type" to "midi-note",
+              "channel" to channel,
+              "offset" to offset,
+              "note-number" to noteNumber,
+              "duration" to duration,
+              "audible-duration" to audibleDuration,
+              "velocity" to velocity
             )
           )
         }
 
         Regex("/track/\\d+/midi/volume").matches(address) -> {
-          val offset = args.get(0) as Int
-          val volume = args.get(1) as Int
-          addTrackEvent(trackNumber(address), MidiVolumeEvent(offset, volume))
-        }
-
-        Regex("/track/\\d+/midi/panning").matches(address) -> {
-          val offset  = args.get(0) as Int
-          val panning = args.get(1) as Int
-          addTrackEvent(trackNumber(address), MidiPanningEvent(offset, panning))
-        }
-
-        Regex("/track/\\d+/pattern").matches(address) -> {
-          val offset      = args.get(0) as Int
-          val patternName = args.get(1) as String
-          val times       = args.get(2) as Int
+          val channel = args.get(0) as Int
+          val offset  = args.get(1) as Int
+          val volume  = args.get(2) as Int
 
           addTrackEvent(
             trackNumber(address),
-            PatternEvent(offset, patternName, times)
+            mapOf(
+              "type" to "midi-volume",
+              "channel" to channel,
+              "offset" to offset,
+              "volume" to volume
+            )
+          )
+        }
+
+        Regex("/track/\\d+/midi/panning").matches(address) -> {
+          val channel = args.get(0) as Int
+          val offset  = args.get(1) as Int
+          val panning = args.get(2) as Int
+
+          addTrackEvent(
+            trackNumber(address),
+            mapOf(
+              "type" to "midi-panning",
+              "channel" to channel,
+              "offset" to offset,
+              "panning" to panning
+            )
+          )
+        }
+
+        Regex("/track/\\d+/pattern").matches(address) -> {
+          val channel     = args.get(0) as Int
+          val offset      = args.get(1) as Int
+          val patternName = args.get(2) as String
+          val times       = args.get(3) as Int
+
+          addTrackEvent(
+            trackNumber(address),
+            mapOf(
+              "type" to "pattern",
+              "channel" to channel,
+              "offset" to offset,
+              "pattern-name" to patternName,
+              "times" to times
+            )
           )
         }
 
         Regex("/track/\\d+/pattern-loop").matches(address) -> {
-          val offset      = args.get(0) as Int
-          val patternName = args.get(1) as String
+          val channel     = args.get(0) as Int
+          val offset      = args.get(1) as Int
+          val patternName = args.get(2) as String
+
           addTrackEvent(
             trackNumber(address),
-            PatternLoopEvent(offset, patternName)
+            mapOf(
+              "type" to "pattern-loop",
+              "channel" to channel,
+              "offset" to offset,
+              "pattern-name" to patternName
+            )
           )
         }
 
         Regex("/track/\\d+/finish-loop").matches(address) -> {
           val offset = args.get(0) as Int
-          addTrackEvent(trackNumber(address), FinishLoopEvent(offset))
+
+          addTrackEvent(
+            trackNumber(address),
+            mapOf("type" to "finish-loop", "offset" to offset)
+          )
         }
 
         Regex("/pattern/[^/]+/clear").matches(address) -> {
@@ -383,8 +286,13 @@ class Updates(val messages : List<Message>, val stateManager : StateManager) {
 
           addPatternEvent(
             patternName(address),
-            MidiNoteEvent(
-              offset, noteNumber, duration, audibleDuration, velocity
+            mapOf(
+              "type" to "midi-note",
+              "offset" to offset,
+              "note-number" to noteNumber,
+              "duration" to duration,
+              "audible-duration" to audibleDuration,
+              "velocity" to velocity
             )
           )
         }
@@ -392,16 +300,28 @@ class Updates(val messages : List<Message>, val stateManager : StateManager) {
         Regex("/pattern/[^/]+/midi/volume").matches(address) -> {
           val offset = args.get(0) as Int
           val volume = args.get(1) as Int
+
           addPatternEvent(
-            patternName(address), MidiVolumeEvent(offset, volume)
+            patternName(address),
+            mapOf(
+              "type" to "midi-volume",
+              "offset" to offset,
+              "volume" to volume
+            )
           )
         }
 
         Regex("/pattern/[^/]+/midi/panning").matches(address) -> {
           val offset  = args.get(0) as Int
           val panning = args.get(1) as Int
+
           addPatternEvent(
-            patternName(address), MidiPanningEvent(offset, panning)
+            patternName(address),
+            mapOf(
+              "type" to "midi-panning",
+              "offset" to offset,
+              "panning" to panning
+            )
           )
         }
 
@@ -412,7 +332,12 @@ class Updates(val messages : List<Message>, val stateManager : StateManager) {
 
           addPatternEvent(
             patternName(address),
-            PatternEvent(offset, patternName, times)
+            mapOf(
+              "type" to "pattern",
+              "offset" to offset,
+              "pattern-name" to patternName,
+              "times" to times
+            )
           )
         }
 

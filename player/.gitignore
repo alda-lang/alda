@@ -12,3 +12,6 @@ src/commonMain/kotlin/Version.kt
 
 # alda.wasm used for test page (fetched by `test-page/serve` script)
 test-page/alda.wasm
+
+# Created by Kotlin language server
+kls_database.db

@@ -12,7 +12,7 @@ type optimizer struct {
 	// different from the key signature
 	// This signifies that the next redundant accidental (same as key signature)
 	// will be kept to re-iterate this return to the key signature
-	currentNoteState    map[model.NoteLetter]bool
+	currentNoteState map[model.NoteLetter]bool
 
 	// currentDuration and currentOctave maintain the last encountered duration
 	// and octave values

@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -192,7 +191,7 @@ Currently, the only supported output format is %s.`,
 		// temporary file.
 		tmpFilename := ""
 		if outputFilename == "" {
-			tmpdir, err := ioutil.TempDir("", "alda-export")
+			tmpdir, err := os.MkdirTemp("", "alda-export")
 			if err != nil {
 				return err
 			}

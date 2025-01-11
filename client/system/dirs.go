@@ -3,7 +3,6 @@ package system
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -69,7 +68,7 @@ func FindRenamedExecutables() ([]string, error) {
 
 	aldaDir := filepath.Dir(aldaPath)
 
-	fileInfos, err := ioutil.ReadDir(aldaDir)
+	fileInfos, err := os.ReadDir(aldaDir)
 	if err != nil {
 		return nil, err
 	}

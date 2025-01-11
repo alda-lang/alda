@@ -18,7 +18,7 @@
   <br>
   <br>
 
-  <a href="https://slack.alda.io">
+  <a href="http://slack.alda.io">
     Join us on Slack!
   </a>
   </p>
@@ -65,10 +65,10 @@ rationale.)
 
 > If you'd like to help, come on in -- [the water's fine](#contributing)!
 
-* [Define and use waveform synthesis instruments](https://github.com/alda-lang/alda/issues/100)
-* [Import MIDI files](https://github.com/alda-lang/alda-core/issues/25)
-* [Export to MusicXML](https://github.com/alda-lang/alda-core/issues/3) for inter-operability with other music software
-* [A more robust REPL](https://github.com/alda-lang/alda-client-java/issues/2), tailor-made for editing scores interactively
+* [Run Alda in the browser](https://github.com/alda-lang/alda/discussions/455)
+* [Define and use waveform synthesis instruments](https://github.com/alda-lang/alda/discussions/435)
+* [Export to MusicXML](https://github.com/alda-lang/alda/discussions/424) for inter-operability with other music software
+* [Improve Raspberry Pi support](https://github.com/alda-lang/alda/discussions/456)
 
 ## Installation
 
@@ -103,21 +103,16 @@ Alda's documentation can be found [here](doc/index.md).
 
 We'd love your help -- Pull Requests welcome!
 
-For a top-level overview of things we're talking about and working on, check out
-the [Alda GitHub Project board][gh-project].
-
 For more details on how you can contribute to Alda, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 > Another way you can contribute is by [sponsoring Dave][gh-sponsor] in the
 > future development of Alda.
 
-[gh-org]: https://github.com/alda-lang
-[gh-project]: https://github.com/orgs/alda-lang/projects/1
 [gh-sponsor]: https://github.com/sponsors/daveyarwood
 
 ## Support, Discussion, Camaraderie
 
-**Slack**: Joining the [Alda Slack group](https://slack.alda.io) is quick and
+**Slack**: Joining the [Alda Slack group](http://slack.alda.io) is quick and
 painless. Come say hi!
 
 **Reddit**: Subscribe to the [/r/alda](https://www.reddit.com/r/alda/)
@@ -125,6 +120,6 @@ subreddit, where you can discuss all things Alda and share your Alda scores!
 
 ## License
 
-Copyright © 2012-2023 Dave Yarwood et al
+Copyright © 2012-2024 Dave Yarwood et al
 
 Distributed under the Eclipse Public License version 2.0.

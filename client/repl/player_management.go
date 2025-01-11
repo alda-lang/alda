@@ -103,16 +103,16 @@ func (server *Server) unsetPlayer() {
 // The server has two responsibilities when it comes to managing player
 // processes:
 //
-// 1. Ensuring that the "player pool" is full, i.e. that there is always a fresh
-//    player process available to use if needed, e.g. if the one that the server
-//    is using falls over / becomes unavailable.
+//  1. Ensuring that the "player pool" is full, i.e. that there is always a fresh
+//     player process available to use if needed, e.g. if the one that the server
+//     is using falls over / becomes unavailable.
 //
-// 2. Ensuring that there is one specific player process available for the
-//    server to use, and that that process remains available for as long as the
-//    server needs to use it. The server does this by sending a `/ping` message
-//    to the player at regular intervals. If the player becomes unresponsive,
-//    the server is responsible for recovering by switching to use another
-//    player process.
+//  2. Ensuring that there is one specific player process available for the
+//     server to use, and that that process remains available for as long as the
+//     server needs to use it. The server does this by sending a `/ping` message
+//     to the player at regular intervals. If the player becomes unresponsive,
+//     the server is responsible for recovering by switching to use another
+//     player process.
 func (server *Server) managePlayers() {
 	playerPoolLastFilled := time.Unix(0, 0)
 	lastPing := time.Unix(0, 0)
