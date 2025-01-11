@@ -323,6 +323,7 @@ class Updates() {
             patternName(address),
             mapOf(
               "type" to "pattern",
+              "offset" to offset,
               "pattern-name" to patternName,
               "times" to times
             )
