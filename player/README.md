@@ -117,6 +117,6 @@ alda-player.js) objects are available to use in the JS console.
 
 ## License
 
-Copyright © 2019-2024 Dave Yarwood, et al
+Copyright © 2019-2025 Dave Yarwood, et al
 
 Distributed under the Eclipse Public License version 2.0.
