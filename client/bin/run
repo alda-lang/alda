@@ -30,6 +30,9 @@ case "$(uname -s)" in
 esac
 
 case "$(uname -m)" in
+  arm64)
+    arch=arm64
+    ;;
   x86_64)
     arch=amd64
     ;;
