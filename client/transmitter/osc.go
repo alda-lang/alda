@@ -20,6 +20,10 @@ func pingMsg() *osc.Message {
 	return osc.NewMessage("/ping")
 }
 
+func yieldMsg() *osc.Message {
+	return osc.NewMessage("/yield")
+}
+
 func systemMidiExportMsg(filename string) *osc.Message {
 	msg := osc.NewMessage("/system/midi/export")
 	msg.Append(filename)
@@ -103,6 +107,11 @@ func (oe OSCTransmitter) TransmitMidiExportMessage(filename string) error {
 // TransmitPingMessage sends a "ping" message to a player process.
 func (oe OSCTransmitter) TransmitPingMessage() error {
 	return oscClient(oe.Port).Send(pingMsg())
+}
+
+// TransmitPingMessage sends a "yield" message to a player process.
+func (oe OSCTransmitter) TransmitYieldMessage() error {
+	return oscClient(oe.Port).Send(yieldMsg())
 }
 
 // TransmitPlayMessage sends a "play" message to a player process.

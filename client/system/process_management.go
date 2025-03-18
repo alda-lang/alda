@@ -589,7 +589,7 @@ func FillPlayerPool() error {
 // processes come up, we print a message to make it clear what we're waiting
 // for.
 func StartingPlayerProcesses() {
-	if _, err := FindAvailablePlayer(); err == ErrNoPlayersAvailable {
+	if states, _ := ReadPlayerStates(); len(states) == 0 {
 		fmt.Fprintln(os.Stderr, "Starting player processes...")
 	}
 }

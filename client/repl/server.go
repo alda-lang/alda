@@ -531,6 +531,19 @@ var ops = map[string]func(*Server, nREPLRequest){
 
 		server.respondDone(req, nil)
 	},
+
+	"yield": func(server *Server, req nREPLRequest) {
+		if err := server.withTransmitter(
+			func(transmitter transmitter.OSCTransmitter) error {
+				return transmitter.TransmitYieldMessage()
+			},
+		); err != nil {
+			server.respondError(req, err.Error(), nil)
+			return
+		}
+
+		server.respondDone(req, nil)
+	},
 }
 
 // Runs in a loop, handling requests from the queue as they come in in a
