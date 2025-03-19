@@ -92,15 +92,6 @@ class Updates() {
           stateManager!!.delayExpiration()
         }
 
-        //The /yield message acts as the inverse of the /ping message,
-        //where ping is used to move a player proccess into the active state
-        //yield puts the proccess in the ready state such that it may be used 
-        //by another client when neccesary
-        Regex("/yield").matches(address) -> {
-          log.debug("received yield message")
-          stateManager!!.markReady()
-        }
-
         Regex("/system/shutdown").matches(address) -> {
           val offset = args.get(0) as Int
 

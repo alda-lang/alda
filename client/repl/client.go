@@ -553,11 +553,6 @@ func (client *Client) handleCommand(name string, args string) error {
 // Disconnect closes the client's connection with the server.
 func (client *Client) Disconnect() {
 	if client.serverConn != nil {
-		_, err := client.sendRequest(map[string]interface{}{"op": "yield"})
-		if err != nil {
-			fmt.Fprint(os.Stderr, "request to yield player proccess failed")
-		}
-
 		client.serverConn.Close()
 	}
 }
