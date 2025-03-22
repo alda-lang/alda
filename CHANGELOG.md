@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Unreleased
+
+* Fixed spacing in the `:help play` output.
+
 ## 2.3.1 (2024-08-04)
 
 Fixed an issue where ANSI color codes (e.g. `←[36m`) were being displayed when

@@ -278,8 +278,8 @@ file into the REPL server.`,
 
 		"play": {
 			helpSummary: "Plays the current score.",
-			helpDetails: `Can take optional ` + "`from`" + `and ` + "`to`" +
-				`arguments, in the form of markers or mm:ss
+			helpDetails: `Can take optional ` + "`from`" + ` and ` + "`to`" +
+				` arguments, in the form of markers or mm:ss
 times.
 
 Without arguments, will play the entire score from beginning to end.
