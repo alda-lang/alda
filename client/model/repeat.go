@@ -58,8 +58,8 @@ func (repeat Repeat) DurationMs(part *Part) float64 {
 
 	for repetition := int32(1); repetition <= repeat.Times; repetition++ {
 		previousRepetition := part.currentRepetition
-		part.currentRepetition = repetition
 
+		part.currentRepetition = repetition
 		durationMs += repeat.Event.DurationMs(part)
 
 		part.currentRepetition = previousRepetition
@@ -67,7 +67,6 @@ func (repeat Repeat) DurationMs(part *Part) float64 {
 
 	return durationMs
 }
-
 
 // VariableValue implements ScoreUpdate.VariableValue by returning a version of
 // the repeat where the value of the event to be repeated is captured.
