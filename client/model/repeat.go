@@ -33,19 +33,22 @@ func (repeat Repeat) JSON() *json.Container {
 func (repeat Repeat) UpdateScore(score *Score) error {
 	previousRepetitions := make([]int32, len(score.CurrentParts))
 
+	for i, part := range score.CurrentParts {
+		previousRepetitions[i] = part.currentRepetition
+	}
+
 	for repetition := int32(1); repetition <= repeat.Times; repetition++ {
-		for i, part := range score.CurrentParts {
-			previousRepetitions[i] = part.currentRepetition
+		for _, part := range score.CurrentParts {
 			part.currentRepetition = repetition
 		}
 
 		if err := score.Update(repeat.Event); err != nil {
 			return err
 		}
+	}
 
-		for i, part := range score.CurrentParts {
-			part.currentRepetition = previousRepetitions[i]
-		}
+	for i, part := range score.CurrentParts {
+		part.currentRepetition = previousRepetitions[i]
 	}
 
 	return nil
