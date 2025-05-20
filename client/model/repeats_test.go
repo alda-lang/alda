@@ -180,5 +180,59 @@ func TestRepeats(t *testing.T) {
 				expectMidiNoteNumbers(60, 60, 62, 64, 62, 64, 60),
 			},
 		},
+		scoreUpdateTestCase{
+			label: "nested repeats",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				Repeat{
+					Times: 2,
+					Event: EventSequence{
+						Events: []ScoreUpdate{
+							Repeat{
+								Times: 2,
+								Event: EventSequence{
+									Events: []ScoreUpdate{
+										Note{
+											Pitch: LetterAndAccidentals{NoteLetter: C},
+											Duration: Duration{
+												Components: []DurationComponent{
+													NoteLength{Denominator: 4},
+												},
+											},
+										},
+										OnRepetitions{
+											Repetitions: []RepetitionRange{
+												RepetitionRange{First: 1, Last: 1},
+											},
+											Event: Note{
+												Pitch: LetterAndAccidentals{NoteLetter: D},
+											},
+										},
+										OnRepetitions{
+											Repetitions: []RepetitionRange{
+												RepetitionRange{First: 2, Last: 2},
+											},
+											Event: Note{
+												Pitch: LetterAndAccidentals{NoteLetter: E},
+											},
+										},
+									},
+								},
+							},
+							OnRepetitions{
+								Repetitions: []RepetitionRange{
+									RepetitionRange{First: 2, Last: 2},
+								},
+								Event: Note{Pitch: LetterAndAccidentals{NoteLetter: D}},
+							},
+						},
+					},
+				},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectNoteOffsets(0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000),
+				expectMidiNoteNumbers(60, 62, 60, 64, 60, 62, 60, 64, 62),
+			},
+		},
 	)
 }
