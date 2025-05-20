@@ -414,6 +414,7 @@ the [Alda 2 migration guide][migration-guide]!
 [Scowluga]: https://github.com/Scowluga
 [alan-ma]: https://github.com/alan-ma
 [Vanello1908]: https://github.com/Vanello1908
+[De-Alchmst]: https://github.com/De-Alchmst
 
 [alda-import-blog-post]: https://blog.djy.io/musicxml-import-and-another-new-alda-features/
 [midi-channel-assignment-discussion]: https://github.com/alda-lang/alda/discussions/447
