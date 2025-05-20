@@ -58,16 +58,14 @@ func (repeat Repeat) UpdateScore(score *Score) error {
 // of the event being repeated the specified number of times.
 func (repeat Repeat) DurationMs(part *Part) float64 {
 	durationMs := 0.0
+	previousRepetition := part.currentRepetition
 
 	for repetition := int32(1); repetition <= repeat.Times; repetition++ {
-		previousRepetition := part.currentRepetition
-
 		part.currentRepetition = repetition
 		durationMs += repeat.Event.DurationMs(part)
-
-		part.currentRepetition = previousRepetition
 	}
 
+	part.currentRepetition = previousRepetition
 	return durationMs
 }
 
