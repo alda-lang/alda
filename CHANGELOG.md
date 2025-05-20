@@ -1,6 +1,9 @@
 # CHANGELOG
 
-## Unreleased
+## 2.3.2 (2025-05-20)
+
+* Fixed [an issue][issue-401] where nested repeats weren't working as expected.
+  Thanks so much to [De-Alchmst] for the fix!
 
 * Fixed spacing in the `:help play` output.
 
@@ -418,4 +421,5 @@ the [Alda 2 migration guide][migration-guide]!
 [midi-channel-management]: ./examples/midi-channel-management.alda
 [midi-channel-management-2]: ./examples/midi-channel-management-2.alda
 [midi-channel-attribute]: ./doc/attributes.md#midi-channel
+[issue-401]: https://github.com/alda-lang/alda/issues/401
 [issue-405]: https://github.com/alda-lang/alda/issues/405
