@@ -39,7 +39,9 @@ func (chord Chord) JSON() *json.Container {
 // all active parts, and updating each part's CurrentOffset, LastOffset, and
 // Duration accordingly.
 func (chord Chord) UpdateScore(score *Score) error {
-	score.ApplyGlobalAttributes()
+	if err := score.ApplyGlobalAttributes(); err != nil {
+		return err
+	}
 
 	shortestDurationMs := map[*Part]float64{}
 	for _, part := range score.CurrentParts {
@@ -54,11 +56,11 @@ func (chord Chord) UpdateScore(score *Score) error {
 		// Here, we take note of the event's duration so that we can keep track of
 		// which one is the shortest.
 		var specifiedDuration Duration
-		switch event.(type) {
+		switch event := event.(type) {
 		case Note:
-			specifiedDuration = event.(Note).Duration
+			specifiedDuration = event.Duration
 		case Rest:
-			specifiedDuration = event.(Rest).Duration
+			specifiedDuration = event.Duration
 		}
 
 		for _, part := range score.CurrentParts {

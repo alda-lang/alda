@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"time"
 
@@ -58,53 +57,16 @@ func init() {
 	)
 }
 
-// Returns true if input is being piped into stdin.
+// Parses Alda source code piped into stdin and returns the parsed AST.
 //
-// Returns an error if something went wrong while trying to determine this.
-func isInputBeingPipedIn() (bool, error) {
-	stat, err := os.Stdin.Stat()
-	if err != nil {
-		return false, err
-	}
-
-	return stat.Mode()&os.ModeCharDevice == 0, nil
-}
-
-var errNoInputSupplied = fmt.Errorf("no input supplied")
-
-// Reads all bytes piped into stdin and returns them.
-//
-// Returns the error `errNoInputSupplied` if no input is being piped in, or a
-// different error if something else went wrong.
-func readStdin() ([]byte, error) {
-	isInputSupplied, err := isInputBeingPipedIn()
-	if err != nil {
-		return nil, err
-	}
-
-	if !isInputSupplied {
-		return nil, errNoInputSupplied
-	}
-
-	bytes, err := ioutil.ReadAll(os.Stdin)
-	if err != nil {
-		return nil, err
-	}
-
-	return bytes, nil
-}
-
-// Parses Alda source code piped into stdin and returns the parsed score
-// updates.
-//
-// Returns `errNoInputSupplied` if no input is being piped into stdin.
+// Returns `system.ErrNoInputSupplied` if no input is being piped into stdin.
 //
 // Returns a different error if the input couldn't be parsed as valid Alda code,
 // or if something else went wrong.
-func parseStdin() ([]model.ScoreUpdate, error) {
-	bytes, err := readStdin()
+func parseStdin() (parser.ASTNode, error) {
+	bytes, err := system.ReadStdin()
 	if err != nil {
-		return nil, err
+		return parser.ASTNode{}, err
 	}
 
 	return parser.ParseString(string(bytes))
@@ -182,6 +144,7 @@ var playCmd = &cobra.Command{
 			return userFacingNoInputSuppliedError("play")
 		}
 
+		var ast parser.ASTNode
 		var scoreUpdates []model.ScoreUpdate
 		var err error
 
@@ -194,14 +157,14 @@ var playCmd = &cobra.Command{
 
 		switch {
 		case file != "":
-			scoreUpdates, err = parser.ParseFile(file)
+			ast, err = parser.ParseFile(file)
 
 		case code != "":
-			scoreUpdates, err = parser.ParseString(code)
+			ast, err = parser.ParseString(code)
 
 		default:
-			scoreUpdates, err = parseStdin()
-			if err == errNoInputSupplied {
+			ast, err = parseStdin()
+			if err == system.ErrNoInputSupplied {
 				action = "unpause"
 				err = nil
 			}
@@ -218,6 +181,22 @@ var playCmd = &cobra.Command{
 
 		if err != nil {
 			return err
+		}
+
+		if action != "unpause" {
+			scoreUpdates, err = ast.Updates()
+
+			// Errors with source context are presented to the user as-is.
+			//
+			// See TODO notes above.
+			switch err.(type) {
+			case *model.AldaSourceError:
+				err = &help.UserFacingError{Err: err}
+			}
+
+			if err != nil {
+				return err
+			}
 		}
 
 		score := model.NewScore()
@@ -239,7 +218,7 @@ var playCmd = &cobra.Command{
 
 		log.Info().
 			Int("updates", len(scoreUpdates)).
-			Str("took", fmt.Sprintf("%s", time.Since(start))).
+			Str("took", time.Since(start).String()).
 			Msg("Constructed score.")
 
 		var players []system.PlayerState

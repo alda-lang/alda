@@ -3,7 +3,6 @@ package cmd
 import (
 	"bufio"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -83,7 +82,12 @@ var doctorCmd = &cobra.Command{
 		if err := step(
 			"Parse source code",
 			func() error {
-				su, err := parser.ParseString(testInput)
+				ast, err := parser.ParseString(testInput)
+				if err != nil {
+					return err
+				}
+
+				su, err := ast.Updates()
 				if err != nil {
 					return err
 				}
@@ -177,7 +181,7 @@ var doctorCmd = &cobra.Command{
 				errors := make(chan error)
 
 				server := osc.NewServer(
-					fmt.Sprintf("localhost:%d", playerPort),
+					fmt.Sprintf("127.0.0.1:%d", playerPort),
 					OSCPacketForwarder{channel: packetsReceived},
 					0,
 					osc.ServerProtocol(osc.TCP),
@@ -191,15 +195,17 @@ var doctorCmd = &cobra.Command{
 					}
 				}()
 
-				if err := util.Await(
-					func() error {
-						transmitter := transmitter.OSCTransmitter{Port: playerPort}
-						return transmitter.TransmitScore(score)
-					},
-					reasonableTimeout,
-				); err != nil {
-					errors <- err
-				}
+				go func() {
+					if err := util.Await(
+						func() error {
+							transmitter := transmitter.OSCTransmitter{Port: playerPort}
+							return transmitter.TransmitScore(score)
+						},
+						reasonableTimeout,
+					); err != nil {
+						errors <- err
+					}
+				}()
 
 				select {
 				case <-packetsReceived:
@@ -367,7 +373,7 @@ version of %s.`,
 			if err := step(
 				"Export score as MIDI",
 				func() error {
-					tmpdir, err := ioutil.TempDir("", "alda-doctor")
+					tmpdir, err := os.MkdirTemp("", "alda-doctor")
 					if err != nil {
 						return err
 					}
@@ -436,9 +442,9 @@ version of %s.`,
 								return err
 							}
 
-							switch msg.(type) {
+							switch msg := msg.(type) {
 							case channel.NoteOn:
-								if msg.(channel.NoteOn).Key() == expectedNote {
+								if msg.Key() == expectedNote {
 									continue ExpectedNotesLoop
 								}
 							}
@@ -491,7 +497,7 @@ version of %s.`,
 				indication := "received ping"
 				return util.Await(
 					func() error {
-						contents, err := ioutil.ReadFile(logFile)
+						contents, err := os.ReadFile(logFile)
 						if err != nil {
 							return err
 						}
@@ -708,7 +714,7 @@ version of %s.`,
 		if err := step(
 			"Interact with the REPL server",
 			func() error {
-				client, err := repl.NewClient("localhost", replServer.Port)
+				client, err := repl.NewClient("127.0.0.1", replServer.Port)
 				if err != nil {
 					return err
 				}

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
+set -eo pipefail
 
 cd "$(dirname "$0")/../"
 
@@ -29,7 +29,12 @@ if [[ -d "target/$build_sha" ]]; then
 fi
 
 # Refuse to build unless the tests are all passing.
+# shellcheck disable=2046
 go test $(go list ./...)
+
+# I first tried using an associative array for this, but those things behave
+# strangely in the face of concurrency. Falling back to using files instead.
+builds_dir="$(mktemp -d)"
 
 function build() {
   os="$1"
@@ -42,18 +47,39 @@ function build() {
     arm_ext=""
   fi
 
-  if [[ "$os" == "windows" ]]; then
-    ext=".exe"
-  else
-    ext=""
-  fi
+  build_id="$os-$arch$arm_ext"
 
-  output_filename="target/$build_sha/$os-$arch$arm_ext/alda$ext"
+  local ext=""
+  case "$os" in
+    windows)
+      ext=".exe"
+      ;;
+    js)
+      ext=".wasm"
+      ;;
+    *)
+      ext=""
+      ;;
+  esac
+
+  local output_filename="target/$build_sha/$build_id/alda$ext"
 
   echo "Building $output_filename..."
 
-  # Install the standard packages locally to speed up subsequent builds.
-  GOOS="$os" GOARCH="$arch" GOARM="$arm" go install
+  if [[ "$os" != "js" ]]; then
+    # Install the standard packages locally to speed up subsequent builds.
+    GOOS="$os" GOARCH="$arch" GOARM="$arm" go install || \
+      {
+        echo "$build_id build: ERROR"
+        echo "1" > "$builds_dir/$build_id"
+        return
+      }
+  fi
+
+  local input_filename="main.go"
+  if [[ "$os" == "js" ]]; then
+    input_filename="wasm/main.go"
+  fi
 
   # Build.
   #
@@ -69,28 +95,76 @@ function build() {
     -gcflags="all=-trimpath=$PWD" \
     -asmflags="all=-trimpath=$PWD" \
     -o "$output_filename" \
-    main.go
+    "$input_filename" || \
+    {
+      echo "$build_id build: ERROR"
+      echo "1" > "$builds_dir/$build_id"
+      return
+    }
+
+    echo "$build_id build: OK"
+    echo "0" > "$builds_dir/$build_id"
 }
 
-for os in windows darwin linux; do
-  for arch in 386 amd64; do
-    # Support for darwin/386 was apparently removed around Go 1.13.
-    if [[ "$os" == darwin ]] && [[ "$arch" == 386 ]]; then
+for os in windows darwin linux js; do
+  for arch in 386 amd64 arm64 wasm; do
+    # Support for darwin/386 was removed in Go 1.15.
+    if [[ "$os" == darwin && "$arch" == 386 ]]; then
       continue
     fi
 
-    build $os $arch
+    # darwin/arm64 and linux/arm64 are the only supported arm64 builds
+    # TODO: Support ARM64 on Windows
+    if [[ "$arch" == arm64 && "$os" != darwin && "$os" != linux ]]; then
+      continue
+    fi
+
+    # js/wasm is the only possible combination involving one of those
+    if [[ ("$os" == js && "$arch" != wasm) || \
+          ("$arch" == wasm && "$os" != js) ]]; then
+      continue
+    fi
+
+    # Add an empty file in the builds directory right away, so that we can wait
+    # on a result in the main thread.
+    touch "$builds_dir/$os-$arch"
+
+    build $os $arch &
   done
 done
 
-# ARM build, with a specific goal of supporting recent Raspberry Pi models
+# Build for ARMv7, which needs a specific GOARM value.
 #
 # Reference:
 # https://zchee.github.io/golang-wiki/GoArm/
 # https://www.thepolyglotdeveloper.com/2017/04/cross-compiling-golang-applications-raspberry-pi/
-build linux arm 6  # a.k.a. ARM 6
-build linux arm 7  # a.k.a. ARM 7
-build linux arm64  # a.k.a. ARM 8 (GOARM env var no longer needed)
+os=linux
+arch=arm
+arm=7
+# Add an empty file in the builds directory right away, so that we can wait on
+# a result in the main thread.
+touch "$builds_dir/$os-$arch-$arm"
+build $os $arch $arm &
 
-echo "Done."
+declare -A build_results
 
+for file in "$builds_dir"/*; do
+  while true; do
+    if [[ -s "$file" ]]; then
+      build_results["$(basename "$file")"]="$(cat "$file")"
+      break
+    fi
+
+    sleep 0.5
+  done
+done
+
+for build_result in "${!build_results[@]}"; do
+  exit_code="${build_results[$build_result]}"
+
+  if [[ "$exit_code" -ne 0 ]]; then
+    exit "$exit_code"
+  fi
+done
+
+echo "All builds successful."

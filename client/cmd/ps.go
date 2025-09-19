@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	log "alda.io/client/logging"
 	"alda.io/client/system"
 	"github.com/dustin/go-humanize"
 	"github.com/spf13/cobra"
@@ -13,7 +12,7 @@ import (
 var psCmd = &cobra.Command{
 	Use:   "ps",
 	Short: "List background processes",
-	RunE: func(_ *cobra.Command, args []string) error {
+	RunE: func(_ *cobra.Command, _ []string) error {
 		playerStates, err := system.ReadPlayerStates()
 		if err != nil {
 			return err
@@ -24,31 +23,21 @@ var psCmd = &cobra.Command{
 			return err
 		}
 
-		fmt.Println("id\tport\tstate\texpiry\ttype")
+		fmt.Println("id\tport\tstate\texpiry\ttype\tpid")
 
 		for _, state := range playerStates {
-			if state.ReadError != nil {
-				log.Warn().Err(state.ReadError).Msg("Failed to read player state")
-				continue
-			}
-
 			expiry := humanize.Time(time.Unix(state.Expiry/1000, 0))
 
 			fmt.Printf(
-				"%s\t%d\t%s\t%s\t%s\n",
-				state.ID, state.Port, state.State, expiry, "player",
+				"%s\t%d\t%s\t%s\t%s\t%d\n",
+				state.ID, state.Port, state.State, expiry, "player", state.PID,
 			)
 		}
 
 		for _, state := range replServerStates {
-			if state.ReadError != nil {
-				log.Warn().Err(state.ReadError).Msg("Failed to read REPL server state")
-				continue
-			}
-
 			fmt.Printf(
-				"%s\t%d\t%s\t%s\t%s\n",
-				state.ID, state.Port, "-", "-", "repl-server",
+				"%s\t%d\t%s\t%s\t%s\t%d\n",
+				state.ID, state.Port, "-", "-", "repl-server", state.PID,
 			)
 		}
 

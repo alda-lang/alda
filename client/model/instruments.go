@@ -264,7 +264,7 @@ func stockInstrument(identifier string) (Instrument, error) {
 	instrument, hit := stockInstruments[identifier]
 
 	if !hit {
-		return nil, fmt.Errorf("Unrecognized instrument: %s", identifier)
+		return nil, fmt.Errorf("unrecognized instrument: %s", identifier)
 	}
 
 	return instrument, nil

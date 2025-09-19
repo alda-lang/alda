@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -99,24 +98,30 @@ Currently, the only supported output format is %s.`,
 			)
 		}
 
+		var ast parser.ASTNode
 		var scoreUpdates []model.ScoreUpdate
 		var err error
 
 		switch {
 		case file != "":
-			scoreUpdates, err = parser.ParseFile(file)
+			ast, err = parser.ParseFile(file)
 
 		case code != "":
-			scoreUpdates, err = parser.ParseString(code)
+			ast, err = parser.ParseString(code)
 
 		default:
-			scoreUpdates, err = parseStdin()
+			ast, err = parseStdin()
 		}
 
-		if err == errNoInputSupplied {
+		if err == system.ErrNoInputSupplied {
 			return userFacingNoInputSuppliedError("export")
 		}
 
+		if err != nil {
+			return err
+		}
+
+		scoreUpdates, err = ast.Updates()
 		if err != nil {
 			return err
 		}
@@ -129,7 +134,7 @@ Currently, the only supported output format is %s.`,
 
 		log.Info().
 			Int("updates", len(scoreUpdates)).
-			Str("took", fmt.Sprintf("%s", time.Since(start))).
+			Str("took", time.Since(start).String()).
 			Msg("Constructed score.")
 
 		var player system.PlayerState
@@ -186,7 +191,7 @@ Currently, the only supported output format is %s.`,
 		// temporary file.
 		tmpFilename := ""
 		if outputFilename == "" {
-			tmpdir, err := ioutil.TempDir("", "alda-export")
+			tmpdir, err := os.MkdirTemp("", "alda-export")
 			if err != nil {
 				return err
 			}

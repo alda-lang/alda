@@ -13,7 +13,7 @@ func TestCram(t *testing.T) {
 		parseTestCase{
 			label: "cram expression",
 			given: "{c d e}",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				model.Cram{
 					Events: []model.ScoreUpdate{
 						model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
@@ -26,7 +26,7 @@ func TestCram(t *testing.T) {
 		parseTestCase{
 			label: "cram expression with specified duration",
 			given: "{c d e}2",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				model.Cram{
 					Events: []model.ScoreUpdate{
 						model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},

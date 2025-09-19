@@ -2,7 +2,7 @@ package parser
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strconv"
 	"unicode"
 
@@ -77,6 +77,7 @@ const (
 	Natural
 	NoteLength
 	NoteLengthMs
+	NoteLengthSeconds
 	NoteLetter
 	Number
 	OctaveDown
@@ -141,6 +142,8 @@ func (tt TokenType) String() string {
 		return "note length"
 	case NoteLengthMs:
 		return "note length (ms)"
+	case NoteLengthSeconds:
+		return "note length (s)"
 	case NoteLetter:
 		return "note letter"
 	case Number:
@@ -377,7 +380,7 @@ func (s *scanner) parseNoteLength() {
 	if c == 's' && (terminatesNoteLength(n) || s.eofIsNext()) {
 		// consume 's'
 		s.advance()
-		s.addToken(NoteLengthMs, number*1000)
+		s.addToken(NoteLengthSeconds, number)
 		return
 	}
 
@@ -399,11 +402,6 @@ func (s *scanner) parseNoteLength() {
 	s.addToken(NoteLength, noteLength{denominator: number, dots: int32(dots)})
 }
 
-func (s *scanner) parseInteger() {
-	s.consumeDigits()
-	s.addToken(Integer, s.parseIntegerFrom(s.start))
-}
-
 // This assumes that the initial digit (or minus sign, if it's a negative
 // number) was already consumed.
 func (s *scanner) parseNumber() {
@@ -421,15 +419,10 @@ func (s *scanner) parseNumber() {
 	s.addToken(Number, s.parseFloatFrom(s.start))
 }
 
-type repetitionRange struct {
-	first int32
-	last  int32
-}
-
 func (s *scanner) parseRepetitions() error {
 	// NB: This assumes the initial "'" was already consumed.
 
-	ranges := []repetitionRange{}
+	ranges := []model.RepetitionRange{}
 
 	// Parse repetition ranges as long as we continue to encounter them.
 	for {
@@ -441,7 +434,7 @@ func (s *scanner) parseRepetitions() error {
 		startNumber := s.current
 		s.consumeDigits()
 		first := s.parseIntegerFrom(startNumber)
-		er := repetitionRange{first: first}
+		er := model.RepetitionRange{First: first}
 
 		// Either parse the "last" number of the range, or make the first number
 		// the last number as well, indicating a range of one number, e.g. 3-3.
@@ -453,9 +446,9 @@ func (s *scanner) parseRepetitions() error {
 
 			startNumber := s.current
 			s.consumeDigits()
-			er.last = s.parseIntegerFrom(startNumber)
+			er.Last = s.parseIntegerFrom(startNumber)
 		} else {
-			er.last = first
+			er.Last = first
 		}
 
 		ranges = append(ranges, er)
@@ -813,7 +806,7 @@ func Scan(filename string, input string) ([]Token, error) {
 
 // ScanFile reads a file, scans it, and returns a list of tokens.
 func ScanFile(filepath string) ([]Token, error) {
-	contents, err := ioutil.ReadFile(filepath)
+	contents, err := os.ReadFile(filepath)
 	if err != nil {
 		return nil, err
 	}

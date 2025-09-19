@@ -79,20 +79,22 @@ workflows:
 jobs:
   build_client:
     docker:
-      - image: cimg/go:1.16.8
+      - image: cimg/go:1.19.13
+
+    resource_class: xlarge
 
     steps:
       - checkout
 
       - restore_cache:
-          key: go-mod-v1.16.8-{{ checksum "client/go.sum" }}
+          key: go-mod-v1.19.13-{{ checksum "client/go.sum" }}
 
       - run:
           name: Build Alda client executable
           command: client/bin/build
 
       - save_cache:
-          key: go-mod-v1.16.8-{{ checksum "client/go.sum" }}
+          key: go-mod-v1.19.13-{{ checksum "client/go.sum" }}
           paths:
             - "/go/pkg/mod"
 
@@ -182,13 +184,15 @@ jobs:
           command: |
             export ALDA_DISABLE_SPAWNING=yes
             export ALDA_DISABLE_TELEMETRY=yes
-            alda -v3 update --yes --version 2.0.0
-            alda version | grep 2.0.0
-            alda-player info | grep 2.0.0
+            alda -v3 update --yes --version 2.2.6
+            alda version | grep 2.2.6
+            alda-player info | grep 2.2.6
 
   test_macos:
     macos:
-      xcode: 11.3.0
+      xcode: 15.0.0
+
+    resource_class: macos.m1.medium.gen1
 
     steps:
       - attach_workspace:
@@ -199,7 +203,7 @@ jobs:
           working_directory: /tmp/workspace/build
           command: |
             mkdir -p /usr/local/bin
-            cp client/darwin-amd64/alda /usr/local/bin/
+            cp client/darwin-arm64/alda /usr/local/bin/
             cp player/non-windows/alda-player /usr/local/bin/
             chmod +x /usr/local/bin/alda
             chmod +x /usr/local/bin/alda-player
@@ -225,9 +229,9 @@ jobs:
           command: |
             export ALDA_DISABLE_SPAWNING=yes
             export ALDA_DISABLE_TELEMETRY=yes
-            alda -v3 update --yes --version 2.0.0
-            alda version | grep 2.0.0
-            alda-player info | grep 2.0.0
+            alda -v3 update --yes --version 2.2.6
+            alda version | grep 2.2.6
+            alda-player info | grep 2.2.6
 
   test_windows:
     executor: win/default
@@ -263,9 +267,9 @@ jobs:
             $env:PATH = "$env:PATH;C:\Program Files\Alda\bin"
             $env:ALDA_DISABLE_SPAWNING = "yes"
             $env:ALDA_DISABLE_TELEMETRY = "yes"
-            alda -v3 update --yes --version 2.0.0
-            if (alda version | Select-String -Pattern 2.0.0 -quiet) { true } else { false }
-            if (alda-player info | Select-String -Pattern 2.0.0 -quiet) { true } else { false }
+            alda -v3 update --yes --version 2.2.6
+            if (alda version | Select-String -Pattern 2.2.6 -quiet) { true } else { false }
+            if (alda-player info | Select-String -Pattern 2.2.6 -quiet) { true } else { false }
 
       - run:
           name: "Troubleshooting: player logs"

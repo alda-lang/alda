@@ -123,20 +123,20 @@ func CleanUpStaleStateFiles() error {
 // PlayerState describes the current state of a player process. These states are
 // continously written to files by each player process. (See: StateManager.kt.)
 type PlayerState struct {
-	State     string
-	Port      int
-	Expiry    int64
-	ID        string
-	ReadError error
+	State  string `json:"state"`
+	Port   int    `json:"port"`
+	Expiry int64  `json:"expiry"`
+	PID    int    `json:"pid"`
+	ID     string
 }
 
 // REPLServerState describes the current state of an Alda REPL server process.
 // These states are continously written to files by each Alda REPL process.
 // (See: repl/server.go.)
 type REPLServerState struct {
-	Port      int    `json:"port"`
-	ID        string `json:"id"`
-	ReadError error  `json:"-"`
+	Port int    `json:"port"`
+	ID   string `json:"id"`
+	PID  int    `json:"pid"`
 }
 
 func processFiles(
@@ -162,11 +162,22 @@ func processFiles(
 	return nil
 }
 
+// FIXME: There is a lot of duplication between ReadPlayerStates and
+// ReadREPLServerStates because prior to Go 1.18, Go didn't have generics.
+//
+// TODO: Refactor these 2 functions into a generic function parameterized on the
+// kind of state (PlayerState vs. REPLServerState).
+
 // ReadPlayerStates reads all of the player state files in the Alda cache
 // directory and returns a list of player state structs describing the current
 // state of each player process.
 //
-// Returns an error if something goes wrong.
+// In the event that a state file is unreadable or cannot be parsed as JSON, we
+// skip that file. The goal is that we end up with a list of only known, valid
+// player states.
+//
+// Returns an error if something goes horribly wrong, e.g. we cannot list the
+// files in the directory for some reason.
 func ReadPlayerStates() ([]PlayerState, error) {
 	if err := CleanUpStaleStateFiles(); err != nil {
 		log.Warn().Err(err).Msg("Failed to clean up stale state files.")
@@ -177,17 +188,36 @@ func ReadPlayerStates() ([]PlayerState, error) {
 	if err := processFiles(
 		CachePath("state", "players", generated.ClientVersion),
 		func(filename string, contents []byte, readError error) {
+			// It's common for these files to be empty, e.g. when a player process is
+			// coming up and has created the file, but hasn't written to it yet.
+			//
+			// This isn't an exceptional situation. We can simply ignore this process
+			// and move onto the next state file.
+			if len(contents) == 0 {
+				return
+			}
+
 			var state PlayerState
 
+			// `readError` is initially a possible error reading the file.
 			if readError == nil {
-				err := json.Unmarshal(contents, &state)
-				if err != nil {
-					readError = err
-				}
+				readError = json.Unmarshal(contents, &state)
+			}
+
+			// Now, `readError` is either a possible error reading the file or a
+			// possible error parsing its contents as JSON.
+			//
+			// If either of these scenarios, we log a warning and move on to the next
+			// file.
+			if readError != nil {
+				log.Warn().
+					Err(readError).
+					Str("filename", filename).
+					Msg("Failed to read player state")
+				return
 			}
 
 			state.ID = strings.Replace(filename, ".json", "", 1)
-			state.ReadError = readError
 
 			states = append(states, state)
 		},
@@ -200,26 +230,51 @@ func ReadPlayerStates() ([]PlayerState, error) {
 
 // ReadREPLServerStates reads all of the REPL server state files in the Alda
 // cache directory and returns a list of REPLServerState structs describing the
-// current state of each player process.
+// current state of each REPL server process.
 //
-// Returns an error if something goes wrong.
+// In the event that a state file is unreadable or cannot be parsed as JSON, we
+// skip that file. The goal is that we end up with a list of only known, valid
+// REPL server states.
+//
+// Returns an error if something goes horribly wrong, e.g. we cannot list the
+// files in the directory for some reason.
 func ReadREPLServerStates() ([]REPLServerState, error) {
 	states := []REPLServerState{}
 
 	processFiles(
 		CachePath("state", "repl-servers"),
 		func(filename string, contents []byte, readError error) {
+			// It's common for these files to be empty, e.g. when a REPL server
+			// process is coming up and has created the file, but hasn't written to it
+			// yet.
+			//
+			// This isn't an exceptional situation. We can simply ignore this process
+			// and move onto the next state file.
+			if len(contents) == 0 {
+				return
+			}
+
 			var state REPLServerState
 
+			// `readError` is initially a possible error reading the file.
 			if readError == nil {
-				err := json.Unmarshal(contents, &state)
-				if err != nil {
-					readError = err
-				}
+				readError = json.Unmarshal(contents, &state)
+			}
+
+			// Now, `readError` is either a possible error reading the file or a
+			// possible error parsing its contents as JSON.
+			//
+			// If either of these scenarios, we log a warning and move on to the next
+			// file.
+			if readError != nil {
+				log.Warn().
+					Err(readError).
+					Str("filename", filename).
+					Msg("Failed to read REPL server state")
+				return
 			}
 
 			state.ID = strings.Replace(filename, ".json", "", 1)
-			state.ReadError = readError
 
 			states = append(states, state)
 		},
@@ -298,7 +353,7 @@ func PingPlayer(port int) (*osc.Client, error) {
 		Int("port", port).
 		Msg("Waiting for player to respond to ping.")
 
-	client := osc.NewClient("localhost", port, osc.ClientProtocol(osc.TCP))
+	client := osc.NewClient("127.0.0.1", port, osc.ClientProtocol(osc.TCP))
 
 	err := util.Await(
 		func() error {
@@ -374,6 +429,12 @@ func FindPlayerByID(id string) (PlayerState, error) {
 		}
 	}
 
+	// FIXME: repl/player_management.go does a check whether the error message
+	// returned by FindPlayerByID starts with "No player was found". If we ever
+	// change the verbiage here, we'll need to adjust that other code accordingly.
+	//
+	// TODO: Consider adding an optional error code to UserFacingErrors that we
+	// could check for instead.
 	return PlayerState{}, help.UserFacingErrorf(
 		`No player was found with the ID %s.
 

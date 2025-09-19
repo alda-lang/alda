@@ -2,6 +2,7 @@ package model
 
 import (
 	"math"
+	"strings"
 
 	"alda.io/client/json"
 )
@@ -37,13 +38,37 @@ const (
 // Alda models a key signature as a map from NoteLetter to []Accidental. This
 // allows us to represent the "standard" key signatures, e.g.:
 //
-//   (A major)
-//   {F: [sharp], C: [sharp], G: [sharp]}
+//	(A major)
+//	{F: [sharp], C: [sharp], G: [sharp]}
 //
 // as well as unconventional ones like:
 //
-//   {B: [flat, flat], G: [sharp], E: [flat]}
+//	{B: [flat, flat], G: [sharp], E: [flat]}
 type KeySignature map[NoteLetter][]Accidental
+
+func (ks KeySignature) String() string {
+	laas := []string{}
+
+	for note, accidentals := range ks {
+		laa := strings.Builder{}
+		laa.WriteRune(rune(note + 'a'))
+
+		for _, acc := range accidentals {
+			switch acc {
+			case Flat:
+				laa.WriteString("-")
+			case Natural:
+				laa.WriteString("_")
+			case Sharp:
+				laa.WriteString("+")
+			}
+		}
+
+		laas = append(laas, laa.String())
+	}
+
+	return strings.Join(laas, " ")
+}
 
 // JSON implements RepresentableAsJSON.JSON.
 func (ks KeySignature) JSON() *json.Container {
@@ -178,8 +203,8 @@ func KeySignatureFromCircleOfFifths(fifths int) KeySignature {
 	keySignature := KeySignature{}
 
 	for i := 0; i < int(math.Abs(float64(fifths))); i++ {
-		keySignature[order[i % len(order)]] = append(
-			keySignature[order[i % len(order)]],
+		keySignature[order[i%len(order)]] = append(
+			keySignature[order[i%len(order)]],
 			accidental,
 		)
 	}

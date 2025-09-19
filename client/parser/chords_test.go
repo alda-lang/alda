@@ -13,7 +13,7 @@ func TestChords(t *testing.T) {
 		parseTestCase{
 			label: "simple chord",
 			given: "c/e/g",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				model.Chord{
 					Events: []model.ScoreUpdate{
 						model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
@@ -26,7 +26,7 @@ func TestChords(t *testing.T) {
 		parseTestCase{
 			label: "chord that includes a rest",
 			given: "c1/>e2/g4/r8",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				model.Chord{
 					Events: []model.ScoreUpdate{
 						model.Note{
@@ -68,7 +68,7 @@ func TestChords(t *testing.T) {
 		parseTestCase{
 			label: "chord that includes a dotted note",
 			given: "b>/d/f2.",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				model.Chord{
 					Events: []model.ScoreUpdate{
 						model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.B}},
@@ -84,6 +84,21 @@ func TestChords(t *testing.T) {
 						},
 					},
 				},
+			},
+		},
+		parseTestCase{
+			label: "chord, then octave down, then note",
+			given: "c/e/g < c",
+			expectUpdates: []model.ScoreUpdate{
+				model.Chord{
+					Events: []model.ScoreUpdate{
+						model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
+						model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.E}},
+						model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.G}},
+					},
+				},
+				model.AttributeUpdate{PartUpdate: model.OctaveDown{}},
+				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
 			},
 		},
 	)

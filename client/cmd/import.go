@@ -1,20 +1,15 @@
 package cmd
 
 import (
-	"fmt"
-	"os"
-	"strings"
-
-	"alda.io/client/code-generator"
 	"alda.io/client/color"
 	"alda.io/client/help"
 	"alda.io/client/interop/musicxml/importer"
-	log "alda.io/client/logging"
 	"alda.io/client/model"
+	"alda.io/client/parser"
 	"alda.io/client/system"
-	"alda.io/client/transmitter"
-	"alda.io/client/util"
+	"fmt"
 	"github.com/spf13/cobra"
+	"os"
 )
 
 var outputAldaFilename string
@@ -39,10 +34,13 @@ func init() {
 }
 
 var importCmd = &cobra.Command{
-	Use:    "import",
-	Hidden: true,
-	Short:  "Evaluate external format and import as Alda source code",
-	Long: `Evaluate external format and import as Alda source code
+	Use:   "import",
+	Short: "Import Alda source code from other formats",
+	Long: `Import Alda source code from other formats
+
+---
+
+Currently, the only supported import format is MusicXML (.musicxml). Most popular software applications support exporting scores to MusicXML.
 
 ---
 
@@ -69,181 +67,102 @@ redirecting into other files or processes.
   alda import -i musicxml -f path/to/my-score.musicxml > my-score.alda
   alda import -i musicxml -f path/to/my-score.musicxml | some-process > my-score.alda
 
----
-
-Currently, the only import format is MusicXML.  
-
 ---`,
 	RunE: func(_ *cobra.Command, args []string) error {
 		if importFormat != "musicxml" {
 			return help.UserFacingErrorf(
-				`%s is not a supported input format.
+				`Provided %s is not a supported input format.
 
-Currently, the only supported output format is %s.`,
+Currently, the only supported input format is %s.`,
 				color.Aurora.BrightYellow(importFormat),
 				color.Aurora.BrightYellow("musicxml"),
 			)
 		}
 
-		// TODO (experimental): remove warning log
-		log.Warn().Msg(fmt.Sprintf(
-			`The %s command is currently experimental. Imported scores may be incorrect and lack information.`,
-			color.Aurora.BrightYellow("import"),
-		))
-
 		var scoreUpdates []model.ScoreUpdate
 		var err error
 
-		// TODO: add XML validation
-		// TODO: add XML conversion to ensure we get score-partwise pieces as input
 		switch {
 		case file != "":
-			inputFile, err := os.Open(file)
+			b, err := os.ReadFile(file)
+			if err != nil {
+				return help.UserFacingErrorf(
+					`Failed to open file %s: %s.`,
+					color.Aurora.BrightYellow(file),
+					err.Error(),
+				)
+			}
+
+			scoreUpdates, err = importer.ImportMusicXML(b)
 			if err != nil {
 				return err
 			}
-
-			scoreUpdates, err = importer.ImportMusicXML(inputFile)
 		case code != "":
-			reader := strings.NewReader(code)
-			scoreUpdates, err = importer.ImportMusicXML(reader)
+			scoreUpdates, err = importer.ImportMusicXML([]byte(code))
+			if err != nil {
+				return err
+			}
 
 		default:
-			bytes, err := readStdin()
+			b, err := system.ReadStdin()
+			if err != nil {
+				return help.UserFacingErrorf(
+					`Failed to read from stdin: %s.`,
+					err.Error(),
+				)
+			}
+
+			scoreUpdates, err = importer.ImportMusicXML(b)
 			if err != nil {
 				return err
 			}
-
-			reader := strings.NewReader(string(bytes))
-			scoreUpdates, err = importer.ImportMusicXML(reader)
 		}
 
+		root, err := parser.GenerateASTFromScoreUpdates(scoreUpdates)
 		if err != nil {
-			return err
+			return help.UserFacingErrorf(
+				`Issue generating Alda AST: %s.`,
+				err.Error(),
+			)
 		}
 
 		if outputAldaFilename == "" {
 			// When no output filename is specified, we write directly to stdout
-			code_generator.Generate(scoreUpdates, os.Stdout)
+			err = parser.FormatASTToCode(root, os.Stdout)
+			if err != nil {
+				return help.UserFacingErrorf(
+					`Issue formatting imported Alda: %s.`,
+					err.Error(),
+				)
+			}
 		} else {
-			file, err := os.Create(outputAldaFilename)
+			out, err := os.OpenFile(
+				outputAldaFilename,
+				os.O_WRONLY|os.O_CREATE|os.O_TRUNC,
+				0664, // default rw-rw-r perms
+			)
 			if err != nil {
-				return err
+				return help.UserFacingErrorf(
+					`Issue opening output file %s.`,
+					color.Aurora.BrightYellow(outputAldaFilename),
+				)
 			}
+			defer out.Close()
 
-			code_generator.Generate(scoreUpdates, file)
-
-			fmt.Fprintf(os.Stderr, "Imported score to %s\n", outputAldaFilename)
-			if err := file.Close(); err != nil {
-				return err
-			}
-		}
-
-		// Bootstrapping the play command to apply the scoreUpdates
-		// TODO (experimental): Remove this temporary play-back
-		score := model.NewScore()
-		err = score.Update(scoreUpdates...)
-		action := "play"
-
-		// Errors with source context are presented to the user as-is.
-		//
-		// TODO: See TODO comment in cmd/parse.go about writing better user-facing
-		// error messages.
-		switch err.(type) {
-		case *model.AldaSourceError:
-			err = &help.UserFacingError{Err: err}
-		}
-
-		if err != nil {
-			return err
-		}
-
-		var players []system.PlayerState
-
-		// Determine the port to use based on the provided CLI options.
-		switch {
-
-		// Port is explicitly specified, so use that port.
-		case playerPort != -1:
-			player := system.PlayerState{
-				ID:    "unknown",
-				State: "unknown",
-				Port:  playerPort,
-			}
-			players = []system.PlayerState{player}
-
-		// Player ID is specified; look up the player by ID and use its port.
-		case playerID != "":
-			player, err := system.FindPlayerByID(playerID)
+			err = parser.FormatASTToCode(root, out)
 			if err != nil {
-				return err
-			}
-			players = []system.PlayerState{player}
-
-		// We're actually unpausing, not playing, so send the message to all active
-		// player processes so that if any of them are paused, they'll resume
-		// playing.
-		case action == "unpause":
-			allPlayers, err := system.ReadPlayerStates()
-			if err != nil {
-				return err
-			}
-			players = []system.PlayerState{}
-			for _, player := range allPlayers {
-				if player.State == "active" {
-					players = append(players, player)
-				}
+				return help.UserFacingErrorf(
+					`Issue formatting imported Alda: %s.`,
+					err.Error(),
+				)
 			}
 
-		// Find an available player process to use.
-		default:
-			system.StartingPlayerProcesses()
-
-			if err := util.Await(
-				func() error {
-					player, err := system.FindAvailablePlayer()
-					if err != nil {
-						return err
-					}
-
-					players = []system.PlayerState{player}
-					return nil
-				},
-				reasonableTimeout,
-			); err != nil {
-				return err
-			}
+			fmt.Fprintf(
+				os.Stderr,
+				"Imported score to %s\n.",
+				outputAldaFilename,
+			)
 		}
-
-		transmitOpts := []transmitter.TransmissionOption{
-			transmitter.TransmitFrom(optionFrom),
-			transmitter.TransmitTo(optionTo),
-		}
-
-		if action == "play" {
-			transmitOpts = append(transmitOpts, transmitter.OneOff())
-		}
-
-		for _, player := range players {
-			transmitter := transmitter.OSCTransmitter{Port: player.Port}
-
-			var transmissionError error
-			if action == "unpause" {
-				transmissionError = transmitter.TransmitPlayMessage()
-			} else {
-				transmissionError = transmitter.TransmitScore(score, transmitOpts...)
-			}
-			if transmissionError != nil {
-				return transmissionError
-			}
-		}
-
-		// We don't have to print something here, but it's a good idea because it
-		// indicates to the user that we did what they asked. Otherwise, it might
-		// not be obvious that we did anything, especially in cases where there is
-		// no audible output, e.g. `alda play -c "c d e"` (valid syntax, but no
-		// audible output because no part was indicated).
-		fmt.Fprintln(os.Stderr, "Playing...")
 
 		return nil
 	},

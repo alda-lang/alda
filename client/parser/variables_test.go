@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"testing"
 
 	"alda.io/client/model"
@@ -16,53 +17,37 @@ func variableReference(name string) model.VariableReference {
 	return model.VariableReference{VariableName: name}
 }
 
+func variableNameCheck(name string) parseTestCase {
+	return parseTestCase{
+		label: fmt.Sprintf("variable definition and reference: %s", name),
+		given: fmt.Sprintf("%[1]s = r \n%[1]s", name),
+		expectUpdates: []model.ScoreUpdate{
+			variableDefinition(name, model.Rest{}),
+			variableReference(name),
+		},
+	}
+}
+
 func TestVariables(t *testing.T) {
 	executeParseTestCases(
 		t,
-		parseTestCase{
-			label:  "variable reference: aa",
-			given:  "aa",
-			expect: []model.ScoreUpdate{variableReference("aa")},
-		},
-		parseTestCase{
-			label:  "variable reference: aaa",
-			given:  "aaa",
-			expect: []model.ScoreUpdate{variableReference("aaa")},
-		},
-		parseTestCase{
-			label:  "variable reference: HI",
-			given:  "HI",
-			expect: []model.ScoreUpdate{variableReference("HI")},
-		},
-		parseTestCase{
-			label:  "variable reference: celloPart2",
-			given:  "celloPart2",
-			expect: []model.ScoreUpdate{variableReference("celloPart2")},
-		},
-		parseTestCase{
-			label:  "variable reference: xy42",
-			given:  "xy42",
-			expect: []model.ScoreUpdate{variableReference("xy42")},
-		},
-		parseTestCase{
-			label:  "variable reference: my20cats",
-			given:  "my20cats",
-			expect: []model.ScoreUpdate{variableReference("my20cats")},
-		},
-		parseTestCase{
-			label:  "variable reference: apple_cider",
-			given:  "apple_cider",
-			expect: []model.ScoreUpdate{variableReference("apple_cider")},
-		},
-		parseTestCase{
-			label:  "variable reference: underscores_are_great",
-			given:  "underscores_are_great",
-			expect: []model.ScoreUpdate{variableReference("underscores_are_great")},
-		},
+		variableNameCheck("aa"),
+		variableNameCheck("aaa"),
+		variableNameCheck("HI"),
+		variableNameCheck("celloPart2"),
+		variableNameCheck("xy42"),
+		variableNameCheck("my20cats"),
+		variableNameCheck("apple_cider"),
+		variableNameCheck("underscores_are_great"),
 		parseTestCase{
 			label: "variable reference in a part",
-			given: "flute: c flan f",
-			expect: []model.ScoreUpdate{
+			given: "flan = e\nflute: c flan f",
+			expectUpdates: []model.ScoreUpdate{
+				variableDefinition("flan",
+					model.Note{
+						Pitch: model.LetterAndAccidentals{NoteLetter: model.E},
+					},
+				),
 				model.PartDeclaration{Names: []string{"flute"}},
 				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},
 				variableReference("flan"),
@@ -71,8 +56,9 @@ func TestVariables(t *testing.T) {
 		},
 		parseTestCase{
 			label: "only a variable reference in a part",
-			given: "clarinet: pudding123",
-			expect: []model.ScoreUpdate{
+			given: "pudding123 = r\nclarinet: pudding123",
+			expectUpdates: []model.ScoreUpdate{
+				variableDefinition("pudding123", model.Rest{}),
 				model.PartDeclaration{Names: []string{"clarinet"}},
 				variableReference("pudding123"),
 			},
@@ -80,7 +66,7 @@ func TestVariables(t *testing.T) {
 		parseTestCase{
 			label: "variable definition containing a cram expression",
 			given: "cheesecake = { c/e }2",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				variableDefinition(
 					"cheesecake",
 					model.Cram{
@@ -109,7 +95,7 @@ func TestVariables(t *testing.T) {
 			label: "variable definition within an instrument part",
 			given: `harpsichord:
 			custard_ = c d e/g`,
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				model.PartDeclaration{Names: []string{"harpsichord"}},
 				variableDefinition(
 					"custard_",
@@ -131,10 +117,10 @@ func TestVariables(t *testing.T) {
 		parseTestCase{
 			label: "variable definition within an instrument part (variation)",
 			given: `glockenspiel:
-
+		
 			sorbet=c d e/g
 			c`,
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				model.PartDeclaration{Names: []string{"glockenspiel"}},
 				variableDefinition(
 					"sorbet",
@@ -157,9 +143,9 @@ func TestVariables(t *testing.T) {
 		parseTestCase{
 			label: "variable definition before an instrument part",
 			given: `GELATO=d e
-
+		
 			clavinet: c/f`,
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				variableDefinition(
 					"GELATO",
 					model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.D}},
@@ -180,7 +166,7 @@ func TestVariables(t *testing.T) {
 		parseTestCase{
 			label: "var defined and used s/t var ends with a rest",
 			given: "foo = c8 d c r\npiano: foo*2",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				variableDefinition(
 					"foo",
 					model.Note{
@@ -203,8 +189,18 @@ func TestVariables(t *testing.T) {
 		// NB: the trailing newline was essential to reproducing the issue!
 		parseTestCase{
 			label: "variable definition ending with a variable reference",
-			given: "satb = V1: soprano V2: alto V3: tenor V4: bass\n",
-			expect: []model.ScoreUpdate{
+			given: `
+			soprano = r
+			alto = r
+			tenor = r
+			bass = r
+			satb = V1: soprano V2: alto V3: tenor V4: bass
+			`,
+			expectUpdates: []model.ScoreUpdate{
+				variableDefinition("soprano", model.Rest{}),
+				variableDefinition("alto", model.Rest{}),
+				variableDefinition("tenor", model.Rest{}),
+				variableDefinition("bass", model.Rest{}),
 				variableDefinition(
 					"satb",
 					model.VoiceMarker{VoiceNumber: 1},
@@ -221,9 +217,12 @@ func TestVariables(t *testing.T) {
 		// Regression test for https://github.com/alda-lang/alda-core/issues/64
 		// NB: the trailing newline was essential to reproducing the issue!
 		parseTestCase{
-			label: "variable definition ending with a variable reference",
-			given: "foo = bar\n",
-			expect: []model.ScoreUpdate{
+			label: "variable definition followed by a newline",
+			given: `bar = r
+			foo = bar
+			`,
+			expectUpdates: []model.ScoreUpdate{
+				variableDefinition("bar", model.Rest{}),
 				variableDefinition("foo", variableReference("bar")),
 			},
 		},

@@ -1,0 +1,197 @@
+= MIDI channel management
+:toc:
+
+== Reference
+
+* https://github.com/alda-lang/alda/discussions/447[Manage MIDI channel
+  assignment in a better way]
+
+* https://github.com/alda-lang/alda/issues/340#issuecomment-602138366[`midi-channel`
+function idea]
+
+=== Overview
+
+The MIDI spec limits us to 16 channels (channels 0-15), one of which (channel 9)
+is for percussion only.
+
+Only one instrument can use a channel at a time. This means that up to 16
+instruments may be playing at once: 1 percussion instrument and 15
+non-percussion instruments. However, also note that a channel can switch back
+and forth between different instruments, and this is common in complex MIDI
+files found in the wild.
+
+Currently, the Alda player process manages channel assignment automatically, but
+that's not ideal because we would prefer to have more control over channel
+assignment, earlier on, in the client.
+
+One pitfall of the way it works currently is that the client will happily allow
+more than 16 instruments, only to have playback fail once it reaches the player
+and there aren't enough channels. It would be better to catch this error earlier
+and provide a good error message.
+
+Another issue is that Alda cannot currently produce the aforementioned kind of
+scores with > 16 instruments. But we could, with some intelligent automatic
+assignment of MIDI channels based on which channels are in use and when.
+
+== Goals
+
+* Automatically support scores with > 16 instruments, as long as there are never
+  > 16 different instruments playing at the same time (which would make playback
+  impossible due to the limitations of the MIDI spec).
+
+* Validate on the client side and provide a better error message if a score has
+  more instruments than there are channels available, and the parts aren't
+  arranged such that it's possible to play the score by switching instruments
+  within a MIDI channel.
+
+* Add a new feature where users can use a `midi-channel` function within a part
+  to specify which channel it should be using.
+
+* If `(midi-channel ...)` isn't specified, assign a channel automatically like
+  we're doing today, but make it deterministic.
+
+== Implementation
+
+=== `MidiChannel` field on notes
+
+Each note will have a `MidiChannel` field. This will inform what MIDI channel is
+to be used for that note on the player side.
+
+On the player side, rather than assign one MIDI channel per track, the player
+process will simply use whatever MIDI channel was specified for each note.
+
+=== `MidiChannel` field on parts
+
+Each part will have a `MidiChannel` field, the value of which is (when a channel
+has been assigned) an integer in the range 0-15. The value will initially be the
+sentinel value -1 (because Go doesn't have nullable types), which means a
+channel hasn't yet been assigned.
+
+Each time a note occurs for a part, a channel will be assigned. The currently
+assigned channel will be preferred if there are no other parts using that
+channel (and we will re-check for every single note - this check should be very
+fast). If another part is using that channel, then we will automatically choose
+another channel.
+
+=== Automatic channel assignment
+
+The logic for finding a suitable channel to use for a part is as follows:
+
+* If a channel is already assigned and it's still available, then the part will
+  continue to use that channel.
+
+* If it's a percussion part, then channel 9 will always be assigned, because
+  that's the only channel you can use for percussion in the MIDI spec.
+
+* If it's a non-percussion part and there are currently less than 15 channels
+  assigned, then the first available channel will be assigned. This means that
+  for simple scores with up to 16 parts, each part will get its own channel.
+
+* If all of the channels have been assigned (i.e. the score has more than 16
+  parts), then we will do a more involved check to find a channel that no part
+  happens to be using at that point in time in the score, and assign it to the
+  part. If no channel is available at that point in time, we will throw an
+  error.
+
+==== Simple check: `midiChannelUsage` field on score
+
+The score object will have a new field called `midiChannelUsage`. This will be a
+16-item slice, each index corresponding to one of the 16 channels in the MIDI
+spec. The value at each index will be a slice of part IDs, representing which
+part(s) are using that channel at some point in the score.
+
+We will use this data structure to help us quickly find an available MIDI
+channel to use for each note added to the score.
+
+For example, consider a score with 5 parts. Because there are 16 total channels,
+every part will get its own channel.
+
+Let's say that the 5th part is a piano. When the part is declared, it initially
+has no assigned channel. When the first piano note occurs, we will observe that
+there is no channel assigned, and go looking for one by referring to
+`midiChannelUsage`. The first 4 items in `midiChannelUsage` (which represent
+MIDI channels 0-3) would each be a slice containing 1 part ID. We would skip
+those because they are non-empty. The 5th item (i.e. index 4) would be an empty
+slice, so we would add the piano's part ID to that slice, and set the piano
+part's `MidiChannel` field value to 4.
+
+For every subsequent note in the piano part, we would see that that part's
+assigned `MidiChannel` is 4, and do a quick check that the part ID slice
+`midiChannelUsage[4]` only includes 1 part ID, and it's the piano part. We would
+therefore proceed to use that channel for that note.
+
+==== Complex check: note offset and durations
+
+In cases where there are more than 16 parts in a score, we won't have enough
+MIDI channels for every part to have its own dedicated channel. So, we will have
+to do a more involved check to see which parts are using which channels, when.
+
+This information will be inherent in the list of notes in each part. Recall that
+each note will now have a `MidiChannel` field. A note is, therefore, a record of
+a particular channel being unavailable for a particular period of time: from
+`note offset` to `note offset + note duration`.
+
+Going back to the previous example, imagine that the score now has 16 parts (one
+of which is percussion, assigned to MIDI channel 9). Now we encounter a part
+declaration for a 17th part, a bassoon, followed by the first note for that
+part.
+
+As before, we would first check `midiChannelUsage`. We would look through the 16
+items in that slice, and see that each of them is a part ID slice containing at
+least 1 other part ID that isn't the bassoon. This would tell us that we need to
+proceed to the more complex check to find a suitable MIDI channel that could be
+reused for the bassoon part.
+
+For **each channel** in `midiChannelUsage`, we would consider **each part ID**
+in the slice, representing a part that is using that channel at some point in
+time.
+
+For each of those parts, we would look through **each note** in the part and
+consider its offset and duration. If it overlaps with the note we are currently
+trying to assign a channel to, then we must conclude that that channel is
+unavailable.
+
+We would then move on to the next channel in `midiChannelUsage` and repeat the
+process until we find a channel that we could use for this note. If, at the end
+of this process, we cannot find such a channel, then we throw an error.
+
+Once we find a channel, we set the part's `MidiChannel` to that channel number,
+so that we will prefer to use that channel for the part's other notes, going
+forward.
+
+Note that we will have to repeat this complex check for **every single note**
+that we place once a score reaches 17 parts. The good news is that the simple
+check part should be fast, and for the complex part, we won't need to check all
+of the notes for _all_ of the parts, only the ones in the other parts using the
+channel that a part is currently assigned. I'm hoping that this won't be too
+performance-impacting, but we'll see how it works in practice. I think it's good
+enough for an MVP, and if we find in the future that performance _is_ an issue,
+then we can try to come up with some optimizations or re-think the algorithm.
+
+=== Manual channel assignment
+
+Power users will be able to explicitly specify the MIDI channel that they want a
+part to use at a moment in time. This can be useful for Alda users who want to
+produce MIDI files where they have more control over which MIDI channels are
+used for which parts.
+
+For example:
+
+[.source]
+----
+piano:
+  (midi-channel 2)
+  c8 d e f g a b > c
+
+guitar:
+  (midi-channel 2)
+  r1 # piano is using channel 2 here
+  o3 c1/e/g/>c
+----
+
+The `midi-channel` attribute re-assigns the part to the specified channel. As
+each subsequent note is added to the score, if the specified channel is not
+available, then an error is thrown. (The idea is that if you are using
+`midi-channel`, you know what you are doing, and you would prefer to get an
+error vs. having Alda silently use a channel other than the one you specified
+for that part.)

@@ -240,6 +240,7 @@ Use "{{.CommandPath}} [command] --help" for more information about a command.{{e
 	for _, cmd := range []*cobra.Command{
 		doctorCmd,
 		exportCmd,
+		formatCmd,
 		importCmd,
 		instrumentsCmd,
 		parseCmd,
@@ -288,7 +289,7 @@ var rootCmd = &cobra.Command{
 
 Website: https://alda.io
 GitHub: https://github.com/alda-lang/alda
-Slack: https://slack.alda.io`,
+Slack: http://slack.alda.io`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		if err := handleVerbosity(cmd); err != nil {
 			return err

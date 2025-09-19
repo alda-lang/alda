@@ -1,27 +1,37 @@
 package importer
 
 import (
+	log "alda.io/client/logging"
+	"fmt"
+	"sort"
+
 	"alda.io/client/color"
 	"alda.io/client/help"
 	"github.com/beevik/etree"
-	"io"
-	"sort"
 
 	"alda.io/client/model"
 )
 
 // musicXMLPart contains part-specific information necessary for import
 type musicXMLPart struct {
-	instruments  []string
+	instruments []string
+
+	// State
+	divisions int
+	beats     float64
+
+	// Imported updates
+	updates      []model.ScoreUpdate
 	voices       map[int32]*musicXMLVoice
 	currentVoice *musicXMLVoice
-	divisions    int
-	beats        float64
 
 	// We maintain the following information for unpitched percussion parts
 	// unpitched maps a part's instrument ID to the corresponding MIDI pitch
 	unpitched map[string]int32
 	alias     string
+
+	// We maintain an optimizer per part to optimize as we collapse voices
+	opt optimizer
 }
 
 func newMusicXMLPart() *musicXMLPart {
@@ -31,40 +41,64 @@ func newMusicXMLPart() *musicXMLPart {
 		beats:     0,
 		unpitched: make(map[string]int32),
 		alias:     "",
+		opt:       newOptimizer(),
 	}
 }
 
-func (part *musicXMLPart) generateScoreUpdates() []model.ScoreUpdate {
-	partDeclaration := model.PartDeclaration{
-		Names: part.instruments,
-		Alias: part.alias,
-	}
-
-	updates := []model.ScoreUpdate{partDeclaration}
-
+func (part *musicXMLPart) collapseVoices(end bool) {
 	if len(part.voices) == 1 {
 		// For a single voice, we don't include a voice marker
-		updates = append(
-			updates, part.currentVoice.generateScoreUpdates()...,
-		)
+		if !part.currentVoice.isEffectivelyEmpty() {
+			part.updates = append(part.updates,
+				part.opt.optimize(part.currentVoice.getScoreUpdates())...,
+			)
+			part.voices[1] = newMusicXMLVoice()
+			part.voices[1].octave = -1 // force re-setting of octave
+			part.beats = 0
+		}
 	} else {
 		// Process voices in order of voice number
 		var voiceNumber int32 = 1
+		anyVoiceUpdates := false
 		for voicesLeft := len(part.voices); voicesLeft > 0; voiceNumber++ {
 			if voice, ok := part.voices[voiceNumber]; ok {
 				voiceMarker := model.VoiceMarker{
 					VoiceNumber: voiceNumber,
 				}
-				updates = append(updates, voiceMarker)
-				updates = append(
-					updates,
-					voice.generateScoreUpdates()...,
-				)
+				if !voice.isEffectivelyEmpty() {
+					anyVoiceUpdates = true
+					part.updates = append(part.updates,
+						voiceMarker,
+					)
+					part.updates = append(part.updates,
+						part.opt.optimize(voice.getScoreUpdates())...,
+					)
+					part.voices[voiceNumber] = newMusicXMLVoice()
+					part.voices[voiceNumber].octave = -1
+				}
 				voicesLeft--
 			}
 		}
+
+		if anyVoiceUpdates {
+			part.currentVoice = part.voices[1]
+			part.beats = 0
+			if end {
+				part.updates = append(part.updates, model.VoiceGroupEndMarker{})
+			}
+		}
 	}
-	return updates
+}
+
+func (part *musicXMLPart) generateScoreUpdates() []model.ScoreUpdate {
+	part.collapseVoices(false)
+
+	partDeclaration := model.PartDeclaration{
+		Names: part.instruments,
+		Alias: part.alias,
+	}
+
+	return append([]model.ScoreUpdate{partDeclaration}, part.updates...)
 }
 
 // musicXMLVoice contains voice-specific information necessary for import
@@ -99,8 +133,24 @@ func newMusicXMLVoice() *musicXMLVoice {
 	}
 }
 
-func (voice *musicXMLVoice) generateScoreUpdates() []model.ScoreUpdate {
+func (voice *musicXMLVoice) getScoreUpdates() []model.ScoreUpdate {
 	return voice.updates[0].(model.EventSequence).Events
+}
+
+// isEffectivelyEmpty returns if a voice has no updates, or just an empty repeat
+func (voice *musicXMLVoice) isEffectivelyEmpty() bool {
+	if len(voice.getScoreUpdates()) == 1 {
+		repeat, ok := voice.getScoreUpdates()[0].(model.Repeat)
+		if ok {
+			eventSeq, ok := repeat.Event.(model.EventSequence)
+			if ok {
+				if len(eventSeq.Events) == 0 {
+					return true
+				}
+			}
+		}
+	}
+	return len(voice.getScoreUpdates()) == 0
 }
 
 // musicXMLImporter contains global state for importing a MusicXML file
@@ -128,7 +178,7 @@ func (importer *musicXMLImporter) generateScoreUpdates() []model.ScoreUpdate {
 		partIDs = append(partIDs, id)
 	}
 
-	sort.Sort(sort.StringSlice(partIDs))
+	sort.Strings(partIDs)
 
 	for _, id := range partIDs {
 		part := importer.parts[id]
@@ -182,6 +232,16 @@ func (importer *musicXMLImporter) append(newUpdates ...model.ScoreUpdate) {
 	)
 }
 
+// appendPartAttrs appends attribute updates to the current part
+// We make these apply to the entire part by closing out any ongoing voices
+func (importer *musicXMLImporter) appendPartAttrs(update model.ScoreUpdate) {
+	importer.currentPart.collapseVoices(true)
+	importer.currentPart.updates = append(importer.currentPart.updates,
+		// We optimize the single attr update to catch key signature changes
+		importer.currentPart.opt.optimize([]model.ScoreUpdate{update})...,
+	)
+}
+
 // setAll replaces the updates for the current slice to import into
 func (importer *musicXMLImporter) setAll(newUpdates []model.ScoreUpdate) {
 	_, ni := importer.findLast(filterNestedImportableUpdate)
@@ -196,6 +256,8 @@ func (importer *musicXMLImporter) setAll(newUpdates []model.ScoreUpdate) {
 
 func (importer *musicXMLImporter) recountBeats() {
 	beats := getBeats(importer.voice().updates...)
+	beats = roundIfCloseEnough(beats)
+
 	importer.part().beats = beats
 	importer.voice().beats = beats
 }
@@ -318,9 +380,7 @@ func findLastWithStateRecursive(
 	updates []model.ScoreUpdate,
 	filter func(updates model.ScoreUpdate, state interface{}) bool,
 	initialState interface{},
-	updateState func(
-		update model.ScoreUpdate, state interface{},
-	) interface{},
+	updateState func(update model.ScoreUpdate, state interface{}) interface{},
 ) (model.ScoreUpdate, nestedIndex, interface{}) {
 	curr := initialState
 	for i := len(updates) - 1; i >= 0; i-- {
@@ -347,38 +407,46 @@ func findLastWithStateRecursive(
 
 // ImportMusicXML translates a MusicXML file into Alda score updates
 // ImportMusicXML requires valid MusicXML with a "score-partwise" root tag
-func ImportMusicXML(r io.Reader) ([]model.ScoreUpdate, error) {
+func ImportMusicXML(b []byte) ([]model.ScoreUpdate, error) {
 	doc := etree.NewDocument()
 
-	_, err := doc.ReadFrom(r)
+	err := doc.ReadFromBytes(b)
 	if err != nil {
-		return nil, err
+		return nil, help.UserFacingErrorf(
+			"Failed to read from input: %s.", err.Error(),
+		)
 	}
 
 	scorePartwise := doc.SelectElement("score-partwise")
 	scoreTimewise := doc.SelectElement("score-timewise")
 
 	if scorePartwise == nil && scoreTimewise != nil {
+		// The vast majority of applications export directly to score-partwise.
+		// Applying the XSLT here in Go would require many additional deps, and
+		// the user should be able to do so themselves somewhat easily.
 		return nil, help.UserFacingErrorf(
-			`Issue importing MusicXML file: please convert to %s instead of %s using XSLT before importing`,
-			color.Aurora.BrightYellow("score-partwise"),
+			"Issue importing MusicXML: please convert input from %s to %s format (MusicXML provides an XSLT stylesheet to perform this conversion)",
 			color.Aurora.BrightYellow("score-timewise"),
+			color.Aurora.BrightYellow("score-partwise"),
 		)
 	} else if scorePartwise == nil {
 		return nil, help.UserFacingErrorf(
-			`Issue importing MusicXML file: could not last %s root tag`,
+			"Issue importing MusicXML: could not find %s root tag",
 			color.Aurora.BrightYellow("score-partwise"),
 		)
+	}
+
+	version := scorePartwise.SelectAttrValue("version", "")
+	if version != "3.1" {
+		log.Warn().Msg(fmt.Sprintf(
+			`MusicXML import supports version %s. Behaviour may be undefined with provided version %s.`,
+			color.Aurora.BrightYellow("3.1"),
+			color.Aurora.BrightYellow(version),
+		))
 	}
 
 	importer := newMusicXMLImporter()
 	handle(scorePartwise, importer)
 
-	// We optimize the updates for each voice to generate more idiomatic Alda
-	for _, part := range importer.parts {
-		for _, voice := range part.voices {
-			voice.updates = optimize(voice.updates)
-		}
-	}
 	return importer.generateScoreUpdates(), nil
 }

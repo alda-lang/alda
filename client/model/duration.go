@@ -151,6 +151,36 @@ func (nl NoteLengthMs) Ms(tempo float64) float64 {
 	return nl.Quantity
 }
 
+// NoteLengthSeconds expresses a duration as a specific number of seconds.
+type NoteLengthSeconds struct {
+	Quantity float64
+}
+
+func (nl NoteLengthSeconds) Validate() error {
+	if nl.Quantity <= 0 {
+		return help.UserFacingErrorf(
+			`The number of seconds must be positive.`,
+		)
+	}
+
+	return nil
+}
+
+// JSON implements RepresentableAsJSON.JSON.
+func (nl NoteLengthSeconds) JSON() *json.Container {
+	return json.Object("s", nl.Quantity)
+}
+
+func (nl NoteLengthSeconds) Beats() float64 {
+	panic("A second note length cannot be expressed in beats")
+}
+
+// Ms implements DurationComponent.Ms by describing a specific number of
+// milliseconds.
+func (nl NoteLengthSeconds) Ms(tempo float64) float64 {
+	return nl.Quantity * 1000
+}
+
 // Duration describes the length of time occupied by a note or other event.
 type Duration struct {
 	Components []DurationComponent

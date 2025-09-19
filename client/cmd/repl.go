@@ -22,7 +22,7 @@ var replMessage string
 
 func init() {
 	replCmd.Flags().StringVarP(
-		&replHost, "host", "H", "localhost", "The hostname of the Alda REPL server",
+		&replHost, "host", "H", "127.0.0.1", "The hostname of the Alda REPL server",
 	)
 
 	replCmd.Flags().IntVarP(
@@ -84,7 +84,7 @@ func sendREPLMessage(host string, port int, message string) error {
 		return err
 	}
 
-	fmt.Println(json.ToJson(res))
+	fmt.Println(json.ToJSON(res))
 
 	if len(repl.ResponseErrors(res)) > 0 {
 		return help.UserFacingErrorf(

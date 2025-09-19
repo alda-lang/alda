@@ -47,9 +47,6 @@ type ScoreEvent interface {
 //
 // Scores are built up via events (structs which implement ScoreUpdate) that
 // update aspects of the score data.
-//
-// chordMode: When true, notes/rests added to the score are placed at the same
-// offset. Otherwise, they are appended sequentially.
 type Score struct {
 	Parts            []*Part
 	CurrentParts     []*Part
@@ -58,7 +55,10 @@ type Score struct {
 	GlobalAttributes *GlobalAttributes
 	Markers          map[string]float64
 	Variables        map[string][]ScoreUpdate
-	chordMode        bool
+	midiChannelUsage midiChannelUsage
+	// When true, notes/rests added to the score are placed at the same offset.
+	// Otherwise, they are appended sequentially.
+	chordMode bool
 }
 
 // JSON implements RepresentableAsJSON.JSON.
@@ -117,6 +117,7 @@ func NewScore() *Score {
 		GlobalAttributes: NewGlobalAttributes(),
 		Markers:          map[string]float64{},
 		Variables:        map[string][]ScoreUpdate{},
+		midiChannelUsage: [16][]*Part{},
 	}
 }
 
@@ -136,6 +137,16 @@ func (score *Score) Update(updates ...ScoreUpdate) error {
 
 // Tracks returns a map of Part instances to track numbers for the purposes of
 // transmitting score data.
+//
+// NOTE: We are using the term "track" as distinct from the concept of a MIDI
+// channel, with the expectation that we will eventually support multiple kinds
+// of tracks besides MIDI instruments.
+//
+// For our purposes, a "track" is simply an identifier to an instrument/part on
+// the player side; these map one-to-one with the parts in an Alda score, on the
+// client side. In cases where there are more parts in a score than there are
+// available MIDI channels, a single MIDI channel can include the notes of
+// multiple parts.
 func (score *Score) Tracks() map[*Part]int32 {
 	tracks := map[*Part]int32{}
 

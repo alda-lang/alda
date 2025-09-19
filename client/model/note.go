@@ -1,6 +1,7 @@
 package model
 
 import (
+	"alda.io/client/help"
 	"alda.io/client/json"
 	log "alda.io/client/logging"
 )
@@ -39,6 +40,7 @@ func (note Note) JSON() *json.Container {
 // the note e.g. on a MIDI sequencer/synthesizer.
 type NoteEvent struct {
 	Part            *Part
+	MidiChannel     int32
 	MidiNote        int32
 	Offset          float64
 	Duration        float64
@@ -52,6 +54,7 @@ type NoteEvent struct {
 func (note NoteEvent) JSON() *json.Container {
 	return json.Object(
 		"part", note.Part.ID(),
+		"midi-channel", note.MidiChannel,
 		"midi-note", note.MidiNote,
 		"offset", note.Offset,
 		"duration", note.Duration,
@@ -92,15 +95,17 @@ func addNoteOrRest(score *Score, noteOrRest ScoreUpdate) error {
 	// (To apply the change one time in the case of a chord, we call
 	// score.ApplyGlobalAttributes() as part of the chord score update).
 	if !score.chordMode {
-		score.ApplyGlobalAttributes()
+		if err := score.ApplyGlobalAttributes(); err != nil {
+			return err
+		}
 	}
 
 	var specifiedDuration Duration
-	switch noteOrRest.(type) {
+	switch noteOrRest := noteOrRest.(type) {
 	case Note:
-		specifiedDuration = noteOrRest.(Note).Duration
+		specifiedDuration = noteOrRest.Duration
 	case Rest:
-		specifiedDuration = noteOrRest.(Rest).Duration
+		specifiedDuration = noteOrRest.Duration
 	}
 
 	if err := specifiedDuration.Validate(); err != nil {
@@ -111,22 +116,33 @@ func addNoteOrRest(score *Score, noteOrRest ScoreUpdate) error {
 		duration := effectiveDuration(specifiedDuration, part)
 		durationMs := duration.Ms(part.Tempo) * part.TimeScale
 
-		switch noteOrRest.(type) {
+		switch noteOrRest := noteOrRest.(type) {
 		case Note:
-			note := noteOrRest.(Note)
-
 			audibleDurationMs := durationMs
-			if !note.Slurred {
+			if !noteOrRest.Slurred {
 				audibleDurationMs *= part.Quantization
 			}
 
 			if audibleDurationMs > 0 {
-				midiNote := note.Pitch.CalculateMidiNote(
+				midiNote := noteOrRest.Pitch.CalculateMidiNote(
 					part.Octave, part.KeySignature, part.Transposition,
 				)
 
+				if midiNote < 0 || midiNote > 127 {
+					return help.UserFacingErrorf("MIDI note out of the 0-127 range. Input note: %d", midiNote)
+				}
+
+				midiChannel, err := score.assignMidiChannel(part, audibleDurationMs)
+				if err != nil {
+					return err
+				}
+
+				part.MidiChannel = midiChannel
+				part.origin.MidiChannel = midiChannel
+
 				noteEvent := NoteEvent{
 					Part:            part.origin,
+					MidiChannel:     midiChannel,
 					MidiNote:        midiNote,
 					Offset:          part.CurrentOffset,
 					Duration:        durationMs,
@@ -143,6 +159,13 @@ func addNoteOrRest(score *Score, noteOrRest ScoreUpdate) error {
 					Float64("Duration", noteEvent.Duration).
 					Msg("Adding note.")
 
+				// TODO: Consider proactively sorting `score.Events` by offset. This
+				// might help to speed up MIDI channel availability checks, if we need
+				// to.
+				//
+				// It might also be helpful to proactively sort by MIDI channel.
+				//
+				// See `complexCheck` in `model/midi.go`.
 				score.Events = append(score.Events, noteEvent)
 			}
 		}

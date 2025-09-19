@@ -53,24 +53,20 @@ func systemTempoMsg(offset int32, tempo float32) *osc.Message {
 	return msg
 }
 
-func midiPatchMsg(track int32, offset int32, patch int32) *osc.Message {
+func midiPatchMsg(track int32, channel int32, offset int32, patch int32) *osc.Message {
 	msg := osc.NewMessage(fmt.Sprintf("/track/%d/midi/patch", track))
+	msg.Append(channel)
 	msg.Append(offset)
 	msg.Append(patch)
 	return msg
 }
 
-func midiPercussionMsg(track int32, offset int32) *osc.Message {
-	msg := osc.NewMessage(fmt.Sprintf("/track/%d/midi/percussion", track))
-	msg.Append(offset)
-	return msg
-}
-
 func midiNoteMsg(
-	track int32, offset int32, note int32, duration int32, audibleDuration int32,
-	velocity int32,
+	track int32, channel int32, offset int32, note int32, duration int32,
+	audibleDuration int32, velocity int32,
 ) *osc.Message {
 	msg := osc.NewMessage(fmt.Sprintf("/track/%d/midi/note", track))
+	msg.Append(channel)
 	msg.Append(offset)
 	msg.Append(note)
 	msg.Append(duration)
@@ -79,22 +75,24 @@ func midiNoteMsg(
 	return msg
 }
 
-func midiVolumeMsg(track int32, offset int32, volume int32) *osc.Message {
+func midiVolumeMsg(track int32, channel int32, offset int32, volume int32) *osc.Message {
 	msg := osc.NewMessage(fmt.Sprintf("/track/%d/midi/volume", track))
+	msg.Append(channel)
 	msg.Append(offset)
 	msg.Append(volume)
 	return msg
 }
 
-func midiPanningMsg(track int32, offset int32, panning int32) *osc.Message {
+func midiPanningMsg(track int32, channel int32, offset int32, panning int32) *osc.Message {
 	msg := osc.NewMessage(fmt.Sprintf("/track/%d/midi/panning", track))
+	msg.Append(channel)
 	msg.Append(offset)
 	msg.Append(panning)
 	return msg
 }
 
 func oscClient(port int) *osc.Client {
-	return osc.NewClient("localhost", int(port), osc.ClientProtocol(osc.TCP))
+	return osc.NewClient("127.0.0.1", int(port), osc.ClientProtocol(osc.TCP))
 }
 
 // TransmitMidiExportMessage sends a "MIDI export" message to a player process.
@@ -198,11 +196,11 @@ func tempoMessages(
 	return messages
 }
 
-// TransmitScore implements Transmitter.TransmitScore by sending OSC messages to
-// instruct a player process how to perform the score.
-func (oe OSCTransmitter) TransmitScore(
+// ScoreToOSCBundle returns the OSC bundle that should be sent to an Alda player
+// process in order to transmit the provided score.
+func (oe OSCTransmitter) ScoreToOSCBundle(
 	score *model.Score, opts ...TransmissionOption,
-) error {
+) (*osc.Bundle, error) {
 	ctx := &TransmissionContext{toIndex: -1}
 	for _, opt := range opts {
 		opt(ctx)
@@ -224,7 +222,7 @@ func (oe OSCTransmitter) TransmitScore(
 	if ctx.from != "" {
 		offset, err := score.InterpretOffsetReference(ctx.from)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		startOffset = offset
@@ -233,7 +231,7 @@ func (oe OSCTransmitter) TransmitScore(
 	if ctx.to != "" {
 		offset, err := score.InterpretOffsetReference(ctx.to)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		endOffset = offset
@@ -243,8 +241,8 @@ func (oe OSCTransmitter) TransmitScore(
 
 	// In order to support features like:
 	//
-	// * Avoiding scheduling more volume and panning control change messages than
-	//   we have to (see below).
+	// * Avoiding scheduling more program, volume, and panning control change
+	//   messages than we have to (see below).
 	//
 	// * Playing just a slice of a score, e.g. `alda play --from 0:05 --to 0:10`
 	//
@@ -253,37 +251,6 @@ func (oe OSCTransmitter) TransmitScore(
 	sort.Slice(events, func(i, j int) bool {
 		return events[i].EventOffset() < events[j].EventOffset()
 	})
-
-	// In Alda's model, the track volume and panning are an attribute of each
-	// individual note. However, in MIDI, these attributes are set persistently on
-	// a channel via a control change message.
-	//
-	// To make this work, as we're scheduling the events of the score in
-	// chonological order, we keep track of the volume and panning attributes for
-	// each track, so that we can send volume and panning control changes only
-	// when necessary (when the values change).
-	currentVolume := map[int32]float64{}
-	currentPanning := map[int32]float64{}
-
-	tracks := score.Tracks()
-
-	for part, trackNumber := range tracks {
-		currentVolume[trackNumber] = -1
-		currentPanning[trackNumber] = -1
-
-		// We currently only have MIDI instruments. This might change in the future,
-		// which is why Instrument is an interface instead of a plain struct. For
-		// now, we're operating under the assumption that all instruments are MIDI
-		// instruments.
-		stockInstrument := part.StockInstrument.(model.MidiInstrument)
-
-		patchNumber := stockInstrument.PatchNumber
-		bundle.Append(midiPatchMsg(trackNumber, 0, patchNumber))
-
-		if stockInstrument.IsPercussion {
-			bundle.Append(midiPercussionMsg(trackNumber, 0))
-		}
-	}
 
 	// Append tempo messages to the score, based on the tempo changes in the
 	// score. (See *Score.TempoItinerary.)
@@ -311,6 +278,20 @@ func (oe OSCTransmitter) TransmitScore(
 	// of the score.
 	scoreLength := 0.0
 
+	// In Alda's model, properties like patch (program) number, volume, and
+	// panning are attributes of each individual note. However, in MIDI, these
+	// attributes are set persistently on a channel via a control change message.
+	//
+	// To make this work, as we're scheduling the events of the score in
+	// chronological order, we keep track of these attribute values for each
+	// channel, so that we can send the control changes only when necessary (when
+	// the values change).
+	channelPatch := map[int32]int32{}
+	channelVolume := map[int32]float64{}
+	channelPanning := map[int32]float64{}
+
+	tracks := score.Tracks()
+
 	for _, event := range events {
 		eventOffset := event.EventOffset()
 
@@ -325,10 +306,9 @@ func (oe OSCTransmitter) TransmitScore(
 			break
 		}
 
-		switch event.(type) {
+		switch event := event.(type) {
 		case model.NoteEvent:
-			noteEvent := event.(model.NoteEvent)
-			track := tracks[noteEvent.Part]
+			track := tracks[event.Part]
 
 			// We subtract `startOffset` from the offset so that when the `--from`
 			// option is used (e.g. `--from 0:30`), we will shift all of the events
@@ -338,7 +318,7 @@ func (oe OSCTransmitter) TransmitScore(
 			//
 			// By default, `startOffset` is 0, so the usual scenario is that the event
 			// offsets are not adjusted.
-			offset := noteEvent.Offset - startOffset
+			offset := event.Offset - startOffset
 
 			// When sync offsets are provided, we subtract the specified offset for
 			// each part from its events. (When syncOffsets isn't provided, or when
@@ -350,48 +330,91 @@ func (oe OSCTransmitter) TransmitScore(
 			// If they are used together, the behavior is unspecified (we would
 			// probably subtract too much from each offset and the features wouldn't
 			// work the way they're supposed to.)
-			offset -= ctx.syncOffsets[noteEvent.Part]
+			offset -= ctx.syncOffsets[event.Part]
 
 			// The OSC API works with offsets that are ints, not floats, so we do the
 			// rounding here and work with the int value from here onward.
 			offsetRounded := int32(math.Round(offset))
 
-			if noteEvent.TrackVolume != currentVolume[track] {
-				currentVolume[track] = noteEvent.TrackVolume
+			/////////////////////////////////////////////////////////////////////////
+			// Insert a program control change message, if needed
+			/////////////////////////////////////////////////////////////////////////
+
+			// Channel 9 is for percussion only; program changes are not relevant on
+			// that channel.
+			if event.MidiChannel != 9 {
+				// We currently only have MIDI instruments. This might change in the
+				// future, which is why Instrument is an interface instead of a plain
+				// struct. For now, we're operating under the assumption that all
+				// instruments are MIDI instruments.
+				thisPatch := event.Part.StockInstrument.(model.MidiInstrument).PatchNumber
+
+				currentPatch, recorded := channelPatch[event.MidiChannel]
+
+				if !recorded || thisPatch != currentPatch {
+					channelPatch[event.MidiChannel] = thisPatch
+
+					bundle.Append(
+						midiPatchMsg(track, event.MidiChannel, offsetRounded, thisPatch),
+					)
+				}
+			}
+
+			/////////////////////////////////////////////////////////////////////////
+			// Insert a volume control change message, if needed
+			/////////////////////////////////////////////////////////////////////////
+
+			currentVolume, recorded := channelVolume[event.MidiChannel]
+
+			if !recorded || event.TrackVolume != currentVolume {
+				channelVolume[event.MidiChannel] = event.TrackVolume
 
 				bundle.Append(
 					midiVolumeMsg(
 						track,
+						event.MidiChannel,
 						offsetRounded,
-						int32(math.Round(noteEvent.TrackVolume*127)),
+						int32(math.Round(event.TrackVolume*127)),
 					),
 				)
 			}
 
-			if noteEvent.Panning != currentPanning[track] {
-				currentPanning[track] = noteEvent.Panning
+			/////////////////////////////////////////////////////////////////////////
+			// Insert a panning control change message, if needed
+			/////////////////////////////////////////////////////////////////////////
+
+			currentPanning, recorded := channelPanning[event.MidiChannel]
+
+			if !recorded || event.Panning != currentPanning {
+				channelPanning[event.MidiChannel] = event.Panning
 
 				bundle.Append(
 					midiPanningMsg(
 						track,
+						event.MidiChannel,
 						offsetRounded,
-						int32(math.Round(noteEvent.Panning*127)),
+						int32(math.Round(event.Panning*127)),
 					),
 				)
 			}
 
+			/////////////////////////////////////////////////////////////////////////
+			// Insert a message for the note
+			/////////////////////////////////////////////////////////////////////////
+
 			bundle.Append(midiNoteMsg(
 				track,
+				event.MidiChannel,
 				offsetRounded,
-				noteEvent.MidiNote,
-				int32(math.Round(noteEvent.Duration)),
-				int32(math.Round(noteEvent.AudibleDuration)),
-				int32(math.Round(noteEvent.Volume*127)),
+				event.MidiNote,
+				int32(math.Round(event.Duration)),
+				int32(math.Round(event.AudibleDuration)),
+				int32(math.Round(event.Volume*127)),
 			))
 
-			scoreLength = math.Max(scoreLength, offset+noteEvent.AudibleDuration)
+			scoreLength = math.Max(scoreLength, offset+event.AudibleDuration)
 		default:
-			return fmt.Errorf("unsupported event: %#v", event)
+			return nil, fmt.Errorf("unsupported event: %#v", event)
 		}
 	}
 
@@ -401,6 +424,19 @@ func (oe OSCTransmitter) TransmitScore(
 
 	if ctx.oneOff {
 		bundle.Append(systemShutdownMsg(int32(math.Round(scoreLength + 10000))))
+	}
+
+	return bundle, nil
+}
+
+// TransmitScore implements Transmitter.TransmitScore by sending OSC messages to
+// instruct a player process how to perform the score.
+func (oe OSCTransmitter) TransmitScore(
+	score *model.Score, opts ...TransmissionOption,
+) error {
+	bundle, err := oe.ScoreToOSCBundle(score, opts...)
+	if err != nil {
+		return err
 	}
 
 	log.Debug().

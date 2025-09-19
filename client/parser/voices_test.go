@@ -13,7 +13,7 @@ func TestVoices(t *testing.T) {
 		parseTestCase{
 			label: "part with voice",
 			given: "piano: V1: a b c",
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				model.PartDeclaration{Names: []string{"piano"}},
 				model.VoiceMarker{VoiceNumber: 1},
 				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.A}},
@@ -26,7 +26,7 @@ func TestVoices(t *testing.T) {
 			given: `piano:
 			V1: a b c
 			V2: d e f`,
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				model.PartDeclaration{Names: []string{"piano"}},
 				model.VoiceMarker{VoiceNumber: 1},
 				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.A}},
@@ -42,7 +42,7 @@ func TestVoices(t *testing.T) {
 			label: "part with two voices separated by a barline",
 			given: `piano:
 			V1: a b c | V2: d e f`,
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				model.PartDeclaration{Names: []string{"piano"}},
 				model.VoiceMarker{VoiceNumber: 1},
 				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.A}},
@@ -60,7 +60,7 @@ func TestVoices(t *testing.T) {
 			given: `piano:
 			V1: [a b c] *8
 			V2: [d e f] *8`,
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				model.PartDeclaration{Names: []string{"piano"}},
 				model.VoiceMarker{VoiceNumber: 1},
 				repeat(
@@ -88,7 +88,7 @@ func TestVoices(t *testing.T) {
 			V1: c
 			V2: e
 			V0: g`,
-			expect: []model.ScoreUpdate{
+			expectUpdates: []model.ScoreUpdate{
 				model.PartDeclaration{Names: []string{"piano"}},
 				model.VoiceMarker{VoiceNumber: 1},
 				model.Note{Pitch: model.LetterAndAccidentals{NoteLetter: model.C}},

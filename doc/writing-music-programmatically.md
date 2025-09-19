@@ -69,13 +69,15 @@ Loop).
 > live-coding library][write-your-own-alda-library] in that language and adding it
 > to this list. It's surprisingly easy!
 
-| Language | Library    | Author         |
-|----------|------------|----------------|
-| Clojure  | [alda-clj] | Dave Yarwood   |
-| Ruby     | [alda-rb]  | Ulysses Zhan   |
-| Julia    | [Alda.jl]  | Ismael Venegas |
+| Language | Library       | Author         |
+|----------|---------------|----------------|
+| Clojure  | [alda-clj]    | Dave Yarwood   |
+| Ruby     | [alda-rb]     | Ulysses Zhan   |
+| Julia    | [Alda.jl]     | Ismael Venegas |
+| Python   | [alda-python] | Nicola Vitucci |
 
 [alda-clj]: https://github.com/daveyarwood/alda-clj
 [alda-rb]: https://github.com/UlyssesZh/alda-rb
 [Alda.jl]: https://github.com/SalchiPapa/Alda.jl
+[alda-python]: https://github.com/nvitucci/alda-python
 [write-your-own-alda-library]: implementing-an-alda-library.md

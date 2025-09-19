@@ -3,6 +3,7 @@ package io.alda.player
 import com.beust.klaxon.Klaxon
 import java.io.File
 import java.nio.file.Paths
+import java.lang.management.ManagementFactory
 import java.time.Duration
 import java.time.Instant
 import java.util.Date
@@ -13,7 +14,9 @@ import mu.KotlinLogging
 private val json = Klaxon()
 private val log = KotlinLogging.logger {}
 
-class PlayerState(val port : Int, var expiry : Long, var state : String)
+class PlayerState(
+  val port : Int, var expiry : Long, var state : String, val pid: Long?
+)
 
 class StateManager(val port : Int) {
   val thread = thread(start = false) {
@@ -45,10 +48,23 @@ class StateManager(val port : Int) {
   // aren't left hanging around, running idle in the background.
   val inactivityTimeoutMs = Random.nextInt(5 * 60000, 10 * 60000)
 
+  fun currentPid() : Long? {
+    // NOTE: Starting in Java 9, you can just do this to get the current PID:
+    //
+    // ProcessHandle.current().pid()
+    //
+    // But we are targeting Java 8 compatibility, so we have to do this
+    // craziness instead:
+    val beanName = ManagementFactory.getRuntimeMXBean().getName()
+    return beanName.split("@")[0].toLongOrNull()
+  }
+
   val state = PlayerState(
     port,
     System.currentTimeMillis() + inactivityTimeoutMs,
-    "starting")
+    "starting",
+    currentPid()
+  )
 
   val stateFilesDir =
     Paths.get(projDirs.cacheDir, "state", "players").toString()

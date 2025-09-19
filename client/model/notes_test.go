@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	_ "alda.io/client/testing"
@@ -483,6 +484,139 @@ func TestNotes(t *testing.T) {
 			expectations: []scoreUpdateExpectation{
 				expectNoteAudibleDurations(500),
 				expectMidiNoteNumbers(67),
+			},
+		},
+		scoreUpdateTestCase{
+			// r4. (pause) c2.
+			label: "Rest with implicit duration from previous rest",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				Rest{
+					Duration: Duration{
+						Components: []DurationComponent{
+							NoteLength{Denominator: 4, Dots: 1},
+						},
+					},
+				},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "pause"},
+				}},
+				Note{
+					Pitch: LetterAndAccidentals{NoteLetter: C},
+					Duration: Duration{
+						Components: []DurationComponent{
+							NoteLength{Denominator: 2, Dots: 1},
+						},
+					},
+				},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectNoteOffsets(1500),
+				expectNoteDurations(1500),
+			},
+		},
+		scoreUpdateTestCase{
+			// c4. (pause) c2.
+			label: "Rest with implicit duration from previous note",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				Note{
+					Pitch: LetterAndAccidentals{NoteLetter: C},
+					Duration: Duration{
+						Components: []DurationComponent{
+							NoteLength{Denominator: 4, Dots: 1},
+						},
+					},
+				},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "pause"},
+				}},
+				Note{
+					Pitch: LetterAndAccidentals{NoteLetter: C},
+					Duration: Duration{
+						Components: []DurationComponent{
+							NoteLength{Denominator: 2, Dots: 1},
+						},
+					},
+				},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectNoteOffsets(0, 1500),
+				expectNoteDurations(750, 1500),
+			},
+		},
+		scoreUpdateTestCase{
+			// (pause (note-length 4)) c2.
+			label: "Rest with note length 4",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "pause"},
+					LispList{Elements: []LispForm{
+						LispSymbol{Name: "note-length"},
+						LispNumber{Value: 4},
+					}},
+				}},
+				Note{
+					Pitch: LetterAndAccidentals{NoteLetter: C},
+					Duration: Duration{
+						Components: []DurationComponent{
+							NoteLength{Denominator: 2, Dots: 1},
+						},
+					},
+				},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectNoteOffsets(500),
+				expectNoteDurations(1500),
+			},
+		},
+		scoreUpdateTestCase{
+			// (pause (duration (ms 12345))) c2.
+			label: "Rest with duration of 12345ms",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "pause"},
+					LispList{Elements: []LispForm{
+						LispSymbol{Name: "duration"},
+						LispList{Elements: []LispForm{
+							LispSymbol{Name: "ms"},
+							LispNumber{Value: 12345},
+						}},
+					}},
+				}},
+				Note{
+					Pitch: LetterAndAccidentals{NoteLetter: C},
+					Duration: Duration{
+						Components: []DurationComponent{
+							NoteLength{Denominator: 2, Dots: 1},
+						},
+					},
+				},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectNoteOffsets(12345),
+				expectNoteDurations(1500),
+			},
+		},
+		scoreUpdateTestCase{
+			// alda play -c 'piano: o10 c' - MIDI note out of range
+			label: "C note with MIDI value out of range",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				AttributeUpdate{PartUpdate: OctaveSet{OctaveNumber: 10}},
+				Note{
+					Pitch: LetterAndAccidentals{NoteLetter: C},
+				},
+			},
+			errorExpectations: []scoreUpdateErrorExpectation{
+				func(err error) error {
+					if !strings.Contains(err.Error(), "MIDI note out of the 0-127 range") {
+						return err
+					}
+					return nil
+				},
 			},
 		},
 	)

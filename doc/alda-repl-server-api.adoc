@@ -23,6 +23,22 @@ $ alda repl --client --port 34223 --message '{"op": "score-text"}'
 
 == Operations
 
+=== `describe`
+
+Returns information on the Alda REPL server.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+{blank}
+
+Returns::
+* `ops` - the operations available on the Alda REPL server
+* `problems` if there were any
+* `status`
+* `versions` - Alda version information
+
 === `eval-and-play`
 
 Parses the provided input in the context of the current score, updates the score
@@ -117,6 +133,22 @@ marker name (e.g. `chorus`), representing where in the score to stop playing
 Returns::
 * `status`
 * `problems` if there were any
+
+=== `score-ast`
+
+Returns the parsed AST of the current score. (This is the output that you get
+when you run `alda parse -o ast ...` at the command line.)
+
+Required parameters::
+{blank}
+
+Optional parameters::
+{blank}
+
+Returns::
+* `status`
+* `problems` if there were any
+* `ast` - the parsed AST of the current score, as a JSON string
 
 === `score-data`
 

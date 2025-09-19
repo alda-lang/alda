@@ -31,6 +31,12 @@ func (repeat Repeat) JSON() *json.Container {
 // UpdateScore implements ScoreUpdate.UpdateScore by repeatedly updating the
 // score with an event a specified number of times.
 func (repeat Repeat) UpdateScore(score *Score) error {
+	previousRepetitions := make([]int32, len(score.CurrentParts))
+
+	for i, part := range score.CurrentParts {
+		previousRepetitions[i] = part.currentRepetition
+	}
+
 	for repetition := int32(1); repetition <= repeat.Times; repetition++ {
 		for _, part := range score.CurrentParts {
 			part.currentRepetition = repetition
@@ -41,6 +47,10 @@ func (repeat Repeat) UpdateScore(score *Score) error {
 		}
 	}
 
+	for i, part := range score.CurrentParts {
+		part.currentRepetition = previousRepetitions[i]
+	}
+
 	return nil
 }
 
@@ -48,12 +58,14 @@ func (repeat Repeat) UpdateScore(score *Score) error {
 // of the event being repeated the specified number of times.
 func (repeat Repeat) DurationMs(part *Part) float64 {
 	durationMs := 0.0
+	previousRepetition := part.currentRepetition
 
 	for repetition := int32(1); repetition <= repeat.Times; repetition++ {
 		part.currentRepetition = repetition
 		durationMs += repeat.Event.DurationMs(part)
 	}
 
+	part.currentRepetition = previousRepetition
 	return durationMs
 }
 

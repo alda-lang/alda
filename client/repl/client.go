@@ -1,11 +1,8 @@
-// vim: tabstop=2
-
 package repl
 
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"os"
 	"path/filepath"
@@ -19,6 +16,7 @@ import (
 	"alda.io/client/help"
 	"alda.io/client/json"
 	log "alda.io/client/logging"
+	"alda.io/client/parser"
 	"alda.io/client/system"
 	"alda.io/client/util"
 	"github.com/chzyer/readline"
@@ -115,7 +113,7 @@ func init() {
 				}
 				binaryData := []byte(res["binary-data"].(string))
 
-				return ioutil.WriteFile(filename, binaryData, 0644)
+				return os.WriteFile(filename, binaryData, 0644)
 			},
 		},
 
@@ -226,7 +224,7 @@ file into the REPL server.`,
 					return invalidArgsError(args)
 				}
 
-				contents, err := ioutil.ReadFile(client.inputFilepath)
+				contents, err := os.ReadFile(client.inputFilepath)
 				if err != nil {
 					return err
 				}
@@ -258,10 +256,30 @@ file into the REPL server.`,
 			},
 		},
 
+		"parts": {
+			helpSummary: "Displays information about the parts in the current score.",
+			run: func(client *Client, argsString string) error {
+				scoreData, err := client.scoreData()
+				if err != nil {
+					return err
+				}
+
+				parts := scoreData.Search("parts")
+				if parts.Data() == nil {
+					return fmt.Errorf("server response missing information about parts")
+				}
+
+				printPartsInfo(parts)
+				fmt.Println()
+
+				return nil
+			},
+		},
+
 		"play": {
 			helpSummary: "Plays the current score.",
-			helpDetails: `Can take optional ` + "`from`" + `and ` + "`to`" +
-				`arguments, in the form of markers or mm:ss
+			helpDetails: `Can take optional ` + "`from`" + ` and ` + "`to`" +
+				` arguments, in the form of markers or mm:ss
 times.
 
 Without arguments, will play the entire score from beginning to end.
@@ -359,7 +377,7 @@ arguments will save the updated score to the same file.`,
 					return err
 				}
 
-				return ioutil.WriteFile(client.inputFilepath, []byte(scoreText), 0644)
+				return os.WriteFile(client.inputFilepath, []byte(scoreText), 0644)
 			},
 		},
 
@@ -381,7 +399,11 @@ arguments will save the updated score to the same file.`,
 
   Print the parsed events output of the score (This is the output that you get
   when you run ` + "`alda parse -o events ...`" + ` at the command line.):
-    :score events`,
+    :score events
+
+  Print the parsed AST output of the score (This is the output that you get
+  when you run ` + "`alda parse -o ast-human ...`" + ` at the command line.):
+    :score ast`,
 			run: func(client *Client, argsString string) error {
 				args, err := shlex.Split(argsString)
 				if err != nil {
@@ -424,6 +446,14 @@ arguments will save the updated score to the same file.`,
 					}
 
 					fmt.Println(scoreEvents.StringIndent("", "  "))
+
+				case "ast":
+					scoreAST, err := client.scoreAST()
+					if err != nil {
+						return err
+					}
+
+					fmt.Println(parser.HumanReadableAST(scoreAST))
 
 				case "info":
 					scoreData, err := client.scoreData()
@@ -821,12 +851,26 @@ func (client *Client) scoreEvents() (*json.Container, error) {
 	return json.ParseJSON([]byte(res["events"].(string)))
 }
 
-func printScoreInfo(scoreData *json.Container) error {
-	parts := scoreData.Search("parts")
-	if parts.Data() == nil {
-		return fmt.Errorf("server response missing information about parts")
+func (client *Client) scoreAST() (*json.Container, error) {
+	res, err := client.sendRequest(
+		map[string]interface{}{"op": "score-ast"},
+	)
+	if err != nil {
+		return nil, err
 	}
 
+	switch res["ast"].(type) {
+	case string: // OK to proceed
+	default:
+		return nil, fmt.Errorf(
+			"the response from the REPL server did not contain the score AST",
+		)
+	}
+
+	return json.ParseJSON([]byte(res["ast"].(string)))
+}
+
+func printPartsInfo(parts *json.Container) {
 	fmt.Println("Parts:")
 
 	if len(parts.ChildrenMap()) == 0 {
@@ -840,8 +884,13 @@ func printScoreInfo(scoreData *json.Container) error {
 			)
 		}
 	}
+}
 
-	fmt.Println()
+func printScoreInfo(scoreData *json.Container) error {
+	parts := scoreData.Search("parts")
+	if parts.Data() == nil {
+		return fmt.Errorf("server response missing information about parts")
+	}
 
 	currentParts := scoreData.Search("current-parts")
 	if currentParts.Data() == nil {
@@ -849,6 +898,10 @@ func printScoreInfo(scoreData *json.Container) error {
 			"server response missing information about current parts",
 		)
 	}
+
+	printPartsInfo(parts)
+
+	fmt.Println()
 
 	fmt.Println("Current parts:")
 
