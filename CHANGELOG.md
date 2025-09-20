@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2.3.3 (2025-09-19)
+
+* Alda now officially supports Linux on a wider range of ARM devices. This includes both 32-bit (e.g. Raspberry Pi 2/3) and 64-bit (e.g. Raspberry Pi 4 and newer) processors.
+
 ## 2.3.2 (2025-05-20)
 
 * Fixed [an issue][issue-401] where nested repeats weren't working as expected.
