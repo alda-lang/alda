@@ -3,6 +3,57 @@ version: 2.1
 orbs:
   win: circleci/windows@2.2.0
 
+commands:
+  run_linux_tests:
+    description: "Installs Alda and runs tests on a Linux environment."
+    parameters:
+      arch:
+        type: string
+        description: "The architecture to test (e.g., amd64, arm64)"
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: Verify architecture and Java version
+          command: |
+            echo "Architecture: $(uname -m)"
+            echo "Java Version:"
+            java -version
+      - run:
+          name: Install alda and alda-player (<< parameters.arch >>)
+          working_directory: /tmp/workspace/build
+          command: |
+            mkdir -p /home/circleci/bin
+            cp client/linux-<< parameters.arch >>/alda /home/circleci/bin/
+            cp player/non-windows/alda-player /home/circleci/bin/
+            chmod +x /home/circleci/bin/alda
+            chmod +x /home/circleci/bin/alda-player
+            export PATH="/home/circleci/bin:$PATH"
+            export ALDA_DISABLE_SPAWNING=yes
+            export ALDA_DISABLE_TELEMETRY=yes
+            alda version
+            alda-player info
+      - run:
+          name: alda doctor
+          command: |
+            export PATH="/home/circleci/bin:$PATH"
+            export ALDA_DISABLE_SPAWNING=yes
+            export ALDA_DISABLE_TELEMETRY=yes
+            alda -v3 doctor --no-audio
+      - run:
+          name: "Troubleshooting: player logs"
+          command: cat /home/circleci/.cache/alda/logs/alda-player.log
+          when: on_fail
+      - run:
+          name: "Test `alda update` mechanism"
+          command: |
+            export PATH="/home/circleci/bin:$PATH"
+            export ALDA_DISABLE_SPAWNING=yes
+            export ALDA_DISABLE_TELEMETRY=yes
+            alda -v3 update --yes --version 2.2.6
+            alda version | grep 2.2.6
+            alda-player info | grep 2.2.6
+
 # All of the jobs below have filters that appear superfluous, but the filters
 # are actually required because if one job has tag filters, then every job
 # upstream (i.e.  directly or transitively required by said job) is required to
@@ -23,6 +74,13 @@ workflows:
             tags:
               only: /^release-.*/
       - test_ubuntu_18_04:
+          requires:
+            - build_client
+            - build_player
+          filters:
+            tags:
+              only: /^release-.*/
+      - test_linux_arm64:
           requires:
             - build_client
             - build_player
@@ -54,6 +112,7 @@ workflows:
             - test_ubuntu_18_04
             - test_macos
             - test_windows
+            - test_linux_arm64
       # When a tag is pushed, this job uploads the artifacts to a permanent
       # storage location where end users can download them.
       - upload_artifacts:
@@ -66,6 +125,7 @@ workflows:
             - test_ubuntu_18_04
             - test_macos
             - test_windows
+            - test_linux_arm64
       # Announces releases on Slack.
       - announce_release:
           filters:
@@ -148,45 +208,17 @@ jobs:
   test_ubuntu_18_04:
     docker:
       - image: cimg/openjdk:8.0
-
     steps:
-      - attach_workspace:
-          at: /tmp/workspace
+      - run_linux_tests:
+          arch: amd64
 
-      - run:
-          name: Install alda and alda-player
-          working_directory: /tmp/workspace/build
-          command: |
-            mkdir -p /home/circleci/bin
-            cp client/linux-amd64/alda /home/circleci/bin/
-            cp player/non-windows/alda-player /home/circleci/bin/
-            chmod +x /home/circleci/bin/alda
-            chmod +x /home/circleci/bin/alda-player
-            export ALDA_DISABLE_SPAWNING=yes
-            export ALDA_DISABLE_TELEMETRY=yes
-            alda version
-            alda-player info
-
-      - run:
-          name: alda doctor
-          command: |
-            export ALDA_DISABLE_SPAWNING=yes
-            export ALDA_DISABLE_TELEMETRY=yes
-            alda -v3 doctor --no-audio
-
-      - run:
-          name: "Troubleshooting: player logs"
-          command: cat /home/circleci/.cache/alda/logs/alda-player.log
-          when: on_fail
-
-      - run:
-          name: "Test `alda update` mechanism"
-          command: |
-            export ALDA_DISABLE_SPAWNING=yes
-            export ALDA_DISABLE_TELEMETRY=yes
-            alda -v3 update --yes --version 2.2.6
-            alda version | grep 2.2.6
-            alda-player info | grep 2.2.6
+  test_linux_arm64:
+    docker:
+      - image: cimg/openjdk:8.0
+    resource_class: arm.medium
+    steps:
+      - run_linux_tests:
+          arch: arm64
 
   test_macos:
     macos:
@@ -324,4 +356,3 @@ jobs:
           name: "Announce release on Slack"
           command: |
             bin/announce-release ${CIRCLE_TAG#release-}
-
