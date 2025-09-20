@@ -37,17 +37,16 @@ go test $(go list ./...)
 builds_dir="$(mktemp -d)"
 
 function build() {
-  os="$1"
-  arch="$2"
-  arm="$3"
+  local os="$1"
+  local arch="$2"
+  local arm="$3"
 
+  local arm_ext=""
   if [[ -n "$arm" ]]; then
-    arm_ext="-$3"
-  else
-    arm_ext=""
+    arm_ext="-$arm"
   fi
 
-  build_id="$os-$arch$arm_ext"
+  local build_id="$os-$arch$arm_ext"
 
   local ext=""
   case "$os" in
