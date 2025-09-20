@@ -44,15 +44,15 @@ commands:
           name: "Troubleshooting: player logs"
           command: cat /home/circleci/.cache/alda/logs/alda-player.log
           when: on_fail
-      # - run:
-      #     name: "Test `alda update` mechanism"
-      #     command: |
-      #       export PATH="/home/circleci/bin:$PATH"
-      #       export ALDA_DISABLE_SPAWNING=yes
-      #       export ALDA_DISABLE_TELEMETRY=yes
-      #       alda -v3 update --yes --version 2.3.2
-      #       alda version | grep 2.3.2
-      #       alda-player info | grep 2.3.2
+      - run:
+          name: "Test `alda update` mechanism"
+          command: |
+            export PATH="/home/circleci/bin:$PATH"
+            export ALDA_DISABLE_SPAWNING=yes
+            export ALDA_DISABLE_TELEMETRY=yes
+            alda -v3 update --yes --version 2.3.3
+            alda version | grep 2.3.3
+            alda-player info | grep 2.3.3
 
 # All of the jobs below have filters that appear superfluous, but the filters
 # are actually required because if one job has tag filters, then every job
@@ -256,14 +256,14 @@ jobs:
           command: cat /Users/distiller/Library/Caches/alda/logs/alda-player.log
           when: on_fail
 
-      # - run:
-      #     name: "Test `alda update` mechanism"
-      #     command: |
-      #       export ALDA_DISABLE_SPAWNING=yes
-      #       export ALDA_DISABLE_TELEMETRY=yes
-      #       alda -v3 update --yes --version 2.3.2
-      #       alda version | grep 2.3.2
-      #       alda-player info | grep 2.3.2
+      - run:
+          name: "Test `alda update` mechanism"
+          command: |
+            export ALDA_DISABLE_SPAWNING=yes
+            export ALDA_DISABLE_TELEMETRY=yes
+            alda -v3 update --yes --version 2.3.3
+            alda version | grep 2.3.3
+            alda-player info | grep 2.3.3
 
   test_windows:
     executor: win/default
@@ -293,15 +293,15 @@ jobs:
             $env:ALDA_DISABLE_TELEMETRY = "yes"
             alda -v3 doctor --no-audio
 
-      # - run:
-      #     name: "Test `alda update` mechanism"
-      #     command: |
-      #       $env:PATH = "$env:PATH;C:\Program Files\Alda\bin"
-      #       $env:ALDA_DISABLE_SPAWNING = "yes"
-      #       $env:ALDA_DISABLE_TELEMETRY = "yes"
-      #       alda -v3 update --yes --version 2.3.2
-      #       if (alda version | Select-String -Pattern 2.3.2 -quiet) { true } else { false }
-      #       if (alda-player info | Select-String -Pattern 2.3.2 -quiet) { true } else { false }
+      - run:
+          name: "Test `alda update` mechanism"
+          command: |
+            $env:PATH = "$env:PATH;C:\Program Files\Alda\bin"
+            $env:ALDA_DISABLE_SPAWNING = "yes"
+            $env:ALDA_DISABLE_TELEMETRY = "yes"
+            alda -v3 update --yes --version 2.3.3
+            if (alda version | Select-String -Pattern 2.3.3 -quiet) { true } else { false }
+            if (alda-player info | Select-String -Pattern 2.3.3 -quiet) { true } else { false }
 
       - run:
           name: "Troubleshooting: player logs"
