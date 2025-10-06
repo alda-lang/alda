@@ -162,7 +162,7 @@ func (score *Score) PartOffsets() map[*Part]float64 {
 	offsets := map[*Part]float64{}
 
 	for _, part := range score.Parts {
-		offsets[part.origin] = part.origin.CurrentOffset
+		offsets[part.origin] = part.CurrentOffset
 	}
 
 	return offsets

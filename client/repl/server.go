@@ -569,6 +569,11 @@ func (server *Server) updateScoreWithInput(
 	// option when transmitting the score.)
 	partOffsets := server.score.PartOffsets()
 
+	// Log for checking what offset value we use for the current playback.
+	for name, offset := range partOffsets {
+		log.Debug().Str("part", name.Name).Float64("offset", offset).Msg("Offset before the update, taken into account.")
+	}
+
 	// Take note of the current `eventIndex` value, so that we know where to start
 	// playing from when we want to play the new events.
 	eventIndex := server.eventIndex
@@ -585,6 +590,11 @@ func (server *Server) updateScoreWithInput(
 
 	if err := server.score.Update(scoreUpdates...); err != nil {
 		return nil, err
+	}
+
+	// Log for checking what offset value we will use next playback. (Useful for tracking by how much the offset changed.)
+	for name, offset := range server.score.PartOffsets() {
+		log.Debug().Str("part", name.Name).Float64("offset", offset).Msg("Offset after the update, not yet taken into account.")
 	}
 
 	// Add the provided `input` to our total string of input representing the
