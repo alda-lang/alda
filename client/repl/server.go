@@ -569,9 +569,12 @@ func (server *Server) updateScoreWithInput(
 	// option when transmitting the score.)
 	partOffsets := server.score.PartOffsets()
 
-	// Log for checking what offset value we use for the current playback.
-	for name, offset := range partOffsets {
-		log.Debug().Str("part", name.Name).Float64("offset", offset).Msg("Offset before the update, taken into account.")
+	// Variable for checking if offset is supposed to be lower later
+	lowvoiceoffset := 0.0
+
+	for name, offset := range server.score.PartOffsets() {
+		log.Debug().Str("part", name.Name).Float64("offset", offset).Msg("before update, server side")
+		lowvoiceoffset = offset
 	}
 
 	// Take note of the current `eventIndex` value, so that we know where to start
@@ -592,9 +595,12 @@ func (server *Server) updateScoreWithInput(
 		return nil, err
 	}
 
-	// Log for checking what offset value we will use next playback. (Useful for tracking by how much the offset changed.)
+	// Changing the offset to a lower one if needed (needed for when new voice is added)
 	for name, offset := range server.score.PartOffsets() {
-		log.Debug().Str("part", name.Name).Float64("offset", offset).Msg("Offset after the update, not yet taken into account.")
+		log.Debug().Str("part", name.Name).Float64("offset", offset).Msg("after update, before sync")
+		if lowvoiceoffset > offset {
+			partOffsets[name] = offset
+		}
 	}
 
 	// Add the provided `input` to our total string of input representing the

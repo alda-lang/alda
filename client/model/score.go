@@ -1,12 +1,14 @@
 package model
 
 import (
+	"math"
 	"regexp"
 	"strconv"
 
 	"alda.io/client/color"
 	"alda.io/client/help"
 	"alda.io/client/json"
+	log "alda.io/client/logging"
 )
 
 // The ScoreUpdate interface is implemented by events that update a score.
@@ -58,7 +60,8 @@ type Score struct {
 	midiChannelUsage midiChannelUsage
 	// When true, notes/rests added to the score are placed at the same offset.
 	// Otherwise, they are appended sequentially.
-	chordMode bool
+	chordMode   bool
+	voiceChange int
 }
 
 // JSON implements RepresentableAsJSON.JSON.
@@ -118,6 +121,7 @@ func NewScore() *Score {
 		Markers:          map[string]float64{},
 		Variables:        map[string][]ScoreUpdate{},
 		midiChannelUsage: [16][]*Part{},
+		voiceChange:      0,
 	}
 }
 
@@ -162,7 +166,32 @@ func (score *Score) PartOffsets() map[*Part]float64 {
 	offsets := map[*Part]float64{}
 
 	for _, part := range score.Parts {
-		offsets[part.origin] = part.CurrentOffset
+		log.Debug().Float64("Offset Value:", part.CurrentOffset).Msg("PartOffsets offset")
+		offset := part.CurrentOffset
+
+		// If a new voice is added, start from the beginning offset
+		if score.voiceChange < len(part.voices.voices) {
+			offset = part.CurrentOffset
+			// If voices are present, take the offset of the lowest voice offsets
+		} else if part.voices != nil && len(part.voices.voices) > 0 {
+			minOffset := math.Inf(1)
+			for _, voiceNumber := range part.voices.insertionOrder {
+				voice := part.voices.voices[voiceNumber]
+				log.Debug().Float64("Voice Offset Value:", voice.CurrentOffset).Int32("Voice:", voiceNumber).Msg("Voice Offset")
+				if voice.CurrentOffset < minOffset {
+					minOffset = voice.CurrentOffset
+				}
+			}
+			if minOffset == math.Inf(1) {
+				minOffset = part.CurrentOffset
+			}
+			offset = minOffset
+		}
+
+		// Update helper variables for voice offsets
+		score.voiceChange = len(part.voices.voices)
+
+		offsets[part.origin] = offset
 	}
 
 	return offsets
