@@ -186,6 +186,15 @@ func expectAliasParts(
 	}
 }
 
+func expectPartEffectiveOffset(
+	instrument string, expected float64,
+) func(s *Score) error {
+	return expectPartOffsetMsValue(
+		instrument, "effective offset",
+		func(part *Part) float64 { return part.CalculateEffectiveOffset() }, expected,
+	)
+}
+
 func TestParts(t *testing.T) {
 	executeScoreUpdateTestCases(
 		t,
@@ -829,6 +838,49 @@ func TestParts(t *testing.T) {
 					}
 					return nil
 				},
+			},
+		},
+		scoreUpdateTestCase{
+			label: "PartOffsets with voices",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				Note{
+					Pitch: LetterAndAccidentals{NoteLetter: C},
+					Duration: Duration{
+						Components: []DurationComponent{
+							NoteLengthMs{Quantity: 1000},
+						},
+					},
+				},
+				VoiceMarker{VoiceNumber: 1},
+				Note{
+					Pitch: LetterAndAccidentals{NoteLetter: D},
+					Duration: Duration{
+						Components: []DurationComponent{
+							NoteLengthMs{Quantity: 500},
+						},
+					},
+				},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPartEffectiveOffset("piano", 1500),
+			},
+		},
+		scoreUpdateTestCase{
+			label: "PartOffsets without voices (effective offset)",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				Note{
+					Pitch: LetterAndAccidentals{NoteLetter: C},
+					Duration: Duration{
+						Components: []DurationComponent{
+							NoteLengthMs{Quantity: 1000},
+						},
+					},
+				},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectPartEffectiveOffset("piano", 1000),
 			},
 		},
 		scoreUpdateTestCase{

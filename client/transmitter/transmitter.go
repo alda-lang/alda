@@ -23,7 +23,7 @@ type TransmissionContext struct {
 	// for that part will have the indicated offset subtracted from its offset.
 	// The use case for this is REPL usage, where a score is built up
 	// incrementally as the score is being played.
-	syncOffsets map[*model.Part]float64
+	syncOffsets map[string]float64
 	// When true, no further transmissions are expected for this particular score.
 	//
 	// What this means can vary depending on the transmitter. For the OSC
@@ -85,7 +85,7 @@ func TransmitToIndex(i int) TransmissionOption {
 // that part will have the indicated offset subtracted from its offset. The use
 // case for this is REPL usage, where a score is built up incrementally as the
 // score is being played.
-func SyncOffsets(syncOffsets map[*model.Part]float64) TransmissionOption {
+func SyncOffsets(syncOffsets map[string]float64) TransmissionOption {
 	return func(ctx *TransmissionContext) {
 		log.Debug().
 			Str("syncOffsets", fmt.Sprintf("%#v", syncOffsets)).

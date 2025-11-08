@@ -36,6 +36,7 @@ func (decl PartDeclaration) JSON() *json.Container {
 //
 // A score can include multiple instances of the same type of instrument.
 type Part struct {
+	ID              string
 	Name            string
 	StockInstrument Instrument
 	TempoRole       TempoRole
@@ -97,11 +98,6 @@ func (part *Part) RecordTempoValue() {
 	part.TempoValues[part.CurrentOffset] = part.Tempo
 }
 
-// ID returns a unique identifier to the part.
-func (part *Part) ID() string {
-	return fmt.Sprintf("%p", part)
-}
-
 // JSON implements RepresentableAsJSON.JSON.
 func (part *Part) JSON() *json.Container {
 	tempoValues := json.Object()
@@ -110,6 +106,7 @@ func (part *Part) JSON() *json.Container {
 	}
 
 	return json.Object(
+		"id", part.ID,
 		"name", part.Name,
 		"stock-instrument", part.StockInstrument.Name(),
 		"tempo-role", part.TempoRole.String(),
@@ -158,7 +155,10 @@ func (score *Score) NewPart(name string) (*Part, error) {
 		return nil, err
 	}
 
+	score.partCounter++
+
 	part := &Part{
+		ID:                     fmt.Sprintf("part%03d", score.partCounter),
 		Name:                   name,
 		StockInstrument:        stock,
 		CurrentOffset:          0,
@@ -520,4 +520,24 @@ func (decl PartDeclaration) VariableValue(score *Score) (ScoreUpdate, error) {
 	return nil, fmt.Errorf(
 		"a part declaration cannot be part of a variable definition",
 	)
+}
+
+// CalculateEffectiveOffset determines the current offset of the part,
+// considering the offsets of any voices it may have.
+func (p *Part) CalculateEffectiveOffset() float64 {
+	// If there are no voices, the offset is simply the part's current offset.
+	if p.voices == nil || len(p.voices.voices) == 0 {
+		return p.CurrentOffset
+	}
+
+	// Otherwise, the effective offset is the maximum of the part's
+	// offset and all of its voices' offsets.
+	maxOffset := p.CurrentOffset
+	for _, voiceNumber := range p.voices.insertionOrder {
+		voice := p.voices.voices[voiceNumber]
+		if voice.CurrentOffset > maxOffset {
+			maxOffset = voice.CurrentOffset
+		}
+	}
+	return maxOffset
 }

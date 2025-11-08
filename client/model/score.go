@@ -56,6 +56,7 @@ type Score struct {
 	Markers          map[string]float64
 	Variables        map[string][]ScoreUpdate
 	midiChannelUsage midiChannelUsage
+	partCounter      int
 	// When true, notes/rests added to the score are placed at the same offset.
 	// Otherwise, they are appended sequentially.
 	chordMode bool
@@ -65,19 +66,19 @@ type Score struct {
 func (score *Score) JSON() *json.Container {
 	parts := json.Object()
 	for _, part := range score.Parts {
-		parts.Set(part.JSON(), part.ID())
+		parts.Set(part.JSON(), part.ID)
 	}
 
 	currentParts := json.Array()
 	for _, part := range score.CurrentParts {
-		currentParts.ArrayAppend(part.ID())
+		currentParts.ArrayAppend(part.ID)
 	}
 
 	aliases := json.Object()
 	for alias, parts := range score.Aliases {
 		partIDs := json.Array()
 		for _, part := range parts {
-			partIDs.ArrayAppend(part.ID())
+			partIDs.ArrayAppend(part.ID)
 		}
 
 		aliases.Set(partIDs, alias)
@@ -158,11 +159,11 @@ func (score *Score) Tracks() map[*Part]int32 {
 }
 
 // PartOffsets returns a map of Part instances to their current offsets.
-func (score *Score) PartOffsets() map[*Part]float64 {
-	offsets := map[*Part]float64{}
+func (score *Score) PartOffsets() map[string]float64 {
+	offsets := map[string]float64{}
 
 	for _, part := range score.Parts {
-		offsets[part.origin] = part.origin.CurrentOffset
+		offsets[part.origin.ID] = part.origin.CalculateEffectiveOffset()
 	}
 
 	return offsets

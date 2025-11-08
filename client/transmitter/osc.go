@@ -330,7 +330,7 @@ func (oe OSCTransmitter) ScoreToOSCBundle(
 			// If they are used together, the behavior is unspecified (we would
 			// probably subtract too much from each offset and the features wouldn't
 			// work the way they're supposed to.)
-			offset -= ctx.syncOffsets[event.Part]
+			offset -= ctx.syncOffsets[event.Part.ID]
 
 			// The OSC API works with offsets that are ints, not floats, so we do the
 			// rounding here and work with the int value from here onward.

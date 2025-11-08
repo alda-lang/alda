@@ -53,7 +53,7 @@ type NoteEvent struct {
 // JSON implements RepresentableAsJSON.JSON.
 func (note NoteEvent) JSON() *json.Container {
 	return json.Object(
-		"part", note.Part.ID(),
+		"part", note.Part.ID,
 		"midi-channel", note.MidiChannel,
 		"midi-note", note.MidiNote,
 		"offset", note.Offset,

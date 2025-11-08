@@ -93,14 +93,8 @@ func (vm VoiceMarker) UpdateScore(score *Score) error {
 		Int32("VoiceNumber", vm.VoiceNumber).
 		Msg("Voice marker")
 
-	for _, part := range score.CurrentParts {
-		voice := part.GetVoice(vm.VoiceNumber)
-
-		for i, currentPart := range score.CurrentParts {
-			if currentPart.origin == part.origin {
-				score.CurrentParts[i] = voice
-			}
-		}
+	for i, part := range score.CurrentParts {
+		score.CurrentParts[i] = part.origin.GetVoice(vm.VoiceNumber)
 	}
 
 	return nil
@@ -141,18 +135,19 @@ func (VoiceGroupEndMarker) JSON() *json.Container {
 // the score, going forward.
 func (VoiceGroupEndMarker) UpdateScore(score *Score) error {
 	for i, part := range score.CurrentParts {
-		if len(part.voices.voices) == 0 {
+		origin := part.origin
+		if origin == nil || len(origin.voices.voices) == 0 {
 			continue
 		}
 
-		insertionOrder := part.voices.insertionOrder
+		insertionOrder := origin.voices.insertionOrder
 		lastInsertedVoiceNumber := insertionOrder[len(insertionOrder)-1]
 
-		lastVoiceToFinish := part.GetVoice(lastInsertedVoiceNumber)
+		lastVoiceToFinish := origin.GetVoice(lastInsertedVoiceNumber)
 
-		if len(part.voices.voices) > 1 {
+		if len(origin.voices.voices) > 1 {
 			for _, voiceNumber := range insertionOrder[0 : len(insertionOrder)-1] {
-				voice := part.GetVoice(voiceNumber)
+				voice := origin.GetVoice(voiceNumber)
 
 				if voice.CurrentOffset > lastVoiceToFinish.CurrentOffset {
 					lastVoiceToFinish = voice
@@ -162,18 +157,19 @@ func (VoiceGroupEndMarker) UpdateScore(score *Score) error {
 
 		lastVoiceToFinish.voices = NewVoices()
 		lastVoiceToFinish.voiceTemplate = nil
+		lastVoiceToFinish.origin = lastVoiceToFinish
 
 		score.CurrentParts[i] = lastVoiceToFinish
 
 		for i, partsPart := range score.Parts {
-			if partsPart.origin == part.origin {
+			if partsPart == origin {
 				score.Parts[i] = lastVoiceToFinish
 			}
 		}
 
 		for _, parts := range score.Aliases {
 			for i, aliasPart := range parts {
-				if aliasPart.origin == part.origin {
+				if aliasPart == origin {
 					parts[i] = lastVoiceToFinish
 				}
 			}

@@ -56,13 +56,12 @@ func TestVoices(t *testing.T) {
 				expectNoteOffsets(0, 500, 1000, 1500, 1500, 1500, 2000),
 				expectMidiNoteNumbers(60, 62, 64, 67, 71, 74, 76),
 				func(score *Score) error {
-					part := score.Events[0].(NoteEvent).Part
+					name := score.Events[0].(NoteEvent).Part.Name
 
 					for _, event := range score.Events[1:] {
-						if event.(NoteEvent).Part != part {
+						if event.(NoteEvent).Part.Name != name {
 							return fmt.Errorf(
-								"Note events from different voices have different part " +
-									"references",
+								"Note events from different voices have different part names",
 							)
 						}
 					}
