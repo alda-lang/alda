@@ -1,8 +1,19 @@
 # CHANGELOG
 
+## 2.3.4 (2025-11-08)
+
+* Fixed [an issue][issue-415] where an accumulating delay would
+  occur in the REPL when using voices. A big thank you to
+  [JakubSlacht] for their dedication in helping to solve this mystery!
+
+* Part IDs (as seen in `:score info`) are now short, sequential, and
+  human-readable (e.g. "part001") instead of memory addresses.
+
 ## 2.3.3 (2025-09-19)
 
-* Alda now officially supports Linux on a wider range of ARM devices. This includes both 32-bit (e.g. Raspberry Pi 2/3) and 64-bit (e.g. Raspberry Pi 4 and newer) processors.
+* Alda now officially supports Linux on a wider range of ARM devices.
+  This includes both 32-bit (e.g. Raspberry Pi 2/3) and 64-bit (e.g.
+  Raspberry Pi 4 and newer) processors.
 
 ## 2.3.2 (2025-05-20)
 
@@ -419,6 +430,7 @@ the [Alda 2 migration guide][migration-guide]!
 [alan-ma]: https://github.com/alan-ma
 [Vanello1908]: https://github.com/Vanello1908
 [De-Alchmst]: https://github.com/De-Alchmst
+[JakubSlacht]: https://github.com/JakubSlacht
 
 [alda-import-blog-post]: https://blog.djy.io/musicxml-import-and-another-new-alda-features/
 [midi-channel-assignment-discussion]: https://github.com/alda-lang/alda/discussions/447
@@ -428,3 +440,4 @@ the [Alda 2 migration guide][migration-guide]!
 [midi-channel-attribute]: ./doc/attributes.md#midi-channel
 [issue-401]: https://github.com/alda-lang/alda/issues/401
 [issue-405]: https://github.com/alda-lang/alda/issues/405
+[issue-415]: https://github.com/alda-lang/alda/issues/415
