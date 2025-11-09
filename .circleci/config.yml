@@ -293,15 +293,21 @@ jobs:
             $env:ALDA_DISABLE_TELEMETRY = "yes"
             alda -v3 doctor --no-audio
 
-      - run:
-          name: "Test `alda update` mechanism"
-          command: |
-            $env:PATH = "$env:PATH;C:\Program Files\Alda\bin"
-            $env:ALDA_DISABLE_SPAWNING = "yes"
-            $env:ALDA_DISABLE_TELEMETRY = "yes"
-            alda -v3 update --yes --version 2.3.3
-            if (alda version | Select-String -Pattern 2.3.3 -quiet) { true } else { false }
-            if (alda-player info | Select-String -Pattern 2.3.3 -quiet) { true } else { false }
+      # 2025-11-08: Temporarily skipping this step for Windows builds because of
+      # some issues on CircleCI's end. I've opened a support case.
+      #
+      # TODO: Work with CircleCI support to resolve the issue and re-enable this
+      # step.
+      #
+      # - run:
+      #     name: "Test `alda update` mechanism"
+      #     command: |
+      #       $env:PATH = "$env:PATH;C:\Program Files\Alda\bin"
+      #       $env:ALDA_DISABLE_SPAWNING = "yes"
+      #       $env:ALDA_DISABLE_TELEMETRY = "yes"
+      #       alda -v3 update --yes --version 2.3.3
+      #       if (alda version | Select-String -Pattern 2.3.3 -quiet) { true } else { false }
+      #       if (alda-player info | Select-String -Pattern 2.3.3 -quiet) { true } else { false }
 
       - run:
           name: "Troubleshooting: player logs"
