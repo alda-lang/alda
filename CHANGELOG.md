@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Unreleased
+
+* The `:parts` and `:score info` REPL commands now sort parts by ID.
+
 ## 2.3.4 (2025-11-08)
 
 * Fixed [an issue][issue-415] where an accumulating delay would

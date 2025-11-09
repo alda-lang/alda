@@ -876,7 +876,14 @@ func printPartsInfo(parts *json.Container) {
 	if len(parts.ChildrenMap()) == 0 {
 		fmt.Println("  (none)")
 	} else {
-		for id, part := range parts.ChildrenMap() {
+		ids := make([]string, 0, len(parts.ChildrenMap()))
+		for id := range parts.ChildrenMap() {
+			ids = append(ids, id)
+		}
+		sort.Strings(ids)
+
+		for _, id := range ids {
+			part := parts.Search(id)
 			fmt.Printf(
 				"  %s (%s)\n",
 				id,
