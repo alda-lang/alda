@@ -45,9 +45,6 @@ type Server struct {
 	// The stateful score object that should correspond to the input received so
 	// far.
 	score *model.Score
-	// The current index into `score.Events`, representing where to start playing
-	// any new events that are added to the score when input is added.
-	eventIndex int
 	// The server's most recent information about the player process it is using.
 	player system.PlayerState
 	// A queue onto which bdecoded messages from clients are placed in one
@@ -117,7 +114,6 @@ func (server *Server) resetState() error {
 
 	server.input = ""
 	server.score = model.NewScore()
-	server.eventIndex = 0
 
 	return nil
 }
@@ -564,14 +560,7 @@ func (server *Server) handleRequests() {
 func (server *Server) updateScoreWithInput(
 	input string,
 ) ([]transmitter.TransmissionOption, error) {
-	// Take note of the current offsets of all parts in the score, for the purpose
-	// of synchronization. (See below where we use the transmitter.SyncOffsets
-	// option when transmitting the score.)
-	partOffsets := server.score.PartOffsets()
-
-	// Take note of the current `eventIndex` value, so that we know where to start
-	// playing from when we want to play the new events.
-	eventIndex := server.eventIndex
+	eventCountBefore := len(server.score.Events)
 
 	ast, err := parser.ParseString(input)
 	if err != nil {
@@ -591,27 +580,36 @@ func (server *Server) updateScoreWithInput(
 	// entire score.
 	server.input += strings.TrimSpace(input) + "\n"
 
-	// Update the starting index so that the next invocation of `evalAndPlay` for
-	// this same score will result in only playing newly added events.
-	server.eventIndex = len(server.score.Events)
+	newEvents := server.score.Events[eventCountBefore:]
+	log.Debug().Int("lenNewEvents", len(newEvents)).Msg("updateScoreWithInput")
+
+	var syncOffset float64
+
+	if len(newEvents) > 0 {
+		minOffset := math.MaxFloat64
+		for _, event := range newEvents {
+			offset := event.EventOffset()
+			if offset < minOffset {
+				minOffset = offset
+			}
+		}
+		log.Debug().Float64("minOffset", minOffset).Msg("updateScoreWithInput")
+		// If minOffset is still MaxFloat64, it means there were no events with a valid offset.
+		// In this case, syncOffset should remain 0.
+		if minOffset != math.MaxFloat64 {
+			syncOffset = minOffset
+		}
+	}
+	log.Debug().Float64("syncOffset", syncOffset).Msg("updateScoreWithInput")
 
 	return []transmitter.TransmissionOption{
 		// Transmit only the new events, i.e. events added as a result of parsing
 		// the provided `input` and applying the resulting updates to the score.
-		transmitter.TransmitFromIndex(eventIndex),
-		// The previous offset of each part is subtracted from any new events for
-		// that part. The effect is that we "synchronize" that part with the events
-		// that we already sent to the player. For example, if a client submits the
-		// following code:
-		//
-		//   piano: c d e f
-		//
-		// Followed by (sometime before the 4 notes above finish playing):
-		//
-		//   piano: g a b > c
-		//
-		// Then the notes `c d e f g a b > c` will be played in time.
-		transmitter.SyncOffsets(partOffsets),
+		transmitter.TransmitFromIndex(eventCountBefore),
+		// The "sync offset" is the earliest offset of all the new events. We
+		// subtract this from all of the new events so that they start playing
+		// right away.
+		transmitter.SyncOffset(syncOffset),
 	}, nil
 }
 

@@ -1,8 +1,6 @@
 package transmitter
 
 import (
-	"fmt"
-
 	log "alda.io/client/logging"
 	"alda.io/client/model"
 )
@@ -18,12 +16,10 @@ type TransmissionContext struct {
 	fromIndex int
 	// The index (+ 1) of the last event to transmit. (default: len(events))
 	toIndex int
-	// An optional map of parts to offsets that is used for the purpose of
-	// synchronization. For each part present in the map, any event transmitted
-	// for that part will have the indicated offset subtracted from its offset.
+	// An optional offset to subtract from all events transmitted.
 	// The use case for this is REPL usage, where a score is built up
 	// incrementally as the score is being played.
-	syncOffsets map[string]float64
+	syncOffset float64
 	// When true, no further transmissions are expected for this particular score.
 	//
 	// What this means can vary depending on the transmitter. For the OSC
@@ -80,18 +76,17 @@ func TransmitToIndex(i int) TransmissionOption {
 	return func(ctx *TransmissionContext) { ctx.toIndex = i }
 }
 
-// SyncOffsets uses the provided map of parts to offsets for the purpose of
-// synchronization. For each part present in the map, any event transmitted for
-// that part will have the indicated offset subtracted from its offset. The use
-// case for this is REPL usage, where a score is built up incrementally as the
-// score is being played.
-func SyncOffsets(syncOffsets map[string]float64) TransmissionOption {
+// SyncOffset uses the provided offset for the purpose of synchronization.
+// Any event transmitted will have the indicated offset subtracted from its
+// offset. The use case for this is REPL usage, where a score is built up
+// incrementally as the score is being played.
+func SyncOffset(offset float64) TransmissionOption {
 	return func(ctx *TransmissionContext) {
 		log.Debug().
-			Str("syncOffsets", fmt.Sprintf("%#v", syncOffsets)).
+			Float64("syncOffset", offset).
 			Msg("Applying transmission option")
 
-		ctx.syncOffsets = syncOffsets
+		ctx.syncOffset = offset
 	}
 }
 

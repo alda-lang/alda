@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2.3.5 (2025-11-11)
+
+* Further improvements to make REPL note timing more robust.
+
 ## 2.3.4 (2025-11-08)
 
 * Fixed [an issue][issue-415] where an accumulating delay would
