@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## Unreleased
+
+* Fixed [a bug][issue-416] where running the REPL server was accidentally
+  "claiming" 2 player processes to use instead of 1.
+
 ## 2.3.5 (2025-11-11)
 
 * Further improvements to make REPL note timing more robust.
@@ -447,3 +452,4 @@ the [Alda 2 migration guide][migration-guide]!
 [issue-401]: https://github.com/alda-lang/alda/issues/401
 [issue-405]: https://github.com/alda-lang/alda/issues/405
 [issue-415]: https://github.com/alda-lang/alda/issues/415
+[issue-416]: https://github.com/alda-lang/alda/issues/416

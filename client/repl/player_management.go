@@ -114,7 +114,9 @@ func (server *Server) unsetPlayer() {
 //     the server is responsible for recovering by switching to use another
 //     player process.
 func (server *Server) managePlayers() {
-	playerPoolLastFilled := time.Unix(0, 0)
+	// When the `alda` process is started, we automatically fill the player pool,
+	// so we can hold off on immediately filling it again here.
+	playerPoolLastFilled := time.Now()
 	lastPing := time.Unix(0, 0)
 
 	for {
