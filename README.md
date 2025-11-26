@@ -9,6 +9,8 @@
   <p align="center">
   <b><a href="#installation">Installation</a></b>
   |
+  <b><a href="#building-from-source">Building</a></b>
+  |
   <b><a href="doc/index.md">Docs</a></b>
   |
   <b><a href="CHANGELOG.md">Changelog</a></b>
@@ -76,6 +78,56 @@ See [the official website][alda-install] for instructions to install the latest
 release of Alda.
 
 [alda-install]: https://alda.io/install
+
+## Building from Source
+
+If pre-built binaries are not available for your system (e.g., Raspberry Pi,
+BSD), you can build Alda from source. Alda consists of two components: the
+**client** (written in Go) and the **player** (written in Kotlin/Java).
+
+### Requirements
+
+* **Java 8+** - Required to build and run the player.
+  * Check your version with `java -version`
+* **Go 1.19+** - Required to build the client.
+  * Download from [golang.org](https://golang.org/dl/)
+
+### Build Instructions
+
+1. **Clone the repository** (or download and extract a release):
+
+   ```bash
+   git clone https://github.com/alda-lang/alda.git
+   cd alda
+   ```
+
+2. **Build the player**:
+
+   ```bash
+   cd player
+   # On Linux/macOS:
+   ./bin/run
+   # On Windows:
+   bin\run
+   ```
+
+   The player binary will be located in `player/target/<version>/`.
+
+3. **Build the client**:
+
+   ```bash
+   cd ../client
+   go generate
+   go build -o alda
+   ```
+
+   The client binary (`alda` or `alda.exe`) will be in the `client/` directory.
+
+4. **Add to PATH**: Move both binaries to a directory in your PATH, or add their
+   locations to your PATH.
+
+> For detailed development instructions, see the READMEs in the
+> [client](client/README.md) and [player](player/README.md) directories.
 
 ## Demo
 
