@@ -77,6 +77,8 @@ release of Alda.
 
 [alda-install]: https://alda.io/install
 
+### Building from source
+
 Another option is to build Alda from source. Alda consists of two components:
 the **client** (written in Go) and the **player** (written in Kotlin/Java).
 
