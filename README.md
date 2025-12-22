@@ -77,6 +77,26 @@ release of Alda.
 
 [alda-install]: https://alda.io/install
 
+Another option is to build Alda from source. Alda consists of two components:
+the **client** (written in Go) and the **player** (written in Kotlin/Java).
+
+```bash
+# Clone the repo
+git clone https://github.com/alda-lang/alda.git
+cd alda
+
+# Build the client and player executables
+client/bin/build
+player/bin/build
+```
+
+The executables are built in `client/target` and `player/target`, and the
+output of the build commands shows you the path to the built executables, which
+include builds for various OS/arch combinations.
+
+For more details, see the READMEs in the [client](client/README.md) and
+[player](player/README.md) directories.
+
 ## Demo
 
 For an overview of available commands and options:
