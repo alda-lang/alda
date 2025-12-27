@@ -169,6 +169,29 @@ with other music software (e.g. sheet music notation programs).
       <td>Start playing all tracks at the current system offset.</td>
     </tr>
     <tr>
+      <td><code>/system/playback-finished</code></td>
+      <td>
+        <ul>
+          <li>Offset (integer)</li>
+        </ul>
+      </td>
+      <td>
+        <p>
+          Signal that playback is finished. This is used by the Alda client in
+          conjunction with the <code>--wait</code> flag to block the
+          <code>alda play</code> command until playback is complete.
+        </p>
+        <p>
+          If the provided offset is 0, the player's state will transition to
+          "finished" immediately.
+        </p>
+        <p>
+          Otherwise, the player will be scheduled to transition to the
+          "finished" state at the specified offset.
+        </p>
+      </td>
+    </tr>
+    <tr>
       <td><code>/system/stop</code></td>
       <td></td>
       <td>

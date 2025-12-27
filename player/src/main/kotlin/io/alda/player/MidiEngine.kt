@@ -82,7 +82,8 @@ enum class CustomMetaMessage(val type : Int) {
   //
   // PERCUSSION(0x31),
   EVENT(0x32),
-  SHUTDOWN(0x33)
+  SHUTDOWN(0x33),
+  PLAYBACK_FINISHED(0x34)
 }
 
 // Returns the channel affected by a MidiEvent. For example, a MIDI NOTE_ON
@@ -302,6 +303,13 @@ class MidiEngine {
     scheduleMetaMsg(shutdownOffsetMs, CustomMetaMessage.SHUTDOWN)
   }
 
+  fun schedulePlaybackFinished(offsetMs : Int) {
+    val now = Math.round(currentOffset()).toInt()
+    val playbackFinishedOffsetMs = now + offsetMs
+    debug("Scheduling playback finished for $playbackFinishedOffsetMs")
+    scheduleMetaMsg(playbackFinishedOffsetMs, CustomMetaMessage.PLAYBACK_FINISHED)
+  }
+
   init {
     info("Initializing MIDI sequencer...")
     sequencer.open()
@@ -340,6 +348,11 @@ class MidiEngine {
         CustomMetaMessage.SHUTDOWN.type -> {
           debug("Received SHUTDOWN meta event")
           isRunning = false
+        }
+
+        CustomMetaMessage.PLAYBACK_FINISHED.type -> {
+          debug("Received PLAYBACK_FINISHED meta event")
+          stateManager!!.markFinished()
         }
 
         MIDI_END_OF_TRACK -> {

@@ -146,4 +146,5 @@ class StateManager(val port : Int) {
 
   fun markReady() = setState("ready")
   fun markActive() = setState("active")
+  fun markFinished() = setState("finished")
 }

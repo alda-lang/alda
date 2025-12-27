@@ -363,6 +363,9 @@ private fun applyUpdates(updates : Updates) {
   if (updates.systemActions.contains(SystemAction.SHUTDOWN))
     isRunning = false
 
+  if (updates.systemActions.contains(SystemAction.PLAYBACK_FINISHED))
+    stateManager!!.markFinished()
+
   if (updates.systemActions.contains(SystemAction.STOP))
     midi().stopSequencer()
 
@@ -419,6 +422,11 @@ private fun applyUpdates(updates : Updates) {
   // that will occur in the score.)
   updates.systemEvents.filter { it["type"] == "shutdown" }.forEach {
     midi().scheduleShutdown(it["offset"] as Int)
+  }
+
+  // PHASE 6: Scheduled playback finished
+  updates.systemEvents.filter { it["type"] == "playback-finished" }.forEach {
+    midi().schedulePlaybackFinished(it["offset"] as Int)
   }
 
   // NB: We don't actually start the sequencer here; that action needs to be

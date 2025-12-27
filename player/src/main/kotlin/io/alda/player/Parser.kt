@@ -6,7 +6,7 @@ import mu.KotlinLogging
 private val log = KotlinLogging.logger {}
 
 enum class SystemAction {
-  SHUTDOWN, PLAY, STOP, CLEAR
+  SHUTDOWN, PLAY, STOP, CLEAR, PLAYBACK_FINISHED
 }
 
 enum class TrackAction {
@@ -113,6 +113,25 @@ class Updates() {
         Regex("/system/play").matches(address) -> {
           systemActions.add(SystemAction.PLAY)
         }
+
+        Regex("/system/playback-finished").matches(address) -> {
+          val offset = args.get(0) as Int
+
+          // There are two "modes" of signalling playback finished:
+          //
+          // 1. A system action that immediately transitions the player state to "finished".
+          //    Use case: immediately marking player as finished
+          //
+          // 2. A system event that schedules the player to transition to "finished" when a
+          //    particular offset is reached.
+          //    Use case: marking the player as finished after the end of a score
+          if (offset == 0) {
+            systemActions.add(SystemAction.PLAYBACK_FINISHED)
+          } else {
+            systemEvents.add(mapOf("type" to "playback-finished", "offset" to offset))
+          }
+        }
+
 
         Regex("/system/stop").matches(address) -> {
           systemActions.add(SystemAction.STOP)

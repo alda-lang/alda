@@ -22,6 +22,7 @@ var file string
 var code string
 var optionFrom string
 var optionTo string
+var wait bool
 
 func init() {
 	playCmd.Flags().StringVarP(
@@ -54,6 +55,10 @@ func init() {
 		"T",
 		"",
 		"A time marking (e.g. 1:00) or marker at which to end playback",
+	)
+
+	playCmd.Flags().BoolVarP(
+		&wait, "wait", "w", false, "Wait until playback is complete",
 	)
 }
 
@@ -312,6 +317,31 @@ var playCmd = &cobra.Command{
 		// no audible output, e.g. `alda play -c "c d e"` (valid syntax, but no
 		// audible output because no part was indicated).
 		fmt.Fprintln(os.Stderr, "Playing...")
+
+		if wait {
+			if len(players) != 1 {
+				return fmt.Errorf("unexpected number of players: %d", len(players))
+			}
+			playerIDToWait := players[0].ID
+
+			log.Info().Str("playerID", playerIDToWait).Msg("Waiting for playback to complete.")
+
+			for {
+				time.Sleep(100 * time.Millisecond)
+
+				p, err := system.FindPlayerByID(playerIDToWait)
+				if err != nil {
+					// The player process probably died.
+					log.Warn().Err(err).Str("playerID", playerIDToWait).Msg("Player process disappeared while waiting.")
+					return nil // Exit gracefully, as playback is effectively complete.
+				}
+
+				if p.State == "finished" {
+					log.Info().Str("playerID", playerIDToWait).Msg("Playback complete.")
+					break
+				}
+			}
+		}
 
 		return nil
 	},

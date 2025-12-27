@@ -34,6 +34,12 @@ func systemStopMsg() *osc.Message {
 	return osc.NewMessage("/system/stop")
 }
 
+func systemPlaybackFinishedMsg(offset int32) *osc.Message {
+	msg := osc.NewMessage("/system/playback-finished")
+	msg.Append(offset)
+	return msg
+}
+
 func systemShutdownMsg(offset int32) *osc.Message {
 	msg := osc.NewMessage("/system/shutdown")
 	msg.Append(offset)
@@ -419,7 +425,9 @@ func (oe OSCTransmitter) ScoreToOSCBundle(
 	}
 
 	if ctx.oneOff {
-		bundle.Append(systemShutdownMsg(int32(math.Round(scoreLength + 10000))))
+		scoreLengthRounded := int32(math.Round(scoreLength))
+		bundle.Append(systemPlaybackFinishedMsg(scoreLengthRounded))
+		bundle.Append(systemShutdownMsg(scoreLengthRounded + 10000))
 	}
 
 	return bundle, nil
