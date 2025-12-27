@@ -1,6 +1,12 @@
 # CHANGELOG
 
-## Unreleased
+## 2.4.0 (2025-12-27)
+
+* The `alda play` command now has a `--wait` (or `-w`) flag that will cause the
+  command to block until playback is complete. This is useful for when you
+  want to run Alda from another program and have it wait until the music is
+  finished before continuing. Thanks to [lenianiva] for the feature
+  request!
 
 * Fixed [a bug][issue-416] where running the REPL server was accidentally
   "claiming" 2 player processes to use instead of 1.
@@ -442,6 +448,7 @@ the [Alda 2 migration guide][migration-guide]!
 [Vanello1908]: https://github.com/Vanello1908
 [De-Alchmst]: https://github.com/De-Alchmst
 [JakubSlacht]: https://github.com/JakubSlacht
+[lenianiva]: https://github.com/lenianiva
 
 [alda-import-blog-post]: https://blog.djy.io/musicxml-import-and-another-new-alda-features/
 [midi-channel-assignment-discussion]: https://github.com/alda-lang/alda/discussions/447
