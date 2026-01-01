@@ -330,6 +330,7 @@ class MidiEngine {
 
   init {
     info("Initializing MIDI sequencer...")
+    logAudioMixers()
     sequencer.open()
     sequencer.setSequence(sequence)
     sequencer.setTickPosition(0)
@@ -337,10 +338,13 @@ class MidiEngine {
     info("Initializing MIDI synthesizer...")
     // NB: This blocks for about a second.
     synthesizer.open()
+    log.info {
+      "Synthesizer opened: name='${synthesizer.deviceInfo.name}', vendor='${synthesizer.deviceInfo.vendor}'"
+    }
 
     // Transmit messages from the sequencer to the synthesizer.
     sequencer.getTransmitter().setReceiver(synthesizer.getReceiver())
-
+    log.info { "Sequencer transmitter connected to synthesizer receiver." }
     sequencer.addMetaEventListener(MetaEventListener { msg ->
       when (val msgType = msg.getType()) {
         CustomMetaMessage.CONTINUE.type -> {
