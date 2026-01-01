@@ -160,6 +160,22 @@ private fun setTempoMessage(bpm : Float) : MetaMessage {
 }
 
 class MidiEngine {
+  private fun logAudioMixers() {
+    val mixers = AudioSystem.getMixerInfo()
+
+    if (mixers.isEmpty()) {
+      log.warn { "No audio mixers detected by Java Sound API." }
+      return
+    }
+
+    log.info { "Detected audio mixers:" }
+
+    mixers.forEach { info ->
+      log.info {
+        "Mixer: name='${info.name}', vendor='${info.vendor}', version='${info.version}', description='${info.description}'"
+      }
+    }
+  }
   val sequencer = MidiSystem.getSequencer(false)
   val synthesizer = MidiSystem.getSynthesizer()
   val receiver = sequencer.getReceiver()
