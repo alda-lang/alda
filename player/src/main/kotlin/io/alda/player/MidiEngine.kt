@@ -16,6 +16,8 @@ import javax.sound.midi.ShortMessage
 import kotlin.concurrent.thread
 import kotlin.math.roundToLong
 import mu.KotlinLogging
+import javax.sound.sampled.AudioSystem
+import javax.sound.sampled.Mixer
 
 private val log = KotlinLogging.logger {}
 
@@ -158,6 +160,22 @@ private fun setTempoMessage(bpm : Float) : MetaMessage {
 }
 
 class MidiEngine {
+  private fun logAudioMixers() {
+    val mixers = AudioSystem.getMixerInfo()
+
+    if (mixers.isEmpty()) {
+      log.warn { "No audio mixers detected by Java Sound API." }
+      return
+    }
+
+    log.info { "Detected audio mixers:" }
+
+    mixers.forEach { info ->
+      log.info {
+        "Mixer: name='${info.name}', vendor='${info.vendor}', version='${info.version}', description='${info.description}'"
+      }
+    }
+  }
   val sequencer = MidiSystem.getSequencer(false)
   val synthesizer = MidiSystem.getSynthesizer()
   val receiver = sequencer.getReceiver()
@@ -312,6 +330,7 @@ class MidiEngine {
 
   init {
     info("Initializing MIDI sequencer...")
+    logAudioMixers()
     sequencer.open()
     sequencer.setSequence(sequence)
     sequencer.setTickPosition(0)
@@ -319,10 +338,13 @@ class MidiEngine {
     info("Initializing MIDI synthesizer...")
     // NB: This blocks for about a second.
     synthesizer.open()
+    log.info {
+      "Synthesizer opened: name='${synthesizer.deviceInfo.name}', vendor='${synthesizer.deviceInfo.vendor}'"
+    }
 
     // Transmit messages from the sequencer to the synthesizer.
     sequencer.getTransmitter().setReceiver(synthesizer.getReceiver())
-
+    log.info { "Sequencer transmitter connected to synthesizer receiver." }
     sequencer.addMetaEventListener(MetaEventListener { msg ->
       when (val msgType = msg.getType()) {
         CustomMetaMessage.CONTINUE.type -> {
