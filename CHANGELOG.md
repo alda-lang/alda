@@ -1,5 +1,40 @@
 # CHANGELOG
 
+## 2.4.1 (2026-01-01)
+
+Happy New Year! 🎆 This release includes a small update to the player process to
+log what audio devices are available on startup.
+
+This logging will not be seen by default, for a couple of reasons:
+
+1. Player processes are run automatically in the background, so you will not see
+   player logs when running the `alda` client.
+
+2. The new logs are logged at the DEBUG level, so they will not appear unless
+   you have enabled DEBUG-level logging when starting a player process.
+
+To see the full output, you can run a player process in the foreground with
+verbose logging by running `alda-player -v run`.
+
+You should see lines like these:
+
+```
+...
+vmj INFO  2026-01-01 19:22:14 Main.run:77 - Starting receiver, listening on port 27701...
+vmj INFO  2026-01-01 19:22:14 MidiEngine.info:261 - [0] Initializing MIDI sequencer...
+vmj DEBUG 2026-01-01 19:22:14 MidiEngine.logAudioMixers:171 - Detected audio mixers:
+vmj DEBUG 2026-01-01 19:22:14 MidiEngine.logAudioMixers:174 - Mixer: name='Port Generic [hw:0]', vendor='ALSA (http://www.alsa-project.org)', version='6.8.0-90-generic', description='HD-Audio Generic, ATI R6xx HDMI'
+vmj DEBUG 2026-01-01 19:22:14 MidiEngine.logAudioMixers:174 - Mixer: name='Port Generic_1 [hw:1]', vendor='ALSA (http://www.alsa-project.org)', version='6.8.0-90-generic', description='HD-Audio Generic, Realtek ALC257'
+... many more lines ...
+vmj INFO  2026-01-01 19:22:14 MidiEngine.info:261 - [0] Initializing MIDI synthesizer...
+vmj INFO  2026-01-01 19:22:15 MidiEngine.<init>:341 - Synthesizer opened: name='Gervill', vendor='OpenJDK'
+vmj INFO  2026-01-01 19:22:15 MidiEngine.<init>:347 - Sequencer transmitter connected to synthesizer receiver.
+vmj INFO  2026-01-01 19:22:18 MidiEngine.info:261 - [0] Player ready
+```
+
+Note that the synthesizer that was chosen to use is also logged at the INFO
+level.
+
 ## 2.4.0 (2025-12-27)
 
 * The `alda play` command now has a `--wait` (or `-w`) flag that will cause the
