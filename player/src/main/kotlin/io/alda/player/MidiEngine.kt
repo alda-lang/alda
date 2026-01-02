@@ -168,10 +168,10 @@ class MidiEngine {
       return
     }
 
-    log.info { "Detected audio mixers:" }
+    log.debug { "Detected audio mixers:" }
 
     mixers.forEach { info ->
-      log.info {
+      log.debug {
         "Mixer: name='${info.name}', vendor='${info.vendor}', version='${info.version}', description='${info.description}'"
       }
     }
