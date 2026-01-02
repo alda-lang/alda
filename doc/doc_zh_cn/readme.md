@@ -112,6 +112,6 @@ piano:
 
 ## 许可证
 
-Copyright © 2012-2025 Dave Yarwood et al
+Copyright © 2012-2026 Dave Yarwood et al
 
 Distributed under the Eclipse Public License version 2.0.
