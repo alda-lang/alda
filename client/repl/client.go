@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strings"
 	"time"
+	"runtime"
 
 	"alda.io/client/color"
 	"alda.io/client/generated"
@@ -33,6 +34,14 @@ const aldaASCIILogo = `
 ██║  ██║███████╗██████╔╝██║  ██║
 ╚═╝  ╚═╝╚══════╝╚═════╝ ╚═╝  ╚═╝
 `
+func isWindowsPowershell() bool {
+	if runtime.GOOS != "windows" {
+		return false
+	}
+
+	_, hasPSModulePath := os.LookupEnv("PSModulePath")
+	return hasPSModulePath
+}
 
 func aldaVersionText(serverVersion string) string {
 	return `
@@ -1067,12 +1076,26 @@ func RunClient(serverHost string, serverPort int) error {
 		serverVersion = fmt.Sprintf("%#v", serverVersionInfo)
 	}
 
+useColor := true
+if isWindowsPowershell() {
+	useColor = false
+	_ = os.Setenv("NO_COLOR", "1")
+}
+
+logo := strings.Trim(aldaASCIILogo, "\n")
+versionText := strings.Trim(aldaVersionText(serverVersion), "\n")
+helpText := "Type :help for a list of available commands."
+
+if useColor {
 	fmt.Printf(
 		"%s\n\n%s\n\n%s\n\n",
-		color.Aurora.Blue(strings.Trim(aldaASCIILogo, "\n")),
-		color.Aurora.Cyan(strings.Trim(aldaVersionText(serverVersion), "\n")),
-		color.Aurora.Bold("Type :help for a list of available commands."),
+		color.Aurora.Blue(logo),
+		color.Aurora.Cyan(versionText),
+		color.Aurora.Bold(helpText),
 	)
+} else {
+	fmt.Printf("%s\n\n%s\n\n%s\n\n", logo, versionText, helpText)
+}
 
 	err = os.MkdirAll(filepath.Dir(replHistoryFilepath), os.ModePerm)
 	if err != nil {
