@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"runtime"
 
 	"alda.io/client/color"
 	"alda.io/client/help"
@@ -19,6 +20,16 @@ var replPort int
 var startREPLClient bool
 var startREPLServer bool
 var replMessage string
+
+func isWindowsPowershell() bool {
+	if runtime.GOOS != "windows" {
+		return false
+	}
+
+	// PowerShell sets PSModulePath; cmd.exe does not
+	_, hasPSModulePath := os.LookupEnv("PSModulePath")
+	return hasPSModulePath
+}
 
 func init() {
 	replCmd.Flags().StringVarP(
@@ -197,7 +208,7 @@ Examples:
 			if replPort == -1 {
 				return errREPLServerPortUnspecified
 			}
-
+            _ = isWindowsPowershell()
 			return repl.RunClient(replHost, replPort)
 		}
 
