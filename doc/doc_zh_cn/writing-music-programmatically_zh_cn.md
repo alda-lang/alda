@@ -39,16 +39,17 @@ acoustic-guitar:
 > 如果您喜欢的语言没有在这里列出 并且您有兴趣使用它来生成Alda乐谱
 > 请考虑使用该语言[编写您自己的Alda][write-your-own-alda-library]并将其添加到这个列表中
 
-| 语言 | 库       | 作者         |
-|----------|---------------|----------------|
-| clojure  | [alda-clj]    | dave yarwood   |
-| ruby     | [alda-rb]     | ulysses zhan   |
-| julia    | [alda.jl]     | ismael venegas |
-| python   | [alda-python] | nicola vitucci |
+| 语言     | 库            | 作者          |
+|----------|---------------|-----------------|
+| Clojure  | [alda-clj]    | Dave Yarwood    |
+| Ruby     | [alda-rb]     | Ulysses Zhan    |
+| Julia    | [Alda.jl]     | Ismael Venegas  |
+| Python   | [alda-python] | Nicola Vitucci  |
+| Python   | [aldakit]     | Shakeeb Alireza |
 
 [alda-clj]: https://github.com/daveyarwood/alda-clj
 [alda-rb]: https://github.com/ulysseszh/alda-rb
 [alda.jl]: https://github.com/salchipapa/alda.jl
 [alda-python]: https://github.com/nvitucci/alda-python
+[aldakit]: https://github.com/shakfu/aldakit
 [write-your-own-alda-library]: implementing-an-alda-library_zh_cn.md
-
