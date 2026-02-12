@@ -67,7 +67,7 @@ rationale.)
 
 * [Run Alda in the browser](https://github.com/alda-lang/alda/discussions/455)
 * [Define and use waveform synthesis instruments](https://github.com/alda-lang/alda/discussions/435)
-* [Export to MusicXML](https://github.com/alda-lang/alda/discussions/424) for inter-operability with other music software
+* [Export to MusicXML](https://github.com/alda-lang/alda/discussions/424) for interoperability with other music software
 * [Improve Raspberry Pi support](https://github.com/alda-lang/alda/discussions/456)
 
 ## Installation

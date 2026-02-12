@@ -1,7 +1,7 @@
 # This is a demo of all 128 General MIDI instruments playing The Lick™ in
 # succession.
 #
-# There are only 15 non-percussion channels avaliable in the MIDI synthesizer,
+# There are only 15 non-percussion channels available in the MIDI synthesizer,
 # but Alda works around this limitation by intelligently assigning each note to
 # a channel that's available at that point in time in the score.
 

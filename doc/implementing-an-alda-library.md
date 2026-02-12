@@ -438,7 +438,7 @@ $ alda repl --client --port 34223 --message '{"op": "score-text"}'
 
 The library that we built in the previous steps already has an `alda` function
 that can shell out to the Alda CLI. We can build a few more functions on top of
-that to achieve something analagous to the REPL workflow above:
+that to achieve something analogous to the REPL workflow above:
 
 ```javascript
 const fs = require('fs');

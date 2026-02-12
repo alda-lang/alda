@@ -126,7 +126,7 @@ cello:
   - a number of beats (e.g. 2.5, which represents a dotted half note), or
   - a number of milliseconds
 
-  If the value you provide is a number, it will be intepreted as a number of beats.
+  If the value you provide is a number, it will be interpreted as a number of beats.
 
   Note that this value is a different number than the note value. For example,
   to set the duration to a quarter note, the value is `1`, not `4`, because a

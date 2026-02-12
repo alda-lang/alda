@@ -98,7 +98,7 @@ of audio instruments, such as waveform synthesizers and audio samplers.
 
 In the future, when we have instruments like those, we will likely still use the
 [Java MIDI sequencer][java-midi-sequencer] to manage the scheduling and
-sychronization of musical events, the same way we are doing now. This is
+synchronization of musical events, the same way we are doing now. This is
 possible by using [MetaMessages][java-meta-message] to schedule arbitrary events
 in a MIDI sequence.
 
