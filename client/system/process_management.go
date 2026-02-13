@@ -121,7 +121,7 @@ func CleanUpStaleStateFiles() error {
 }
 
 // PlayerState describes the current state of a player process. These states are
-// continously written to files by each player process. (See: StateManager.kt.)
+// continuously written to files by each player process. (See: StateManager.kt.)
 type PlayerState struct {
 	State  string `json:"state"`
 	Port   int    `json:"port"`
@@ -131,7 +131,7 @@ type PlayerState struct {
 }
 
 // REPLServerState describes the current state of an Alda REPL server process.
-// These states are continously written to files by each Alda REPL process.
+// These states are continuously written to files by each Alda REPL process.
 // (See: repl/server.go.)
 type REPLServerState struct {
 	Port int    `json:"port"`

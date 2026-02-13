@@ -315,7 +315,7 @@ func (server *Server) listen(l net.Listener) {
 
 				case map[string]interface{}:
 					// Strings seem to become byte arrays somewhere in the process of
-					// marshaling and unmarshaling to bencode. I don't have a use-case for
+					// marshaling and unmarshalling to bencode. I don't have a use-case for
 					// dealing with byte arrays, I only want to deal with strings, so
 					// let's go ahead and do the conversion here.
 					for k, v := range msg {

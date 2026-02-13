@@ -70,7 +70,7 @@ type replCommand struct {
 }
 
 var replCommands map[string]replCommand
-var commandsSummmary string
+var commandsSummary string
 
 func invalidArgsError(args []string) error {
 	return fmt.Errorf("invalid arguments: %#v", args)
@@ -139,7 +139,7 @@ e.g. :help play
 
 Available commands:
 
-` + commandsSummmary)
+` + commandsSummary)
 
 					return nil
 				}
@@ -538,7 +538,7 @@ arguments will save the updated score to the same file.`,
 		)
 	}
 
-	commandsSummmary = builder.String()
+	commandsSummary = builder.String()
 }
 
 func (client *Client) handleCommand(name string, args string) error {

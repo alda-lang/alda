@@ -16,6 +16,6 @@ guitar:
   r1 # piano is using channel 2 here
   o3 c1/e/g/>c
 
-  # Here, we swich to channel 3, just for fun!
+  # Here, we switch to channel 3, just for fun!
   (midi-channel 3)
   o3 g1/>c/e/g
