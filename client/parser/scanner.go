@@ -341,7 +341,7 @@ func (s *scanner) parseIntegerFrom(startIndex int) int32 {
 // optionally a period and a bunch more digits. It reads from the start index up
 // until the current index and parses the result as a float.
 func (s *scanner) parseFloatFrom(startIndex int) float64 {
-	number, _ := strconv.ParseFloat(string(s.input[s.start:s.current]), 64)
+	number, _ := strconv.ParseFloat(string(s.input[startIndex:s.current]), 64)
 	return number
 }
 
