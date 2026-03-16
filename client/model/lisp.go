@@ -1374,6 +1374,21 @@ func init() {
 			},
 		},
 	)
+
+	defn("part",
+		FunctionSignature{
+			ArgumentTypes: []LispForm{LispString{}},
+			Implementation: func(args ...LispForm) (LispForm, error) {
+				partName := args[0].(LispString).Value
+
+				partDecl := PartDeclaration{
+					Names: []string{partName},
+				}
+
+				return LispScoreUpdate{ScoreUpdate: partDecl}, nil
+			},
+		},
+	)
 }
 
 // LispNil is the value nil.
