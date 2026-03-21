@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 2.4.2 (2026-03-21)
+
+* Restored the `part` Lisp function, which existed in Alda 1 but was missing
+  from Alda 2. You can now use `(part "piano")` to declare a part from within a
+  Lisp expression. Thanks to [CodeForBeauty] for the contribution, and to
+  [UlyssesZh] for reporting the issue!
+
 ## 2.4.1 (2026-01-01)
 
 Happy New Year! 🎆 This release includes a small update to the player process to
@@ -484,6 +491,7 @@ the [Alda 2 migration guide][migration-guide]!
 [De-Alchmst]: https://github.com/De-Alchmst
 [JakubSlacht]: https://github.com/JakubSlacht
 [lenianiva]: https://github.com/lenianiva
+[CodeForBeauty]: https://github.com/CodeForBeauty
 
 [alda-import-blog-post]: https://blog.djy.io/musicxml-import-and-another-new-alda-features/
 [midi-channel-assignment-discussion]: https://github.com/alda-lang/alda/discussions/447

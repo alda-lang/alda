@@ -1375,6 +1375,10 @@ func init() {
 		},
 	)
 
+	// TODO: Support more advanced part declarations, e.g. multiple instruments
+	// in a group (`trumpet/piano`) and aliases (`trumpet/piano 'trumpiano'`).
+	// This will require a more nuanced API design for the Lisp function
+	// arguments.
 	defn("part",
 		FunctionSignature{
 			ArgumentTypes: []LispForm{LispString{}},

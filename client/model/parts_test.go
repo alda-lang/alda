@@ -884,6 +884,20 @@ func TestParts(t *testing.T) {
 			},
 		},
 		scoreUpdateTestCase{
+			label: "declare part using lisp",
+			updates: []ScoreUpdate{
+				LispList{Elements: []LispForm{
+					LispSymbol{Name: "part"},
+					LispString{Value: "piano"},
+				}},
+				Note{Pitch: LetterAndAccidentals{NoteLetter: C}},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectParts("piano"),
+				expectMidiNoteNumbers(60),
+			},
+		},
+		scoreUpdateTestCase{
 			label: "parts with notes",
 			updates: []ScoreUpdate{
 				PartDeclaration{
