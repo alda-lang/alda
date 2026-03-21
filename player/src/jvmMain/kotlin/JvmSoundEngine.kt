@@ -14,7 +14,8 @@ import javax.sound.midi.MidiSystem
 import javax.sound.midi.Sequence
 import javax.sound.midi.ShortMessage
 import kotlin.concurrent.thread
-import kotlin.math.roundToLong
+import kotlinx.coroutines.CompletableJob
+import kotlinx.coroutines.Job
 import mu.KotlinLogging
 
 private val log = KotlinLogging.logger {}
@@ -47,19 +48,6 @@ const val DIVISION_TYPE = Sequence.PPQ
 // 512th note resolution.)
 const val RESOLUTION = 128
 
-// We often want to schedule a note to be played "right now," but that's not
-// actually possible unless time has stopped. If we schedule the note for "now"
-// (i.e. the current offset), the note will not be played because it takes a
-// non-zero amount of time to do the work of scheduling the note, and by the
-// time we're done, the current offset has advanced past the offset where the
-// note should have been played.
-//
-// This value is the amount of latency that we are reasonably willing to add to
-// allow the scheduler time to schedule the note.
-//
-// TODO: make this configurable?
-const val SCHEDULE_BUFFER_TIME_MS = 500
-
 // The sequencer's clock will stop as soon as it reaches the end of the
 // sequence, however this is not the behavior we want.
 //
@@ -75,12 +63,7 @@ const val CONTINUATION_INTERVAL_MS = 1000
 
 enum class CustomMetaMessage(val type : Int) {
   CONTINUE(0x30),
-  // Removed 2024-03-09, as it was no longer needed. We used to use this as a
-  // signal that the current track should use the percussion channel. Now,
-  // instead, each note event includes a channel, so if it's percussion, then it
-  // the channel number will be 9.
-  //
-  // PERCUSSION(0x31),
+  PERCUSSION(0x31),
   EVENT(0x32),
   SHUTDOWN(0x33)
 }
@@ -162,13 +145,15 @@ class JVMSoundEngine : SoundEngine {
   val receiver = sequencer.getReceiver()
   val sequence = Sequence(DIVISION_TYPE, RESOLUTION)
   val track = sequence.createTrack()
-  val pendingEvents = mutableMapOf<String, CountDownLatch>()
+  val pendingEvents = mutableMapOf<String, CompletableJob>()
 
   // The sequencer automatically stops running when it reaches the end of the
   // sequence. We don't want that behavior; instead, we want to maintain our own
   // playing vs. not playing state so that if the sequencer is "playing"
   // (according to us), notes that get added are played right away.
-  var isPlaying = false
+  var _isPlaying = false
+
+  override fun isPlaying() : Boolean = _isPlaying
 
   // We need to track the history of tempo changes throughout the score so that
   // we can convert millisecond values to ticks.
@@ -222,36 +207,12 @@ class JVMSoundEngine : SoundEngine {
     return tempoEntry.offsetMs + msDelta
   }
 
-  fun currentOffset(): Double {
+  override fun currentOffset(): Double {
     return ticksToMs(sequencer.getTickPosition())
   }
 
-  fun prefixWithOffset(str: String): String {
-    return "[${currentOffset().roundToLong()}] $str"
-  }
-
-  fun trace(msg: String) {
-    log.trace { prefixWithOffset(msg) }
-  }
-
-  fun debug(msg: String) {
-    log.debug { prefixWithOffset(msg) }
-  }
-
-  fun info(msg: String) {
-    log.info { prefixWithOffset(msg) }
-  }
-
-  fun warn(msg: String) {
-    log.warn { prefixWithOffset(msg) }
-  }
-
-  fun error(msg: String) {
-    log.error { prefixWithOffset(msg) }
-  }
-
   fun setTempo(offsetMs : Int, bpm : Float) {
-    trace("Setting tempo to $bpm BPM at offset: $offsetMs")
+    log.trace { "Setting tempo to ${bpm} BPM at offset: ${offsetMs}" }
     val ticks = msToTicks(offsetMs * 1.0)
     addTempoEntry(TempoEntry(offsetMs, bpm, ticks))
     track.add(MidiEvent(setTempoMessage(bpm), ticks))
@@ -298,17 +259,17 @@ class JVMSoundEngine : SoundEngine {
   fun scheduleShutdown(offsetMs : Int) {
     val now = Math.round(currentOffset()).toInt()
     val shutdownOffsetMs = now + offsetMs
-    debug("Scheduling shutdown for $shutdownOffsetMs")
+    log.debug { "Scheduling shutdown for ${shutdownOffsetMs}" }
     scheduleMetaMsg(shutdownOffsetMs, CustomMetaMessage.SHUTDOWN)
   }
 
   init {
-    info("Initializing MIDI sequencer...")
+    log.info { "Initializing MIDI sequencer..." }
     sequencer.open()
     sequencer.setSequence(sequence)
     sequencer.setTickPosition(0)
 
-    info("Initializing MIDI synthesizer...")
+    log.info { "Initializing MIDI synthesizer..." }
     // NB: This blocks for about a second.
     synthesizer.open()
 
@@ -318,43 +279,55 @@ class JVMSoundEngine : SoundEngine {
     sequencer.addMetaEventListener(MetaEventListener { msg ->
       when (val msgType = msg.getType()) {
         CustomMetaMessage.CONTINUE.type -> {
-          debug("Received CONTINUE meta event")
-          if (isPlaying) sequencer.start()
+          log.debug { "Received CONTINUE meta event" }
+          synchronized(_isPlaying) {
+            if (_isPlaying) sequencer.start()
+          }
+        }
+
+        CustomMetaMessage.PERCUSSION.type -> {
+          val trackNumber = msg.getData().first().toInt()
+          log.debug {
+            "Received PERCUSSION meta event for track ${trackNumber}"
+          }
+          track(trackNumber).useMidiPercussionChannel()
         }
 
         CustomMetaMessage.EVENT.type -> {
           val pendingEvent = String(msg.getData())
 
-          debug("Received EVENT meta event for pending event: $pendingEvent")
+          log.debug {
+            "Received EVENT meta event for pending event: ${pendingEvent}"
+          }
 
           synchronized(pendingEvents) {
-            pendingEvents[pendingEvent]?.also { latch ->
-              latch.countDown()
+            pendingEvents.get(pendingEvent)?.also { job ->
+              job.complete()
               pendingEvents.remove(pendingEvent)
             } ?: run {
-              error("$pendingEvent latch not found!")
+              log.error { "$pendingEvent latch not found!" }
             }
           }
         }
 
         CustomMetaMessage.SHUTDOWN.type -> {
-          debug("Received SHUTDOWN meta event")
+          log.debug { "Received SHUTDOWN meta event" }
           isRunning = false
         }
 
         MIDI_END_OF_TRACK -> {
-          debug("Received End of Track meta event")
+          log.debug { "Received End of Track meta event" }
           // This metamessage is sent automatically when the end of the sequence
           // is reached.
         }
 
         MIDI_SET_TEMPO -> {
-          debug("Received Set Tempo meta event")
+          log.debug { "Received Set Tempo meta event" }
           // This metamessage is handled by the Sequencer out of the box.
         }
 
         else -> {
-          warn("MetaMessage type $msgType not implemented.")
+          log.warn { "MetaMessage type $msgType not implemented." }
         }
       }
     })
@@ -362,14 +335,32 @@ class JVMSoundEngine : SoundEngine {
     thread {
       while (!Thread.currentThread().isInterrupted()) {
         try {
-          if (isPlaying) {
-            val now = currentOffset()
-            val future = now + (CONTINUATION_INTERVAL_MS * 2)
-            scheduleContinueMsg(Math.round(future).toInt())
-            sequencer.start()
+          synchronized(_isPlaying) {
+            if (_isPlaying) {
+              val now = currentOffset()
+              val future = now + (CONTINUATION_INTERVAL_MS * 2)
+              scheduleContinueMsg(Math.round(future).toInt())
+              sequencer.start()
+            }
           }
 
           Thread.sleep(CONTINUATION_INTERVAL_MS.toLong())
+        } catch (iex : InterruptedException) {
+          Thread.currentThread().interrupt()
+        }
+      }
+    }
+
+    // for debugging
+    thread {
+      while (!Thread.currentThread().isInterrupted()) {
+        try {
+          log.trace {
+            "${if (_isPlaying)
+                 "PLAYING; "
+               else ""}current offset: ${currentOffset()}"
+          }
+          Thread.sleep(500)
         } catch (iex : InterruptedException) {
           Thread.currentThread().interrupt()
         }
@@ -383,22 +374,24 @@ class JVMSoundEngine : SoundEngine {
     Thread.sleep(2500)
 
     stateManager!!.markReady()
-
-    info("Player ready")
   }
 
-  fun startSequencer() {
-    sequencer.start()
-    isPlaying = true
+  override fun startSequencer() {
+    synchronized(_isPlaying) {
+      sequencer.start()
+      _isPlaying = true
+    }
   }
 
-  fun stopSequencer() {
-    sequencer.stop()
-    isPlaying = false
+  override fun stopSequencer() {
+    synchronized(_isPlaying) {
+      sequencer.stop()
+      _isPlaying = false
+    }
   }
 
   fun setSequencerOffset(offsetMs : Int) {
-    trace("setting offset to $offsetMs")
+    log.trace { "setting offset to ${offsetMs}" }
     sequencer.setTickPosition(msToTicks(offsetMs * 1.0))
   }
 
@@ -406,13 +399,30 @@ class JVMSoundEngine : SoundEngine {
     scheduleShortMsg(offset, ShortMessage.PROGRAM_CHANGE, channel, patch, 0)
   }
 
+  // Immediately configure the track to use a percussion channel. That way, any
+  // note messages in the same bundle will be scheduled on a percussion channel.
+  override fun midiPercussionImmediate(trackNumber : Int) {
+    track(trackNumber).useMidiPercussionChannel()
+  }
+
+  // Configure a track to be a percussion track in the future by scheduling a
+  // metamessage that will do the above once the offset is reached.
+  override fun midiPercussionScheduled(trackNumber : Int, offset : Int) {
+    scheduleMetaMsg(
+      offset,
+      CustomMetaMessage.PERCUSSION,
+      listOf(trackNumber.toByte()).toByteArray(),
+      1
+    )
+  }
+
   override fun midiNote(
     startOffset : Int, endOffset : Int, channel : Int, noteNumber : Int,
     velocity : Int
   ) {
-    trace(
-      "channel $channel: scheduling note from $startOffset to $endOffset"
-    )
+    log.trace {
+      "channel ${channel}: scheduling note from ${startOffset} to ${endOffset}"
+    }
 
     scheduleShortMsg(
       startOffset, ShortMessage.NOTE_ON, channel, noteNumber, velocity
@@ -436,22 +446,64 @@ class JVMSoundEngine : SoundEngine {
 
   // Schedules an event to occur at the desired offset.
   //
-  // Returns a CountDownLatch that will count down from 1 to 0 when the event is
-  // scheduled to occur.
+  // Returns a coroutine Job that will complete when the event is scheduled to
+  // occur.
   //
   // This will signal the Player to perform a particular action at just the
   // right time.
-  fun scheduleEvent(offset : Int, eventName : String) : CountDownLatch {
-    val latch = CountDownLatch(1)
+  override fun scheduleEvent(offset : Int, eventName : String) : Job {
+    val job = Job()
     val pendingEvent = eventName + "::" + UUID.randomUUID().toString()
 
-    synchronized(pendingEvents){
-      pendingEvents.put(pendingEvent, latch)
+    synchronized(pendingEvents) {
+      pendingEvents.put(pendingEvent, job)
     }
 
     val msgData = pendingEvent.toByteArray()
     scheduleMetaMsg(offset, CustomMetaMessage.EVENT, msgData, msgData.size)
-    return latch
+
+    return job
+  }
+
+  private fun withChannel(channelNumber : Int, f : (MidiChannel) -> Unit) {
+    synthesizer.getChannels()[channelNumber]?.also { channel ->
+      f(channel)
+    } ?: run {
+      log.warn { "MIDI channel $channelNumber is null." }
+    }
+  }
+
+  override fun midiClearChannel(channelNumber : Int) {
+    withChannel(channelNumber) { channel ->
+      channel.allNotesOff()
+      channel.allSoundOff()
+    }
+
+    val channelEvents = mutableListOf<MidiEvent>()
+    for (i in 0..(track.size() - 1)) {
+      val event = track.get(i)
+      if (eventChannel(event) == channelNumber) {
+        channelEvents.add(event)
+      }
+    }
+
+    // To preserve the current tick position, we replace each message with a
+    // no-op CONTINUE message instead of simply removing it.
+    channelEvents.forEach {
+      track.add(MidiEvent(
+        MetaMessage(CustomMetaMessage.CONTINUE.type, null, 0),
+        it.getTick())
+      )
+      track.remove(it)
+    }
+  }
+
+  override fun midiMuteChannel(channelNumber : Int) {
+    withChannel(channelNumber) { it.setMute(true) }
+  }
+
+  override fun midiUnmuteChannel(channelNumber : Int) {
+    withChannel(channelNumber) { it.setMute(false) }
   }
 
   fun export(filepath : String) {

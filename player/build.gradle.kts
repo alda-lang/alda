@@ -1,16 +1,14 @@
 import java.nio.file.Paths
+// import org.jetbrains.kotlin.gradle.dsl.JvmCompilationOptions
+// import org.jetbrains.kotlin.gradle.dsl.KotlinJvmCompilerOptions
 
 plugins {
   // TODO: See if there is a more recent version of Kotlin multiplatform?
   //
   // On the master branch, we're doing this:
   // id("org.jetbrains.kotlin.jvm") version("1.7.21")
-  kotlin("multiplatform") version "1.6.10"
-  application
-}
-
-java {
-  targetCompatibility = JavaVersion.VERSION_1_8
+  kotlin("multiplatform") version "2.1.0"
+  id("application")
 }
 
 repositories {
@@ -18,24 +16,24 @@ repositories {
   mavenCentral()
 }
 
-if (project.gradle.startParameter.taskNames.contains("build")) {
-  throw RuntimeException(
-"""-----------------------------------------------------------------------------
-Dave 2022-01-17: It would be nice if I could customize the `gradle build` task
-so that the JVM build uses the `fatJar` task I've defined in build.gradle.kts,
-instead of whatever default, non-fat JAR approach it's using.
+// if (project.gradle.startParameter.taskNames.contains("build")) {
+//   throw RuntimeException(
+// """-----------------------------------------------------------------------------
+// Dave 2022-01-17: It would be nice if I could customize the `gradle build` task
+// so that the JVM build uses the `fatJar` task I've defined in build.gradle.kts,
+// instead of whatever default, non-fat JAR approach it's using.
 
-But I can't, for the life of me, figure out how to replace/customize the `gradle
-build` task. If you know how to do this, please enlighten me!
+// But I can't, for the life of me, figure out how to replace/customize the `gradle
+// build` task. If you know how to do this, please enlighten me!
 
-As a workaround, I am disabling the `gradle build` task. Instead, use the
-`gradle fatJar` task directly to build  the JVM part.
+// As a workaround, I am disabling the `gradle build` task. Instead, use the
+// `gradle fatJar` task directly to build  the JVM part.
 
-To build the JS part, run `bin/build-js`, which includes workarounds for the
-out-of-the-box flakiness of Kotlin JS tooling.
------------------------------------------------------------------------------"""
-)
-}
+// To build the JS part, run `bin/build-js`, which includes workarounds for the
+// out-of-the-box flakiness of Kotlin JS tooling.
+// -----------------------------------------------------------------------------"""
+// )
+// }
 
 ////////////////////////////////////////////////////////////////////////////////
 // This could be a task, but I don't want it to be possible for this file not to
@@ -66,30 +64,65 @@ val playerVersion = "${aldaVersion}"""")
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile>().configureEach {
+//     compilerOptions {
+//         jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8)
+//     }
+// }
+
 // Multiplatform Kotlin configuration
 //
 // JVM: CLI `alda-player` process
 // JS: in-browser Alda player process (for use with alda.wasm, generated from
 // the Go client code)
 kotlin {
+  targets.all {
+    compilations.all {
+      kotlinOptions {
+        // This is necessary because we're opting into the "delicate"
+        // GlobalScope coroutines API.
+        //
+        // Reference:
+        // https://blog.jetbrains.com/kotlin/2021/05/kotlin-coroutines-1-5-0-released/#globalscope
+        //
+        // Opting in is done via the @OptIn annotation, which, itself, is a beta
+        // feature! So we have to opt into being able to opt in by including
+        // this compiler option.
+        //
+        // Reference:
+        // https://kotlinlang.org/docs/opt-in-requirements.html#beta-status-of-the-opt-in-requirements
+        freeCompilerArgs += "-opt-in=kotlin.RequiresOptIn"
+      }
+    }
+  }
+
   jvm {
-    withJava()
+    compilations.all {
+      compilerOptions {
+        jvmTarget.set(JvmCompilationOptions.JvmTarget.JVM_1_8)
+      }
+    }
+
+    project.plugins.apply("application")
+
+    project.extensions.configure<JavaApplication>("application") {
+      mainClass.set("io.alda.player.MainKt")
+    }
 
     compilations {
-      val main = getByName("main")
       tasks {
-        register<Jar>("fatJar") {
-          archiveBaseName.set("${project.name}-fat")
-          duplicatesStrategy = DuplicatesStrategy.INCLUDE
-          manifest {
-            attributes["Main-Class"] = "io.alda.player.MainKt"
-            attributes["Multi-Release"] = "true"
-          }
-          from(configurations.compileClasspath.get().map({ if (it.isDirectory) it else zipTree(it) }))
-          from(configurations.runtimeClasspath.get().map({ if (it.isDirectory) it else zipTree(it) }))
-          val jar: CopySpec by getting(Jar::class)
-          with(jar)
-        }
+        // register<Jar>("fatJar") {
+        //   archiveBaseName.set("${project.name}-fat")
+        //   duplicatesStrategy = DuplicatesStrategy.INCLUDE
+        //   manifest {
+        //     attributes["Main-Class"] = "io.alda.player.MainKt"
+        //     attributes["Multi-Release"] = "true"
+        //   }
+        //   from(configurations.compileClasspath.get().map({ if (it.isDirectory) it else zipTree(it) }))
+        //   from(configurations.runtimeClasspath.get().map({ if (it.isDirectory) it else zipTree(it) }))
+        //   val jar: CopySpec by getting(Jar::class)
+        //   with(jar)
+        // }
       }
     }
   }
@@ -103,6 +136,7 @@ kotlin {
   sourceSets {
     val commonMain by getting {
       dependencies {
+        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
         implementation("io.github.microutils:kotlin-logging:2.1.21")
       }
     }
@@ -139,9 +173,16 @@ kotlin {
   }
 }
 
-application {
-  mainClass.set("io.alda.player.MainKt")
-}
+// application {
+//   mainClass.set("io.alda.player.MainKt")
+// }
+
+// Do I really need this? Seems like a duplicate of an earlier line
+// tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile>().configureEach {
+//     compilerOptions {
+//         jvmTarget.set(JvmCompilationOptions.JvmTarget.JVM_1_8)
+//     }
+// }
 
 val run by tasks.getting(JavaExec::class) {
   standardInput = System.`in`

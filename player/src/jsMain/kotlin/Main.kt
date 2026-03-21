@@ -20,5 +20,9 @@ fun main() {
 
   window.asDynamic().AldaPlayer = jsObject {
     setLogLevel = ::setLogLevel
+
+    start = fun() : Player {
+      return Player()
+    }
   }
 }

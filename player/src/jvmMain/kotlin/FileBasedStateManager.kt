@@ -19,6 +19,9 @@ class PlayerState(
 )
 
 class FileBasedStateManager(val port : Int) : StateManager {
+  // TODO: remove
+  override fun sleep(ms : Long) { Thread.sleep(ms) }
+
   val thread = thread(start = false) {
     while (!Thread.currentThread().isInterrupted()) {
       try {
