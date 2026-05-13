@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 2.4.3 (2026-05-12)
+
+* Adjusted the JVM options used by the player process to use 75% less memory.
+  This should make Alda easier to run on devices with less RAM, e.g. Raspberry
+  Pi.
+
+  Thanks to [SomedayToday] for the contribution!
+
 ## 2.4.2 (2026-03-21)
 
 * Restored the `part` Lisp function, which existed in Alda 1 but was missing
@@ -492,6 +500,7 @@ the [Alda 2 migration guide][migration-guide]!
 [JakubSlacht]: https://github.com/JakubSlacht
 [lenianiva]: https://github.com/lenianiva
 [CodeForBeauty]: https://github.com/CodeForBeauty
+[SomedayToday]: https://github.com/SomedayToday
 
 [alda-import-blog-post]: https://blog.djy.io/musicxml-import-and-another-new-alda-features/
 [midi-channel-assignment-discussion]: https://github.com/alda-lang/alda/discussions/447
