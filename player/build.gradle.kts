@@ -1,5 +1,5 @@
 plugins {
-  id("org.jetbrains.kotlin.jvm") version("1.7.21")
+  id("org.jetbrains.kotlin.jvm") version("2.0.21")
   application
 }
 
@@ -63,3 +63,8 @@ tasks {
     dependsOn(fatJar)
   }
 }
+
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8)
+}
+
