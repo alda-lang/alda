@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## 2.4.8 (2026-10-23)
+
+* Fixed [a timing bug][pr-529] involving nested cram expressions with an
+  explicit duration. The explicit duration of a nested cram is now inherited by
+  subsequent events when the enclosing cram's timing is calculated, matching the
+  behavior when the score is applied.
+
+  For example, `piano: {{c}2 d}1` previously played two notes of about 1333.33
+  ms each (2666.67 ms total) instead of two notes of 1000 ms each (the whole
+  note's 2000 ms).
+
+  Thanks to [dajiaohuang] for the fix!
+
 ## 2.4.7 (2026-08-29)
 
 * Fixed [a longstanding issue][issue-406] on Windows where Alda player processes
@@ -549,6 +562,7 @@ the [Alda 2 migration guide][migration-guide]!
 [SomedayToday]: https://github.com/SomedayToday
 [Samyra312007]: https://github.com/Samyra312007
 [userjuma]: https://github.com/userjuma
+[dajiaohuang]: https://github.com/dajiaohuang
 
 [alda-import-blog-post]: https://blog.djy.io/musicxml-import-and-another-new-alda-features/
 [midi-channel-assignment-discussion]: https://github.com/alda-lang/alda/discussions/447
@@ -563,3 +577,4 @@ the [Alda 2 migration guide][migration-guide]!
 [issue-416]: https://github.com/alda-lang/alda/issues/416
 [issue-417]: https://github.com/alda-lang/alda/issues/417
 [issue-421]: https://github.com/alda-lang/alda/issues/421
+[pr-529]: https://github.com/alda-lang/alda/pull/529
