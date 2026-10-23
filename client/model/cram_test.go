@@ -130,6 +130,48 @@ func TestCram(t *testing.T) {
 			},
 		},
 		scoreUpdateTestCase{
+			label: "the explicit duration of a nested cram becomes the default " +
+				"duration for subsequent events",
+			updates: []ScoreUpdate{
+				PartDeclaration{Names: []string{"piano"}},
+				// A whole note at 120 bpm = 2000 ms
+				Cram{
+					Events: []ScoreUpdate{
+						// A half note at 120 bpm = 1000 ms
+						Cram{
+							Events: []ScoreUpdate{
+								Note{
+									Pitch:   LetterAndAccidentals{NoteLetter: C},
+									Slurred: true,
+								},
+							},
+							Duration: Duration{
+								Components: []DurationComponent{
+									NoteLength{Denominator: 2},
+								},
+							},
+						},
+						// Inherits the nested cram's half note duration (1000 ms),
+						// so the whole cram occupies its full 2000 ms.
+						Note{
+							Pitch:   LetterAndAccidentals{NoteLetter: D},
+							Slurred: true,
+						},
+					},
+					Duration: Duration{
+						Components: []DurationComponent{
+							NoteLength{Denominator: 1},
+						},
+					},
+				},
+			},
+			expectations: []scoreUpdateExpectation{
+				expectNoteOffsets(0, 1000),
+				expectNoteDurations(1000, 1000),
+				expectPartCurrentOffset("piano", 2000),
+			},
+		},
+		scoreUpdateTestCase{
 			label: "repeated nested cram expressions",
 			updates: []ScoreUpdate{
 				PartDeclaration{Names: []string{"piano"}},
