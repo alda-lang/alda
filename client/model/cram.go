@@ -135,8 +135,12 @@ func (cram Cram) UpdateScore(score *Score) error {
 // DurationMs implements ScoreUpdate.DurationMs by returning the effective
 // duration of the Cram expression, i.e. either the specified duration of the
 // Cram expression or the part's default duration.
+// Also updates the default duration so subsequent events inherit it, matching
+// the behavior of UpdateScore when an explicit duration is specified.
 func (cram Cram) DurationMs(part *Part) float64 {
-	return effectiveDuration(cram.Duration, part).Ms(part.Tempo)
+	durationMs := effectiveDuration(cram.Duration, part).Ms(part.Tempo)
+	updateDefaultDuration(part, cram.Duration)
+	return durationMs
 }
 
 // VariableValue implements ScoreUpdate.VariableValue by returning a version of
